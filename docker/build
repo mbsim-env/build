@@ -1,0 +1,28 @@
+#!/bin/bash
+
+SCRIPTDIR=$(readlink -m $(dirname $0))
+MBSIMENVDIR=$(readlink -f "$SCRIPTDIR"/../..)
+
+# split args to normal, --passToConfigure and --passToRunExamples args
+ADDTOARGS=normal
+NORMALARGS=()
+CONFIGUREARGS=()
+RUNEXAMPLEARGS=()
+while [ $# -ge 1 ]; do
+  test "$1" == "--passToConfigure" && { ADDTOARGS=configure; shift; continue; }
+  test "$1" == "--passToRunExamples" && { ADDTOARGS=runExamples; shift; continue; }
+  if [ $ADDTOARGS == "normal" ]; then
+    NORMALARGS+=("$1")
+  elif [ $ADDTOARGS == "configure" ]; then
+    CONFIGUREARGS+=("$1")
+  elif [ $ADDTOARGS == "runExamples" ]; then
+    RUNEXAMPLEARGS+=("$1")
+  fi
+  shift
+done
+if [ ${#RUNEXAMPLEARGS[*]} -gt 0 ]; then
+  RUNEXAMPLEARGS=(--passToRunExamples "${RUNEXAMPLEARGS[@]}")
+fi
+
+# run using mbsd
+"$SCRIPTDIR"/mbsd "$MBSIMENVDIR"/mbsim/misc/BuildService/scripts/build.py --sourceDir "$MBSIMENVDIR" --binSuffix=-build --prefix "$MBSIMENVDIR"/local "${NORMALARGS[@]}" --passToConfigure --disable-static --enable-python --with-qwt-inc-prefix=/3rdparty/local/include --with-qwt-lib-prefix=/3rdparty/local/lib --with-qwt-lib-name=qwt --with-qmake=qmake-qt5 COIN_CFLAGS=-I/3rdparty/local/include COIN_LIBS="-L/3rdparty/local/lib64 -lCoin" SOQT_CFLAGS=-I/3rdparty/local/include SOQT_LIBS="-L/3rdparty/local/lib64 -lSoQt" "${CONFIGUREARGS[@]}" "${RUNEXAMPLEARGS[@]}"

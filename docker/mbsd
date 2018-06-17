@@ -1,0 +1,35 @@
+#!/bin/bash
+
+SCRIPTDIR=$(readlink -f $(dirname $0))
+MBSIMENVDIR=$(readlink -f "$SCRIPTDIR"/../..)
+
+# convert the absolute path stored in PABS to the corresponding docker path
+function convertPABS {
+  PCANO=$(readlink -m $PABS)
+  if [ "${PCANO:0:${#MBSIMENVDIR}}" == "$MBSIMENVDIR" ]; then
+    PABS=/mbsim-env${PCANO:${#MBSIMENVDIR}}
+  else
+    echo "ERROR: The path $PABS is not a subdir of $MBSIMENVDIR. This cannot be handled by $(basename $0)."
+    exit 1
+  fi
+}
+
+# convert cur dir
+PABS=$PWD; convertPABS; CURDIR=$PABS
+
+#convert args
+ARGS=()
+while [ $# -ge 1 ]; do
+  if [ "${1:0:1}" == "/" ]; then
+    # convert absolute path
+    PABS=$1; convertPABS
+    ARGS+=("$PABS")
+  else
+    # keep everything else
+    ARGS+=("$1")
+  fi
+  shift
+done
+
+# run in docker image
+sudo docker run --rm --user $(id -u):$(id -g) -v "$MBSIMENVDIR":/mbsim-env -w "$CURDIR" -e CCACHE_DIR=/mbsim-env/.ccache mbsimenv/mbsim-env-build "${ARGS[@]}"
