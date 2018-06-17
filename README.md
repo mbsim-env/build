@@ -26,3 +26,5 @@ to be done
 ## Docker
 
 to be done
+
+The Docker file for building MBSim-Env is available at [Docker Hub](https://hub.docker.com/r/mbsimenv/mbsim-env-build/).
