@@ -1,5 +1,0 @@
-#!/bin/bash
-
-SCRIPTDIR=$(readlink -f $(dirname $0))
-
-sudo docker build -t mbsimenv/mbsim-env-build "$SCRIPTDIR"/imageContext
