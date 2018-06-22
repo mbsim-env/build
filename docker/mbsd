@@ -4,17 +4,15 @@ SCRIPTDIR=$(readlink -f $(dirname $0))
 MBSIMENVDIR=$(readlink -f "$SCRIPTDIR"/../..)
 
 # help
-for A in "$@"; do
-  if [ "$A" == "-h" -o "$A" == "--help" ]; then
-    echo "This script runs the command provided as first argument in the mbsim-env-build Docker image."
-    echo "All other arguments are passed to the command running in Docker."
-    echo "Examples:"
-    echo "$ <path>/mbsd make - runs make in the Docker directory corresponding to the current directory."
-    echo "$ <path>/mbsd mbsimxml MBS.mbsimprj.xml - runs the MBSim XML model MBS.mbsimprj.xml using mbsimxml."
-    echo "..."
-    exit 0
-  fi
-done
+if [ $# -le 0 ]; then
+  echo "This script runs the command provided as first argument in the mbsim-env-build Docker image."
+  echo "All other arguments are passed to the command running in Docker."
+  echo "Examples:"
+  echo "$ <path>/mbsd make - runs make in the Docker directory corresponding to the current directory."
+  echo "$ <path>/mbsd mbsimxml MBS.mbsimprj.xml - runs the MBSim XML model MBS.mbsimprj.xml in the current directory using mbsimxml."
+  echo "..."
+  exit 0
+fi
 
 # check docker
 if ! sudo docker version > /dev/null; then
@@ -29,6 +27,7 @@ function convertPABS {
     PABS=/mbsim-env${PCANO:${#MBSIMENVDIR}}
   else
     echo "ERROR: The path $PABS is not a subdir of $MBSIMENVDIR. This cannot be handled by $(basename $0)."
+    echo "If you mean a native path in the Docker image prefix this argument with DOCKERDIR:"
     exit 1
   fi
 }
@@ -43,6 +42,8 @@ while [ $# -ge 1 ]; do
     # convert absolute path
     PABS=$1; convertPABS
     ARGS+=("$PABS")
+  elif [ "${1:0:10}" == "DOCKERDIR:" ]; then
+    ARGS+=("${1:10}")
   else
     # keep everything else
     ARGS+=("$1")
@@ -51,4 +52,4 @@ while [ $# -ge 1 ]; do
 done
 
 # run in mbsim-env-build docker image
-sudo docker run --rm --user $(id -u):$(id -g) -v "$MBSIMENVDIR":/mbsim-env -w "$CURDIR" -e CCACHE_DIR=/mbsim-env/.ccache mbsimenv/mbsim-env-build "${ARGS[@]}"
+sudo docker run --rm --user $(id -u):$(id -g) -v "$MBSIMENVDIR":/mbsim-env -w "$CURDIR" mbsimenv/mbsim-env-build "${ARGS[@]}"

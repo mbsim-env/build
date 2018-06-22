@@ -10,7 +10,7 @@ for A in "$@"; do
     echo "It automatically passes all required arguments to build.py needed for the Docker build of mbsim-env."
     echo "All arguments of this script are also passed (added) to build.py."
     echo "Moreover, when the mbsim-env git repositories are not already cloned, it does for you."
-    echo "(Hence, just cloning mbsims-env/build and running this script will build mbsim-env using Docker)"
+    echo "(Hence, just cloning https://github.com/mbsim-env/build.git and running this script will build mbsim-env using Docker)"
     echo ""
     break
   fi
