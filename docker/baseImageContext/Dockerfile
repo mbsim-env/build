@@ -30,3 +30,11 @@ RUN yum -y install \
   mesa-dri-drivers \
   xorg-x11-fonts-Type1 \
   urw-fonts
+
+# set labels
+LABEL org.label-schema.schema-version="1.0" \
+  org.label-schema.name="mbsim-env-base" \
+  org.label-schema.description="Build the base image for all MBSim-Environment images." \
+  org.label-schema.url="https://www.mbsim-env.de" \
+  org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/baseImageContext" \
+  org.label-schema.vendor="MBSim-Environment"

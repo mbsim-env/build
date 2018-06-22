@@ -98,4 +98,7 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.url="https://www.mbsim-env.de" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/runImageContext" \
   org.label-schema.vendor="MBSim-Environment" \
-  org.label-schema.docker.cmd="docker run --rm --user $(id -u):$(id -g) mbsimenv/mbsim-env-run mbsimgui"
+  org.label-schema.docker.cmd="docker run --rm --user $(id -u):$(id -g) -e DISPLAY -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority --net=host mbsimenv/mbsim-env-run"
+ 
+# per default run mbsimgui
+CMD ["mbsimgui"]

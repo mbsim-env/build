@@ -132,7 +132,7 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.name="mbsim-env-build" \
   org.label-schema.description="Build all tools from MBSim-Environment." \
   org.label-schema.url="https://www.mbsim-env.de" \
-  org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/runBuildContext" \
+  org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/buildImageContext" \
   org.label-schema.vendor="MBSim-Environment" \
   org.label-schema.docker.params="SWIGVERSION=swig verion to use,CASADIBRANCH=CasADi branch to use,QWTVERSION=QWT version to use,COINBRANCH=Coin3D branch to use,SOQTBRANCH=SoQt version to use"
 
