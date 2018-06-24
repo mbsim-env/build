@@ -84,16 +84,12 @@ RUN sed -re "s~^( *QWT_INSTALL_PREFIX *= *).*~\1/3rdparty/local~" qwt-$QWTVERSIO
 RUN mkdir /3rdparty/qwt-build
 
 # coin
-RUN hg clone https://bitbucket.org/Coin3D/coin
-WORKDIR /3rdparty/coin
-RUN hg update $COINBRANCH
+RUN hg clone https://bitbucket.org/Coin3D/coin -r $COINBRANCH
 RUN mkdir /3rdparty/coin-build
 
 # soqt
 WORKDIR /3rdparty
-RUN hg clone https://bitbucket.org/Coin3D/soqt
-WORKDIR /3rdparty/soqt
-RUN hg update $SOQTBRANCH
+RUN hg clone https://bitbucket.org/Coin3D/soqt -r $SOQTBRANCH
 RUN mkdir /3rdparty/soqt-build
 
 # casadi
