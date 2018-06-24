@@ -12,7 +12,6 @@ RUN yum -y install \
   autoconf \
   pcre-devel \
   python-devel \
-  numpy \
   qt5-qtbase-devel \
   qt5-qtsvg-devel \
   hdf5-devel \
@@ -36,7 +35,8 @@ RUN yum -y install \
   file \
   qt5-qtwebkit-devel \
   libarchive-devel \
-  ccache
+  ccache \
+  && yum clean all
 
 
 
@@ -48,10 +48,10 @@ FROM centosBaseImage AS thirdpartyBuildImage
 # configuration
 ARG JOBS=4
 ARG SWIGVERSION=3.0.7
-ARG CASADIBRANCH=470b5b3f0cc4044e3cb0eb20dfb2a85e247c62a6
 ARG QWTVERSION=6.1.3
 ARG COINBRANCH=7e191c8f6a31
 ARG SOQTBRANCH=945ec22f6219
+ARG CASADIBRANCH=470b5b3f0cc4044e3cb0eb20dfb2a85e247c62a6
 
 # install additional packaged needed to build the tool not part of centos7
 RUN yum -y install \
@@ -59,64 +59,78 @@ RUN yum -y install \
   bzip2 \
   qt5-qttools-devel \
   mercurial \
-  cmake3
+  cmake3 \
+  && yum clean all
 
 # configure path and envvar for the 3rd party tools
 RUN mkdir /3rdparty
 ENV PKG_CONFIG_PATH=/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfig
 
-# compile/install swig3 (centos7 only provides swig2)
+# get tools to build
 WORKDIR /3rdparty
+
+# swig
 RUN wget -q -O - https://kent.dl.sourceforge.net/project/swig/swig/swig-$SWIGVERSION/swig-$SWIGVERSION.tar.gz | tar -xz
 RUN mkdir /3rdparty/swig-build
-WORKDIR /3rdparty/swig-build
-RUN ../swig-$SWIGVERSION/configure --disable-static --enable-shared CXXFLAGS="-O2" CFLAGS="-O2" --prefix=/3rdparty/local
-RUN make -j $JOBS
-RUN make install
 
-# compile/install casadi (we use the fork from friedrichatgc)
-WORKDIR /3rdparty
-RUN git clone https://github.com/friedrichatgc/casadi.git
-WORKDIR /3rdparty/casadi
-RUN git checkout $CASADIBRANCH
-RUN mkdir /3rdparty/casadi-build
-WORKDIR /3rdparty/casadi-build
-RUN cmake3 -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DCMAKE_BUILD_TYPE=Release -DWITH_PYTHON=on \
-  -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=/3rdparty/local ../casadi
-RUN make -j $JOBS
-RUN make install
-
-# compile/install qwt6 for Qt5 (centos only provides qwt6 for Qt4)
-WORKDIR /3rdparty
+# qwt
 RUN wget -q -O - https://kent.dl.sourceforge.net/project/qwt/qwt/$QWTVERSION/qwt-$QWTVERSION.tar.bz2 | tar -xj
 # fix the install dir (this cannot be done via options in qwt)
 RUN sed -re "s~^( *QWT_INSTALL_PREFIX *= *).*~\1/3rdparty/local~" qwt-$QWTVERSION/qwtconfig.pri > qwt-$QWTVERSION/qwtconfig.pri.new && \
   mv -f qwt-$QWTVERSION/qwtconfig.pri.new qwt-$QWTVERSION/qwtconfig.pri
 RUN mkdir /3rdparty/qwt-build
-WORKDIR /3rdparty/qwt-build
-RUN qmake-qt5 ../qwt-$QWTVERSION
-RUN make -j $JOBS
-RUN make install
 
-# compile/install Coin3D
-WORKDIR /3rdparty
+# coin
 RUN hg clone https://bitbucket.org/Coin3D/coin
 WORKDIR /3rdparty/coin
 RUN hg update $COINBRANCH
 RUN mkdir /3rdparty/coin-build
-WORKDIR /3rdparty/coin-build
-RUN cmake3 -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=/3rdparty/local ../coin
-RUN make -j $JOBS
-RUN make install
 
-# compile/install SoQt
+# soqt
 WORKDIR /3rdparty
 RUN hg clone https://bitbucket.org/Coin3D/soqt
 WORKDIR /3rdparty/soqt
 RUN hg update $SOQTBRANCH
 RUN mkdir /3rdparty/soqt-build
+
+# casadi
+WORKDIR /3rdparty
+RUN git clone https://github.com/friedrichatgc/casadi.git
+WORKDIR /3rdparty/casadi
+RUN git checkout $CASADIBRANCH
+RUN mkdir /3rdparty/casadi-build
+
+# compile/install
+
+# swig3 (centos7 only provides swig2)
+WORKDIR /3rdparty/swig-build
+RUN ../swig-$SWIGVERSION/configure --disable-static --enable-shared CXXFLAGS="-O2" CFLAGS="-O2" --prefix=/3rdparty/local
+RUN make -j $JOBS
+RUN make install
+
+# qwt6 for Qt5 (centos only provides qwt6 for Qt4)
+WORKDIR /3rdparty/qwt-build
+RUN qmake-qt5 ../qwt-$QWTVERSION
+RUN make -j $JOBS
+RUN make install
+
+# Coin3D
+WORKDIR /3rdparty/coin-build
+RUN cmake3 -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=/3rdparty/local ../coin
+RUN make -j $JOBS
+RUN make install
+
+# SoQt
 WORKDIR /3rdparty/soqt-build
 RUN cmake3 -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=/3rdparty/local ../soqt
+RUN make -j $JOBS
+RUN make install
+
+# casadi (we use the fork from friedrichatgc)
+WORKDIR /3rdparty/casadi-build
+RUN cmake3 -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DCMAKE_BUILD_TYPE=Release -DWITH_PYTHON=on \
+  -DPYTHON_PREFIX=/3rdparty/local/python2.7/site-packages \
+  -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=/3rdparty/local ../casadi
 RUN make -j $JOBS
 RUN make install
 

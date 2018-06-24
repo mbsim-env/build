@@ -41,8 +41,11 @@ RUN git checkout $BUILDBRANCH
 
 # build mbsim-env
 WORKDIR /mbsim-env
-# mfmf use --filter "'basic' in labels" instead of directories in runexamples when octave evaluator is working
-RUN /mbsim-env/mbsim/misc/BuildService/scripts/build.py --sourceDir /mbsim-env --binSuffix=-build --prefix /mbsim-env/local -j $JOBS --disableUpdate --passToConfigure --disable-static --enable-python --with-qwt-inc-prefix=/3rdparty/local/include --with-qwt-lib-prefix=/3rdparty/local/lib --with-qwt-lib-name=qwt --with-qmake=qmake-qt5 COIN_CFLAGS=-I/3rdparty/local/include COIN_LIBS="-L/3rdparty/local/lib64 -lCoin" SOQT_CFLAGS=-I/3rdparty/local/include SOQT_LIBS="-L/3rdparty/local/lib64 -lSoQt" --passToRunexamples xmlflat/bouncing_ball_boostodeint xmlflat/hierachical_modelling mechanics/basics/time_dependent_kinematics fmi/sphere_on_plane mechanics/basics/hierachical_modelling
+# enable swig interface to mbsim
+ENV MBSIM_SWIG=1
+# build
+RUN /mbsim-env/mbsim/misc/BuildService/scripts/build.py --sourceDir /mbsim-env --binSuffix=-build --prefix /mbsim-env/local -j $JOBS --disableUpdate --disableRunExamples --passToConfigure --disable-static --enable-python --with-qwt-inc-prefix=/3rdparty/local/include --with-qwt-lib-prefix=/3rdparty/local/lib --with-qwt-lib-name=qwt --with-qmake=qmake-qt5 COIN_CFLAGS=-I/3rdparty/local/include COIN_LIBS="-L/3rdparty/local/lib64 -lCoin" SOQT_CFLAGS=-I/3rdparty/local/include SOQT_LIBS="-L/3rdparty/local/lib64 -lSoQt"
+# do not run examples here it is done later in the test image
 
 
 
@@ -61,24 +64,28 @@ COPY --from=buildImage /mbsim-env/local /mbsim-env/local
 # make some test in the run image (this image is throw away after the tests)
 FROM intermediateImage
 
+# configuration
+ARG JOBS=4
+
+# copy over examples dir
+COPY --from=buildImage /mbsim-env/mbsim/examples /mbsim-env/mbsim/examples
+
+# configure pkg-config
+ENV PKG_CONFIG_PATH=/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfig:/mbsim-env/local/lib/pkgconfig:/mbsim-env/local/lib64/pkgconfig
+
 # install everything and configure for X11 tests
-RUN yum install -y tigervnc-server
+RUN yum install -y \
+  h5py \
+  tigervnc-server \
+  && yum clean all
+
+# run basic examples but no source code example and run GUI tests
+WORKDIR /mbsim-env
+# MISSING we should run the examples with --checkGUIs options but this does not work sometimes for a unknown reason
+# (simulations hang)
+RUN /mbsim-env/mbsim/examples/runexamples.py -j $JOBS --filter "'basic' in labels and not src" /mbsim-env/mbsim/examples
+# MISSING as a workaround we test now the GUI tools by hand
 ENV DISPLAY=:0
-
-# test command line tools
-RUN mbxmlutilspp
-RUN mbsimflatxml
-RUN mbsimxml
-RUN mbxmlutilsvalidate
-RUN mbsimCreateFMU
-RUN h5dumpserie
-RUN h5flushserie
-RUN h5lsserie
-RUN mbsimgui -h
-RUN openmbv -h
-RUN h5plotserie -h
-
-# test X11 tools
 RUN vncserver :0 -SecurityTypes None && \
   mbsimgui --autoExit && \
   openmbv --autoExit && \

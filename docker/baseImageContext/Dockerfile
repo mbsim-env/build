@@ -13,9 +13,10 @@ ENV LD_LIBRARY_PATH=/3rdparty/local/lib:/3rdparty/local/lib64:/mbsim-env/local/l
     XDG_RUNTIME_DIR=/run/user/$UID
 
 # install everything from centos7 needed to run mbsim-env tools
-RUN yum -y install epel-release
+RUN yum -y install epel-release && yum clean all
 RUN yum -y install \
   hdf5 \
+  numpy \
   boost-regex \
   xerces-c \
   lapack \
@@ -29,7 +30,13 @@ RUN yum -y install \
   xkeyboard-config \
   mesa-dri-drivers \
   xorg-x11-fonts-Type1 \
-  urw-fonts
+  urw-fonts \
+  octave \
+  && yum clean all
+# fix octave 3.8.2: it is not initializing when runnig without a DISPLAY
+RUN sed -re "s/\<__have_fltk__ *\( *\) *&& *have_window_system *\( *\)/have_window_system () \&\& __have_fltk__ ()/" \
+  /usr/lib64/octave/3.8.2/oct/x86_64-redhat-linux-gnu/PKG_ADD > /tmp/mbsim-env.tmp && \
+  mv -f /tmp/mbsim-env.tmp /usr/lib64/octave/3.8.2/oct/x86_64-redhat-linux-gnu/PKG_ADD
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
