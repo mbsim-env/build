@@ -5,10 +5,10 @@ SCRIPTDIR=$(readlink -f $(dirname $0))
 # help
 for A in "$@"; do
   if [ "$A" == "-h" -o "$A" == "--help" ]; then
-    echo "This script creates the Docker image mbsimenv/mbsim-env-build from scratch."
+    echo "This script creates the Docker image mbsimenv/mbsim-env-base from scratch."
     echo "Calling this script it not needed by mbsim-env users or developers since the image is available on Docker-Hub."
     exit 0
   fi
 done
 
-sudo docker build -t mbsimenv/mbsim-env-build "$SCRIPTDIR"/buildImageContext
+sudo docker build -t mbsimenv/mbsim-env-base "$SCRIPTDIR"

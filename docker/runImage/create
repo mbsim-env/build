@@ -11,4 +11,4 @@ for A in "$@"; do
   fi
 done
 
-sudo docker build -t mbsimenv/mbsim-env-run "$SCRIPTDIR"/runImageContext
+sudo docker build -t mbsimenv/mbsim-env-run "$SCRIPTDIR"
