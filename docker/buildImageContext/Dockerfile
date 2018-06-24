@@ -4,6 +4,7 @@ FROM mbsimenv/mbsim-env-base AS centosBaseImage
 
 # install everything needed to build mbsim-env tools from centos7
 RUN yum -y install \
+  tigervnc-server \
   git \
   make \
   gcc-c++ \
@@ -70,11 +71,13 @@ ENV PKG_CONFIG_PATH=/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfi
 WORKDIR /3rdparty
 
 # swig
-RUN wget -q -O - https://kent.dl.sourceforge.net/project/swig/swig/swig-$SWIGVERSION/swig-$SWIGVERSION.tar.gz | tar -xz
+RUN set -o pipefail && \
+  wget -q -O - https://kent.dl.sourceforge.net/project/swig/swig/swig-$SWIGVERSION/swig-$SWIGVERSION.tar.gz | tar -xz
 RUN mkdir /3rdparty/swig-build
 
 # qwt
-RUN wget -q -O - https://kent.dl.sourceforge.net/project/qwt/qwt/$QWTVERSION/qwt-$QWTVERSION.tar.bz2 | tar -xj
+RUN set -o pipefail && \
+  wget -q -O - https://kent.dl.sourceforge.net/project/qwt/qwt/$QWTVERSION/qwt-$QWTVERSION.tar.bz2 | tar -xj
 # fix the install dir (this cannot be done via options in qwt)
 RUN sed -re "s~^( *QWT_INSTALL_PREFIX *= *).*~\1/3rdparty/local~" qwt-$QWTVERSION/qwtconfig.pri > qwt-$QWTVERSION/qwtconfig.pri.new && \
   mv -f qwt-$QWTVERSION/qwtconfig.pri.new qwt-$QWTVERSION/qwtconfig.pri
