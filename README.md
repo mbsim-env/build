@@ -36,14 +36,14 @@ releases provided by [MBSim-Env](https://www.mbsim-env.de).
 To run it using Docker the following needs to be done once.
 
 1. Install Docker. Please look on [Docker](https://www.docker.com/) or your Linux distribution how to do this.
-On Linux it is also recommended to enable Docker via "sudo".
+On Linux it is also recommended to enable Docker via "sudo" (It's even required to run the scripts of this repo as a none-privileged user).
 2. Clone or download this repository to your preferred directory (`<mypath>`) which should have enough 
 space to hold all your MBSim-Env models and data.
 3. Configure your shell to add `<mypath>/build/docker/runScripts` to your `PATH`.
 This is not really required but recommended.
-4. Download the Docker image [mbsimenv/mbsim-env-run](https://hub.docker.com/r/mbsimenv/mbsim-env-run/) using the command `sudo docker pull mbsimenv/mbsim-env-run`.
 
 You are done. Now start the GUI of MBSim by running `mbsimgui` in the above configured shell.
+Note that this will take a long time if started the first time since a large Docker image is downloaded.
 All other MBSim-Env commands like `mbsimxml`, `openmbv` or `h5plotserie` are also available.
 
 ### Building and Running MBSim-Env Tools as a Developer
@@ -56,15 +56,14 @@ That's why we provide Docker images to build and run MBSim-Env easily in the typ
 To prepare this the following needs to be done once.
 
 1. Install Docker. Please look on [Docker](https://www.docker.com/) or your Linux distribution how to do this.
-On Linux it is also recommended to enable Docker via "sudo".
+On Linux it is also recommended to enable Docker via "sudo" (It's even required to run the scripts of this repo as a none-privileged user).
 2. Clone this Git repository to your preferred directory (`<mypath>`) which should have enough 
 space to hold the MBSim-Env source code the build directories as well as all your MBSim-Env models and data.
 3. Configure your shell to add `<mypath>/build/docker/buildScripts` to your `PATH`.
 This is not really required but recommended.
-4. Download the Docker image [mbsimenv/mbsim-env-build](https://hub.docker.com/r/mbsimenv/mbsim-env-build/) using the command `sudo docker pull mbsimenv/mbsim-env-build`.
-5. Call `build` in the above configured shell. This will clone all MBSim-Env repositories, it not already done manually,
-to `<mypath>/fmatvec`, `<mypath>/hdf5serie`, ... After that it will completely build MBSim-Env, so this may take some time.
-For the current progress see the output of the script or view `file://<mypath>/build_report/result_current/index.html`
+4. Call `build` in the above configured shell. This will clone all MBSim-Env repositories, it not already done manually,
+to `<mypath>/fmatvec`, `<mypath>/hdf5serie`, ... Then it will download a large Docker image of MBSim-Env. After that it will completely build MBSim-Env, so this all may take some time.
+For the current progress of building MBSim-Env see the output of the script or view `file://<mypath>/build_report/result_current/index.html`
 via your browser.
 
 You are done. Now start the GUI of MBSim by running `mbsimgui` in the above configured shell.
