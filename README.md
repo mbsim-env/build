@@ -61,7 +61,7 @@ On Linux it is also recommended to enable Docker via "sudo" (It's even required 
 space to hold the MBSim-Env source code the build directories as well as all your MBSim-Env models and data.
 3. Configure your shell to add `<mypath>/build/docker/buildScripts` to your `PATH`.
 This is not really required but recommended.
-4. Call `build` in the above configured shell. This will clone all MBSim-Env repositories, it not already done manually,
+4. Call `build` in the above configured shell. This will clone all MBSim-Env repositories, if not already done manually,
 to `<mypath>/fmatvec`, `<mypath>/hdf5serie`, ... Then it will download a large Docker image of MBSim-Env. After that it will completely build MBSim-Env, so this all may take some time.
 For the current progress of building MBSim-Env see the output of the script or view `file://<mypath>/build_report/result_current/index.html`
 via your browser.
