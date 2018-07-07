@@ -30,14 +30,14 @@ if [ ! -d $MBSIMENVDIR/mbsim ]; then
   (cd $MBSIMENVDIR; git clone https://github.com/mbsim-env/mbsim)
 fi
 
-# split args to normal, --passToConfigure and --passToRunExamples args
+# split args to normal, --passToConfigure and --passToRunexamples args
 ADDTOARGS=normal
 NORMALARGS=()
 CONFIGUREARGS=()
 RUNEXAMPLEARGS=()
 while [ $# -ge 1 ]; do
   test "$1" == "--passToConfigure" && { ADDTOARGS=configure; shift; continue; }
-  test "$1" == "--passToRunExamples" && { ADDTOARGS=runExamples; shift; continue; }
+  test "$1" == "--passToRunexamples" && { ADDTOARGS=runExamples; shift; continue; }
   if [ $ADDTOARGS == "normal" ]; then
     NORMALARGS+=("$1")
   elif [ $ADDTOARGS == "configure" ]; then
@@ -48,7 +48,7 @@ while [ $# -ge 1 ]; do
   shift
 done
 if [ ${#RUNEXAMPLEARGS[*]} -gt 0 ]; then
-  RUNEXAMPLEARGS=(--passToRunExamples "${RUNEXAMPLEARGS[@]}")
+  RUNEXAMPLEARGS=(--passToRunexamples "${RUNEXAMPLEARGS[@]}")
 fi
 
 # run using mbsbd with all required args all all user args appended

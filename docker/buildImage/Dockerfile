@@ -30,13 +30,13 @@ RUN yum -y install \
   freetype-devel \
   gl2ps-devel \
   libcurl-devel \
-  mesa-libGLU-devel \
   qrupdate-devel \
   suitesparse-devel \
   file \
   qt5-qtwebkit-devel \
   libarchive-devel \
   ccache \
+  mesa-libGLU-devel \
   && yum clean all
 
 
@@ -54,7 +54,7 @@ ARG COINBRANCH=7e191c8f6a31
 ARG SOQTBRANCH=945ec22f6219
 ARG CASADIBRANCH=470b5b3f0cc4044e3cb0eb20dfb2a85e247c62a6
 
-# install additional packaged needed to build the tool not part of centos7
+# install additional packaged needed to build the tools not part of centos7
 RUN yum -y install \
   wget \
   bzip2 \
@@ -65,7 +65,6 @@ RUN yum -y install \
 
 # configure path and envvar for the 3rd party tools
 RUN mkdir /3rdparty
-ENV PKG_CONFIG_PATH=/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfig
 
 # get tools to build
 WORKDIR /3rdparty
@@ -148,9 +147,6 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/buildImageContext" \
   org.label-schema.vendor="MBSim-Environment" \
   org.label-schema.docker.params="SWIGVERSION=swig verion to use,CASADIBRANCH=CasADi branch to use,QWTVERSION=QWT version to use,COINBRANCH=Coin3D branch to use,SOQTBRANCH=SoQt version to use"
-
-# configure pkg-config
-ENV PKG_CONFIG_PATH=/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfig:/mbsim-env/local/lib/pkgconfig:/mbsim-env/local/lib64/pkgconfig
 
 # copy over the local dir from the 3rd party build stage
 COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local

@@ -70,9 +70,6 @@ ARG JOBS=4
 # copy over examples dir
 COPY --from=buildImage /mbsim-env/mbsim/examples /mbsim-env/mbsim/examples
 
-# configure pkg-config
-ENV PKG_CONFIG_PATH=/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfig:/mbsim-env/local/lib/pkgconfig:/mbsim-env/local/lib64/pkgconfig
-
 # install everything and configure for X11 tests
 RUN yum install -y \
   h5py \
@@ -81,6 +78,7 @@ RUN yum install -y \
 
 # run basic examples but no source code example and run GUI tests
 WORKDIR /mbsim-env
+ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/mbsim-env/local/lib/pkgconfig
 # MISSING we should run the examples with --checkGUIs options but this does not work sometimes for a unknown reason
 # (simulations hang)
 RUN /mbsim-env/mbsim/examples/runexamples.py -j $JOBS --filter "'basic' in labels and not src" /mbsim-env/mbsim/examples
