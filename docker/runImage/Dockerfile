@@ -44,7 +44,7 @@ WORKDIR /mbsim-env
 # enable swig interface to mbsim
 ENV MBSIM_SWIG=1
 # build
-RUN /mbsim-env/mbsim/misc/BuildService/scripts/build.py --sourceDir /mbsim-env --binSuffix=-build --prefix /mbsim-env/local -j $JOBS --disableUpdate --disableRunExamples --passToConfigure --disable-static --enable-python --with-qwt-inc-prefix=/3rdparty/local/include --with-qwt-lib-prefix=/3rdparty/local/lib --with-qwt-lib-name=qwt --with-qmake=qmake-qt5 COIN_CFLAGS=-I/3rdparty/local/include COIN_LIBS="-L/3rdparty/local/lib64 -lCoin" SOQT_CFLAGS=-I/3rdparty/local/include SOQT_LIBS="-L/3rdparty/local/lib64 -lSoQt"
+RUN /mbsim-env/build/buildScripts/build.py --sourceDir /mbsim-env --binSuffix=-build --prefix /mbsim-env/local -j $JOBS --disableUpdate --disableRunExamples --passToConfigure --disable-static --enable-python --with-qwt-inc-prefix=/3rdparty/local/include --with-qwt-lib-prefix=/3rdparty/local/lib --with-qwt-lib-name=qwt --with-qmake=qmake-qt5 COIN_CFLAGS=-I/3rdparty/local/include COIN_LIBS="-L/3rdparty/local/lib64 -lCoin" SOQT_CFLAGS=-I/3rdparty/local/include SOQT_LIBS="-L/3rdparty/local/lib64 -lSoQt"
 # do not run examples here it is done later in the test image
 
 
@@ -98,12 +98,13 @@ FROM intermediateImage
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
-  org.label-schema.name="mbsim-env" \
+  org.label-schema.name="mbsim-env-run" \
   org.label-schema.description="All MBSim-Environment tools for runing and postprocessing simulations." \
   org.label-schema.url="https://www.mbsim-env.de" \
-  org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/runImageContext" \
+  org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/runImage" \
   org.label-schema.vendor="MBSim-Environment" \
-  org.label-schema.docker.cmd="docker run --rm --user $(id -u):$(id -g) -e DISPLAY -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority --net=host mbsimenv/mbsim-env-run"
+  org.label-schema.docker.params="JOBS=number of parallel jobs,FMATVECBRANCH=fmatvec branch to use,HDF5SERIEBRANCH=hdf5serie branch to use,OPENMBVBRANCH=openmbv branch to use,MBSIMBRANCH=mbsim branch to use,BUILDBRANCH=build branch to use" \
+  org.label-schema.docker.cmd="docker run --rm --user $(id -u):$(id -g) -e HOME=/tmp -v \"$MBSIMENVDIR\":/mount -w \"$CURDIR\" -e MBSIM_SWIG=$MBSIM_SWIG -e DISPLAY -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority --net=host mbsimenv/mbsim-env-run"
  
 # per default run mbsimgui
 CMD ["mbsimgui"]
