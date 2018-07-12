@@ -582,7 +582,7 @@ def main():
 
   # update build system state
   if args.buildSystemRun:
-    sys.path.append(SCRIPTDIR+'/../buildSystem/scripts')
+    sys.path.append(scriptdir+'/../buildSystem/scripts')
     import buildSystemState
     buildSystemState.update(args.buildType+"-build", "Build Failed: "+args.buildType,
                             "%d of %d build parts failed."%(nrFailed, nrRun),
