@@ -25,6 +25,6 @@ if libc.prctl(PR_SET_PDEATHSIG, signal.SIGUSR1, 0, 0, 0)!=0:
   raise auth_plugins.AuthenticationError(log_msg="Cannot call prctl.")
 
 p=subprocess.Popen(['/opt/firejail-local/bin/firejail',
-  '--profile=/home/mbsim/SCRIPTS/mbsim/misc/BuildService/scripts/mbsimwebapp-firejail.profile', '--',
-  '/usr/bin/python', '/usr/local/mbsim/SCRIPTS/mbsim/misc/BuildService/scripts/mbsimwebapp_service_run.py']+sys.argv[1:])
+  '--profile=/home/mbsim/build/buildSystem/scripts/mbsimwebapp-firejail.profile', '--',
+  '/usr/bin/python', '/usr/local/mbsim/build/buildSystem/scripts/mbsimwebapp_service_run.py']+sys.argv[1:])
 p.wait()

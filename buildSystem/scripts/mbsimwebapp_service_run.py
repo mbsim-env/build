@@ -16,7 +16,7 @@ def run(token, display):
   #   /home/mbsim/win64-dailyrelease /usr/local/mbsim/win64-dailyrelease none bind,ro
   #   /home/mbsim/linux64-ci /usr/local/mbsim/linux64-ci none bind,ro
   #   /home/mbsim/3rdparty /usr/local/mbsim/3rdparty none bind,ro
-  #   /home/mbsim/SCRIPTS /usr/local/mbsim/SCRIPTS none bind,ro
+  #   /home/mbsim/build /usr/local/mbsim/build none bind,ro
   XAUTHTMPL='/tmp/mbsimwebapp-xauth-%d.'+getpass.getuser()
   PIDFILE='/tmp/mbsimwebapp-pid/%d.'+getpass.getuser()
 
