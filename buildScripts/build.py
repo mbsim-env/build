@@ -1061,7 +1061,7 @@ def runexamples(mainFD):
   command.extend(["--currentID", str(currentID)])
   command.extend(["--timeID", timeID.strftime("%Y-%m-%dT%H:%M:%S")])
   if args.buildSystemRun:
-    command.extend(["--buildSystemRun", scriptdir])
+    command.extend(["--buildSystemRun", scriptdir+"/../buildSystem/scripts"])
   if args.coverage:
     command.extend(["--coverage", args.sourceDir+":"+args.binSuffix+":"+args.prefix])
   if args.webapp:
