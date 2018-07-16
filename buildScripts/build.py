@@ -217,6 +217,8 @@ def mainDocPage():
   print('  <link rel="icon" href="/mbsim/html/mbsimenv.ico" type="image/x-icon"/>', file=docFD)
   print('</head>', file=docFD)
   print('<body style="margin:0.5em">', file=docFD)
+  print('<script type="text/javascript" src="https://code.jquery.com/jquery-2.1.4.min.js"> </script>', file=docFD)
+  print('<script type="text/javascript" src="/mbsim/html/cookiewarning.js"> </script>', file=docFD)
   print('<h1>Documentation of the MBSim-Environment</h1>', file=docFD)
   print('<div class="panel panel-success">', file=docFD)
   print('  <div class="panel-heading"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;XML Documentation</div>', file=docFD)
@@ -431,6 +433,7 @@ def main():
 </head>
 <body style="margin:0.5em">
 <script type="text/javascript" src="https://cdn.datatables.net/s/bs-3.3.5/jq-2.1.4,dt-1.10.10/datatables.min.js"> </script>
+<script type="text/javascript" src="/mbsim/html/cookiewarning.js"> </script>
 <script type="text/javascript" src="../../../html/mbsimBuildServiceClient.js"></script>
 <script type="text/javascript">
   $(document).ready(function() {
