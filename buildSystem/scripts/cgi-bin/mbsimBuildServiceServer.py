@@ -288,7 +288,10 @@ try:
     if action=="/getuser" and method=="GET":
       if 'HTTP_COOKIE' in os.environ:
         c=Cookie.SimpleCookie(os.environ["HTTP_COOKIE"])
-        sessionid=c['mbsimenvsessionid'].value
+        if 'mbsimenvsessionid' in c:
+          sessionid=c['mbsimenvsessionid'].value
+        else
+          sessionid=None
       else:
         sessionid=None
       if sessionid==None:
