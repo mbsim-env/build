@@ -290,7 +290,7 @@ try:
         c=Cookie.SimpleCookie(os.environ["HTTP_COOKIE"])
         if 'mbsimenvsessionid' in c:
           sessionid=c['mbsimenvsessionid'].value
-        else
+        else:
           sessionid=None
       else:
         sessionid=None
