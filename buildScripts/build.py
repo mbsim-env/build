@@ -905,7 +905,7 @@ def make(tool, mainFD):
         errStr=errStr+"make failed; "
       if not args.disableMakeInstall:
         print("\n\nRUNNING make install\n", file=makeFD); makeFD.flush()
-        if simplesandbox.call(["make", "-k", "install"], envvar=simplesandboxEnvvars,
+        if simplesandbox.call(["make", "-k", "-j", str(args.j), "install"], envvar=simplesandboxEnvvars,
                               shareddir=[".", args.prefix if args.prefix!=None else args.prefixAuto],
                               stderr=subprocess.STDOUT, stdout=makeFD, buildSystemRun=args.buildSystemRun)!=0:
           errStr=errStr+"make install failed; "
