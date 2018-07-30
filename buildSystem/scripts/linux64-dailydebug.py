@@ -121,5 +121,5 @@ build.setStatus(commitidfull, "success" if ret==0 else "failure", currentID, tim
       "linux64-dailydebug-valgrind", endTime)
 
 # build doc
-if subprocess.call([SCRIPTDIR+"/builddoc.py"])!=0:
+if subprocess.call([SCRIPTDIR+"/builddoc.py", "/var/www/html/mbsim/buildsystemstate"])!=0:
   print("builddoc.py failed.")

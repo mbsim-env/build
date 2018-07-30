@@ -80,6 +80,7 @@ def parseArguments():
   cfgOpts.add_argument("--staticCodeAnalyzis", action="store_true", help='Enable static code analyzis using LLVM Clang Analyzer.')
   cfgOpts.add_argument("--webapp", action="store_true", help='Just passed to runexamples.py.')
   cfgOpts.add_argument("--buildFailedExit", default=None, type=int, help='Define the exit code when the build fails - e.g. use --buildFailedExit 125 to skip a failed build when running as "git bisect run".')
+  cfgOpts.add_argument("--stateDir", default="/var/www/html/mbsim/buildsystemstate", type=str, help='www state directory used for --buildSystemRun.')
   
   outOpts=argparser.add_argument_group('Output Options')
   outOpts.add_argument("--reportOutDir", default="build_report", type=str, help="the output directory of the report")
@@ -587,7 +588,7 @@ def main():
   if args.buildSystemRun:
     sys.path.append(scriptdir+'/../buildSystem/scripts')
     import buildSystemState
-    buildSystemState.update(args.buildType+"-build", "Build Failed: "+args.buildType,
+    buildSystemState.update(args.stateDir, args.buildType+"-build", "Build Failed: "+args.buildType,
                             "%d of %d build parts failed."%(nrFailed, nrRun),
                             args.url+"/result_%010d"%(currentID)+"/index.html",
                             nrFailed, nrRun)

@@ -7,6 +7,9 @@ import simplesandbox
 import buildSystemState
 import subprocess
 import datetime
+import sys
+
+stateDir=sys.argv[1]
 
 scriptdir=os.path.dirname(os.path.realpath(__file__))
 
@@ -35,6 +38,6 @@ for texMain in mainFiles:
   os.chdir(curdir)
 f.close()
 
-buildSystemState.update("build-manuals", "Building Manuals Failed",
+buildSystemState.update(stateDir, "build-manuals", "Building Manuals Failed",
                         str(nrDocFailed)+" of "+str(len(mainFiles))+" manuals failed to build.",
                         "https://www.mbsim-env.de/mbsim/doc/", nrDocFailed, len(mainFiles))

@@ -7,9 +7,7 @@ import fcntl
 import hashlib
 import base64
 
-stateDir='/var/www/html/mbsim/buildsystemstate'
-
-def update(buildType, title, content, link, nrFailed, nrRun):
+def update(stateDir, buildType, title, content, link, nrFailed, nrRun):
 
   # update build system state
   createStateSVGFile(stateDir+"/"+buildType+".nrFailed.svg", str(nrFailed), "#5cb85c" if nrFailed==0 else "#d9534f")
