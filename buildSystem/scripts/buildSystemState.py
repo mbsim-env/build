@@ -6,6 +6,7 @@ import datetime
 import fcntl
 import hashlib
 import base64
+import os.path
 
 def update(stateDir, buildType, title, content, link, nrFailed, nrRun):
 
@@ -22,6 +23,17 @@ def update(stateDir, buildType, title, content, link, nrFailed, nrRun):
     # read feed
     fd=open(stateDir+'/.failures.atom.xml.lock', 'w') # open/create lockfile
     fcntl.lockf(fd, fcntl.LOCK_EX) # lock lockfile
+    if not os.path.isfile(stateDir+'/failures.atom.xml'):
+      # create the file if it does not exist
+      with open(stateDir+'/failures.atom.xml', "w") as f:
+        f.write(
+'''<feed xmlns="http://www.w3.org/2005/Atom">
+  <author><name>MBSim-Env Build System</name></author>
+  <id>http://www.mbsim-env.de/atom/mbsim-env-build-system</id>
+  <link href="http://www.mbsim-env.de/mbsim/buildsystemstate/failures.atom.xml" rel="self" />
+  <title>MBSim-Env Build System Feeds</title>
+  <updated>2018-07-27T06:08:08Z</updated>
+</feed>''')
     tree=ET.parse(stateDir+'/failures.atom.xml') # read feed
     elefeed=tree.getroot() # get root element
 

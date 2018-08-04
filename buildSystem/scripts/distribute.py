@@ -42,14 +42,16 @@ def config():
   # enviroment variables
   if platform=="linux":
     os.environ["LD_LIBRARY_PATH"]="/home/mbsim/3rdparty/casadi3py-local-linux64/lib:"+\
-      "/home/mbsim/3rdparty/coin-soqt-bb-local-linux64/lib64:/home/mbsim/3rdparty/qwt-6.1.3-local-linux64/lib"
+      "/home/mbsim/3rdparty/coin-soqt-bb-local-linux64/lib64:/home/mbsim/3rdparty/qwt-6.1.3-local-linux64/lib"+\
+      (":"+os.environ["LD_LIBRARY_PATH"] if "LD_LIBRARY_PATH" in os.environ else "")
   if platform=="win":
     os.environ["WINEPATH"]="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/home/mbsim/3rdparty/lapack-local-win64/bin;"+ \
       "/home/mbsim/3rdparty/xerces-c-local-win64/bin;/home/mbsim/3rdparty/casadi3py-local-win64/lib;"+ \
       "/home/mbsim/win64-dailyrelease/local/bin;/home/mbsim/3rdparty/octave-local-win64/bin;"+ \
       "/home/mbsim/3rdparty/hdf5-local-win64/bin;/home/mbsim/3rdparty/libarchive-local-win64/bin;"+\
       "/home/mbsim/3rdparty/qwt-6.1.3-local-win64/lib;/home/mbsim/3rdparty/coin-soqt-bb-local-win64/bin;"+\
-      "/home/mbsim/3rdparty/python-win64;/home/mbsim/3rdparty/python-win64/Lib/site-packages/numpy/core"
+      "/home/mbsim/3rdparty/python-win64;/home/mbsim/3rdparty/python-win64/Lib/site-packages/numpy/core"+\
+      (";"+os.environ["WINEPATH"] if "WINEPATH" in os.environ else "")
 
 
 
@@ -94,7 +96,8 @@ def addFileToDist(name, arcname, addDepLibs=True):
   elif os.path.isfile(name):
     # file type
     content=subprocess.check_output(["file", name]).decode('utf-8')
-    if re.search('ELF [0-9]+-bit LSB', content)!=None or re.search('PE32\+? executable', content)!=None:
+    if (platform=="linux" and re.search('ELF [0-9]+-bit LSB', content)!=None) or \
+       (platform=="win"   and re.search('PE32\+? executable', content)!=None):
       # binary file
       # fix rpath (remove all absolute componentes from rpath; delete all RUNPATH)
       basename=os.path.basename(name)
@@ -403,8 +406,8 @@ export OCTAVE_HOME="$INSTDIR"
 export LD_LIBRARY_PATH="$INSTDIR/lib"
 $INSTDIR/bin/.octave-3.8.2.envvar "$@"
 ''', "mbsim-env/bin/octave", True)
-    addFileToDist("/usr/bin/octave-3.8.2", "mbsim-env/bin/.octave-3.8.2.envvar")
-    addFileToDist("/usr/bin/octave-cli-3.8.2", "mbsim-env/bin/octave-cli-3.8.2")
+    addFileToDist("/usr/bin/octave", "mbsim-env/bin/.octave-3.8.2.envvar")
+    addFileToDist("/usr/bin/octave-cli", "mbsim-env/bin/octave-cli-3.8.2")
   if platform=="win":
     addFileToDist("/home/mbsim/3rdparty/octave-local-win64/bin/octave-3.8.2.exe", "mbsim-env/bin/octave.exe")
     addFileToDist("/home/mbsim/3rdparty/octave-local-win64/bin/octave-cli-3.8.2.exe", "mbsim-env/bin/octave-cli-3.8.2.exe")
@@ -415,7 +418,12 @@ def addPython():
   print("Add python casadi files")
 
   if platform=="linux":
-    addFileToDist("/home/mbsim/3rdparty/casadi3py-local-linux64/python2.7/site-packages/casadi", "mbsim-env/lib64/python2.7/site-packages/casadi")
+    if os.path.isdir("/home/mbsim/3rdparty/casadi3py-local-linux64/python2.7/site-packages/casadi"):
+      addFileToDist("/home/mbsim/3rdparty/casadi3py-local-linux64/python2.7/site-packages/casadi",
+                    "mbsim-env/lib64/python2.7/site-packages/casadi")
+    else:
+      addFileToDist("/3rdparty/local/python2.7/site-packages/casadi",
+                    "mbsim-env/lib64/python2.7/site-packages/casadi")
   if platform=="win":
     addFileToDist("/home/mbsim/3rdparty/casadi3py-local-win64/python2.7/site-packages/casadi", "mbsim-env/Lib/site-packages/casadi")
 

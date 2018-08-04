@@ -1,0 +1,34 @@
+#!/bin/bash
+
+SCRIPTDIR=$(readlink -f $(dirname $0))
+TAG=latest
+
+# args
+ARGS=()
+while [ $# -ge 1 ]; do
+  # help
+  if [ "$1" == "-h" -o "$1" == "--help" ]; then
+    echo "This script creates the Docker image mbsimenv/mbsim-env-autobuild from scratch."
+    echo "Calling this script it not needed by mbsim-env users or developers since the image is available on Docker-Hub."
+    echo "The argument -t <name> or --tag <name> sets the tag of the image to mbsimenv/mbsim-env-autobuild:<name>."
+    echo "All other arguments to this script are passed to the docker build command with a default tag-name mbsimenv/mbsim-env-autobuild."
+    exit 0
+  # tag
+  elif [ "$1" == "-t" -o "$1" == "--tag" ]; then
+    shift
+    TAG=$1
+  # others
+  else
+    ARGS+=("$1")
+  fi
+
+  shift
+done
+
+#mfmf sudo docker build -t mbsimenv/mbsim-env-autobuild:$TAG "${ARGS[@]}" "$SCRIPTDIR"
+sudo docker build -t mbsimenv/mbsim-env-autobuild:$TAG "${ARGS[@]}" /home/markus/docker/mbsim-env/build -f $SCRIPTDIR/Dockerfile
+
+#mfmf run in ~/docker/mbsim-env/build/docker/autoBuildImage the following for testing
+#mfmf linux64-ci ./create && sudo docker run --rm -v /home/markus/docker/tmp/mbsim-env:/mbsim-env -v /home/markus/docker/tmp/mbsim-ccache:/mbsim-ccache -v /home/markus/docker/tmp:/mbsim-report -v /home/markus/docker/tmp/mbsim-state:/mbsim-state -v /home/markus/docker/tmp/mbsim-config:/mbsim-config mbsimenv/mbsim-env-autobuild -j 8 --buildType linux64-ci
+#mfmf linux64-dailyrelease ./create && sudo docker run --rm -v /home/markus/docker/tmp/mbsim-env:/mbsim-env -v /home/markus/docker/tmp/mbsim-ccache:/mbsim-ccache -v /home/markus/docker/tmp:/mbsim-report -v /home/markus/docker/tmp/mbsim-state:/mbsim-state -v /home/markus/docker/tmp/mbsim-config:/mbsim-config mbsimenv/mbsim-env-autobuild -j 8 --buildType linux64-dailyrelease
+#mfmf linux64-dailydebug ./create && sudo docker run --rm -v /home/markus/docker/tmp/mbsim-env:/mbsim-env -v /home/markus/docker/tmp/mbsim-ccache:/mbsim-ccache -v /home/markus/docker/tmp:/mbsim-report -v /home/markus/docker/tmp/mbsim-state:/mbsim-state -v /home/markus/docker/tmp/mbsim-config:/mbsim-config mbsimenv/mbsim-env-autobuild -j 8 --buildType linux64-dailydebug --forceBuild --buildDoc --valgrindExamples --updateReferences xml/hierachical_modelling

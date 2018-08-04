@@ -4,6 +4,10 @@ FROM mbsimenv/mbsim-env-base AS centosBaseImage
 
 # install everything needed to build mbsim-env tools from centos7
 RUN yum -y install \
+  chrpath \
+  gdb \
+  valgrind \
+  lcov \
   tigervnc-server \
   git \
   make \
@@ -147,6 +151,9 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/buildImage" \
   org.label-schema.vendor="MBSim-Environment" \
   org.label-schema.docker.params="JOBS=number of parallel jobs,SWIGVERSION=swig verion to use,CASADIBRANCH=CasADi branch to use,QWTVERSION=QWT version to use,COINBRANCH=Coin3D branch to use,SOQTBRANCH=SoQt version to use"
+
+# serach pkg-config in mbsim local dir
+ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/mbsim-env/local/lib/pkgconfig:/mbsim-env/local/lib64/pkgconfig
 
 # copy over the local dir from the 3rd party build stage
 COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local
