@@ -8,16 +8,22 @@ import buildSystemState
 import subprocess
 import datetime
 import sys
+import shutil
 
 stateDir=sys.argv[1]
+inDir=sys.argv[2]
+outDir=sys.argv[3]
+
+if not os.path.isdir(outDir):
+  os.makedirs(outDir)
 
 scriptdir=os.path.dirname(os.path.realpath(__file__))
 
-os.chdir("/var/www/html/mbsim/html/doc")
+os.chdir(inDir)
 curdir=os.getcwd()
 
 nrDocFailed=0
-f=open("/var/www/html/mbsim/doc_manualsbuild.log", "w")
+f=open(outDir+"/manualsbuild.log", "w")
 print("Logfile of the build process of the manuals. Generated on "+str(datetime.datetime.now()), file=f)
 print("", file=f)
 f.flush()
@@ -33,6 +39,7 @@ for texMain in mainFiles:
 
   if simplesandbox.call([scriptdir+"/builddocsb.py"], shareddir=["."], stderr=subprocess.STDOUT, stdout=f, buildSystemRun=True)!=0:
     nrDocFailed+=1
+  shutil.copyfile("main.pdf", outDir+"/"+os.path.dirname(texMain)+".pdf")
   f.flush()
 
   os.chdir(curdir)
@@ -40,4 +47,4 @@ f.close()
 
 buildSystemState.update(stateDir, "build-manuals", "Building Manuals Failed",
                         str(nrDocFailed)+" of "+str(len(mainFiles))+" manuals failed to build.",
-                        "https://www.mbsim-env.de/mbsim/doc/", nrDocFailed, len(mainFiles))
+                        "https://www.mbsim-env.de/mbsim/html/manuals/", nrDocFailed, len(mainFiles))
