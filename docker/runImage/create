@@ -25,4 +25,4 @@ while [ $# -ge 1 ]; do
   shift
 done
 
-sudo docker build -t mbsimenv/mbsim-env-run:$TAG "${ARGS[@]}" "$SCRIPTDIR"
+sudo docker build -t mbsimenv/mbsim-env-run:$TAG "${ARGS[@]}" -f "$SCRIPTDIR/Dockerfile" "$SCRIPTDIR/../.."

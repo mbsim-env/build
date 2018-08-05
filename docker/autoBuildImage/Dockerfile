@@ -11,19 +11,10 @@ RUN yum install -y \
   texlive-pdftex-def \
   && yum clean all
 
-# configuration
-ARG BUILDBRANCH=master
-
-# checkout the build repo
-#mfmf do not use this code but the below for testing
-#RUN mkdir /mbsim-build
-#WORKDIR /mbsim-build
-#RUN git clone https://github.com/mbsim-env/build.git
-#WORKDIR /mbsim-build/build
-#RUN git checkout $BUILDBRANCH
-COPY docker /mbsim-build/build/docker
+# copy build repo
+COPY docker/autoBuildImage/entrypoint.py /mbsim-build/build/docker/autoBuildImage/entrypoint.py
 COPY buildScripts /mbsim-build/build/buildScripts
-COPY buildSystem /mbsim-build/build/buildSystem
+COPY buildSystem/scripts /mbsim-build/build/buildSystem/scripts
 
 # ccache
 ENV CCACHE_DIR=/mbsim-ccache
