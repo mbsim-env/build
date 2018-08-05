@@ -184,11 +184,11 @@ if args.valgrindExamples:
         "https://www.mbsim-env.de/mbsim/"+args.buildType+"/report/runexamples_valgrind_report/result_%010d/index.html"%(currentID),
         args.buildType+"-valgrind", endTime)
 
-#mfmf not working till now
-#if args.buildDoc:
-#  # build doc
-#  if subprocess.call(["/mbsim-build/build/buildSystem/scripts/builddoc.py", "/mbsim-state"])!=0:
-#    ret=ret+1
-#    print("builddoc.py failed.")
+if args.buildDoc:
+  # build doc
+  if subprocess.call(["/mbsim-build/build/buildSystem/scripts/builddoc.py", "/mbsim-state",
+                      "/mbsim-env/mbsim/manuals", "/mbsim-report/"+args.buildType+"/manuals"])!=0:
+    ret=ret+1
+    print("builddoc.py failed.")
 
 sys.exit(ret)

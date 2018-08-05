@@ -2,7 +2,14 @@
 FROM mbsimenv/mbsim-env-build
 
 # install software
-RUN yum install -y python-requests && yum clean all
+RUN yum install -y \
+  python-requests \
+  texlive-latex-bin-bin \
+  texlive-bibtex-bin \
+  texlive-collection-fontsrecommended \
+  texlive-subfigure \
+  texlive-pdftex-def \
+  && yum clean all
 
 # configuration
 ARG BUILDBRANCH=master

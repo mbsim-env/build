@@ -3,7 +3,6 @@
 from __future__ import print_function # to enable the print function for backward compatiblity with python2
 import os
 import glob
-import simplesandbox
 import buildSystemState
 import subprocess
 import datetime
@@ -13,6 +12,14 @@ import shutil
 stateDir=sys.argv[1]
 inDir=sys.argv[2]
 outDir=sys.argv[3]
+
+def buildLatex(f):
+  subprocess.check_call(["pdflatex", "-halt-on-error", "-file-line-error", "main.tex"], stderr=subprocess.STDOUT, stdout=f)
+  if len(glob.glob("*.bib"))>0:
+    subprocess.check_call(["bibtex", "main"], stderr=subprocess.STDOUT, stdout=f)
+  subprocess.check_call(["pdflatex", "-halt-on-error", "-file-line-error", "main.tex"], stderr=subprocess.STDOUT, stdout=f)
+  subprocess.check_call(["pdflatex", "-halt-on-error", "-file-line-error", "main.tex"], stderr=subprocess.STDOUT, stdout=f)
+  subprocess.check_call(["pdflatex", "-halt-on-error", "-file-line-error", "main.tex"], stderr=subprocess.STDOUT, stdout=f)
 
 if not os.path.isdir(outDir):
   os.makedirs(outDir)
@@ -37,9 +44,13 @@ for texMain in mainFiles:
   print("", file=f)
   f.flush()
 
-  if simplesandbox.call([scriptdir+"/builddocsb.py"], shareddir=["."], stderr=subprocess.STDOUT, stdout=f, buildSystemRun=True)!=0:
+  try:
+    buildLatex(f)
+    shutil.copyfile("main.pdf", outDir+"/"+os.path.dirname(texMain)+".pdf")
+  except subprocess.CalledProcessError as ex:
+    print(ex)
+    print(ex.output)
     nrDocFailed+=1
-  shutil.copyfile("main.pdf", outDir+"/"+os.path.dirname(texMain)+".pdf")
   f.flush()
 
   os.chdir(curdir)
@@ -48,3 +59,5 @@ f.close()
 buildSystemState.update(stateDir, "build-manuals", "Building Manuals Failed",
                         str(nrDocFailed)+" of "+str(len(mainFiles))+" manuals failed to build.",
                         "https://www.mbsim-env.de/mbsim/html/manuals/", nrDocFailed, len(mainFiles))
+
+sys.exit(nrDocFailed)
