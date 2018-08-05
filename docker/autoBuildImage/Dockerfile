@@ -25,3 +25,6 @@ ENV CCACHE_DIR=/mbsim-ccache
 CMD []
 # call this script when running the container
 ENTRYPOINT ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py"]
+
+#mfmf set user to avoid to build as root
+#mfmf secure this container since untrusted code is executed.
