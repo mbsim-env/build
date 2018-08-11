@@ -161,3 +161,6 @@ COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local
 # enable ccache (after all other things are done); note /mbsim-env is usually a persistent Docker volume
 ENV PATH=/usr/lib64/ccache:$PATH \
     CCACHE_DIR=/mbsim-env/.ccache
+
+# run bash per default
+CMD ["bash"]

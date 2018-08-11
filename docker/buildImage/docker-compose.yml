@@ -1,0 +1,5 @@
+version: "2"
+services:
+  mbsim-env-build:
+    image: mbsimenv/mbsim-env-build
+    build: .

@@ -92,3 +92,6 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/baseImage" \
   org.label-schema.vendor="MBSim-Environment" \
   org.label-schema.docker.params="JOBS=number of parallel jobs,MESAVERSION=mesa verion to use"
+
+# run bash per default
+CMD ["bash"]
