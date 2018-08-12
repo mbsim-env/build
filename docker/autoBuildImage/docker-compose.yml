@@ -1,12 +1,55 @@
 version: "2"
 services:
-  mbsim-env-autobuild:
+  mbsim-env-autobuild-linux64-ci:
     image: mbsimenv/mbsim-env-autobuild
     build:
       context: ../..
       dockerfile: docker/autoBuildImage/Dockerfile
+    # passed to default entrypoint to build linux64-ci     
+    command: ["--buildType", "linux64-ci"]
+    volumes:
+      - autobuild-mbsim-linux64-ci:/mbsim-env
+      - autobuild-report-linux64-ci:/mbsim-report
+      - autobuild-ccache:/mbsim-ccache
+      - autobuild-state:/mbsim-state
+      - autobuild-config:/mbsim-config
+  mbsim-env-autobuild-linux64-dailydebug:
+    image: mbsimenv/mbsim-env-autobuild
+    build:
+      context: ../..
+      dockerfile: docker/autoBuildImage/Dockerfile
+    # we change the entrypoint to build linux64-dailydebug including the special options for this build type.
+    # This way we can pass as arguments to docker-composre run the models which need a updated reference.
+    entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailydebug",
+                 "--buildDoc", "--valgrindExamples", "--updateReferences"]
+#    command: ["xml/hierachical_modelling"] #mfmf updateReferences comes from the webserver
+    volumes:
+      - autobuild-mbsim-linux64-dailydebug:/mbsim-env
+      - autobuild-report-linux64-dailydebug:/mbsim-report
+      - autobuild-ccache:/mbsim-ccache
+      - autobuild-state:/mbsim-state
+      - autobuild-config:/mbsim-config
+  mbsim-env-autobuild-linux64-dailyrelease:
+    image: mbsimenv/mbsim-env-autobuild
+    build:
+      context: ../..
+      dockerfile: docker/autoBuildImage/Dockerfile
+    # passed to default entrypoint to build linux64-dailyrelease     
+    command: ["--buildType", "linux64-dailyrelease"]
+    volumes:
+      - autobuild-mbsim-linux64-dailyrelease:/mbsim-env
+      - autobuild-report-linux64-dailyrelease:/mbsim-report
+      - autobuild-ccache:/mbsim-ccache
+      - autobuild-state:/mbsim-state
+      - autobuild-config:/mbsim-config
 
-#mfmf run in ~/docker/mbsim-env/build/docker/autoBuildImage the following for testing
-#mfmf linux64-ci ./create && sudo docker run --rm -v /home/markus/docker/tmp/mbsim-env:/mbsim-env -v /home/markus/docker/tmp/mbsim-ccache:/mbsim-ccache -v /home/markus/docker/tmp:/mbsim-report -v /home/markus/docker/tmp/mbsim-state:/mbsim-state -v /home/markus/docker/tmp/mbsim-config:/mbsim-config mbsimenv/mbsim-env-autobuild -j 8 --buildType linux64-ci
-#mfmf linux64-dailyrelease ./create && sudo docker run --rm -v /home/markus/docker/tmp/mbsim-env:/mbsim-env -v /home/markus/docker/tmp/mbsim-ccache:/mbsim-ccache -v /home/markus/docker/tmp:/mbsim-report -v /home/markus/docker/tmp/mbsim-state:/mbsim-state -v /home/markus/docker/tmp/mbsim-config:/mbsim-config mbsimenv/mbsim-env-autobuild -j 8 --buildType linux64-dailyrelease
-#mfmf linux64-dailydebug ./create && sudo docker run --rm -v /home/markus/docker/tmp/mbsim-env:/mbsim-env -v /home/markus/docker/tmp/mbsim-ccache:/mbsim-ccache -v /home/markus/docker/tmp:/mbsim-report -v /home/markus/docker/tmp/mbsim-state:/mbsim-state -v /home/markus/docker/tmp/mbsim-config:/mbsim-config mbsimenv/mbsim-env-autobuild -j 8 --buildType linux64-dailydebug --forceBuild --buildDoc --valgrindExamples --updateReferences xml/hierachical_modelling
+volumes:
+  autobuild-mbsim-linux64-ci:
+  autobuild-report-linux64-ci:
+  autobuild-mbsim-linux64-dailydebug:
+  autobuild-report-linux64-dailydebug:
+  autobuild-mbsim-linux64-dailyrelease:
+  autobuild-report-linux64-dailyrelease:
+  autobuild-ccache:
+  autobuild-state:
+  autobuild-config:
