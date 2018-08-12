@@ -9,6 +9,8 @@ RUN yum install -y \
   texlive-collection-fontsrecommended \
   texlive-subfigure \
   texlive-pdftex-def \
+  texlive-epstopdf-bin \
+  ghostscript \
   && yum clean all
 
 # ccache

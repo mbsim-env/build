@@ -242,8 +242,8 @@ def mainDocPage():
   docFD.close()
 
 # read config file
-def readConfigFile():
-  configFilename=pj(args.configDir, "mbsimBuildService.conf")
+def readConfigFile(configDir):
+  configFilename=pj(configDir, "mbsimBuildService.conf")
   if not os.path.isfile(configFilename):
     return None
   fd=open(configFilename, 'r')
@@ -252,7 +252,7 @@ def readConfigFile():
   fcntl.lockf(fd, fcntl.LOCK_UN)
   fd.close()
   return config
-def setStatus(commitidfull, state, currentID, timeID, target_url, buildType, endTime=None):
+def setStatus(configDir, commitidfull, state, currentID, timeID, target_url, buildType, endTime=None):
   import requests
   for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
     # create github status (for linux64-ci build on all master branch)
@@ -277,7 +277,7 @@ def setStatus(commitidfull, state, currentID, timeID, target_url, buildType, end
     else:
       raise RuntimeError("Unknown state "+state+" provided")
     # call github api
-    config=readConfigFile()
+    config=readConfigFile(configDir)
     if config==None:
       print("Warning: Cannot create github status on repo "+repo+": No configuration file with github credential found.")
       return
@@ -485,7 +485,7 @@ def main():
 
   # set status on commit
   if args.buildSystemRun:
-    setStatus(commitidfull, "pending", currentID, timeID,
+    setStatus(args.configDir, commitidfull, "pending", currentID, timeID,
       "https://www.mbsim-env.de/mbsim/%s/report/result_%010d/index.html"%(args.buildType, currentID), args.buildType)
 
   # clean prefix dir
@@ -593,7 +593,7 @@ def main():
 
   # update status on commitid
   if args.buildSystemRun:
-    setStatus(commitidfull, "success" if nrFailed+abs(runExamplesErrorCode)==0 else "failure", currentID, timeID,
+    setStatus(args.configDir, commitidfull, "success" if nrFailed+abs(runExamplesErrorCode)==0 else "failure", currentID, timeID,
       "https://www.mbsim-env.de/mbsim/%s/report/result_%010d/index.html"%(args.buildType, currentID), args.buildType, endTime)
 
   if nrFailed>0:

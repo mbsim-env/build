@@ -150,7 +150,7 @@ if args.valgrindExamples:
   timeID=datetime.datetime(timeID.year, timeID.month, timeID.day, timeID.hour, timeID.minute, timeID.second)
   with codecs.open("/mbsim-report/"+args.buildType+"/report/result_current/repoState.json", "r", encoding="utf-8") as f:
     commitidfull=json.load(f)
-  build.setStatus(commitidfull, "pending", currentID, timeID,
+  build.setStatus("/mbsim-config", commitidfull, "pending", currentID, timeID,
         "https://www.mbsim-env.de/mbsim/"+args.buildType+"/report/runexamples_valgrind_report/result_%010d/index.html"%(currentID),
         args.buildType+"-valgrind")
   # update
@@ -162,7 +162,7 @@ if args.valgrindExamples:
   valgrindEnv=os.environ
   valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
   # build
-  coverage = ["--coverage", "/mbsim-env::/mbsim-env/local"] if "--coverage" in ARGS else []
+  coverage = ["--coverage", "/mbsim-env:-build:/mbsim-env/local"] if "--coverage" in ARGS else []
   localRet=subprocess.call(["./runexamples.py", "--rotate", "20", "-j", str(args.jobs)]+coverage+["--reportOutDir",
             "/mbsim-report/"+args.buildType+"/report/runexamples_valgrind_report", "--url",
             "https://www.mbsim-env.de/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
@@ -180,7 +180,7 @@ if args.valgrindExamples:
   # set github statuses
   endTime=datetime.datetime.now()
   endTime=datetime.datetime(endTime.year, endTime.month, endTime.day, endTime.hour, endTime.minute, endTime.second)
-  build.setStatus(commitidfull, "success" if ret==0 else "failure", currentID, timeID,
+  build.setStatus("/mbsim-config", commitidfull, "success" if ret==0 else "failure", currentID, timeID,
         "https://www.mbsim-env.de/mbsim/"+args.buildType+"/report/runexamples_valgrind_report/result_%010d/index.html"%(currentID),
         args.buildType+"-valgrind", endTime)
 
