@@ -23,8 +23,7 @@ services:
     build:
       context: ..
       dockerfile: docker/autoBuildImage/Dockerfile
-    # passed to default entrypoint to build linux64-ci     
-    command: ["--buildType", "linux64-ci"]
+    entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-ci"]
     volumes:
       - autobuild-mbsim-linux64-ci:/mbsim-env
       - autobuild-report-linux64-ci:/mbsim-report
@@ -37,10 +36,8 @@ services:
     build:
       context: ..
       dockerfile: docker/autoBuildImage/Dockerfile
-    # we change the entrypoint to build linux64-dailydebug including the special options for this build type.
-    # This way we can pass as arguments to docker-composre run the models which need a updated reference.
     entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailydebug",
-                 "--buildDoc", "--valgrindExamples", "--updateReferences"]
+                 "--buildDoc", "--valgrindExamples"]
     volumes:
       - autobuild-mbsim-linux64-dailydebug:/mbsim-env
       - autobuild-report-linux64-dailydebug:/mbsim-report
@@ -53,8 +50,8 @@ services:
     build:
       context: ..
       dockerfile: docker/autoBuildImage/Dockerfile
-    # passed to default entrypoint to build linux64-dailyrelease     
     command: ["--buildType", "linux64-dailyrelease"]
+    entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailyrelease"]
     volumes:
       - autobuild-mbsim-linux64-dailyrelease:/mbsim-env
       - autobuild-report-linux64-dailyrelease:/mbsim-report
