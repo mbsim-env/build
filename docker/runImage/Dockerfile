@@ -33,14 +33,15 @@ RUN git clone https://github.com/mbsim-env/mbsim.git
 WORKDIR /mbsim-env/mbsim
 RUN git checkout $MBSIMBRANCH
 
-# copy build
-COPY buildScripts /mbsim-build/build/buildScripts
-COPY buildSystem/scripts /mbsim-build/build/buildSystem/scripts
-
 # build mbsim-env
 WORKDIR /mbsim-env
 # enable swig interface to mbsim
 ENV MBSIM_SWIG=1
+
+# copy build
+COPY buildScripts /mbsim-build/build/buildScripts
+COPY buildSystem/scripts /mbsim-build/build/buildSystem/scripts
+
 # build
 RUN /mbsim-build/build/buildScripts/build.py --sourceDir /mbsim-env --binSuffix=-build --prefix /mbsim-env/local -j $JOBS --disableUpdate --disableRunExamples --passToConfigure --disable-static --enable-python --with-qwt-inc-prefix=/3rdparty/local/include --with-qwt-lib-prefix=/3rdparty/local/lib --with-qwt-lib-name=qwt --with-qmake=qmake-qt5 COIN_CFLAGS=-I/3rdparty/local/include COIN_LIBS="-L/3rdparty/local/lib64 -lCoin" SOQT_CFLAGS=-I/3rdparty/local/include SOQT_LIBS="-L/3rdparty/local/lib64 -lSoQt"
 # do not run examples here it is done later in the test image

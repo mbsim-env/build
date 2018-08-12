@@ -11,13 +11,13 @@ RUN yum install -y \
   texlive-pdftex-def \
   && yum clean all
 
+# ccache
+ENV CCACHE_DIR=/mbsim-ccache
+
 # copy build repo
 COPY docker/autoBuildImage/entrypoint.py /mbsim-build/build/docker/autoBuildImage/entrypoint.py
 COPY buildScripts /mbsim-build/build/buildScripts
 COPY buildSystem/scripts /mbsim-build/build/buildSystem/scripts
-
-# ccache
-ENV CCACHE_DIR=/mbsim-ccache
 
 # these are the default arguments when running the container
 CMD []
