@@ -1,9 +1,27 @@
+# mfmf manage -j in all docker-compose.yml
 version: "2"
+
+
+
 services:
-  mbsim-env-autobuild-linux64-ci:
+  base:
+    image: mbsimenv/mbsim-env-base
+    build: baseImage
+
+  build:
+    image: mbsimenv/mbsim-env-build
+    build: buildImage
+
+  run:
+    image: mbsimenv/mbsim-env-run
+    build:
+      context: ..
+      dockerfile: docker/runImage/Dockerfile
+
+  autobuild-linux64-ci:
     image: mbsimenv/mbsim-env-autobuild
     build:
-      context: ../..
+      context: ..
       dockerfile: docker/autoBuildImage/Dockerfile
     # passed to default entrypoint to build linux64-ci     
     command: ["--buildType", "linux64-ci"]
@@ -13,26 +31,27 @@ services:
       - autobuild-ccache:/mbsim-ccache
       - autobuild-state:/mbsim-state
       - autobuild-config:/mbsim-config
-  mbsim-env-autobuild-linux64-dailydebug:
+
+  autobuild-linux64-dailydebug:
     image: mbsimenv/mbsim-env-autobuild
     build:
-      context: ../..
+      context: ..
       dockerfile: docker/autoBuildImage/Dockerfile
     # we change the entrypoint to build linux64-dailydebug including the special options for this build type.
     # This way we can pass as arguments to docker-composre run the models which need a updated reference.
     entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailydebug",
                  "--buildDoc", "--valgrindExamples", "--updateReferences"]
-#    command: ["xml/hierachical_modelling"] #mfmf updateReferences comes from the webserver
     volumes:
       - autobuild-mbsim-linux64-dailydebug:/mbsim-env
       - autobuild-report-linux64-dailydebug:/mbsim-report
       - autobuild-ccache:/mbsim-ccache
       - autobuild-state:/mbsim-state
       - autobuild-config:/mbsim-config
-  mbsim-env-autobuild-linux64-dailyrelease:
+
+  autobuild-linux64-dailyrelease:
     image: mbsimenv/mbsim-env-autobuild
     build:
-      context: ../..
+      context: ..
       dockerfile: docker/autoBuildImage/Dockerfile
     # passed to default entrypoint to build linux64-dailyrelease     
     command: ["--buildType", "linux64-dailyrelease"]
@@ -43,6 +62,8 @@ services:
       - autobuild-state:/mbsim-state
       - autobuild-config:/mbsim-config
 
+
+
 volumes:
   autobuild-mbsim-linux64-ci:
   autobuild-report-linux64-ci:
@@ -50,6 +71,6 @@ volumes:
   autobuild-report-linux64-dailydebug:
   autobuild-mbsim-linux64-dailyrelease:
   autobuild-report-linux64-dailyrelease:
-  autobuild-ccache:
   autobuild-state:
   autobuild-config:
+  autobuild-ccache:

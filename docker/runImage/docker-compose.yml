@@ -1,7 +1,0 @@
-version: "2"
-services:
-  mbsim-env-run:
-    image: mbsimenv/mbsim-env-run
-    build:
-      context: ../..
-      dockerfile: docker/runImage/Dockerfile
