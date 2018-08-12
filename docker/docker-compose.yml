@@ -5,21 +5,21 @@ version: "2"
 
 services:
   base:
-    image: mbsimenv/mbsim-env-base
+    image: mbsimenv/base
     build: baseImage
 
   build:
-    image: mbsimenv/mbsim-env-build
+    image: mbsimenv/build
     build: buildImage
 
   run:
-    image: mbsimenv/mbsim-env-run
+    image: mbsimenv/run
     build:
       context: ..
       dockerfile: docker/runImage/Dockerfile
 
   autobuild-linux64-ci:
-    image: mbsimenv/mbsim-env-autobuild
+    image: mbsimenv/autobuild
     build:
       context: ..
       dockerfile: docker/autoBuildImage/Dockerfile
@@ -33,7 +33,7 @@ services:
       - autobuild-config:/mbsim-config
 
   autobuild-linux64-dailydebug:
-    image: mbsimenv/mbsim-env-autobuild
+    image: mbsimenv/autobuild
     build:
       context: ..
       dockerfile: docker/autoBuildImage/Dockerfile
@@ -49,7 +49,7 @@ services:
       - autobuild-config:/mbsim-config
 
   autobuild-linux64-dailyrelease:
-    image: mbsimenv/mbsim-env-autobuild
+    image: mbsimenv/autobuild
     build:
       context: ..
       dockerfile: docker/autoBuildImage/Dockerfile

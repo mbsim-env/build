@@ -1,6 +1,6 @@
-# mbsim-env-build image: this image is used to build mbsim-env
+# build image: this image is used to build mbsim-env
 
-FROM mbsimenv/mbsim-env-base AS centosBaseImage
+FROM mbsimenv/base AS centosBaseImage
 
 # install everything needed to build mbsim-env tools from centos7
 RUN yum -y install \
@@ -145,7 +145,7 @@ FROM centosBaseImage
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
-  org.label-schema.name="mbsim-env-build" \
+  org.label-schema.name="mbsimenv/build" \
   org.label-schema.description="Build all tools from MBSim-Environment." \
   org.label-schema.url="https://www.mbsim-env.de" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/buildImage" \

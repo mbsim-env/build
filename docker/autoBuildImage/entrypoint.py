@@ -14,7 +14,7 @@ import build
 # arguments
 argparser=argparse.ArgumentParser(
   formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-  description="Entrypoint for container mbsimenv/mbsim-env-autobuild.")
+  description="Entrypoint for container mbsimenv/autobuild.")
   
 argparser.add_argument("--buildType", type=str, required=True, help="The build type")
 argparser.add_argument("--fmatvecBranch", type=str, default="master", help="fmatvec branch")

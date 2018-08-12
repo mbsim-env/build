@@ -1,4 +1,4 @@
-# mbsim-env-base image: this image is used for the images mbsim-env-build and mbsim-env-run
+# base image: this image is used for the images build and run
 
 # centos7 is our operating system
 FROM centos:centos7 AS baseImage
@@ -86,7 +86,7 @@ COPY --from=mesaBuild /osupdate/local /osupdate/local
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
-  org.label-schema.name="mbsim-env-base" \
+  org.label-schema.name="mbsimenv/base" \
   org.label-schema.description="Build the base image for all MBSim-Environment images." \
   org.label-schema.url="https://www.mbsim-env.de" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/baseImage" \

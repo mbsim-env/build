@@ -1,5 +1,5 @@
 # use the build image as base
-FROM mbsimenv/mbsim-env-build
+FROM mbsimenv/build
 
 # install software
 RUN yum install -y \
