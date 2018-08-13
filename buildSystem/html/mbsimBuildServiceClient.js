@@ -1,4 +1,4 @@
-var cgiPath="https://www.mbsim-env.de/cgi-bin/mbsimBuildServiceServer.py";
+var cgiPath="https://"+window.location.hostname+"/cgi-bin/mbsimBuildServiceServer.py";
 
 // indicate start of server commnication
 function statusCommunicating() {
@@ -57,7 +57,7 @@ $(document).ready(function() {
       loginStatus();
       statusMessage(response);
       if(response.success)
-        document.cookie="mbsimenvsessionid_js=dummy; Domain=www.mbsim-env.de; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC; Secure;"
+        document.cookie="mbsimenvsessionid_js=dummy; Domain="+window.location.hostname+"; Path=/; Expires=Thu, 01 Jan 1970 00:00:00 UTC; Secure;"
     });
   })
 

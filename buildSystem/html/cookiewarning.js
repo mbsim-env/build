@@ -1,4 +1,4 @@
-if($(location).attr('href').startsWith("https://www.mbsim-env.de")>=0) {
+if($(location).attr('href').startsWith("https://"+window.location.hostname)>=0) {
   $(document).ready(function() {
     if(!localStorage.getItem('cookieWarning')) {
       $("body").prepend(

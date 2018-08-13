@@ -147,7 +147,6 @@ FROM centosBaseImage
 LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.name="mbsimenv/build" \
   org.label-schema.description="Build all tools from MBSim-Environment." \
-  org.label-schema.url="https://www.mbsim-env.de" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/buildImage" \
   org.label-schema.vendor="MBSim-Environment" \
   org.label-schema.docker.params="JOBS=number of parallel jobs,SWIGVERSION=swig verion to use,CASADIBRANCH=CasADi branch to use,QWTVERSION=QWT version to use,COINBRANCH=Coin3D branch to use,SOQTBRANCH=SoQt version to use"

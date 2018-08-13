@@ -58,6 +58,6 @@ f.close()
 
 buildSystemState.update(stateDir, "build-manuals", "Building Manuals Failed",
                         str(nrDocFailed)+" of "+str(len(mainFiles))+" manuals failed to build.",
-                        "https://www.mbsim-env.de/mbsim/html/manuals/", nrDocFailed, len(mainFiles))
+                        "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/html/manuals/", nrDocFailed, len(mainFiles))
 
 sys.exit(nrDocFailed)

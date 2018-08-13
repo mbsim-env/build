@@ -21,6 +21,13 @@ COPY docker/autoBuildImage/entrypoint.py /mbsim-build/build/docker/autoBuildImag
 COPY buildScripts /mbsim-build/build/buildScripts
 COPY buildSystem/scripts /mbsim-build/build/buildSystem/scripts
 
+# set labels
+LABEL org.label-schema.schema-version="1.0" \
+  org.label-schema.name="mbsimenv/autobuild" \
+  org.label-schema.description="Automatic build (CI and daily) for the MBSim-Environment." \
+  org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/autobuildImage" \
+  org.label-schema.vendor="MBSim-Environment"
+
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container

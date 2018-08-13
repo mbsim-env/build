@@ -32,6 +32,10 @@ args=argparser.parse_args()
 
 ret=0
 
+# check environment
+if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="":
+  raise RuntimeError("Envvar MBSIMENVSERVERNAME is not defined.")
+
 # check volumes
 if not os.path.isdir("/mbsim-env"):
   raise RuntimeError("Need a volume /mbsim-env mounted when running the container")
@@ -126,7 +130,7 @@ if len(args.updateReferences)>0:
 
 # run build
 localRet=subprocess.call(
-  ["/mbsim-build/build/buildScripts/build.py"]+ARGS+["--url", "https://www.mbsim-env.de/mbsim/"+args.buildType+"/report",
+  ["/mbsim-build/build/buildScripts/build.py"]+ARGS+["--url", "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report",
   "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun",
   "--configDir", "/mbsim-config", "--stateDir", "/mbsim-state", "--rotate", "20", "--fmatvecBranch", args.fmatvecBranch,
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
@@ -151,7 +155,7 @@ if args.valgrindExamples:
   with codecs.open("/mbsim-report/report/result_current/repoState.json", "r", encoding="utf-8") as f:
     commitidfull=json.load(f)
   build.setStatus("/mbsim-config", commitidfull, "pending", currentID, timeID,
-        "https://www.mbsim-env.de/mbsim/"+args.buildType+"/report/runexamples_valgrind_report/result_%010d/index.html"%(currentID),
+        "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report/result_%010d/index.html"%(currentID),
         args.buildType+"-valgrind")
   # update
   CURDIR=os.getcwd()
@@ -165,7 +169,7 @@ if args.valgrindExamples:
   coverage = ["--coverage", "/mbsim-env:-build:/mbsim-env/local"] if "--coverage" in ARGS else []
   localRet=subprocess.call(["./runexamples.py", "--rotate", "20", "-j", str(args.jobs)]+coverage+["--reportOutDir",
             "/mbsim-report/report/runexamples_valgrind_report", "--url",
-            "https://www.mbsim-env.de/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
+            "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
             "--buildSystemRun", "/mbsim-build/build/buildSystem/scripts", "--stateDir", "/mbsim-state",
             "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
             "valgrind --trace-children=yes --trace-children-skip=*/rm --num-callers=150 --gen-suppressions=all --suppressions="+
@@ -181,7 +185,7 @@ if args.valgrindExamples:
   endTime=datetime.datetime.now()
   endTime=datetime.datetime(endTime.year, endTime.month, endTime.day, endTime.hour, endTime.minute, endTime.second)
   build.setStatus("/mbsim-config", commitidfull, "success" if ret==0 else "failure", currentID, timeID,
-        "https://www.mbsim-env.de/mbsim/"+args.buildType+"/report/runexamples_valgrind_report/result_%010d/index.html"%(currentID),
+        "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report/result_%010d/index.html"%(currentID),
         args.buildType+"-valgrind", endTime)
 
 if args.buildDoc:

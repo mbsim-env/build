@@ -29,11 +29,11 @@ def update(stateDir, buildType, title, content, link, nrFailed, nrRun):
         f.write(
 '''<feed xmlns="http://www.w3.org/2005/Atom">
   <author><name>MBSim-Env Build System</name></author>
-  <id>http://www.mbsim-env.de/atom/mbsim-env-build-system</id>
-  <link href="http://www.mbsim-env.de/mbsim/buildsystemstate/failures.atom.xml" rel="self" />
+  <id>http://%1/atom/mbsim-env-build-system</id>
+  <link href="http://%2/mbsim/buildsystemstate/failures.atom.xml" rel="self" />
   <title>MBSim-Env Build System Feeds</title>
   <updated>2018-07-27T06:08:08Z</updated>
-</feed>''')
+</feed>'''%(os.environ['MBSIMENVSERVERNAME'],os.environ['MBSIMENVSERVERNAME']))
     tree=ET.parse(stateDir+'/failures.atom.xml') # read feed
     elefeed=tree.getroot() # get root element
 
@@ -53,7 +53,7 @@ def update(stateDir, buildType, title, content, link, nrFailed, nrRun):
     elefeed.insert(5, eleentry)
     eleid=ET.Element(NS+"id")
     eleentry.append(eleid)
-    eleid.text="https://www.mbsim-env.de/atom/mbsim-env-build-system/"+curtime.strftime("%s")
+    eleid.text="https://"+os.environ['MBSIMENVSERVERNAME']+"/atom/mbsim-env-build-system/"+curtime.strftime("%s")
     elecategory=ET.Element(NS+"category", term=buildType)
     eleentry.append(elecategory)
     elelink=ET.Element(NS+"link", rel="alternate", href=link)

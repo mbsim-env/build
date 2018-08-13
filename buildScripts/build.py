@@ -486,7 +486,7 @@ def main():
   # set status on commit
   if args.buildSystemRun:
     setStatus(args.configDir, commitidfull, "pending", currentID, timeID,
-      "https://www.mbsim-env.de/mbsim/%s/report/result_%010d/index.html"%(args.buildType, currentID), args.buildType)
+      "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/%s/report/result_%010d/index.html"%(args.buildType, currentID), args.buildType)
 
   # clean prefix dir
   if args.enableCleanPrefix and os.path.isdir(args.prefix if args.prefix!=None else args.prefixAuto):
@@ -594,7 +594,7 @@ def main():
   # update status on commitid
   if args.buildSystemRun:
     setStatus(args.configDir, commitidfull, "success" if nrFailed+abs(runExamplesErrorCode)==0 else "failure", currentID, timeID,
-      "https://www.mbsim-env.de/mbsim/%s/report/result_%010d/index.html"%(args.buildType, currentID), args.buildType, endTime)
+      "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/%s/report/result_%010d/index.html"%(args.buildType, currentID), args.buildType, endTime)
 
   if nrFailed>0:
     print("\nERROR: %d of %d build parts failed!!!!!"%(nrFailed, nrRun));

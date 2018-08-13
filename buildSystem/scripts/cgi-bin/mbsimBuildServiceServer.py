@@ -145,20 +145,20 @@ try:
               c=Cookie.SimpleCookie()
               # sessionid cookie not visible to javascript
               c['mbsimenvsessionid']=sessionid
-              c['mbsimenvsessionid']['comment']="Session ID for www.mbsim-env.de"
-              c['mbsimenvsessionid']['domain']='www.mbsim-env.de'
+              c['mbsimenvsessionid']['comment']="Session ID for "+os.environ['HTTP_HOST']
+              c['mbsimenvsessionid']['domain']=os.environ['HTTP_HOST']
               c['mbsimenvsessionid']['path']='/'
               c['mbsimenvsessionid']['secure']=True
               c['mbsimenvsessionid']['httponly']=True
               # javascript cookie just to show the the user is logged in
               c['mbsimenvsessionid_js']="logged_in"
-              c['mbsimenvsessionid_js']['comment']="User logged into for www.mbsim-env.de"
-              c['mbsimenvsessionid_js']['domain']='www.mbsim-env.de'
+              c['mbsimenvsessionid_js']['comment']="User logged into for "+os.environ['HTTP_HOST']
+              c['mbsimenvsessionid_js']['domain']=os.environ['HTTP_HOST']
               c['mbsimenvsessionid_js']['path']='/'
               c['mbsimenvsessionid_js']['secure']=True
               defaultOutput=False
               print('Status: 301 Moved Permanently')
-              print('Location: https://www.mbsim-env.de/mbsim/html/index.html')
+              print("Location: https://"+os.environ['HTTP_HOST']+"/mbsim/html/index.html")
               print(c)
               print()
 
@@ -398,9 +398,9 @@ try:
                              "message": "Release "+data['relStr']+" of MBSim-Env for "+platform+"\n"+\
                                         "\n"+\
                                         "The binary "+platform+" release can be downloaded from\n"+\
-                                        "https://www.mbsim-env.de/mbsim/releases/"+relArchiveName+"\n"+\
+                                        "https://"+os.environ['HTTP_HOST']+"/mbsim/releases/"+relArchiveName+"\n"+\
                                         "Please note that this binary release includes a full build of MBSim-Env not only of this repository.\n"+\
-                                        "Also look at https://www.mbsim-env.de/mbsim/releases for other platforms of this release version.\n",
+                                        "Also look at https://"+os.environ['HTTP_HOST']+"/mbsim/releases for other platforms of this release version.\n",
                              "object": data['commitid'][repo],
                              "type": "commit",
                              "tagger": {
@@ -433,9 +433,9 @@ try:
                   createRelData={"tag_name": tagName,
                                  "name": "Release "+data['relStr']+" of MBSim-Env for "+platform,
                                  "body": "The binary "+platform+" release can be downloaded from\n"+\
-                                         "https://www.mbsim-env.de/mbsim/releases/"+relArchiveName+"\n"+\
+                                         "https://"+os.environ['HTTP_HOST']+"/mbsim/releases/"+relArchiveName+"\n"+\
                                          "Please note that this binary release includes a full build of MBSim-Env not only of this repository. "+\
-                                         "Also look at https://www.mbsim-env.de/mbsim/releases for other platforms of this release version.",
+                                         "Also look at https://"+os.environ['HTTP_HOST']+"/mbsim/releases for other platforms of this release version.",
                                  "draft": False,
                                  "prerelease": False}
                   response=requests.post('https://api.github.com/repos/'+org+'/'+repo+'/releases',

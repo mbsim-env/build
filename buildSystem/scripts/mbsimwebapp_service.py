@@ -2,7 +2,7 @@ import sys
 sys.path.append('/home/mbsim/Software/websockify')
 import websockify.token_plugins
 import websockify.auth_plugins
-import os.path
+import os
 import subprocess
 import requests
 import Cookie
@@ -53,9 +53,9 @@ class MBSimWebappAuth(websockify.auth_plugins.BasePlugin):
     if 'mbsimenvsessionid' not in c:
       raise websockify.auth_plugins.AuthenticationError(log_msg="No mbsimenvsessionid provided in cookie.")
     sessionid=c['mbsimenvsessionid'].value
-    # call www.mbsim-env.de to check to session ID (we can do this my checking the config file of the server directly
+    # call the server to check to session ID (we can do this my checking the config file of the server directly
     # but this file is not readable for this user for security reasons)
-    response=requests.post('https://www.mbsim-env.de/cgi-bin/mbsimBuildServiceServer.py/checkmbsimenvsessionid',
+    response=requests.post("https://"+os.environ['MBSIMENVSERVERNAME']+"/cgi-bin/mbsimBuildServiceServer.py/checkmbsimenvsessionid",
       json={'mbsimenvsessionid': sessionid})
     # if the response is OK and success is true than continue
     if response.status_code!=200:

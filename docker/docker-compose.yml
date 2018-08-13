@@ -25,6 +25,8 @@ services:
       context: ..
       dockerfile: docker/autoBuildImage/Dockerfile
     entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-ci"]
+    environment:
+      - MBSIMENVSERVERNAME
     volumes:
       - autobuild-mbsim-linux64-ci:/mbsim-env # no name needed since not used by other services
       - autobuild-report-linux64-ci:/mbsim-report
@@ -39,6 +41,8 @@ services:
       dockerfile: docker/autoBuildImage/Dockerfile
     entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailydebug",
                  "--buildDoc", "--valgrindExamples"]
+    environment:
+      - MBSIMENVSERVERNAME
     volumes:
       - autobuild-mbsim-linux64-dailydebug:/mbsim-env # no name neede since not used by oher services
       - autobuild-report-linux64-dailydebug:/mbsim-report
@@ -53,6 +57,8 @@ services:
       dockerfile: docker/autoBuildImage/Dockerfile
     command: ["--buildType", "linux64-dailyrelease"]
     entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailyrelease"]
+    environment:
+      - MBSIMENVSERVERNAME
     volumes:
       - autobuild-mbsim-linux64-dailyrelease:/mbsim-env # no name neede since not used by oher services
       - autobuild-report-linux64-dailyrelease:/mbsim-report

@@ -99,7 +99,6 @@ FROM intermediateImage
 LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.name="mbsimenv/run" \
   org.label-schema.description="All MBSim-Environment tools for runing and postprocessing simulations." \
-  org.label-schema.url="https://www.mbsim-env.de" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/runImage" \
   org.label-schema.vendor="MBSim-Environment" \
   org.label-schema.docker.params="JOBS=number of parallel jobs,FMATVECBRANCH=fmatvec branch to use,HDF5SERIEBRANCH=hdf5serie branch to use,OPENMBVBRANCH=openmbv branch to use,MBSIMBRANCH=mbsim branch to use" \
