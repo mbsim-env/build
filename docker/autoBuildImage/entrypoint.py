@@ -84,7 +84,7 @@ if args.buildType == "linux64-ci":
   ARGS=["--forceBuild", "--disableConfigure", "--disableMakeClean", "--disableDoxygen", "--disableXMLDoc"]
   RUNEXAMPLES=["--disableCompare", "--disableMakeClean", "--filter", "'basic' in labels"]
 elif args.buildType == "linux64-dailydebug":
-  ARGS=["--docOutDir", "/mbsim-report/"+args.buildType+"/doc", "--coverage"]
+  ARGS=["--docOutDir", "/mbsim-report/doc", "--coverage"]
   ARGS=ARGS+["--forceBuild"]#mfmfdeline
   RUNEXAMPLES=["--checkGUIs"]
   RUNEXAMPLES=RUNEXAMPLES+["xml/hierachical_modelling"]#mfmfdeline
@@ -116,7 +116,7 @@ if len(args.updateReferences)>0:
 
   # update references for download
   os.chdir("/mbsim-env/mbsim/examples")
-  if subprocess.call(["./runexamples.py", "--action", "pushReference=/mbsim-report/"+args.buildType+"/references"])!=0:
+  if subprocess.call(["./runexamples.py", "--action", "pushReference=/mbsim-report/references"])!=0:
     ret=ret+1
     print("pushing references to download dir failed.")
   os.chdir(CURDIR)
@@ -131,7 +131,7 @@ localRet=subprocess.call(
   "--configDir", "/mbsim-config", "--stateDir", "/mbsim-state", "--rotate", "20", "--fmatvecBranch", args.fmatvecBranch,
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
   "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix", "--webapp",
-  "--reportOutDir", "/mbsim-report/"+args.buildType+"/report", "--buildType", args.buildType, "--passToConfigure", "--disable-static",
+  "--reportOutDir", "/mbsim-report/report", "--buildType", args.buildType, "--passToConfigure", "--disable-static",
   "--enable-python", "--with-qwt-inc-prefix=/3rdparty/local/include", "--with-qwt-lib-prefix=/3rdparty/local/lib",
   "--with-qwt-lib-name=qwt", "--with-qmake=qmake-qt5", "COIN_CFLAGS=-I/3rdparty/local/include",
   "COIN_LIBS=-L/3rdparty/local/lib64 -lCoin", "SOQT_CFLAGS=-I/3rdparty/local/include",
@@ -145,10 +145,10 @@ if args.valgrindExamples:
   # run examples with valgrind
   
   # set github statuses
-  currentID=int(os.readlink("/mbsim-report/"+args.buildType+"/report/result_current")[len("result_"):])
+  currentID=int(os.readlink("/mbsim-report/report/result_current")[len("result_"):])
   timeID=datetime.datetime.now()
   timeID=datetime.datetime(timeID.year, timeID.month, timeID.day, timeID.hour, timeID.minute, timeID.second)
-  with codecs.open("/mbsim-report/"+args.buildType+"/report/result_current/repoState.json", "r", encoding="utf-8") as f:
+  with codecs.open("/mbsim-report/report/result_current/repoState.json", "r", encoding="utf-8") as f:
     commitidfull=json.load(f)
   build.setStatus("/mbsim-config", commitidfull, "pending", currentID, timeID,
         "https://www.mbsim-env.de/mbsim/"+args.buildType+"/report/runexamples_valgrind_report/result_%010d/index.html"%(currentID),
@@ -164,7 +164,7 @@ if args.valgrindExamples:
   # build
   coverage = ["--coverage", "/mbsim-env:-build:/mbsim-env/local"] if "--coverage" in ARGS else []
   localRet=subprocess.call(["./runexamples.py", "--rotate", "20", "-j", str(args.jobs)]+coverage+["--reportOutDir",
-            "/mbsim-report/"+args.buildType+"/report/runexamples_valgrind_report", "--url",
+            "/mbsim-report/report/runexamples_valgrind_report", "--url",
             "https://www.mbsim-env.de/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
             "--buildSystemRun", "/mbsim-build/build/buildSystem/scripts", "--stateDir", "/mbsim-state",
             "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
@@ -187,7 +187,7 @@ if args.valgrindExamples:
 if args.buildDoc:
   # build doc
   if subprocess.call(["/mbsim-build/build/buildSystem/scripts/builddoc.py", "/mbsim-state",
-                      "/mbsim-env/mbsim/manuals", "/mbsim-report/"+args.buildType+"/manuals"])!=0:
+                      "/mbsim-env/mbsim/manuals", "/mbsim-report/manuals"])!=0:
     ret=ret+1
     print("builddoc.py failed.")
 
