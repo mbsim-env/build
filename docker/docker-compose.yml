@@ -66,6 +66,26 @@ services:
       - autobuild-state:/mbsim-state
       - autobuild-config:/mbsim-config:ro
 
+  webserver:
+    image: mbsimenv/webserver
+    build:
+      context: ..
+      dockerfile: docker/webServerImage/Dockerfile
+    hostname: ${MBSIMENVSERVERNAME}
+    environment:
+      - MBSIMENVSERVERNAME
+    volumes:
+      - autobuild-report-linux64-ci:/var/www/html/mbsim/linux64-ci:ro
+      - autobuild-report-linux64-dailydebug:/var/www/html/mbsim/linux64-dailydebug:ro
+      - autobuild-report-linux64-dailyrelease:/var/www/html/mbsim/linux64-dailyrelease:ro
+      - autobuild-state:/var/www/html/mbsim/buildsystemstate:ro
+      - autobuild-config:/mfmf/BuildServiceConfig
+      - webserver-releases:/var/www/html/mbsim/releases
+      - webserver-letsencrypt:/etc/letsencrypt
+    ports:
+      - "80:80"
+      - "443:443"
+
 
 
 volumes:
@@ -78,3 +98,5 @@ volumes:
   autobuild-state:
   autobuild-config:
   autobuild-ccache:
+  webserver-releases:
+  webserver-letsencrypt:
