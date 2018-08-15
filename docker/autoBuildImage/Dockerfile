@@ -28,10 +28,11 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/autobuildImage" \
   org.label-schema.vendor="MBSim-Environment"
 
+# use a unpriviliged user to run the container
+RUN groupadd -r dockeruser && useradd --no-log-init -r -g dockeruser dockeruser
+USER dockeruser:dockeruser
+
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
 ENTRYPOINT ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py"]
-
-#mfmf set user to avoid to build as root
-#mfmf secure this container since untrusted code is executed.
