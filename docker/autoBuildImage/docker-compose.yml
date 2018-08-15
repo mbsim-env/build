@@ -1,27 +1,12 @@
-# mfmf specify dependencies on services (build and run dependencies)
 version: "2"
 
 
 
 services:
-  base:
-    image: mbsimenv/base
-    build: baseImage
-
-  build:
-    image: mbsimenv/build
-    build: buildImage
-
-  run:
-    image: mbsimenv/run
-    build:
-      context: ..
-      dockerfile: docker/runImage/Dockerfile
-
   autobuild-linux64-ci:
     image: mbsimenv/autobuild
     build:
-      context: ..
+      context: ../..
       dockerfile: docker/autoBuildImage/Dockerfile
     entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-ci"]
     environment:
@@ -36,7 +21,7 @@ services:
   autobuild-linux64-dailydebug:
     image: mbsimenv/autobuild
     build:
-      context: ..
+      context: ../..
       dockerfile: docker/autoBuildImage/Dockerfile
     entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailydebug",
                  "--buildDoc", "--valgrindExamples"]
@@ -52,7 +37,7 @@ services:
   autobuild-linux64-dailyrelease:
     image: mbsimenv/autobuild
     build:
-      context: ..
+      context: ../..
       dockerfile: docker/autoBuildImage/Dockerfile
     entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailyrelease"]
     environment:
@@ -63,26 +48,6 @@ services:
       - autobuild-ccache:/mbsim-ccache
       - autobuild-state:/mbsim-state
       - autobuild-config:/mbsim-config:ro
-
-  webserver:
-    image: mbsimenv/webserver
-    build:
-      context: ..
-      dockerfile: docker/webServerImage/Dockerfile
-    hostname: ${MBSIMENVSERVERNAME}
-    environment:
-      - MBSIMENVSERVERNAME
-    volumes:
-      - autobuild-report-linux64-ci:/var/www/html/mbsim/linux64-ci:ro
-      - autobuild-report-linux64-dailydebug:/var/www/html/mbsim/linux64-dailydebug:ro
-      - autobuild-report-linux64-dailyrelease:/var/www/html/mbsim/linux64-dailyrelease:ro
-      - autobuild-state:/var/www/html/mbsim/buildsystemstate:ro
-      - autobuild-config:/mfmf/BuildServiceConfig
-      - webserver-releases:/var/www/html/mbsim/releases
-      - webserver-letsencrypt:/etc/letsencrypt
-    ports:
-      - "80:80"
-      - "443:443"
 
 
 
@@ -96,5 +61,3 @@ volumes:
   autobuild-state:
   autobuild-config:
   autobuild-ccache:
-  webserver-releases:
-  webserver-letsencrypt:
