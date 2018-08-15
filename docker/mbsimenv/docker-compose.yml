@@ -1,0 +1,85 @@
+version: "2"
+
+
+
+services:
+  autobuild-linux64-ci:
+    image: mbsimenv/autobuild
+    build:
+      context: ../..
+      dockerfile: docker/autoBuildImage/Dockerfile
+    entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-ci"]
+    environment:
+      - MBSIMENVSERVERNAME
+    volumes:
+      - mbsim-linux64-ci:/mbsim-env # no name needed since not used by other services
+      - report-linux64-ci:/mbsim-report
+      - ccache:/mbsim-ccache
+      - state:/mbsim-state
+      - config:/mbsim-config:ro
+
+  autobuild-linux64-dailydebug:
+    image: mbsimenv/autobuild
+    build:
+      context: ../..
+      dockerfile: docker/autoBuildImage/Dockerfile
+    entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailydebug",
+                 "--buildDoc", "--valgrindExamples"]
+    environment:
+      - MBSIMENVSERVERNAME
+    volumes:
+      - mbsim-linux64-dailydebug:/mbsim-env # no name neede since not used by oher services
+      - report-linux64-dailydebug:/mbsim-report
+      - ccache:/mbsim-ccache
+      - state:/mbsim-state
+      - config:/mbsim-config
+
+  autobuild-linux64-dailyrelease:
+    image: mbsimenv/autobuild
+    build:
+      context: ../..
+      dockerfile: docker/autoBuildImage/Dockerfile
+    entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailyrelease"]
+    environment:
+      - MBSIMENVSERVERNAME
+    volumes:
+      - mbsim-linux64-dailyrelease:/mbsim-env # no name neede since not used by oher services
+      - report-linux64-dailyrelease:/mbsim-report
+      - ccache:/mbsim-ccache
+      - state:/mbsim-state
+      - config:/mbsim-config:ro
+
+  webserver:
+    image: mbsimenv/webserver
+    build:
+      context: ../..
+      dockerfile: docker/webServerImage/Dockerfile
+    hostname: ${MBSIMENVSERVERNAME}
+    environment:
+      - MBSIMENVSERVERNAME
+    volumes:
+      - report-linux64-ci:/var/www/html/mbsim/linux64-ci:ro
+      - report-linux64-dailydebug:/var/www/html/mbsim/linux64-dailydebug:ro
+      - report-linux64-dailyrelease:/var/www/html/mbsim/linux64-dailyrelease:ro
+      - state:/var/www/html/mbsim/buildsystemstate:ro
+      - config:/mfmf/BuildServiceConfig
+      - releases:/var/www/html/mbsim/releases
+      - letsencrypt:/etc/letsencrypt
+    ports:
+      - "80:80"
+      - "443:443"
+
+
+
+volumes:
+  mbsim-linux64-ci: # not needed but provided to provide a proper name
+  mbsim-linux64-dailydebug: # not needed but provided to provide a proper name
+  mbsim-linux64-dailyrelease: # not needed but provided to provide a proper name
+  report-linux64-ci:
+  report-linux64-dailydebug:
+  report-linux64-dailyrelease:
+  state:
+  config:
+  ccache:
+  releases:
+  letsencrypt:
