@@ -36,18 +36,6 @@ ret=0
 if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="":
   raise RuntimeError("Envvar MBSIMENVSERVERNAME is not defined.")
 
-# check volumes
-if not os.path.isdir("/mbsim-env"):
-  raise RuntimeError("Need a volume /mbsim-env mounted when running the container")
-if not os.path.isdir("/mbsim-ccache"):
-  raise RuntimeError("Need a volume /mbsim-ccache mounted when running the container")
-if not os.path.isdir("/mbsim-report"):
-  raise RuntimeError("Need a volume /mbsim-report mounted when running the container")
-if not os.path.isdir("/mbsim-state"):
-  raise RuntimeError("Need a volume /mbsim-state mounted when running the container")
-if not os.path.isdir("/mbsim-config"):
-  raise RuntimeError("Need a volume /mbsim-config mounted when running the container")
-
 # check buildtype
 if args.buildType != "linux64-ci" and args.buildType != "linux64-dailydebug" and args.buildType != "linux64-dailyrelease":
   raise RuntimeError("Unknown build type "+args.buildType+".")

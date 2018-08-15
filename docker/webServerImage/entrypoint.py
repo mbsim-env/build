@@ -8,31 +8,31 @@ import os
 import shutil
 import fileinput
 import time
+import argparse
 
-# mfmf remove all checks in entrypoints if this is ensure by the corresponding docker-compose.yml
+# arguments
+argparser=argparse.ArgumentParser(
+  formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+  description="Entrypoint for container mbsimenv/webserver.")
+  
+argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs to run in parallel")
+
+args=argparser.parse_args()
 
 # check environment
 if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="":
   raise RuntimeError("Envvar MBSIMENVSERVERNAME is not defined.")
 
-# check volumes
-if not os.path.isdir("/etc/letsencrypt"):
-  raise RuntimeError("Need a volume /etc/letsencrypt mounted when running the container")
-if not os.path.isdir("/var/www/html/mbsim/releases"):
-  raise RuntimeError("Need a volume /var/www/html/mbsim/releases mounted when running the container")
-if not os.path.isdir("/var/www/html/mbsim/linux64-ci"):
-  raise RuntimeError("Need a volume /var/www/html/mbsim/linux64-ci mounted when running the container")
-if not os.path.isdir("/var/www/html/mbsim/linux64-dailydebug"):
-  raise RuntimeError("Need a volume /var/www/html/mbsim/linux64-dailydebug mounted when running the container")
-if not os.path.isdir("/var/www/html/mbsim/linux64-dailyrelease"):
-  raise RuntimeError("Need a volume /var/www/html/mbsim/linux64-dailyrelease mounted when running the container")
-#if not os.path.isdir("/var/www/html/mbsim/win64-dailyrelease"):
-#  raise RuntimeError("Need a volume /var/www/html/mbsim/win64-dailyrelease mounted when running the container")
-if not os.path.isdir("/var/www/html/mbsim/buildsystemstate"):
-  raise RuntimeError("Need a volume /var/www/html/mbsim/buildsystemstate mounted when running the container")
-
 # run cron in background
 subprocess.check_call(["crond"])
+
+# add daily build to crontab
+#mfmfcrontab=subprocess.check_output(["crontab", "-l"])
+#mfmfcrontab=crontab+"\n0 1 * * * /mbsim-build/build/docker/webServerImage/cron-daily.py -j %1\n"%(args.jobs)
+#mfmfsubprocess.check_call(["crontab", "/dev/stdin"], )
+#mfmfp=subprocess.Popen(['crontab', '/dev/stdin'], stdin=PIPE)    
+#mfmfp.communicate(input=crontab)
+#mfmfp.wait()
 
 # run web server (uses the default certs)
 # the configuration files uses the envvar MBSIMENVSERVERNAME

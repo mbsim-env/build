@@ -1,4 +1,3 @@
-# mfmf manage -j in all docker-compose.yml
 # mfmf specify dependencies on services (build and run dependencies)
 version: "2"
 
@@ -55,7 +54,6 @@ services:
     build:
       context: ..
       dockerfile: docker/autoBuildImage/Dockerfile
-    command: ["--buildType", "linux64-dailyrelease"]
     entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailyrelease"]
     environment:
       - MBSIMENVSERVERNAME

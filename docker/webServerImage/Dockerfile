@@ -48,10 +48,7 @@ COPY docker/webServerImage/le-redirect-mbsim-env.conf /etc/httpd/conf.d/
 # set crontab for
 # - cert updates
 # - nightly builds #mfmf
-#mfmfRUN echo '35 20,8 * * * /usr/bin/certbot-2 renew --webroot -w /var/www/html --post-hook "httpd -k graceful"' > /tmp/cron.root && \
-#mfmf  echo '0 1 * * * /mbsim-build/build/docker/webServerImage/cron-daily.py' >> /tmp/cron.root && \
-#mfmf  crontab /tmp/cron.root && \
-#mfmf  rm -f /tmp/cron.root
+#mfmfRUN echo '35 20,8 * * * /usr/bin/certbot-2 renew --webroot -w /var/www/html --post-hook "httpd -k graceful"' | crontab /dev/stdin
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
