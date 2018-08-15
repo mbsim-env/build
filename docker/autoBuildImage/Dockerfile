@@ -28,8 +28,12 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/autobuildImage" \
   org.label-schema.vendor="MBSim-Environment"
 
+# add user dockeruser, create volumes and set volume ownership and permissions
+RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
+  mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state /mbsim-config && \
+  chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state /mbsim-config
+
 # use a unpriviliged user to run the container
-RUN groupadd -r dockeruser && useradd --no-log-init -r -g dockeruser dockeruser
 USER dockeruser:dockeruser
 
 # these are the default arguments when running the container

@@ -56,6 +56,17 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/webserverImage" \
   org.label-schema.vendor="MBSim-Environment"
 
+# add user dockeruser, create volumes and set volume ownership and permissions
+RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
+  mkdir -p /var/www/html/mbsim/linux64-ci /var/www/html/mbsim/linux64-dailydebug \
+    /var/www/html/mbsim/linux64-dailyrelease /var/www/html/mbsim/buildsystemstate \
+    /etc/letsencrypt /var/www/html/mbsim/releases /mfmf/BuildServiceConfig && \
+  chown dockeruser:dockeruser /var/www/html/mbsim/linux64-ci /var/www/html/mbsim/linux64-dailydebug \
+    /var/www/html/mbsim/linux64-dailyrelease /var/www/html/mbsim/buildsystemstate && \
+  chown apache:apache /var/www/html/mbsim/releases && \
+  chown dockeruser:apache /mfmf/BuildServiceConfig && chmod ug+rw /mfmf/BuildServiceConfig
+  # chown root:roo /etc/letsencrypt # not needed
+
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
