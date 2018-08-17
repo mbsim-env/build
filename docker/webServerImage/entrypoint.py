@@ -39,19 +39,19 @@ subprocess.check_call(["crond"])
 httpd=subprocess.Popen(["httpd", "-DFOREGROUND"])
 
 # create cert if not existing or renew if already existing
-#mfmfsubprocess.check_call(["/usr/bin/certbot-2",
-#mfmf  "--agree-tos", "--email", "friedrich.at.gc@gmail.com", "certonly", "-n", "--webroot", "-w", "/var/www/html",
-#mfmf  "--cert-name", "mbsim-env", "-d", os.environ["MBSIMENVSERVERNAME"]])
-#mfmf
-#mfmf# adapt web server config to use the letsencrypt certs
-#mfmffor line in fileinput.FileInput("/etc/httpd/conf.d/ssl.conf", inplace=1):
-#mfmf  if line.lstrip().startswith("SSLCertificateFile "):
-#mfmf    line="SSLCertificateFile /etc/letsencrypt/live/mbsim-env/cert.pem"
-#mfmf  if line.lstrip().startswith("SSLCertificateKeyFile "):
-#mfmf    line="SSLCertificateKeyFile /etc/letsencrypt/live/mbsim-env/privkey.pem"
-#mfmf  print(line, end="")
-#mfmf# reload web server config
-#mfmfsubprocess.check_call(["httpd", "-k", "graceful"])
+subprocess.check_call(["/usr/bin/certbot-2",
+  "--agree-tos", "--email", "friedrich.at.gc@gmail.com", "certonly", "-n", "--webroot", "-w", "/var/www/html",
+  "--cert-name", "mbsim-env", "-d", os.environ["MBSIMENVSERVERNAME"]])
+
+# adapt web server config to use the letsencrypt certs
+for line in fileinput.FileInput("/etc/httpd/conf.d/ssl.conf", inplace=1):
+  if line.lstrip().startswith("SSLCertificateFile "):
+    line="SSLCertificateFile /etc/letsencrypt/live/mbsim-env/cert.pem"
+  if line.lstrip().startswith("SSLCertificateKeyFile "):
+    line="SSLCertificateKeyFile /etc/letsencrypt/live/mbsim-env/privkey.pem"
+  print(line, end="")
+# reload web server config
+subprocess.check_call(["httpd", "-k", "graceful"])
 
 # wait for the web server to finish (will never happen) and return its return code
 print("Service up and running.")

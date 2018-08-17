@@ -47,7 +47,7 @@ COPY docker/webServerImage/le-redirect-mbsim-env.conf /etc/httpd/conf.d/
 
 # set crontab for
 # - cert updates
-#mfmfRUN echo '35 20,8 * * * /usr/bin/certbot-2 renew --webroot -w /var/www/html --post-hook "httpd -k graceful"' | crontab /dev/stdin
+RUN echo '35 20,8 * * * /usr/bin/certbot-2 renew --webroot -w /var/www/html --post-hook "httpd -k graceful"' | crontab /dev/stdin
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
