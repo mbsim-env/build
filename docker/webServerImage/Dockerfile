@@ -1,3 +1,15 @@
+# get noVNC
+FROM centos:centos7 AS temp
+ARG NOVNCBRANCH=v0.6.2
+RUN yum install -y git && yum clean all
+# install noVNC (the package from yum is to old)
+WORKDIR /tmp
+RUN git clone https://github.com/novnc/noVNC.git
+WORKDIR /tmp/noVNC
+RUN git checkout $NOVNCBRANCH
+
+
+
 # use the build image as base
 #mfmf use a common base for this image and mbsim-env-base regarding all yum installs
 FROM centos:centos7
@@ -13,6 +25,8 @@ RUN yum install -y epel-release && yum install -y \
  
 # a webserver is running on port 80
 EXPOSE 80/tcp 443/tcp
+
+COPY --from=temp /tmp/noVNC/include /var/www/html/noVNC/include
 
 # copy cgi script
 COPY buildSystem/scripts/cgi-bin/mbsimBuildServiceServer.py /var/www/cgi-bin/mbsimBuildServiceServer.py
