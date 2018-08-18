@@ -1,5 +1,5 @@
-import sys
-sys.path.append('/home/mbsim/Software/websockify')
+#!/usr/bin/python
+
 import websockify.token_plugins
 import websockify.auth_plugins
 import os
@@ -100,7 +100,7 @@ class MyPRH(websockify.websocketproxy.ProxyRequestHandler):
 
 server = websockify.websocketproxy.WebSocketProxy(
   RequestHandlerClass=MyPRH,
-  listen_host='localhost',
+  listen_host='webapp',
   listen_port=10080,
   heartbeat=10,
   token_plugin=MBSimWebappToken(None),

@@ -69,6 +69,12 @@ services:
       - "80:80"
       - "443:443"
 
+  webapp:
+    image: mbsimenv/webapp
+    build:
+      context: ../..
+      dockerfile: docker/webappImage/Dockerfile
+
 
 
 volumes:

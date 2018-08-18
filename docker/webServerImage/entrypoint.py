@@ -46,9 +46,9 @@ subprocess.check_call(["/usr/bin/certbot-2",
 # adapt web server config to use the letsencrypt certs
 for line in fileinput.FileInput("/etc/httpd/conf.d/ssl.conf", inplace=1):
   if line.lstrip().startswith("SSLCertificateFile "):
-    line="SSLCertificateFile /etc/letsencrypt/live/mbsim-env/cert.pem"
+    line="SSLCertificateFile /etc/letsencrypt/live/mbsim-env/cert.pem\n"
   if line.lstrip().startswith("SSLCertificateKeyFile "):
-    line="SSLCertificateKeyFile /etc/letsencrypt/live/mbsim-env/privkey.pem"
+    line="SSLCertificateKeyFile /etc/letsencrypt/live/mbsim-env/privkey.pem\n"
   print(line, end="")
 # reload web server config
 subprocess.check_call(["httpd", "-k", "graceful"])
