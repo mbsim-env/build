@@ -242,7 +242,7 @@ def mainDocPage():
   docFD.close()
 
 # read config file
-def readConfigFile(configDir):
+def getStatusAccessToken(configDir):
   configFilename=pj(configDir, "mbsimBuildService.conf")
   if not os.path.isfile(configFilename):
     return None
@@ -251,7 +251,9 @@ def readConfigFile(configDir):
   config=json.load(fd)
   fcntl.lockf(fd, fcntl.LOCK_UN)
   fd.close()
-  return config
+  if config["status_access_token"]=="":
+    return None
+  return config["status_access_token"]
 def setStatus(configDir, commitidfull, state, currentID, timeID, target_url, buildType, endTime=None):
   import requests
   for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
@@ -277,11 +279,11 @@ def setStatus(configDir, commitidfull, state, currentID, timeID, target_url, bui
     else:
       raise RuntimeError("Unknown state "+state+" provided")
     # call github api
-    config=readConfigFile(configDir)
-    if config==None:
-      print("Warning: Cannot create github status on repo "+repo+": No configuration file with github credential found.")
+    statusAccessToken=getStatusAccessToken(configDir)
+    if statusAccessToken==None:
+      print("Warning: Cannot create github status on repo "+repo+": No configuration file/no access token with github credential found.")
       return
-    headers={'Authorization': 'token '+config["status_access_token"],
+    headers={'Authorization': 'token '+statusAccessToken,
              'Accept': 'application/vnd.github.v3+json'}
     response=requests.post('https://api.github.com/repos/mbsim-env/'+repo+'/statuses/'+commitidfull[repo],
                            headers=headers, data=json.dumps(data))

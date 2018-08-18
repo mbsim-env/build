@@ -46,7 +46,7 @@ $(document).ready(function() {
     statusCommunicating();
     // save current scroll value and goto github
     sessionStorage.setItem('backFromLogin', $(document).scrollTop());
-    window.location.href="https://github.com/login/oauth/authorize?client_id=987997eb60fc086e9707&scope=read:org,public_repo,user:email";
+    window.location.href="https://github.com/login/oauth/authorize?client_id=@MBSIMENVCLIENTID@&scope=read:org,public_repo,user:email";
   })
 
   // when the logout button is clicked

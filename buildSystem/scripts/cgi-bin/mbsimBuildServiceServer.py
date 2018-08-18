@@ -25,7 +25,7 @@ try:
     def __init__(self, rw):
       self.rw=rw
     def __enter__(self):
-      configFilename="/home/mbsim/BuildServiceConfig/mbsimBuildService.conf"
+      configFilename="/mbsim-config/mbsimBuildService.conf"
       if self.rw:
         self.fd=open(configFilename, 'r+')
         fcntl.lockf(self.fd, fcntl.LOCK_EX)
@@ -115,7 +115,7 @@ try:
         code=query['code']
         with ConfigFile(True) as config:
           # get access token from github (as a json response)
-          data={'client_id': '987997eb60fc086e9707', 'client_secret': config['client_secret'], 'code': code}
+          data={'client_id': config['client_id'], 'client_secret': config['client_secret'], 'code': code}
           headers={'Accept': 'application/json'}
           response=requests.post('https://github.com/login/oauth/access_token', headers=headers, data=data).json()
           if 'error' in response:

@@ -9,19 +9,77 @@ import shutil
 import fileinput
 import time
 import argparse
+import json
 
 # arguments
+#mfmf argument not working with docker-compose up
 argparser=argparse.ArgumentParser(
   formatter_class=argparse.ArgumentDefaultsHelpFormatter,
   description="Entrypoint for container mbsimenv/webserver.")
   
 argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs to run in parallel")
+argparser.add_argument("--webhookSecret", type=str, default="", help="Define webhook secret (required if no mbsimBuildService.conf exists)")
+argparser.add_argument("--clientID", type=str, default="", help="Define client ID (required if no mbsimBuildService.conf exists)")
+argparser.add_argument("--clientSecret", type=str, default="", help="Define client secret (required if no mbsimBuildService.conf exists)")
+argparser.add_argument("--statusAccessToken", type=str, default="", help="Define status access token (optional; no GitHub status update if not given)")
 
 args=argparser.parse_args()
 
 # check environment
 if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="":
   raise RuntimeError("Envvar MBSIMENVSERVERNAME is not defined.")
+
+# check/create mbsim-config
+def createConfig(webhookSecret, clientID, clientSecret, statusAccessToken):
+  config={
+    "checkedExamples": [], 
+    "curcibranch": [
+      {
+        "fmatvec": "master", 
+        "hdf5serie": "master", 
+        "openmbv": "master", 
+        "mbsim": "master"
+      }
+    ], 
+    "tobuild": [], 
+    "session": {}, 
+    "webhook_secret": webhookSecret, 
+    "client_id": clientID, 
+    "client_secret": clientSecret, 
+    "status_access_token": statusAccessToken
+  }
+  fd=open(configFilename, 'w')
+  json.dump(config, fd, indent=2)
+  fd.close()
+  os.chown(configFilename, 1065, 48)
+  os.chmod(configFilename, 0660)
+  return config
+configFilename="/mbsim-config/mbsimBuildService.conf"
+if not os.path.isfile(configFilename):
+  # no config file: either error or create it
+  if args.webhookSecret=="" or args.clientID=="" or args.clientSecret=="":
+    raise RuntimeError("No mbsimBuildService.conf file found! Need at least the arguments --webhookSecret, --clientID and --clientSecret.")
+  config=createConfig(args.webhookSecret, args.clientID, args.clientSecret, args.statusAccessToken)
+else:
+  # config file available: read it
+  fd=open(configFilename, 'r')
+  config=json.load(fd)
+  fd.close()
+  # if secrets are provided but differ from config file update config file
+  if (args.webhookSecret     !="" and config["webhook_secret"     ]!=args.webhookSecret    ) or \
+     (args.clientID          !="" and config["client_id"          ]!=args.clientID         ) or \
+     (args.clientSecret      !="" and config["client_secret"      ]!=args.clientSecret     ) or \
+     (args.statusAccessToken !="" and config["status_access_token"]!=args.statusAccessToken):
+    config=createConfig(args.webhookSecret     if args.webhookSecret    !="" else config["webhook_secret"     ],
+                        args.clientID          if args.clientID         !="" else config["client_id"          ],
+                        args.clientSecret      if args.clientSecret     !="" else config["client_secret"      ],
+                        args.statusAccessToken if args.statusAccessToken!="" else config["status_access_token"])
+
+# adapt static html content (MBSIMENVCLIENTID)
+for filename in ["/var/www/html/mbsim/html/index.html", "/var/www/html/mbsim/html/mbsimBuildServiceClient.js"]:
+  for line in fileinput.FileInput(filename, inplace=1):
+    line=line.replace("@MBSIMENVCLIENTID@", config["client_id"])
+    print(line, end="")
 
 # run cron in background
 subprocess.check_call(["crond"])

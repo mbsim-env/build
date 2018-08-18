@@ -28,10 +28,13 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/autobuildImage" \
   org.label-schema.vendor="MBSim-Environment"
 
-# add user dockeruser, create volumes and set volume ownership and permissions
-RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
+# Add apache group and user (just needed to set proper mode on /mbsim-config
+# Add user dockeruser, create volumes and set volume ownership and permissions
+RUN groupadd -g 48 -r apache && useradd --no-log-init -u 48 -g apache -c "Apache" -s /sbin/nologin -r -d /usr/share/httpd apache && \
+  groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
   mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state /mbsim-config && \
-  chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state /mbsim-config
+  chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state && \
+  chown dockeruser:apache /mbsim-config && chmod ug+rw /mbsim-config
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser

@@ -3,51 +3,51 @@ version: "2"
 
 
 services:
-  autobuild-linux64-ci:
-    image: mbsimenv/autobuild
-    build:
-      context: ../..
-      dockerfile: docker/autoBuildImage/Dockerfile
-    entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-ci"]
-    environment:
-      - MBSIMENVSERVERNAME
-    volumes:
-      - mbsim-linux64-ci:/mbsim-env # no name needed since not used by other services
-      - report-linux64-ci:/mbsim-report
-      - ccache:/mbsim-ccache
-      - state:/mbsim-state
-      - config:/mbsim-config:ro
-
-  autobuild-linux64-dailydebug:
-    image: mbsimenv/autobuild
-    build:
-      context: ../..
-      dockerfile: docker/autoBuildImage/Dockerfile
-    entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailydebug",
-                 "--buildDoc", "--valgrindExamples"]
-    environment:
-      - MBSIMENVSERVERNAME
-    volumes:
-      - mbsim-linux64-dailydebug:/mbsim-env # no name neede since not used by oher services
-      - report-linux64-dailydebug:/mbsim-report
-      - ccache:/mbsim-ccache
-      - state:/mbsim-state
-      - config:/mbsim-config
-
-  autobuild-linux64-dailyrelease:
-    image: mbsimenv/autobuild
-    build:
-      context: ../..
-      dockerfile: docker/autoBuildImage/Dockerfile
-    entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailyrelease"]
-    environment:
-      - MBSIMENVSERVERNAME
-    volumes:
-      - mbsim-linux64-dailyrelease:/mbsim-env # no name neede since not used by oher services
-      - report-linux64-dailyrelease:/mbsim-report
-      - ccache:/mbsim-ccache
-      - state:/mbsim-state
-      - config:/mbsim-config:ro
+#  autobuild-linux64-ci:
+#    image: mbsimenv/autobuild
+#    build:
+#      context: ../..
+#      dockerfile: docker/autoBuildImage/Dockerfile
+#    entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-ci"]
+#    environment:
+#      - MBSIMENVSERVERNAME
+#    volumes:
+#      - mbsim-linux64-ci:/mbsim-env # no name needed since not used by other services
+#      - report-linux64-ci:/mbsim-report
+#      - ccache:/mbsim-ccache
+#      - state:/mbsim-state
+#      - config:/mbsim-config:ro
+#
+#  autobuild-linux64-dailydebug:
+#    image: mbsimenv/autobuild
+#    build:
+#      context: ../..
+#      dockerfile: docker/autoBuildImage/Dockerfile
+#    entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailydebug",
+#                 "--buildDoc", "--valgrindExamples"]
+#    environment:
+#      - MBSIMENVSERVERNAME
+#    volumes:
+#      - mbsim-linux64-dailydebug:/mbsim-env # no name neede since not used by oher services
+#      - report-linux64-dailydebug:/mbsim-report
+#      - ccache:/mbsim-ccache
+#      - state:/mbsim-state
+#      - config:/mbsim-config
+#
+#  autobuild-linux64-dailyrelease:
+#    image: mbsimenv/autobuild
+#    build:
+#      context: ../..
+#      dockerfile: docker/autoBuildImage/Dockerfile
+#    entrypoint: ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailyrelease"]
+#    environment:
+#      - MBSIMENVSERVERNAME
+#    volumes:
+#      - mbsim-linux64-dailyrelease:/mbsim-env # no name neede since not used by oher services
+#      - report-linux64-dailyrelease:/mbsim-report
+#      - ccache:/mbsim-ccache
+#      - state:/mbsim-state
+#      - config:/mbsim-config:ro
 
   webserver:
     image: mbsimenv/webserver
@@ -62,7 +62,7 @@ services:
       - report-linux64-dailydebug:/var/www/html/mbsim/linux64-dailydebug:ro
       - report-linux64-dailyrelease:/var/www/html/mbsim/linux64-dailyrelease:ro
       - state:/var/www/html/mbsim/buildsystemstate:ro
-      - config:/mfmf/BuildServiceConfig
+      - config:/mbsim-config
       - releases:/var/www/html/mbsim/releases
       - letsencrypt:/etc/letsencrypt
     ports:
@@ -74,6 +74,8 @@ services:
     build:
       context: ../..
       dockerfile: docker/webappImage/Dockerfile
+    environment:
+      - MBSIMENVSERVERNAME
 
 
 
