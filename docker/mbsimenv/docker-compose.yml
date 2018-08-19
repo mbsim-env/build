@@ -3,6 +3,7 @@ version: "2"
 
 
 services:
+#mfmf security issue: autobuild can access the internet
 #  autobuild-linux64-ci:
 #    image: mbsimenv/autobuild
 #    build:
@@ -16,7 +17,6 @@ services:
 #      - report-linux64-ci:/mbsim-report
 #      - ccache:/mbsim-ccache
 #      - state:/mbsim-state
-#      - config:/mbsim-config:ro
 #
 #  autobuild-linux64-dailydebug:
 #    image: mbsimenv/autobuild
@@ -32,7 +32,6 @@ services:
 #      - report-linux64-dailydebug:/mbsim-report
 #      - ccache:/mbsim-ccache
 #      - state:/mbsim-state
-#      - config:/mbsim-config
 #
 #  autobuild-linux64-dailyrelease:
 #    image: mbsimenv/autobuild
@@ -47,7 +46,6 @@ services:
 #      - report-linux64-dailyrelease:/mbsim-report
 #      - ccache:/mbsim-ccache
 #      - state:/mbsim-state
-#      - config:/mbsim-config:ro
 
   webserver:
     image: mbsimenv/webserver

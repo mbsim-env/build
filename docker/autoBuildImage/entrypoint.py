@@ -26,6 +26,7 @@ argparser.add_argument('--forceBuild', action="store_true", help="Passed to buil
 argparser.add_argument("--staticCodeAnalyzis", action="store_true", help="Passed to build.py if existing")
 argparser.add_argument("--buildDoc", action="store_true", help="Build external docu, like papers ...")
 argparser.add_argument("--valgrindExamples", action="store_true", help="Run examples also with valgrind.")
+argparser.add_argument("--statusAccessTokenFile", type=str, default=None, help="Filename containing the GitHub token to update statuses. (should be a pipe for security reasons)")
 argparser.add_argument("--updateReferences", nargs='*', default=[], help="Update these references.")
 
 args=argparser.parse_args()
@@ -116,11 +117,18 @@ if len(args.updateReferences)>0:
   if "--forceBuild" not in ARGS:
     ARGS.append('--forceBuild')
 
+# read statusAccessToken
+statusAccessToken=None
+if args.statusAccessTokenFile!=None:
+  with open(args.statusAccessTokenFile, 'r') as f:
+    statusAccessToken=f.read()
+  statusAccessTokenPipe=subprocess.Popen(["echo", statusAccessToken], stdout=subprocess.PIPE)
 # run build
 localRet=subprocess.call(
   ["/mbsim-build/build/buildScripts/build.py"]+ARGS+["--url", "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report",
-  "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun",
-  "--configDir", "/mbsim-config", "--stateDir", "/mbsim-state", "--rotate", "20", "--fmatvecBranch", args.fmatvecBranch,
+  "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun"]+\
+  (["--statusAccessTokenFile", "/dev/stdin"] if args.statusAccessTokenFile!=None else [])+\
+  ["--stateDir", "/mbsim-state", "--rotate", "20", "--fmatvecBranch", args.fmatvecBranch,
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
   "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix", "--webapp",
   "--reportOutDir", "/mbsim-report/report", "--buildType", args.buildType, "--passToConfigure", "--disable-static",
@@ -128,7 +136,9 @@ localRet=subprocess.call(
   "--with-qwt-lib-name=qwt", "--with-qmake=qmake-qt5", "COIN_CFLAGS=-I/3rdparty/local/include",
   "COIN_LIBS=-L/3rdparty/local/lib64 -lCoin", "SOQT_CFLAGS=-I/3rdparty/local/include",
   "SOQT_LIBS=-L/3rdparty/local/lib64 -lSoQt", "--passToRunexamples"]+RUNEXAMPLES,
-  stdout=sys.stdout, stderr=sys.stderr)
+  stdout=sys.stdout, stderr=sys.stderr, stdin=statusAccessTokenPipe.stdout if args.statusAccessTokenFile!=None else None)
+if args.statusAccessTokenFile!=None:
+  statusAccessTokenPipe.wait()
 if localRet!=0:
   ret=ret+1
   print("build.py failed.")
@@ -142,7 +152,7 @@ if args.valgrindExamples:
   timeID=datetime.datetime(timeID.year, timeID.month, timeID.day, timeID.hour, timeID.minute, timeID.second)
   with codecs.open("/mbsim-report/report/result_current/repoState.json", "r", encoding="utf-8") as f:
     commitidfull=json.load(f)
-  build.setStatus("/mbsim-config", commitidfull, "pending", currentID, timeID,
+  build.setStatus(statusAccessToken, commitidfull, "pending", currentID, timeID,
         "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report/result_%010d/index.html"%(currentID),
         args.buildType+"-valgrind")
   # update
@@ -172,7 +182,7 @@ if args.valgrindExamples:
   # set github statuses
   endTime=datetime.datetime.now()
   endTime=datetime.datetime(endTime.year, endTime.month, endTime.day, endTime.hour, endTime.minute, endTime.second)
-  build.setStatus("/mbsim-config", commitidfull, "success" if ret==0 else "failure", currentID, timeID,
+  build.setStatus(statusAccessToken, commitidfull, "success" if ret==0 else "failure", currentID, timeID,
         "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report/result_%010d/index.html"%(currentID),
         args.buildType+"-valgrind", endTime)
 

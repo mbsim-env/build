@@ -68,6 +68,7 @@ def parseArguments():
   cfgOpts.add_argument("--openmbvBranch", default="", help='In the openmbv repo checkout the branch OPENMBVBRANCH')
   cfgOpts.add_argument("--mbsimBranch", default="", help='In the mbsim repo checkout the branch MBSIMBRANCH')
   cfgOpts.add_argument("--buildSystemRun", action="store_true", help='Run in build system mode: generate build system state files.')
+  cfgOpts.add_argument("--statusAccessTokenFile", type=str, default=None, help="Filename containing the GitHub token to update statuses. (should be a pipe for security reasons)")
   cfgOpts.add_argument("--coverage", action="store_true", help='Enable coverage analyzis using gcov/lcov.')
   cfgOpts.add_argument("--staticCodeAnalyzis", action="store_true", help='Enable static code analyzis using LLVM Clang Analyzer.')
   cfgOpts.add_argument("--webapp", action="store_true", help='Just passed to runexamples.py.')
@@ -241,20 +242,7 @@ def mainDocPage():
   print('</html>', file=docFD)
   docFD.close()
 
-# read config file
-def getStatusAccessToken(configDir):
-  configFilename=pj(configDir, "mbsimBuildService.conf")
-  if not os.path.isfile(configFilename):
-    return None
-  fd=open(configFilename, 'r')
-  fcntl.lockf(fd, fcntl.LOCK_SH)
-  config=json.load(fd)
-  fcntl.lockf(fd, fcntl.LOCK_UN)
-  fd.close()
-  if config["status_access_token"]=="":
-    return None
-  return config["status_access_token"]
-def setStatus(configDir, commitidfull, state, currentID, timeID, target_url, buildType, endTime=None):
+def setStatus(statusAccessToken, commitidfull, state, currentID, timeID, target_url, buildType, endTime=None):
   import requests
   for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
     # create github status (for linux64-ci build on all master branch)
@@ -279,7 +267,6 @@ def setStatus(configDir, commitidfull, state, currentID, timeID, target_url, bui
     else:
       raise RuntimeError("Unknown state "+state+" provided")
     # call github api
-    statusAccessToken=getStatusAccessToken(configDir)
     if statusAccessToken==None:
       print("Warning: Cannot create github status on repo "+repo+": No configuration file/no access token with github credential found.")
       return
@@ -487,7 +474,12 @@ def main():
 
   # set status on commit
   if args.buildSystemRun:
-    setStatus(args.configDir, commitidfull, "pending", currentID, timeID,
+    # read statusAccessToken
+    statusAccessToken=None
+    if args.statusAccessTokenFile!=None:
+      with open(args.statusAccessTokenFile, 'r') as f:
+        statusAccessToken=f.read()
+    setStatus(statusAccessToken, commitidfull, "pending", currentID, timeID,
       "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/%s/report/result_%010d/index.html"%(args.buildType, currentID), args.buildType)
 
   # clean prefix dir
@@ -595,7 +587,7 @@ def main():
 
   # update status on commitid
   if args.buildSystemRun:
-    setStatus(args.configDir, commitidfull, "success" if nrFailed+abs(runExamplesErrorCode)==0 else "failure", currentID, timeID,
+    setStatus(statusAccessToken, commitidfull, "success" if nrFailed+abs(runExamplesErrorCode)==0 else "failure", currentID, timeID,
       "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/%s/report/result_%010d/index.html"%(args.buildType, currentID), args.buildType, endTime)
 
   if nrFailed>0:
