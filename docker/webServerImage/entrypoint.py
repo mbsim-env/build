@@ -10,6 +10,7 @@ import fileinput
 import time
 import argparse
 import json
+import requests
 
 # arguments
 #mfmf argument not working with docker-compose up
@@ -94,7 +95,18 @@ subprocess.check_call(["crond"])
 
 # run web server (uses the default certs)
 # the configuration files uses the envvar MBSIMENVSERVERNAME
+def waitForWWW(timeout):
+  for i in range(0,timeout*10):
+    try:
+      if requests.head("http://localhost").status_code==301:
+        return
+    except:
+      pass
+    time.sleep(0.1)
+  raise RuntimeError("Server start has timed out.")
+# start httpd
 httpd=subprocess.Popen(["httpd", "-DFOREGROUND"])
+waitForWWW(10)
 
 # create cert if not existing or renew if already existing
 subprocess.check_call(["/usr/bin/certbot-2",
@@ -106,10 +118,12 @@ for line in fileinput.FileInput("/etc/httpd/conf.d/ssl.conf", inplace=1):
   if line.lstrip().startswith("SSLCertificateFile "):
     line="SSLCertificateFile /etc/letsencrypt/live/mbsim-env/cert.pem\n"
   if line.lstrip().startswith("SSLCertificateKeyFile "):
-    line="SSLCertificateKeyFile /etc/letsencrypt/live/mbsim-env/privkey.pem\n"
+    line="SSLCertificateKeyFile /etc/letsencrypt/live/mbsim-env/privkey.pem\n"+\
+         "SSLCertificateChainFile /etc/letsencrypt/live/mbsim-env/chain.pem\n"
   print(line, end="")
 # reload web server config
 subprocess.check_call(["httpd", "-k", "graceful"])
+waitForWWW(10)
 
 # wait for the web server to finish (will never happen) and return its return code
 print("Service up and running.")
