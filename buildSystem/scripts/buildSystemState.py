@@ -29,8 +29,8 @@ def update(stateDir, buildType, title, content, link, nrFailed, nrRun):
         f.write(
 '''<feed xmlns="http://www.w3.org/2005/Atom">
   <author><name>MBSim-Env Build System</name></author>
-  <id>http://%1/atom/mbsim-env-build-system</id>
-  <link href="http://%2/mbsim/buildsystemstate/failures.atom.xml" rel="self" />
+  <id>http://%s/atom/mbsim-env-build-system</id>
+  <link href="http://%s/mbsim/buildsystemstate/failures.atom.xml" rel="self" />
   <title>MBSim-Env Build System Feeds</title>
   <updated>2018-07-27T06:08:08Z</updated>
 </feed>'''%(os.environ['MBSIMENVSERVERNAME'],os.environ['MBSIMENVSERVERNAME']))
