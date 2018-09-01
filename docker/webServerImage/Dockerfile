@@ -11,7 +11,6 @@ RUN git checkout $NOVNCBRANCH
 
 
 # use the build image as base
-#mfmf use a common base for this image and mbsim-env-base regarding all yum installs
 FROM centos:centos7
 
 # install software
@@ -21,8 +20,7 @@ RUN yum install -y epel-release && yum install -y \
   python2-certbot \
   cronie \
   && yum clean all
-#mfmf mbsimwebapp is not possible till now must be installed and configured (maybe as another service)
- 
+
 # a webserver is running on port 80
 EXPOSE 80/tcp 443/tcp
 

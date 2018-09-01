@@ -6,7 +6,6 @@ import random
 import time
 import signal
 import urlparse
-import getpass
 
 def run(token, display):
   # configuration
@@ -17,8 +16,7 @@ def run(token, display):
   #   /home/mbsim/linux64-ci /usr/local/mbsim/linux64-ci none bind,ro
   #   /home/mbsim/3rdparty /usr/local/mbsim/3rdparty none bind,ro
   #   /home/mbsim/build /usr/local/mbsim/build none bind,ro
-  XAUTHTMPL='/tmp/mbsimwebapp-xauth-%d.'+getpass.getuser()
-  PIDFILE='/tmp/mbsimwebapp-pid/%d.'+getpass.getuser()
+  XAUTHTMPL='/tmp/mbsimwebapp-xauth'
 
   # check arg
   if type(display)!=int:
@@ -38,15 +36,15 @@ def run(token, display):
     raise RuntimeError('Unknown buildType or prog.')
 
   # create XAUTH file
-  os.open(XAUTHTMPL%(display), os.O_CREAT, 0o600)
+  os.open(XAUTHTMPL, os.O_CREAT, 0o600)
 
   # create XAUTH content
   COOKIE=''.join(random.SystemRandom().choice('0123456789abcdef') for _ in range(32))
-  subprocess.check_call(['/usr/bin/xauth', '-f', XAUTHTMPL%(display), 'add', 'localhost:%d'%(display), '.', COOKIE])
+  subprocess.check_call(['/usr/bin/xauth', '-f', XAUTHTMPL, 'add', 'localhost:%d'%(display), '.', COOKIE])
 
   # start Xvnc in background ...
   xvnc=subprocess.Popen(['/opt/tigervnc-local/bin/Xvnc', ':%d'%(display), '-SecurityTypes', 'None',
-    '-localhost', '-auth', XAUTHTMPL%(display), "-sigstop", "-NeverShared", "-DisconnectClients"])
+    '-localhost', '-auth', XAUTHTMPL, "-sigstop", "-NeverShared", "-DisconnectClients"])
   # ... and wait for Xvnc to be ready (Xvnc stops itself, using -sigstop option, if ready; than we continoue it)
   count=0
   while open('/proc/%d/stat'%(xvnc.pid)).readline().split()[2]!='T' and count<1000:
@@ -56,12 +54,10 @@ def run(token, display):
     xvnc.terminate()
     raise RuntimeError("Xvnc failed to start.")
   xvnc.send_signal(signal.SIGCONT) # continue Xvnc
-  # create pid file
-  open(PIDFILE%(display), 'w').close()
 
   # prepare env for starting programs in the vnc server
   xenv=os.environ.copy()
-  xenv['XAUTHORITY']=XAUTHTMPL%(display)
+  xenv['XAUTHORITY']=XAUTHTMPL
   xenv['DISPLAY']=':%d'%(display)
   xenv['QT_X11_NO_MITSHM']='1' # required for Qt!??
   xenv['LD_LIBRARY_PATH']='/usr/local/mbsim/3rdparty/casadi3py-local-linux64/lib:/usr/local/mbsim/3rdparty/qwt-6.1.3-local-linux64/lib:/usr/local/mbsim/3rdparty/coin-soqt-bb-local-linux64/lib64'

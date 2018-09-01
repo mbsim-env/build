@@ -15,7 +15,7 @@ import signal
 argparser=argparse.ArgumentParser(
   formatter_class=argparse.ArgumentDefaultsHelpFormatter,
   description="Manage and run the MBSim-Env docker images, containers, ...")
-  
+
 argparser.add_argument("command", type=str, choices=["build", "run"], help="Command to execute")
 argparser.add_argument("service", nargs="*", help="Service or image to run or build")
 argparser.add_argument("--servername", type=str, default=None, help="Set the hostname of webserver")
@@ -24,6 +24,7 @@ argparser.add_argument("--clientID", type=str, default=None, help="GitHub OAuth 
 argparser.add_argument("--clientSecret", type=str, default=None, help="GitHub OAuth App client secret")
 argparser.add_argument("--webhookSecret", type=str, default=None, help="GitHub web hook secret")
 argparser.add_argument("--statusAccessToken", type=str, default=None, help="GitHub access token for status updates")
+argparser.add_argument("--token", type=str, default=None, help="Webapprun token")
 
 args=argparser.parse_args()
 
@@ -31,8 +32,8 @@ args=argparser.parse_args()
 
 scriptdir=os.path.dirname(os.path.realpath(__file__))
 
-client=docker.from_env()
-clientLL=docker.APIClient()
+dockerClient=docker.from_env()
+dockerClientLL=docker.APIClient()
 
 
 
@@ -83,21 +84,21 @@ if args.command=="build":
   for s in args.service:
 
     if s=="base":
-      build=clientLL.build(tag="mbsimenv/base",
+      build=dockerClientLL.build(tag="mbsimenv/base",
         path=scriptdir+"/baseImage",
         rm=False)
       ret=syncLogBuildImage(build)
       sys.exit(ret)
 
     elif s=="build":
-      build=clientLL.build(tag="mbsimenv/build",
+      build=dockerClientLL.build(tag="mbsimenv/build",
         path=scriptdir+"/buildImage",
         rm=False)
       ret=syncLogBuildImage(build)
       sys.exit(ret)
 
     elif s=="run":
-      build=clientLL.build(tag="mbsimenv/run",
+      build=dockerClientLL.build(tag="mbsimenv/run",
         path=scriptdir+"/..",
         dockerfile="docker/runImage/Dockerfile",
         rm=False)
@@ -105,7 +106,7 @@ if args.command=="build":
       sys.exit(ret)
 
     elif s=="autobuild":
-      build=clientLL.build(tag="mbsimenv/autobuild",
+      build=dockerClientLL.build(tag="mbsimenv/autobuild",
         path=scriptdir+"/..",
         dockerfile="docker/autoBuildImage/Dockerfile",
         rm=False)
@@ -113,7 +114,7 @@ if args.command=="build":
       sys.exit(ret)
 
     elif s=="webserver":
-      build=clientLL.build(tag="mbsimenv/webserver",
+      build=dockerClientLL.build(tag="mbsimenv/webserver",
         path=scriptdir+"/..",
         dockerfile="docker/webServerImage/Dockerfile",
         rm=False)
@@ -121,8 +122,15 @@ if args.command=="build":
       sys.exit(ret)
 
     elif s=="webapp":
-      build=clientLL.build(tag="mbsimenv/webapp",
+      build=dockerClientLL.build(tag="mbsimenv/webapp",
         path=scriptdir+"/webappImage",
+        rm=False)
+      ret=syncLogBuildImage(build)
+      sys.exit(ret)
+
+    elif s=="webapprun":
+      build=dockerClientLL.build(tag="mbsimenv/webapprun",
+        path=scriptdir+"/webapprunImage",
         rm=False)
       ret=syncLogBuildImage(build)
       sys.exit(ret)
@@ -139,7 +147,7 @@ if args.command=="run":
     if s=="autobuild-linux64-ci":
       if args.servername==None:
         raise RuntimeError("Argument --servername is required.")
-      autobuild=client.containers.run(image="mbsimenv/autobuild",
+      autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
         init=True,
         entrypoint=["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-ci"],
         command=["-j", str(args.jobs)],
@@ -155,11 +163,11 @@ if args.command=="run":
       asyncLogContainer(autobuild)
       ret=waitContainer(autobuild)
       sys.exit(ret)
-    
+
     elif s=="autobuild-linux64-dailydebug":
       if args.servername==None:
         raise RuntimeError("Argument --servername is required.")
-      autobuild=client.containers.run(image="mbsimenv/autobuild",
+      autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
         init=True,
         entrypoint=["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType",
                     "linux64-dailydebug", "--buildDoc", "--valgrindExamples"],
@@ -176,11 +184,11 @@ if args.command=="run":
       asyncLogContainer(autobuild)
       ret=waitContainer(autobuild)
       sys.exit(ret)
-    
+
     elif s=="autobuild-linux64-dailyrelease":
       if args.servername==None:
         raise RuntimeError("Argument --servername is required.")
-      autobuild=client.containers.run(image="mbsimenv/autobuild",
+      autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
         init=True,
         entrypoint=["/mbsim-build/build/docker/autoBuildImage/entrypoint.py", "--buildType", "linux64-dailyrelease"],
         command=["-j", str(args.jobs)],
@@ -202,10 +210,10 @@ if args.command=="run":
         raise RuntimeError("Argument --servername is required.")
 
       # network
-      network=client.networks.create(name="mbsimenv_service")
+      network=dockerClient.networks.create(name="mbsimenv_service")
 
       # webserver
-      webserver=client.containers.run(image="mbsimenv/webserver",
+      webserver=dockerClient.containers.run(image="mbsimenv/webserver",
         init=True,
         command=(["--clientID", args.clientID] if args.clientID!=None else [])+\
           (["--clientSecret", args.clientSecret] if args.clientSecret!=None else [])+\
@@ -232,9 +240,13 @@ if args.command=="run":
       asyncLogContainer(webserver, "webserver: ")
 
       # webapp
-      webapp=client.containers.run(image="mbsimenv/webapp",
+      webapp=dockerClient.containers.run(image="mbsimenv/webapp",
         init=True,
+        command=[network.id],
         environment={"MBSIMENVSERVERNAME": args.servername},
+        volumes={
+          '/var/run/docker.sock': {"bind": "/var/run/docker.sock", "mode": "rw"},
+        },
         detach=True, stdout=True, stderr=True)
       runningContainers.add(webapp)
       network.connect(webapp, aliases=["webapp"])
@@ -245,6 +257,26 @@ if args.command=="run":
       retwebapp=waitContainer(webapp, "webapp: ")
       network.remove()
       sys.exit(0 if retwebserver==0 and retwebapp==0 else 1)
+
+    elif s=="webapprun":
+      if args.token==None:
+        raise RuntimeError("Option --token is required.")
+      webapprun=dockerClient.containers.run(image="mbsimenv/webapprun",
+        init=True,
+        command=[args.token],
+        volumes={
+          'mbsimenv_mbsim-linux64-ci':           {"bind": "/mbsim-env-linux64-ci",           "mode": "ro"},
+          'mbsimenv_mbsim-linux64-dailydebug':   {"bind": "/mbsim-env-linux64-dailydebug",   "mode": "ro"},
+          'mbsimenv_mbsim-linux64-dailyrelease': {"bind": "/mbsim-env-linux64-dailyrelease", "mode": "ro"},
+        },
+        ports={
+          5901: 5901,
+        },
+        detach=True, stdout=True, stderr=True)
+      runningContainers.add(webapprun)
+      asyncLogContainer(webapprun)
+      ret=waitContainer(webapprun)
+      sys.exit(ret)
 
     else:
       raise RuntimeError("Unknown container "+s+" to run.")

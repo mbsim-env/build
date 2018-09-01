@@ -7,39 +7,33 @@ import subprocess
 import requests
 import Cookie
 import time
-import getpass
 import threading
+import uuid
+import docker
+import sys
 
 # configuration
 DEBUG=True
-PIDFILE='/tmp/mbsimwebapp-pid/%d.'+getpass.getuser()
+dockerClient=docker.from_env()
 
 websockify.logger_init()
 if DEBUG:
   websockify.logging.getLogger(websockify.WebSocketProxy.log_prefix).setLevel(websockify.logging.DEBUG)
 
 # a global variable to pass over data from token plugin to auth plugin
-globalToken=None
+globalVar={}
 
 # the Websockify token plugin
 class MBSimWebappToken(websockify.token_plugins.BasePlugin):
   def lookup(self, token):
+    global globalVar
     # save the token for later use in the auth module
-    global globalToken
-    globalToken=token
-    # find free display
-    def checkDisplayNumber(n):
-      # this should be more sophisticated, see file vncserver function CheckDisplayNumber from package tigervnc
-      return not os.path.exists('/tmp/.X11-unix/X%d'%(n))
-    display=-1
-    for i in range(10,31):
-      if checkDisplayNumber(i):
-        display=i
-        break
-    if display==-1:
-      raise RuntimeError("No free display found")
-    # return port of free display
-    return ('localhost', 5900+display)
+    globalVar["token"]=token
+    # create a unique hostname and save for later user in the auth module
+    hostname="webapp-run-"+uuid.uuid4().hex
+    globalVar["hostname"]=hostname
+    # vnc is running at hostname on display 1 = port 5901
+    return (hostname, 5901)
 
 # the Websockify auth plugin
 class MBSimWebappAuth(websockify.auth_plugins.BasePlugin):
@@ -66,34 +60,41 @@ class MBSimWebappAuth(websockify.auth_plugins.BasePlugin):
     if not d['success']:
       raise websockify.auth_plugins.AuthenticationError(log_msg=d['message'])
 
-    token=globalToken
-    display=target_port-5900
+    token=globalVar["token"]
+    hostname=globalVar["hostname"]
 
-    # start vnc and other processes in a sandbox
-    if os.path.exists(PIDFILE%(display)): os.remove(PIDFILE%(display))
-    w=subprocess.Popen(['/usr/bin/python', os.path.dirname(__file__)+'/mbsimwebapp_service_run_wrapper.py', token, str(display)])
-    # ... and wait until the pid file exists
-    count=0
-    while not os.path.exists(PIDFILE%(display)) and count<2000:
-      time.sleep(0.01)
-      count=count+1
-    if not os.path.exists(PIDFILE%(display)):
-      w.terminate()
-      raise websockify.auth_plugins.AuthenticationError(log_msg="Failed to start vnc server.")
+    # start vnc and other processes in a new container (being reachable as hostname)
+    networkID=sys.argv[1]
+    network=dockerClient.networks.get(networkID)
+    webapprun=dockerClient.containers.run(image="mbsimenv/webapprun",
+      init=True,
+      command=[token],
+      volumes={
+        'mbsimenv_mbsim-linux64-ci':           {"bind": "/mbsim-env-linux64-ci",           "mode": "ro"},
+        'mbsimenv_mbsim-linux64-dailydebug':   {"bind": "/mbsim-env-linux64-dailydebug",   "mode": "ro"},
+        'mbsimenv_mbsim-linux64-dailyrelease': {"bind": "/mbsim-env-linux64-dailyrelease", "mode": "ro"},
+      },
+      detach=True, stdout=True, stderr=True)
+    network.connect(webapprun, aliases=[hostname])
+    time.sleep(5)#mfmf
+    #mfmf how to log webapprun
+    #mfmf how to exit webapprun
+    # wait for container to setup webapprun
+    #mfmf
 
 class MyWebSocket(websockify.websockifyserver.CompatibleWebSocket):
   def __init__(self):
     websockify.websockifyserver.CompatibleWebSocket.__init__(self)
-    self.lastPing = time.time()                                                                   
-    threading.Thread(target=self.checkKill).start()   
-  def checkKill(self):                      
-    while True:                                 
-      time.sleep(5)                             
-      if time.time()-self.lastPing>30:            
+    self.lastPing = time.time()
+    threading.Thread(target=self.checkKill).start()
+  def checkKill(self):
+    while True:
+      time.sleep(5)
+      if time.time()-self.lastPing>30:
         websockify.logging.getLogger(websockify.WebSocketProxy.log_prefix).info('Client seems to be dead. No ping since 30sec. Killing now.')
-        os._exit(0)        
-  def handle_pong(self, data):                                                                        
-    self.lastPing = time.time()                 
+        os._exit(0)
+  def handle_pong(self, data):
+    self.lastPing = time.time()
 
 class MyPRH(websockify.websocketproxy.ProxyRequestHandler):
   SocketClass=MyWebSocket
