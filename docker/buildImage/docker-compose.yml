@@ -1,8 +1,0 @@
-version: "2"
-
-
-
-services:
-  build:
-    image: mbsimenv/build
-    build: .
