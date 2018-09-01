@@ -7,8 +7,6 @@ RUN yum install -y python-setuptools
 RUN yum install -y numpy
 RUN yum install -y python-requests
 
-COPY buildSystem/scripts/mbsimwebapp_service.py /mbsim-build/build/buildSystem/scripts/mbsimwebapp_service.py
-
 # websockify
 RUN mkdir /3rdparty
 WORKDIR /3rdparty
@@ -16,6 +14,8 @@ RUN git clone https://github.com/novnc/websockify.git
 WORKDIR /3rdparty/websockify
 RUN git checkout $WEBSOCKIFYBRANCH
 RUN python setup.py install
+
+COPY entrypoint.py /opt/entrypoint.py
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
@@ -29,4 +29,4 @@ LABEL org.label-schema.schema-version="1.0" \
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
-ENTRYPOINT ["/mbsim-build/build/buildSystem/scripts/mbsimwebapp_service.py"]
+ENTRYPOINT ["/opt/entrypoint.py"]

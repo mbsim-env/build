@@ -122,8 +122,7 @@ if args.command=="build":
 
     elif s=="webapp":
       build=clientLL.build(tag="mbsimenv/webapp",
-        path=scriptdir+"/..",
-        dockerfile="docker/webappImage/Dockerfile",
+        path=scriptdir+"/webappImage",
         rm=False)
       ret=syncLogBuildImage(build)
       sys.exit(ret)
