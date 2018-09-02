@@ -252,9 +252,14 @@ if args.command=="run":
       network.connect(webapp, aliases=["webapp"])
       asyncLogContainer(webapp, "webapp: ")
 
-      # wait
+      # wait for running containers
       retwebserver=waitContainer(webserver, "webserver: ")
       retwebapp=waitContainer(webapp, "webapp: ")
+      # stop all other containers connected to network (this may be webapprun and autbuild containers)
+      network.reload()
+      for c in network.containers:
+        c.stop()
+      # remove network
       network.remove()
       sys.exit(0 if retwebserver==0 and retwebapp==0 else 1)
 
