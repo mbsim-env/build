@@ -8,7 +8,6 @@ import Cookie
 import time
 import threading
 import uuid
-import docker
 import sys
 import contextlib
 import socket
@@ -16,14 +15,16 @@ import subprocess
 
 # configuration
 DEBUG=True
-dockerClient=docker.from_env()
 
 def waitForOpenPort(host, port, timeout):
   def portOpen(host, port):
     with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
-      if sock.connect_ex((host, port)) == 0:
-        return True
-      else:
+      try:
+        if sock.connect_ex((host, port)) == 0:
+          return True
+        else:
+          return False
+      except:
         return False
   for i in range(0,timeout*10):
     if portOpen(host, port):
@@ -79,20 +80,9 @@ class MBSimWebappAuth(websockify.auth_plugins.BasePlugin):
     hostname=globalVar["hostname"]
 
     # start vnc and other processes in a new container (being reachable as hostname)
+    # start this in a seperate process which stops the container if the parent (this process) terminates
     networkID=sys.argv[1]
-    network=dockerClient.networks.get(networkID)
-    webapprun=dockerClient.containers.run(image="mbsimenv/webapprun",
-      init=True,
-      command=[token],
-      volumes={
-        'mbsimenv_mbsim-linux64-ci':           {"bind": "/mbsim-env-linux64-ci",           "mode": "ro"},
-        'mbsimenv_mbsim-linux64-dailydebug':   {"bind": "/mbsim-env-linux64-dailydebug",   "mode": "ro"},
-        'mbsimenv_mbsim-linux64-dailyrelease': {"bind": "/mbsim-env-linux64-dailyrelease", "mode": "ro"},
-      },
-      detach=True, stdout=True, stderr=True)
-    network.connect(webapprun, aliases=[hostname])
-    #mfmf how to log webapprun
-    #mfmf how to exit webapprun
+    subprocess.Popen(['/usr/bin/python', "/opt/webapprun.py", networkID, token, hostname])
     waitForOpenPort(hostname, 5901, 10)
 
 class MyWebSocket(websockify.websockifyserver.CompatibleWebSocket):

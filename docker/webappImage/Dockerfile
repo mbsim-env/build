@@ -33,6 +33,7 @@ RUN easy_install /3rdparty/websockify/dist/websockify-0.8.0-py2.7.egg
 RUN pip install docker
 
 COPY entrypoint.py /opt/entrypoint.py
+COPY webapprun.py /opt/webapprun.py
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
