@@ -3,10 +3,11 @@
 from __future__ import print_function # to enable the print function for backward compatiblity with python2
 import os
 import glob
+import sys
+sys.path.append("/mbsim-build/build/buildSystem/scripts")
 import buildSystemState
 import subprocess
 import datetime
-import sys
 import shutil
 
 stateDir=sys.argv[1]

@@ -18,6 +18,7 @@ ENV CCACHE_DIR=/mbsim-ccache
 
 # copy build repo
 COPY docker/autobuildImage/entrypoint.py /mbsim-build/build/docker/autobuildImage/entrypoint.py
+COPY docker/autobuildImage/builddoc.py /mbsim-build/build/docker/autobuildImage/builddoc.py
 COPY buildScripts /mbsim-build/build/buildScripts
 COPY buildSystem/scripts /mbsim-build/build/buildSystem/scripts
 

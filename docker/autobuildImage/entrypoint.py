@@ -188,7 +188,7 @@ if args.valgrindExamples:
 
 if args.buildDoc:
   # build doc
-  if subprocess.call(["/mbsim-build/build/buildSystem/scripts/builddoc.py", "/mbsim-state",
+  if subprocess.call(["/mbsim-build/build/docker/autobuildImage/builddoc.py", "/mbsim-state",
                       "/mbsim-env/mbsim/manuals", "/mbsim-report/manuals"])!=0:
     ret=ret+1
     print("builddoc.py failed.")
