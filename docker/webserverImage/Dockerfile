@@ -27,21 +27,21 @@ EXPOSE 80/tcp 443/tcp
 COPY --from=temp /tmp/noVNC/include /var/www/html/noVNC/include
 
 # copy cgi script
-COPY buildSystem/scripts/cgi-bin/mbsimBuildServiceServer.py /var/www/cgi-bin/mbsimBuildServiceServer.py
+COPY cgi-bin/mbsimBuildServiceServer.py /var/www/cgi-bin/mbsimBuildServiceServer.py
 # copy html script
-COPY buildSystem/html /var/www/html/mbsim/html
+COPY html /var/www/html/mbsim/html
 # copy entrypoint
-COPY docker/webserverImage/entrypoint.py /mbsim-build/build/docker/webserverImage/entrypoint.py
-COPY docker/webserverImage/cron-daily.py /mbsim-build/build/docker/webserverImage/cron-daily.py
+COPY entrypoint.py /mbsim-build/build/docker/webserverImage/entrypoint.py
+COPY cron-daily.py /mbsim-build/build/docker/webserverImage/cron-daily.py
 
 # configure web server
 # add top level config (stored in docker/webserverImage/httpd_toplevel.conf)
-COPY docker/webserverImage/httpd_toplevel.conf /tmp/httpd_toplevel.conf
+COPY conf/httpd_toplevel.conf /tmp/httpd_toplevel.conf
 RUN cat /tmp/httpd_toplevel.conf /etc/httpd/conf/httpd.conf > /etc/httpd/conf/httpd.conf.new && \
   mv /etc/httpd/conf/httpd.conf.new /etc/httpd/conf/httpd.conf && \
   rm -f /tmp/httpd_toplevel.conf
 # replace <Directory "/var/www/html"> with docker/webserverImage/httpd_rootdir.conf
-COPY docker/webserverImage/httpd_rootdir.conf /tmp/httpd_rootdir.conf
+COPY conf/httpd_rootdir.conf /tmp/httpd_rootdir.conf
 RUN set -o pipefail && \
   B=$(sed -rn '/^ *< *Directory +"\/var\/www\/html" *> *(#.*)?$/=' /etc/httpd/conf/httpd.conf | head -n 1); \
   O=$(sed -rn "$[$B+1],\$p" /etc/httpd/conf/httpd.conf | sed -rn '/^ *< *\/ *Directory *> *(#.*)?/=' | head -n 1); \
@@ -54,8 +54,8 @@ RUN set -o pipefail && \
   sed -r "s|^( *< *VirtualHost +_default_ *: *443 *> *(#.*)?)$|\1\nServerName \${MBSIMENVSERVERNAME}\n|" /etc/httpd/conf.d/ssl.conf > \
   /etc/httpd/conf.d/ssl.conf.new && \
   mv -f /etc/httpd/conf.d/ssl.conf.new /etc/httpd/conf.d/ssl.conf
-COPY docker/webserverImage/mpm_prefork.conf /etc/httpd/cond.d/
-COPY docker/webserverImage/le-redirect-mbsim-env.conf /etc/httpd/conf.d/
+COPY conf/mpm_prefork.conf /etc/httpd/cond.d/
+COPY conf/le-redirect-mbsim-env.conf /etc/httpd/conf.d/
 
 # set crontab for
 # - cert updates

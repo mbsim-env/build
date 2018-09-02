@@ -116,8 +116,7 @@ if args.command=="build":
 
     elif s=="webserver":
       build=dockerClientLL.build(tag="mbsimenv/webserver",
-        path=scriptdir+"/..",
-        dockerfile="docker/webserverImage/Dockerfile",
+        path=scriptdir+"/webserverImage",
         rm=False)
       ret=syncLogBuildImage(build)
       sys.exit(ret)
