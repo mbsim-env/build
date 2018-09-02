@@ -13,7 +13,6 @@ import json
 import requests
 
 # arguments
-#mfmf argument not working with docker-compose up
 argparser=argparse.ArgumentParser(
   formatter_class=argparse.ArgumentDefaultsHelpFormatter,
   description="Entrypoint for container mbsimenv/webserver.")
@@ -123,7 +122,6 @@ for line in fileinput.FileInput("/etc/httpd/conf.d/ssl.conf", inplace=1):
   print(line, end="")
 # reload web server config
 subprocess.check_call(["httpd", "-k", "graceful"])
-waitForWWW(10)
 
 # wait for the web server to finish (will never happen) and return its return code
 print("Service up and running.")

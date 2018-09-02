@@ -3,7 +3,6 @@
 import websockify.token_plugins
 import websockify.auth_plugins
 import os
-import subprocess
 import requests
 import Cookie
 import time
@@ -11,10 +10,26 @@ import threading
 import uuid
 import docker
 import sys
+import contextlib
+import socket
+import subprocess
 
 # configuration
 DEBUG=True
 dockerClient=docker.from_env()
+
+def waitForOpenPort(host, port, timeout):
+  def portOpen(host, port):
+    with contextlib.closing(socket.socket(socket.AF_INET, socket.SOCK_STREAM)) as sock:
+      if sock.connect_ex((host, port)) == 0:
+        return True
+      else:
+        return False
+  for i in range(0,timeout*10):
+    if portOpen(host, port):
+      return
+    time.sleep(0.1)
+  raise RuntimeError("Waiting for port "+str(port)+" on host "+host+" timed out.")
 
 websockify.logger_init()
 if DEBUG:
@@ -76,11 +91,9 @@ class MBSimWebappAuth(websockify.auth_plugins.BasePlugin):
       },
       detach=True, stdout=True, stderr=True)
     network.connect(webapprun, aliases=[hostname])
-    time.sleep(5)#mfmf
     #mfmf how to log webapprun
     #mfmf how to exit webapprun
-    # wait for container to setup webapprun
-    #mfmf
+    waitForOpenPort(hostname, 5901, 10)
 
 class MyWebSocket(websockify.websockifyserver.CompatibleWebSocket):
   def __init__(self):
