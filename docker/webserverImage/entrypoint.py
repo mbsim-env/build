@@ -86,7 +86,7 @@ subprocess.check_call(["crond"])
 
 # add daily build to crontab
 #mfmfcrontab=subprocess.check_output(["crontab", "-l"])
-#mfmfcrontab=crontab+"\n0 1 * * * /mbsim-build/build/docker/webServerImage/cron-daily.py -j %1\n"%(args.jobs)
+#mfmfcrontab=crontab+"\n0 1 * * * /mbsim-build/build/docker/webserverImage/cron-daily.py -j %1\n"%(args.jobs)
 #mfmfsubprocess.check_call(["crontab", "/dev/stdin"], )
 #mfmfp=subprocess.Popen(['crontab', '/dev/stdin'], stdin=PIPE)    
 #mfmfp.communicate(input=crontab)

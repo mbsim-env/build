@@ -31,17 +31,17 @@ COPY buildSystem/scripts/cgi-bin/mbsimBuildServiceServer.py /var/www/cgi-bin/mbs
 # copy html script
 COPY buildSystem/html /var/www/html/mbsim/html
 # copy entrypoint
-COPY docker/webServerImage/entrypoint.py /mbsim-build/build/docker/webServerImage/entrypoint.py
-COPY docker/webServerImage/cron-daily.py /mbsim-build/build/docker/webServerImage/cron-daily.py
+COPY docker/webserverImage/entrypoint.py /mbsim-build/build/docker/webserverImage/entrypoint.py
+COPY docker/webserverImage/cron-daily.py /mbsim-build/build/docker/webserverImage/cron-daily.py
 
 # configure web server
-# add top level config (stored in docker/webServerImage/httpd_toplevel.conf)
-COPY docker/webServerImage/httpd_toplevel.conf /tmp/httpd_toplevel.conf
+# add top level config (stored in docker/webserverImage/httpd_toplevel.conf)
+COPY docker/webserverImage/httpd_toplevel.conf /tmp/httpd_toplevel.conf
 RUN cat /tmp/httpd_toplevel.conf /etc/httpd/conf/httpd.conf > /etc/httpd/conf/httpd.conf.new && \
   mv /etc/httpd/conf/httpd.conf.new /etc/httpd/conf/httpd.conf && \
   rm -f /tmp/httpd_toplevel.conf
-# replace <Directory "/var/www/html"> with docker/webServerImage/httpd_rootdir.conf
-COPY docker/webServerImage/httpd_rootdir.conf /tmp/httpd_rootdir.conf
+# replace <Directory "/var/www/html"> with docker/webserverImage/httpd_rootdir.conf
+COPY docker/webserverImage/httpd_rootdir.conf /tmp/httpd_rootdir.conf
 RUN set -o pipefail && \
   B=$(sed -rn '/^ *< *Directory +"\/var\/www\/html" *> *(#.*)?$/=' /etc/httpd/conf/httpd.conf | head -n 1); \
   O=$(sed -rn "$[$B+1],\$p" /etc/httpd/conf/httpd.conf | sed -rn '/^ *< *\/ *Directory *> *(#.*)?/=' | head -n 1); \
@@ -54,8 +54,8 @@ RUN set -o pipefail && \
   sed -r "s|^( *< *VirtualHost +_default_ *: *443 *> *(#.*)?)$|\1\nServerName \${MBSIMENVSERVERNAME}\n|" /etc/httpd/conf.d/ssl.conf > \
   /etc/httpd/conf.d/ssl.conf.new && \
   mv -f /etc/httpd/conf.d/ssl.conf.new /etc/httpd/conf.d/ssl.conf
-COPY docker/webServerImage/mpm_prefork.conf /etc/httpd/cond.d/
-COPY docker/webServerImage/le-redirect-mbsim-env.conf /etc/httpd/conf.d/
+COPY docker/webserverImage/mpm_prefork.conf /etc/httpd/cond.d/
+COPY docker/webserverImage/le-redirect-mbsim-env.conf /etc/httpd/conf.d/
 
 # set crontab for
 # - cert updates
@@ -68,7 +68,7 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/webserverImage" \
   org.label-schema.vendor="MBSim-Environment"
 
-# Check apache user and group id (must be in sync with the one in autoBuildImage)
+# Check apache user and group id (must be in sync with the one in autobuildImage)
 # Add user dockeruser, create volumes and set volume ownership and permissions
 RUN test $(id -u apache) -eq 48 && test $(id -g apache) -eq 48 && \
   groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
@@ -84,4 +84,4 @@ RUN test $(id -u apache) -eq 48 && test $(id -g apache) -eq 48 && \
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
-ENTRYPOINT ["/mbsim-build/build/docker/webServerImage/entrypoint.py"]
+ENTRYPOINT ["/mbsim-build/build/docker/webserverImage/entrypoint.py"]

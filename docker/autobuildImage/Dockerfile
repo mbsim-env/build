@@ -17,7 +17,7 @@ RUN yum install -y \
 ENV CCACHE_DIR=/mbsim-ccache
 
 # copy build repo
-COPY docker/autoBuildImage/entrypoint.py /mbsim-build/build/docker/autoBuildImage/entrypoint.py
+COPY docker/autobuildImage/entrypoint.py /mbsim-build/build/docker/autobuildImage/entrypoint.py
 COPY buildScripts /mbsim-build/build/buildScripts
 COPY buildSystem/scripts /mbsim-build/build/buildSystem/scripts
 
@@ -42,4 +42,4 @@ USER dockeruser:dockeruser
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
-ENTRYPOINT ["/mbsim-build/build/docker/autoBuildImage/entrypoint.py"]
+ENTRYPOINT ["/mbsim-build/build/docker/autobuildImage/entrypoint.py"]
