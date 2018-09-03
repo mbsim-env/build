@@ -19,8 +19,9 @@ ENV CCACHE_DIR=/mbsim-ccache
 # copy build repo
 COPY docker/autobuildImage/entrypoint.py /mbsim-build/build/docker/autobuildImage/entrypoint.py
 COPY docker/autobuildImage/builddoc.py /mbsim-build/build/docker/autobuildImage/builddoc.py
+COPY docker/autobuildImage/buildSystemState.py /mbsim-build/build/docker/autobuildImage/buildSystemState.py
+COPY docker/autobuildImage/distribute.py /mbsim-build/build/docker/autobuildImage/distribute.py
 COPY buildScripts /mbsim-build/build/buildScripts
-COPY buildSystem/scripts /mbsim-build/build/buildSystem/scripts
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \

@@ -4,15 +4,14 @@ from __future__ import print_function # to enable the print function for backwar
 import os
 import glob
 import sys
-sys.path.append("/mbsim-build/build/buildSystem/scripts")
+sys.path.append("/mbsim-build/build/docker/autobuildImage")
 import buildSystemState
 import subprocess
 import datetime
 import shutil
 
-stateDir=sys.argv[1]
-inDir=sys.argv[2]
-outDir=sys.argv[3]
+inDir=sys.argv[1]
+outDir=sys.argv[2]
 
 def buildLatex(f):
   subprocess.check_call(["pdflatex", "-halt-on-error", "-file-line-error", "main.tex"], stderr=subprocess.STDOUT, stdout=f)
@@ -24,8 +23,6 @@ def buildLatex(f):
 
 if not os.path.isdir(outDir):
   os.makedirs(outDir)
-
-scriptdir=os.path.dirname(os.path.realpath(__file__))
 
 os.chdir(inDir)
 curdir=os.getcwd()
@@ -57,7 +54,7 @@ for texMain in mainFiles:
   os.chdir(curdir)
 f.close()
 
-buildSystemState.update(stateDir, "build-manuals", "Building Manuals Failed",
+buildSystemState.update("build-manuals", "Building Manuals Failed",
                         str(nrDocFailed)+" of "+str(len(mainFiles))+" manuals failed to build.",
                         "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/html/manuals/", nrDocFailed, len(mainFiles))
 

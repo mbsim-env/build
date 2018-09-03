@@ -102,14 +102,14 @@ os.environ["MBSIM_SWIG"]="1"
 if len(args.updateReferences)>0:
   CURDIR=os.getcwd()
   os.chdir("/mbsim-env/mbsim/examples")
-  if subprocess.call(["./runexamples.py", "--action", "copyToReference"]+args.updateReferences)!=0:
+  if subprocess.call(["./runexamples_mfmf.py", "--action", "copyToReference"]+args.updateReferences)!=0:
     ret=ret+1
     print("runexamples.py --action copyToReference ... failed.")
   os.chdir(CURDIR)
 
   # update references for download
   os.chdir("/mbsim-env/mbsim/examples")
-  if subprocess.call(["./runexamples.py", "--action", "pushReference=/mbsim-report/references"])!=0:
+  if subprocess.call(["./runexamples_mfmf.py", "--action", "pushReference=/mbsim-report/references"])!=0:
     ret=ret+1
     print("pushing references to download dir failed.")
   os.chdir(CURDIR)
@@ -128,7 +128,7 @@ localRet=subprocess.call(
   ["/mbsim-build/build/buildScripts/build.py"]+ARGS+["--url", "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report",
   "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun"]+\
   (["--statusAccessTokenFile", "/dev/stdin"] if args.statusAccessTokenFile!=None else [])+\
-  ["--stateDir", "/mbsim-state", "--rotate", "20", "--fmatvecBranch", args.fmatvecBranch,
+  ["--rotate", "20", "--fmatvecBranch", args.fmatvecBranch,
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
   "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix", "--webapp",
   "--reportOutDir", "/mbsim-report/report", "--buildType", args.buildType, "--passToConfigure", "--disable-static",
@@ -165,11 +165,10 @@ if args.valgrindExamples:
   valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
   # build
   coverage = ["--coverage", "/mbsim-env:-build:/mbsim-env/local"] if "--coverage" in ARGS else []
-  localRet=subprocess.call(["./runexamples.py", "--rotate", "20", "-j", str(args.jobs)]+coverage+["--reportOutDir",
+  localRet=subprocess.call(["./runexamples_mfmf.py", "--rotate", "20", "-j", str(args.jobs)]+coverage+["--reportOutDir",
             "/mbsim-report/report/runexamples_valgrind_report", "--url",
             "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
-            "--buildSystemRun", "/mbsim-build/build/buildSystem/scripts", "--stateDir", "/mbsim-state",
-            "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
+            "--buildSystemRun", "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
             "valgrind --trace-children=yes --trace-children-skip=*/rm --num-callers=150 --gen-suppressions=all --suppressions="+
             "/mbsim-build/build/buildScripts/valgrind-mbsim.supp --leak-check=full", "--disableCompare", "--disableValidate",
             "--buildType", args.buildType+"-valgrind"]+
@@ -188,7 +187,7 @@ if args.valgrindExamples:
 
 if args.buildDoc:
   # build doc
-  if subprocess.call(["/mbsim-build/build/docker/autobuildImage/builddoc.py", "/mbsim-state",
+  if subprocess.call(["/mbsim-build/build/docker/autobuildImage/builddoc.py",
                       "/mbsim-env/mbsim/manuals", "/mbsim-report/manuals"])!=0:
     ret=ret+1
     print("builddoc.py failed.")

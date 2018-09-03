@@ -73,7 +73,6 @@ def parseArguments():
   cfgOpts.add_argument("--staticCodeAnalyzis", action="store_true", help='Enable static code analyzis using LLVM Clang Analyzer.')
   cfgOpts.add_argument("--webapp", action="store_true", help='Just passed to runexamples.py.')
   cfgOpts.add_argument("--buildFailedExit", default=None, type=int, help='Define the exit code when the build fails - e.g. use --buildFailedExit 125 to skip a failed build when running as "git bisect run".')
-  cfgOpts.add_argument("--stateDir", default="/var/www/html/mbsim/buildsystemstate", type=str, help='www state directory used for --buildSystemRun.')
   cfgOpts.add_argument("--configDir", default="/home/mbsim/BuildServiceConfig", type=str, help='Config directory used for --buildSystemRun.')
   
   outOpts=argparser.add_argument_group('Output Options')
@@ -578,9 +577,9 @@ def main():
 
   # update build system state
   if args.buildSystemRun:
-    sys.path.append(scriptdir+'/../buildSystem/scripts')
+    sys.path.append("/mbsim-build/build/docker/autobuildImage")
     import buildSystemState
-    buildSystemState.update(args.stateDir, args.buildType+"-build", "Build Failed: "+args.buildType,
+    buildSystemState.update(args.buildType+"-build", "Build Failed: "+args.buildType,
                             "%d of %d build parts failed."%(nrFailed, nrRun),
                             args.url+"/result_%010d"%(currentID)+"/index.html",
                             nrFailed, nrRun)
@@ -1031,16 +1030,15 @@ def runexamples(mainFD):
 
   # runexamples.py command
   currentID=int(os.path.basename(args.reportOutDir)[len("result_"):])
-  command=["./runexamples.py", "-j", str(args.j)]
+  command=["./runexamples_mfmf.py", "-j", str(args.j)]
   if args.url!=None:
     command.extend(["--url", args.url+"/result_%010d/runexamples_report"%(currentID)])
   command.extend(["--buildType", args.buildType])
   command.extend(["--reportOutDir", pj(args.reportOutDir, "runexamples_report")])
   command.extend(["--currentID", str(currentID)])
   command.extend(["--timeID", timeID.strftime("%Y-%m-%dT%H:%M:%S")])
-  command.extend(["--stateDir", args.stateDir])
   if args.buildSystemRun:
-    command.extend(["--buildSystemRun", scriptdir+"/../buildSystem/scripts"])
+    command.extend(["--buildSystemRun"])
   if args.coverage:
     command.extend(["--coverage", args.sourceDir+":"+args.binSuffix+":"+args.prefix])
   if args.webapp:
@@ -1075,7 +1073,8 @@ def createDistribution(mainFD):
   os.mkdir(pj(args.reportOutDir, "distribute"))
   distLog=codecs.open(pj(args.reportOutDir, "distribute", "log.txt"), "w", encoding="utf-8")
   distArchiveName="failed"
-  distributeErrorCode=subprocess.call([pj(scriptdir, "../buildSystem/scripts/distribute.py"), "--outDir", pj(args.reportOutDir, "distribute"),
+
+  distributeErrorCode=subprocess.call(["/mbsim-build/build/docker/autobuildImage/distribute.py", "--outDir", pj(args.reportOutDir, "distribute"),
                                          args.prefix if args.prefix!=None else args.prefixAuto],
                                          stderr=subprocess.STDOUT, stdout=distLog)
   distLog.close()

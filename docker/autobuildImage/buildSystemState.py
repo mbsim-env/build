@@ -8,11 +8,11 @@ import hashlib
 import base64
 import os.path
 
-def update(stateDir, buildType, title, content, link, nrFailed, nrRun):
+def update(buildType, title, content, link, nrFailed, nrRun):
 
   # update build system state
-  createStateSVGFile(stateDir+"/"+buildType+".nrFailed.svg", str(nrFailed), "#5cb85c" if nrFailed==0 else "#d9534f")
-  createStateSVGFile(stateDir+"/"+buildType+".nrAll.svg", str(nrRun), "#777")
+  createStateSVGFile("/mbsim-state/"+buildType+".nrFailed.svg", str(nrFailed), "#5cb85c" if nrFailed==0 else "#d9534f")
+  createStateSVGFile("/mbsim-state/"+buildType+".nrAll.svg", str(nrRun), "#777")
 
   # add to Atom feed on failure
   if nrFailed>0:
@@ -21,11 +21,11 @@ def update(stateDir, buildType, title, content, link, nrFailed, nrRun):
     ET.register_namespace("", NS_)
 
     # read feed
-    fd=open(stateDir+'/.failures.atom.xml.lock', 'w') # open/create lockfile
+    fd=open('/mbsim-state/.failures.atom.xml.lock', 'w') # open/create lockfile
     fcntl.lockf(fd, fcntl.LOCK_EX) # lock lockfile
-    if not os.path.isfile(stateDir+'/failures.atom.xml'):
+    if not os.path.isfile('/mbsim-state/failures.atom.xml'):
       # create the file if it does not exist
-      with open(stateDir+'/failures.atom.xml', "w") as f:
+      with open('/mbsim-state/failures.atom.xml', "w") as f:
         f.write(
 '''<feed xmlns="http://www.w3.org/2005/Atom">
   <author><name>MBSim-Env Build System</name></author>
@@ -34,7 +34,7 @@ def update(stateDir, buildType, title, content, link, nrFailed, nrRun):
   <title>MBSim-Env Build System Feeds</title>
   <updated>2018-07-27T06:08:08Z</updated>
 </feed>'''%(os.environ['MBSIMENVSERVERNAME'],os.environ['MBSIMENVSERVERNAME']))
-    tree=ET.parse(stateDir+'/failures.atom.xml') # read feed
+    tree=ET.parse('/mbsim-state/failures.atom.xml') # read feed
     elefeed=tree.getroot() # get root element
 
     curtime=datetime.datetime.utcnow()
@@ -79,7 +79,7 @@ def update(stateDir, buildType, title, content, link, nrFailed, nrRun):
     elename.text="MBSim-Env Build System"
 
     # write feed
-    tree.write(stateDir+'/failures.atom.xml')
+    tree.write('/mbsim-state/failures.atom.xml')
     fcntl.lockf(fd, fcntl.LOCK_UN) # unlock lockfile
     fd.close() # close lockfile
 
