@@ -31,8 +31,8 @@ COPY cgi-bin/mbsimBuildServiceServer.py /var/www/cgi-bin/mbsimBuildServiceServer
 # copy html script
 COPY html /var/www/html/mbsim/html
 # copy entrypoint
-COPY entrypoint.py /mbsim-build/build/docker/webserverImage/entrypoint.py
-COPY cron-daily.py /mbsim-build/build/docker/webserverImage/cron-daily.py
+COPY entrypoint.py /context/entrypoint.py
+COPY cron-daily.py /context/cron-daily.py
 
 # configure web server
 # add top level config (stored in docker/webserverImage/httpd_toplevel.conf)
@@ -84,4 +84,4 @@ RUN test $(id -u apache) -eq 48 && test $(id -g apache) -eq 48 && \
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
-ENTRYPOINT ["/mbsim-build/build/docker/webserverImage/entrypoint.py"]
+ENTRYPOINT ["/context/entrypoint.py"]

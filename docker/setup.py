@@ -149,8 +149,7 @@ if args.command=="run":
         raise RuntimeError("Argument --servername is required.")
       autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
         init=True,
-        entrypoint=["/mbsim-build/build/docker/autobuildImage/entrypoint.py", "--buildType", "linux64-ci"],
-        command=["-j", str(args.jobs)],
+        command=["--buildType", "linux64-ci", "-j", str(args.jobs)],
         environment={"MBSIMENVSERVERNAME": args.servername},
         volumes={
           'mbsimenv_mbsim-linux64-ci':  {"bind": "/mbsim-env",    "mode": "rw"},
@@ -169,9 +168,7 @@ if args.command=="run":
         raise RuntimeError("Argument --servername is required.")
       autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
         init=True,
-        entrypoint=["/mbsim-build/build/docker/autobuildImage/entrypoint.py", "--buildType",
-                    "linux64-dailydebug", "--buildDoc", "--valgrindExamples"],
-        command=["-j", str(args.jobs)],
+        command=["--buildType", "linux64-dailydebug", "--buildDoc", "--valgrindExamples", "-j", str(args.jobs)],
         environment={"MBSIMENVSERVERNAME": args.servername},
         volumes={
           'mbsimenv_mbsim-linux64-dailydebug':  {"bind": "/mbsim-env",    "mode": "rw"},
@@ -190,8 +187,7 @@ if args.command=="run":
         raise RuntimeError("Argument --servername is required.")
       autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
         init=True,
-        entrypoint=["/mbsim-build/build/docker/autobuildImage/entrypoint.py", "--buildType", "linux64-dailyrelease"],
-        command=["-j", str(args.jobs)],
+        command=["--buildType", "linux64-dailyrelease", "-j", str(args.jobs)],
         environment={"MBSIMENVSERVERNAME": args.servername},
         volumes={
           'mbsimenv_mbsim-linux64-dailyrelease':  {"bind": "/mbsim-env",    "mode": "rw"},

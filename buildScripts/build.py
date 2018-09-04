@@ -577,7 +577,7 @@ def main():
 
   # update build system state
   if args.buildSystemRun:
-    sys.path.append("/mbsim-build/build/docker/autobuildImage")
+    sys.path.append("/context")
     import buildSystemState
     buildSystemState.update(args.buildType+"-build", "Build Failed: "+args.buildType,
                             "%d of %d build parts failed."%(nrFailed, nrRun),
@@ -1074,7 +1074,7 @@ def createDistribution(mainFD):
   distLog=codecs.open(pj(args.reportOutDir, "distribute", "log.txt"), "w", encoding="utf-8")
   distArchiveName="failed"
 
-  distributeErrorCode=subprocess.call(["/mbsim-build/build/docker/autobuildImage/distribute.py", "--outDir", pj(args.reportOutDir, "distribute"),
+  distributeErrorCode=subprocess.call(["/context/distribute.py", "--outDir", pj(args.reportOutDir, "distribute"),
                                          args.prefix if args.prefix!=None else args.prefixAuto],
                                          stderr=subprocess.STDOUT, stdout=distLog)
   distLog.close()

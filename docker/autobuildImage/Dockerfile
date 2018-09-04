@@ -17,10 +17,10 @@ RUN yum install -y \
 ENV CCACHE_DIR=/mbsim-ccache
 
 # copy build repo
-COPY docker/autobuildImage/entrypoint.py /mbsim-build/build/docker/autobuildImage/entrypoint.py
-COPY docker/autobuildImage/builddoc.py /mbsim-build/build/docker/autobuildImage/builddoc.py
-COPY docker/autobuildImage/buildSystemState.py /mbsim-build/build/docker/autobuildImage/buildSystemState.py
-COPY docker/autobuildImage/distribute.py /mbsim-build/build/docker/autobuildImage/distribute.py
+COPY docker/autobuildImage/entrypoint.py /context/entrypoint.py
+COPY docker/autobuildImage/builddoc.py /context/builddoc.py
+COPY docker/autobuildImage/buildSystemState.py /context/buildSystemState.py
+COPY docker/autobuildImage/distribute.py /context/distribute.py
 COPY buildScripts /mbsim-build/build/buildScripts
 
 # set labels
@@ -44,4 +44,4 @@ USER dockeruser:dockeruser
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
-ENTRYPOINT ["/mbsim-build/build/docker/autobuildImage/entrypoint.py"]
+ENTRYPOINT ["/context/entrypoint.py"]

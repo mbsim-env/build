@@ -4,7 +4,7 @@ from __future__ import print_function # to enable the print function for backwar
 import os
 import glob
 import sys
-sys.path.append("/mbsim-build/build/docker/autobuildImage")
+sys.path.append("/context")
 import buildSystemState
 import subprocess
 import datetime
