@@ -82,7 +82,7 @@ class MBSimWebappAuth(websockify.auth_plugins.BasePlugin):
     # start vnc and other processes in a new container (being reachable as hostname)
     # start this in a seperate process which stops the container if the parent (this process) terminates
     networkID=sys.argv[1]
-    subprocess.Popen(['/usr/bin/python', "/opt/webapprun.py", networkID, token, hostname])
+    subprocess.Popen(['/usr/bin/python', "/context/webapprun.py", networkID, token, hostname])
     waitForOpenPort(hostname, 5901, 10)
 
 class MyWebSocket(websockify.websockifyserver.CompatibleWebSocket):

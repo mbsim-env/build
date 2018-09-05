@@ -6,7 +6,7 @@ RUN yum install -y \
   xfwm4 \
   && yum clean all
 
-COPY entrypoint.py /opt/entrypoint.py
+COPY entrypoint.py /context/entrypoint.py
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
@@ -25,4 +25,4 @@ USER dockeruser:dockeruser
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
-ENTRYPOINT ["/opt/entrypoint.py"]
+ENTRYPOINT ["/context/entrypoint.py"]

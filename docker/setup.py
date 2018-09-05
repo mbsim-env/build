@@ -21,6 +21,7 @@ argparser.add_argument("service", nargs="*", help="Service or image to run or bu
 argparser.add_argument("--servername", type=str, default=None, help="Set the hostname of webserver")
 argparser.add_argument("--jobs", "-j", type=int, default=4, help="Number of jobs to run in parallel")
 argparser.add_argument("--clientID", type=str, default=None, help="GitHub OAuth App client ID")
+#mfmf hold all secrets in memory or on none readable files
 argparser.add_argument("--clientSecret", type=str, default=None, help="GitHub OAuth App client secret")
 argparser.add_argument("--webhookSecret", type=str, default=None, help="GitHub web hook secret")
 argparser.add_argument("--statusAccessToken", type=str, default=None, help="GitHub access token for status updates")
@@ -116,7 +117,8 @@ if args.command=="build":
 
     elif s=="webserver":
       build=dockerClientLL.build(tag="mbsimenv/webserver",
-        path=scriptdir+"/webserverImage",
+        path=scriptdir,
+        dockerfile="webserverImage/Dockerfile",
         rm=False)
       ret=syncLogBuildImage(build)
       sys.exit(ret)

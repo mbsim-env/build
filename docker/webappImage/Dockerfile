@@ -32,8 +32,8 @@ RUN easy_install /3rdparty/websockify/dist/websockify-0.8.0-py2.7.egg
 # install docker python API
 RUN pip install docker
 
-COPY entrypoint.py /opt/entrypoint.py
-COPY webapprun.py /opt/webapprun.py
+COPY entrypoint.py /context/entrypoint.py
+COPY webapprun.py /context/webapprun.py
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
@@ -45,4 +45,4 @@ LABEL org.label-schema.schema-version="1.0" \
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
-ENTRYPOINT ["/opt/entrypoint.py"]
+ENTRYPOINT ["/context/entrypoint.py"]

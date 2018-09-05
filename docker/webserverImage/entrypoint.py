@@ -81,16 +81,17 @@ for filename in ["/var/www/html/mbsim/html/index.html", "/var/www/html/mbsim/htm
     line=line.replace("@MBSIMENVCLIENTID@", config["client_id"])
     print(line, end="")
 
+# add daily build to crontab (starting at 01:00)
+crontab=subprocess.check_output(["crontab", "-l"])
+#mfmfcrontab=crontab+"0 1 * * * /context/cron-daily.py -j %d\n"%(args.jobs)
+crontab=crontab+"* * * * * /context/cron-daily.py -j %d --servername %s\n"%(args.jobs, os.environ["MBSIMENVSERVERNAME"])
+subprocess.check_call(["crontab", "/dev/stdin"], )
+p=subprocess.Popen(['crontab', '/dev/stdin'], stdin=subprocess.PIPE)    
+p.communicate(input=crontab)
+p.wait()
+
 # run cron in background
 subprocess.check_call(["crond"])
-
-# add daily build to crontab
-#mfmfcrontab=subprocess.check_output(["crontab", "-l"])
-#mfmfcrontab=crontab+"\n0 1 * * * /mbsim-build/build/docker/webserverImage/cron-daily.py -j %1\n"%(args.jobs)
-#mfmfsubprocess.check_call(["crontab", "/dev/stdin"], )
-#mfmfp=subprocess.Popen(['crontab', '/dev/stdin'], stdin=PIPE)    
-#mfmfp.communicate(input=crontab)
-#mfmfp.wait()
 
 # run web server (uses the default certs)
 # the configuration files uses the envvar MBSIMENVSERVERNAME
