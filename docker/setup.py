@@ -226,6 +226,7 @@ if args.command=="run":
           'mbsimenv_config':                      {"bind": "/mbsim-config",                            "mode": "rw"},
           'mbsimenv_releases':                    {"bind": "/var/www/html/mbsim/releases",             "mode": "rw"},
           'mbsimenv_letsencrypt':                 {"bind": "/etc/letsencrypt",                         "mode": "rw"},
+          '/var/run/docker.sock':                 {"bind": "/var/run/docker.sock", "mode": "rw"},
         },
         hostname=args.servername,
         ports={

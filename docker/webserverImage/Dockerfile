@@ -19,8 +19,8 @@ RUN yum install -y epel-release && yum install -y \
   mod_ssl \
   python2-certbot \
   cronie \
+  python34-docker \
   && yum clean all
-#mfmf install docker > 2
 
 # a webserver is running on port 80
 EXPOSE 80/tcp 443/tcp
