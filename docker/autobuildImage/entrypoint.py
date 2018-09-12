@@ -95,9 +95,6 @@ if args.staticCodeAnalyzis:
 # uncomment this to run static code analyzis
 # ARGS.append("--staticCodeAnalyzis")
 
-# build swig interfaces
-os.environ["MBSIM_SWIG"]="1"
-
 # update references of examples
 if len(args.updateReferences)>0:
   CURDIR=os.getcwd()

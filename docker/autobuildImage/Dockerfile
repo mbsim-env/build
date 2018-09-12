@@ -15,6 +15,8 @@ RUN yum install -y \
 
 # ccache
 ENV CCACHE_DIR=/mbsim-ccache
+# enable swig interface to mbsim
+ENV MBSIM_SWIG=1
 
 # copy build repo
 COPY docker/autobuildImage/entrypoint.py /context/entrypoint.py
