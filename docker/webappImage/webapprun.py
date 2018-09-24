@@ -36,6 +36,9 @@ webapprun=dockerClient.containers.run(image="mbsimenv/webapprun",
     'mbsimenv_mbsim-linux64-dailyrelease': {"bind": "/mbsim-env-linux64-dailyrelease", "mode": "ro"},
   },
   detach=True, stdout=True, stderr=True)
+print("Started running webapprun with token "+token+" as container ID "+webapprun.id)
+sys.stdout.flush()
 network.connect(webapprun, aliases=[hostname])
-#mfmf how to log webapprun
 webapprun.wait()
+print("Finished running webapprun with token "+token+" as container ID "+webapprun.id)
+sys.stdout.flush()

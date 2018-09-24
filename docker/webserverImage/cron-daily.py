@@ -3,6 +3,9 @@
 import subprocess
 import os
 import argparse
+import sys
+sys.path.append("/context")
+import setup
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -14,8 +17,9 @@ argparser.add_argument("--servername", type=str, help="Servername")
 
 args=argparser.parse_args()
 
-# linux64-dailydebug
-subprocess.check_call(["python3", "/context/setup.py", "run", "autobuild-linux64-dailydebug", "--servername", args.servername, "-j", str(args.jobs)])
+with open("/proc/1/fd/1", "w") as f:
+  # linux64-dailydebug
+  setup.run("autobuild-linux64-dailydebug", args.servername, args.jobs, printStartStopFile=f)
 
-# linux64-dailyrelease
-subprocess.check_call(["python3", "/context/setup.py", "run", "autobuild-linux64-dailyrelease", "--servername", args.servername, "-j", str(args.jobs)])
+  # linux64-dailyrelease
+  setup.run("autobuild-linux64-dailyrelease", args.servername, args.jobs, printStartStopFile=f)

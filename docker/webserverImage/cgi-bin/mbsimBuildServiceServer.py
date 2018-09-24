@@ -348,6 +348,7 @@ try:
           # create response
           response_data['success']=True
           response_data['message']="OK"
+          #mfmf run linux64-ci and print start/stop to docker console
 
     # copy distribution to release and tag on github
     if action=="/releasedistribution" and method=="POST":
