@@ -10,9 +10,8 @@ import datetime
 import sys
 import shutil
 
-stateDir=sys.argv[1]
-inDir=sys.argv[2]
-outDir=sys.argv[3]
+inDir=sys.argv[1]
+outDir=sys.argv[2]
 
 if not os.path.isdir(outDir):
   os.makedirs(outDir)
@@ -45,6 +44,6 @@ for texMain in mainFiles:
   os.chdir(curdir)
 f.close()
 
-buildSystemState.update(stateDir, "build-manuals", "Building Manuals Failed",
+buildSystemState.update("build-manuals", "Building Manuals Failed",
                         str(nrDocFailed)+" of "+str(len(mainFiles))+" manuals failed to build.",
                         "https://www.mbsim-env.de/mbsim/html/manuals/", nrDocFailed, len(mainFiles))

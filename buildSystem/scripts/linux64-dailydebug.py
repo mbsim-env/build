@@ -102,7 +102,7 @@ os.environ["MBSIM_SET_MINIMAL_TEND"]="1"
 ret=simplesandbox.call(["./runexamples.py", "--rotate", "20", "-j", "2", "--coverage", SRCDIR+"::"+SRCDIR+"/local", "--reportOutDir",
           outDir, "--url",
           "https://www.mbsim-env.de/mbsim/linux64-dailydebug/report/runexamples_valgrind_report",
-          "--buildSystemRun", SCRIPTDIR,
+          "--buildSystemRun",
           "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
           "valgrind --trace-children=yes --trace-children-skip=*/rm --num-callers=150 --gen-suppressions=all --suppressions="+
           SCRIPTDIR+"/../../buildScripts/valgrind-mbsim.supp --leak-check=full", "--disableCompare", "--disableValidate",
@@ -121,5 +121,5 @@ build.setStatus(commitidfull, "success" if ret==0 else "failure", currentID, tim
       "linux64-dailydebug-valgrind", endTime)
 
 # build doc
-if subprocess.call([SCRIPTDIR+"/builddoc.py", "/var/www/html/mbsim/buildsystemstate", "/home/mbsim/linux64-dailydebug/mbsim/manuals", "/var/www/html/mbsim/linux64-dailydebug/manuals"])!=0:
+if subprocess.call([SCRIPTDIR+"/builddoc.py", "/home/mbsim/linux64-dailydebug/mbsim/manuals", "/var/www/html/mbsim/linux64-dailydebug/manuals"])!=0:
   print("builddoc.py failed.")

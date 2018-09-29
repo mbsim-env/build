@@ -7,11 +7,11 @@ import fcntl
 import hashlib
 import base64
 
-def update(stateDir, buildType, title, content, link, nrFailed, nrRun):
+def update(buildType, title, content, link, nrFailed, nrRun):
 
   # update build system state
-  createStateSVGFile(stateDir+"/"+buildType+".nrFailed.svg", str(nrFailed), "#5cb85c" if nrFailed==0 else "#d9534f")
-  createStateSVGFile(stateDir+"/"+buildType+".nrAll.svg", str(nrRun), "#777")
+  createStateSVGFile("/var/www/html/mbsim/buildsystemstate/"+buildType+".nrFailed.svg", str(nrFailed), "#5cb85c" if nrFailed==0 else "#d9534f")
+  createStateSVGFile("/var/www/html/mbsim/buildsystemstate/"+buildType+".nrAll.svg", str(nrRun), "#777")
 
   # add to Atom feed on failure
   if nrFailed>0:
@@ -20,9 +20,9 @@ def update(stateDir, buildType, title, content, link, nrFailed, nrRun):
     ET.register_namespace("", NS_)
 
     # read feed
-    fd=open(stateDir+'/.failures.atom.xml.lock', 'w') # open/create lockfile
+    fd=open('/var/www/html/mbsim/buildsystemstate/.failures.atom.xml.lock', 'w') # open/create lockfile
     fcntl.lockf(fd, fcntl.LOCK_EX) # lock lockfile
-    tree=ET.parse(stateDir+'/failures.atom.xml') # read feed
+    tree=ET.parse('/var/www/html/mbsim/buildsystemstate/failures.atom.xml') # read feed
     elefeed=tree.getroot() # get root element
 
     curtime=datetime.datetime.utcnow()
@@ -67,7 +67,7 @@ def update(stateDir, buildType, title, content, link, nrFailed, nrRun):
     elename.text="MBSim-Env Build System"
 
     # write feed
-    tree.write(stateDir+'/failures.atom.xml')
+    tree.write('/var/www/html/mbsim/buildsystemstate/failures.atom.xml')
     fcntl.lockf(fd, fcntl.LOCK_UN) # unlock lockfile
     fd.close() # close lockfile
 
