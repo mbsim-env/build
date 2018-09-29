@@ -34,6 +34,7 @@ COPY webserverImage/html /var/www/html/mbsim/html
 # copy entrypoint
 COPY webserverImage/entrypoint.py /context/entrypoint.py
 COPY webserverImage/cron-daily.py /context/cron-daily.py
+COPY webserverImage/cron-ci.py /context/cron-ci.py
 COPY setup.py /context/setup.py
 
 # configure web server

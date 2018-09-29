@@ -22,7 +22,6 @@ def parseArgs():
   argparser.add_argument("--servername", type=str, default=None, help="Set the hostname of webserver")
   argparser.add_argument("--jobs", "-j", type=int, default=4, help="Number of jobs to run in parallel")
   argparser.add_argument("--clientID", type=str, default=None, help="GitHub OAuth App client ID")
-  #mfmf hold all secrets in memory or on none readable files
   argparser.add_argument("--clientSecret", type=str, default=None, help="GitHub OAuth App client secret")
   argparser.add_argument("--webhookSecret", type=str, default=None, help="GitHub web hook secret")
   argparser.add_argument("--statusAccessToken", type=str, default=None, help="GitHub access token for status updates")
@@ -164,14 +163,21 @@ def build(s):
 
 
 
-def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=None, statusAccessToken=None, token=None, printStartStopFile=None):
+def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=None, statusAccessToken=None, token=None,
+        fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
+        printStartStopFile=None):
 
   if s=="autobuild-linux64-ci":
     if servername==None:
       raise RuntimeError("Argument --servername is required.")
     autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
       init=True,
-      command=["--buildType", "linux64-ci", "-j", str(jobs)],
+      labels={"buildtype": "linux64-ci"},
+      command=["--buildType", "linux64-ci", "-j", str(jobs),
+               "--fmatvecBranch", fmatvecBranch,
+               "--hdf5serieBranch", hdf5serieBranch,
+               "--openmbvBranch", openmbvBranch,
+               "--mbsimBranch", mbsimBranch],
       environment={"MBSIMENVSERVERNAME": servername},
       volumes={
         'mbsimenv_mbsim-linux64-ci':  {"bind": "/mbsim-env",    "mode": "rw"},
@@ -196,6 +202,7 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
       raise RuntimeError("Argument --servername is required.")
     autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
       init=True,
+      labels={"buildtype": "linux64-dailydebug"},
       command=["--buildType", "linux64-dailydebug", "--buildDoc", "--valgrindExamples", "-j", str(jobs)],
       environment={"MBSIMENVSERVERNAME": servername},
       volumes={
@@ -219,6 +226,7 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
       raise RuntimeError("Argument --servername is required.")
     autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
       init=True,
+      labels={"buildtype": "linux64-dailyrelease"},
       command=["--buildType", "linux64-dailyrelease", "-j", str(jobs)],
       environment={"MBSIMENVSERVERNAME": servername},
       volumes={

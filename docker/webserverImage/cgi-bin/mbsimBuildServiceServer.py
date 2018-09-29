@@ -333,6 +333,8 @@ try:
           response_data['success']=True
           response_data['message']="not implemented yet"
           data=json.loads(rawdata)
+          # we can start the docker container from here but this scripts runs as user apache
+          # which does not have access to the docker socket. Hence, we store to the config file and check it with cron.
           # get current config
           curcibranch=config['curcibranch']
           tobuild=config['tobuild']
@@ -348,7 +350,6 @@ try:
           # create response
           response_data['success']=True
           response_data['message']="OK"
-          #mfmf run linux64-ci and print start/stop to docker console
 
     # copy distribution to release and tag on github
     if action=="/releasedistribution" and method=="POST":
