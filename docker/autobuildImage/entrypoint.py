@@ -78,12 +78,9 @@ if args.buildType == "linux64-ci":
   RUNEXAMPLES=["--disableCompare", "--disableMakeClean", "--filter", "'basic' in labels"]
 elif args.buildType == "linux64-dailydebug":
   ARGS=["--docOutDir", "/mbsim-report/doc", "--coverage"]
-  ARGS=ARGS+["--forceBuild"]#mfmfdeline
   RUNEXAMPLES=["--checkGUIs"]
-  RUNEXAMPLES=RUNEXAMPLES+["xml/hierachical_modelling"]#mfmfdeline
 elif args.buildType == "linux64-dailyrelease":
   ARGS=["--enableDistribution"]
-  ARGS=ARGS+["--forceBuild"]#mfmfdeline
   RUNEXAMPLES=["--disableCompare", "--disableValidate", "--checkGUIs", "--filter", "'basic' in labels"]
 
 # pass arguments to build.py
@@ -168,8 +165,7 @@ if args.valgrindExamples:
             "--buildSystemRun", "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
             "valgrind --trace-children=yes --trace-children-skip=*/rm --num-callers=150 --gen-suppressions=all --suppressions="+
             "/mbsim-build/build/buildScripts/valgrind-mbsim.supp --leak-check=full", "--disableCompare", "--disableValidate",
-            "--buildType", args.buildType+"-valgrind"]+
-            ["xml/hierachical_modelling"]#mfmfdeline
+            "--buildType", args.buildType+"-valgrind"]
             , env=valgrindEnv)
   if localRet!=0:
     ret=ret+1
