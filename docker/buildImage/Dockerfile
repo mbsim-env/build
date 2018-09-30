@@ -158,7 +158,7 @@ ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/mbsim-env/local/lib/pkgconfig:/mbsim-env/l
 COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local
 
 # enable ccache (after all other things are done); note /mbsim-env is usually a persistent Docker volume
-ENV PATH=/usr/lib64/ccache:$PATH \
+ENV PATH=/usr/lib64/ccache:/mbsim-env/mbsim/examples:/mbsim-env/build/buildScripts:$PATH \
     CCACHE_DIR=/mbsim-env/.ccache
 
 # run bash per default

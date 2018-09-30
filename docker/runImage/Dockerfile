@@ -79,7 +79,7 @@ WORKDIR /mbsim-env
 ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/mbsim-env/local/lib/pkgconfig
 # MISSING we should run the examples with --checkGUIs options but this does not work sometimes for a unknown reason
 # (simulations hang)
-RUN /mbsim-env/mbsim/examples/runexamples_mfmf.py -j $JOBS --filter "'basic' in labels and not src" /mbsim-env/mbsim/examples
+RUN /mbsim-env/mbsim/examples/runexamples.py -j $JOBS --filter "'basic' in labels and not src" /mbsim-env/mbsim/examples
 # MISSING as a workaround we test now the GUI tools by hand
 ENV DISPLAY=:0
 RUN vncserver :0 -SecurityTypes None && \

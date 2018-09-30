@@ -96,14 +96,14 @@ if args.staticCodeAnalyzis:
 if len(args.updateReferences)>0:
   CURDIR=os.getcwd()
   os.chdir("/mbsim-env/mbsim/examples")
-  if subprocess.call(["./runexamples_mfmf.py", "--action", "copyToReference"]+args.updateReferences)!=0:
+  if subprocess.call(["./runexamples.py", "--action", "copyToReference"]+args.updateReferences)!=0:
     ret=ret+1
     print("runexamples.py --action copyToReference ... failed.")
   os.chdir(CURDIR)
 
   # update references for download
   os.chdir("/mbsim-env/mbsim/examples")
-  if subprocess.call(["./runexamples_mfmf.py", "--action", "pushReference=/mbsim-report/references"])!=0:
+  if subprocess.call(["./runexamples.py", "--action", "pushReference=/mbsim-report/references"])!=0:
     ret=ret+1
     print("pushing references to download dir failed.")
   os.chdir(CURDIR)
@@ -159,7 +159,7 @@ if args.valgrindExamples:
   valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
   # build
   coverage = ["--coverage", "/mbsim-env:-build:/mbsim-env/local"] if "--coverage" in ARGS else []
-  localRet=subprocess.call(["./runexamples_mfmf.py", "--rotate", "20", "-j", str(args.jobs)]+coverage+["--reportOutDir",
+  localRet=subprocess.call(["./runexamples.py", "--rotate", "20", "-j", str(args.jobs)]+coverage+["--reportOutDir",
             "/mbsim-report/report/runexamples_valgrind_report", "--url",
             "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
             "--buildSystemRun", "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",

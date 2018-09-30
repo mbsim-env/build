@@ -1030,7 +1030,7 @@ def runexamples(mainFD):
 
   # runexamples.py command
   currentID=int(os.path.basename(args.reportOutDir)[len("result_"):])
-  command=["./runexamples_mfmf.py", "-j", str(args.j)]
+  command=["./runexamples.py", "-j", str(args.j)]
   if args.url!=None:
     command.extend(["--url", args.url+"/result_%010d/runexamples_report"%(currentID)])
   command.extend(["--buildType", args.buildType])

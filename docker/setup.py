@@ -92,7 +92,7 @@ def main():
 
   if args.command=="build":
     for s in args.service:
-      build(s)
+      build(s, args.jobs)
   
   if args.command=="run":
     for s in args.service:
@@ -102,10 +102,11 @@ def main():
 
 
 
-def build(s):
+def build(s, jobs=4):
 
   if s=="base":
     build=dockerClientLL.build(tag="mbsimenv/base",
+      buildargs={"JOBS": str(jobs)},
       path=scriptdir+"/baseImage",
       rm=False)
     ret=syncLogBuildImage(build)
@@ -113,6 +114,7 @@ def build(s):
 
   elif s=="build":
     build=dockerClientLL.build(tag="mbsimenv/build",
+      buildargs={"JOBS": str(jobs)},
       path=scriptdir+"/buildImage",
       rm=False)
     ret=syncLogBuildImage(build)
@@ -120,6 +122,7 @@ def build(s):
 
   elif s=="run":
     build=dockerClientLL.build(tag="mbsimenv/run",
+      buildargs={"JOBS": str(jobs)},
       path=scriptdir+"/..",
       dockerfile="docker/runImage/Dockerfile",
       nocache=True,
@@ -255,7 +258,8 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     # webserver
     webserver=dockerClient.containers.run(image="mbsimenv/webserver",
       init=True,
-      command=(["--clientID", clientID] if clientID!=None else [])+\
+      command=["-j", str(jobs)]+\
+        (["--clientID", clientID] if clientID!=None else [])+\
         (["--clientSecret", clientSecret] if clientSecret!=None else [])+\
         (["--webhookSecret", webhookSecret] if webhookSecret!=None else [])+\
         (["--statusAccessToken", statusAccessToken] if statusAccessToken!=None else []),
