@@ -13,7 +13,8 @@ token=sys.argv[1]
 XAUTHTMPL='/tmp/mbsimwebapp-xauth'
 
 # parse the token
-print(token)
+print("Running webapp with token: "+token)
+sys.stdout.flush()
 cmd=urlparse.parse_qs(token)
 
 # get prog of file

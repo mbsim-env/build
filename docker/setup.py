@@ -44,18 +44,21 @@ def syncLogBuildImage(build):
     entry=json.loads(line)
     if "stream" in entry:
       print(entry["stream"], end="")
+      sys.stdout.flush()
     if "error" in entry:
       ret=1
       print("Exited with an error")
       print(entry["error"])
       if "errorDetail" in entry and "message" in entry["errorDetail"] and entry["errorDetail"]["message"]!=entry["error"]:
         print(entry["errorDetail"])
+      sys.stdout.flush()
   return ret
 
 def asyncLogContainer(container, prefix=""):
   def worker(container):
     for line in container.logs(stream=True):
       print(prefix+line.decode('utf-8'), end="")
+      sys.stdout.flush()
   threading.Thread(target=worker, args=(container,)).start()
 
 def waitContainer(container, prefix=""):
@@ -65,10 +68,12 @@ def waitContainer(container, prefix=""):
       print(prefix+"Exited with an error. Status code "+str(ret["StatusCode"]))
     if ret["Error"]!=None:
       print(prefix+ret["Error"])
+    sys.stdout.flush()
     return ret["StatusCode"]
   else:
     if ret!=0:
       print(prefix+"Exited with an error. Status code "+str(ret))
+    sys.stdout.flush()
     return ret
 
 
@@ -81,9 +86,11 @@ def main():
   # terminate handler for command "run"
   def terminateHandler(signalnum, stack):
     print("Got "+("SIGINT" if signalnum==signal.SIGINT else "SIGTERM")+", stopping all containers")
+    sys.stdout.flush()
     for container in runningContainers:
       container.stop()
     print("All containers stopped")
+    sys.stdout.flush()
   if args.command=="run":
     signal.signal(signal.SIGINT , terminateHandler)
     signal.signal(signal.SIGTERM, terminateHandler)
@@ -168,7 +175,7 @@ def build(s, jobs=4):
 
 def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=None, statusAccessToken=None, token=None,
         fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
-        printStartStopFile=None):
+        printLog=True):
 
   if s=="autobuild-linux64-ci":
     if servername==None:
@@ -189,15 +196,16 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
         'mbsimenv_state':             {"bind": "/mbsim-state",  "mode": "rw"},
       },
       detach=True, stdout=True, stderr=True)
-    if(printStartStopFile):
-      print("Started running "+s+" as container ID "+autobuild.id, file=printStartStopFile)
-      printStartStopFile.flush()
+    if not printLog:
+      print("Started running "+s+" as container ID "+autobuild.id)
+      sys.stdout.flush()
     runningContainers.add(autobuild)
-    asyncLogContainer(autobuild)
+    if printLog:
+      asyncLogContainer(autobuild)
     ret=waitContainer(autobuild)
-    if(printStartStopFile):
-      print("Finished running "+s+" as container ID "+autobuild.id, file=printStartStopFile)
-      printStartStopFile.flush()
+    if not printLog:
+      print("Finished running "+s+" as container ID "+autobuild.id)
+      sys.stdout.flush()
     sys.exit(ret)
 
   elif s=="autobuild-linux64-dailydebug":
@@ -215,13 +223,16 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
         'mbsimenv_state':                     {"bind": "/mbsim-state",  "mode": "rw"},
       },
       detach=True, stdout=True, stderr=True)
-    if(printStartStopFile):
-      print("Started running "+s+" as container ID "+autobuild.id, file=printStartStopFile)
+    if not printLog:
+      print("Started running "+s+" as container ID "+autobuild.id)
+      sys.stdout.flush()
     runningContainers.add(autobuild)
-    asyncLogContainer(autobuild)
+    if printLog:
+      asyncLogContainer(autobuild)
     ret=waitContainer(autobuild)
-    if(printStartStopFile):
-      print("Finished running "+s+" as container ID "+autobuild.id, file=printStartStopFile)
+    if not printLog:
+      print("Finished running "+s+" as container ID "+autobuild.id)
+      sys.stdout.flush()
     sys.exit(ret)
 
   elif s=="autobuild-linux64-dailyrelease":
@@ -239,13 +250,16 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
         'mbsimenv_state':                       {"bind": "/mbsim-state",  "mode": "rw"},
       },
       detach=True, stdout=True, stderr=True)
-    if(printStartStopFile):
-      print("Started running "+s+" as container ID "+autobuild.id, file=printStartStopFile)
+    if not printLog:
+      print("Started running "+s+" as container ID "+autobuild.id)
+      sys.stdout.flush()
     runningContainers.add(autobuild)
-    asyncLogContainer(autobuild)
+    if printLog:
+      asyncLogContainer(autobuild)
     ret=waitContainer(autobuild)
-    if(printStartStopFile):
-      print("Finished running "+s+" as container ID "+autobuild.id, file=printStartStopFile)
+    if not printLog:
+      print("Finished running "+s+" as container ID "+autobuild.id)
+      sys.stdout.flush()
     sys.exit(ret)
 
   elif s=="service":
@@ -280,9 +294,13 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
         443: 443,
       },
       detach=True, stdout=True, stderr=True)
+    if not printLog:
+      print("Started running "+s+" as container ID "+webserver.id)
+      sys.stdout.flush()
     runningContainers.add(webserver)
     network.connect(webserver, aliases=["webserver"])
-    asyncLogContainer(webserver, "webserver: ")
+    if printLog:
+      asyncLogContainer(webserver, "webserver: ")
 
     # webapp
     webapp=dockerClient.containers.run(image="mbsimenv/webapp",
@@ -293,13 +311,21 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
         '/var/run/docker.sock': {"bind": "/var/run/docker.sock", "mode": "rw"},
       },
       detach=True, stdout=True, stderr=True)
+    if not printLog:
+      print("Started running "+s+" as container ID "+webapp.id)
+      sys.stdout.flush()
     runningContainers.add(webapp)
     network.connect(webapp, aliases=["webapp"])
-    asyncLogContainer(webapp, "webapp: ")
+    if printLog:
+      asyncLogContainer(webapp, "webapp: ")
 
     # wait for running containers
     retwebserver=waitContainer(webserver, "webserver: ")
     retwebapp=waitContainer(webapp, "webapp: ")
+    if not printLog:
+      print("Finished running "+s+" as container ID "+webserver.id)
+      print("Finished running "+s+" as container ID "+webapp.id)
+      sys.stdout.flush()
     # stop all other containers connected to network (this may be webapprun and autbuild containers)
     network.reload()
     for c in network.containers:
@@ -323,9 +349,16 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
         5901: 5901,
       },
       detach=True, stdout=True, stderr=True)
+    if not printLog:
+      print("Started running "+s+" as container ID "+webapprun.id)
+      sys.stdout.flush()
     runningContainers.add(webapprun)
-    asyncLogContainer(webapprun)
+    if printLog:
+      asyncLogContainer(webapprun)
     ret=waitContainer(webapprun)
+    if not printLog:
+      print("Finished running "+s+" as container ID "+webapprun.id)
+      sys.stdout.flush()
     sys.exit(ret)
 
   else:

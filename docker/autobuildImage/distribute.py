@@ -194,6 +194,7 @@ def addStrToDist(text, arcname, exeBit=False):
 
 def addRepoState():
   print("Add repository state")
+  sys.stdout.flush()
 
   text='This build was done with the following repository states (sha1 commit id):\n\n'
   savedDir=os.getcwd()
@@ -209,6 +210,7 @@ def addRepoState():
 
 def addReadme():
   print("Add README.txt file")
+  sys.stdout.flush()
 
   if platform=="linux":
     note="This binary Linux64 build requires a Linux 64-bit operating system with glibc >= 2.17."
@@ -280,6 +282,7 @@ cd "%%INSTDIR%%\examples\%s"
   return text
 def addMBSimEnvTest():
   print("Add test script mbsim-env-test[.bat]")
+  sys.stdout.flush()
 
   if platform=="linux":
     text=r'''#!/bin/bash
@@ -391,6 +394,7 @@ cd "%%PWD%%"''' % ('\n'.join(map(addMBSimEnvTestExampleWin, basicExamples())))
 
 def addOctave():
   print("Add octave share dir")
+  sys.stdout.flush()
 
   if platform=="linux":
     addFileToDist("/usr/share/octave", "mbsim-env/share/octave")
@@ -398,6 +402,7 @@ def addOctave():
     addFileToDist("/home/mbsim/3rdparty/octave-local-win64/share/octave", "mbsim-env/share/octave")
 
   print("Add octave executable")
+  sys.stdout.flush()
 
   if platform=="linux":
     addStrToDist('''#!/bin/bash
@@ -416,6 +421,7 @@ $INSTDIR/bin/.octave-3.8.2.envvar "$@"
 
 def addPython():
   print("Add python casadi files")
+  sys.stdout.flush()
 
   if platform=="linux":
     if os.path.isdir("/home/mbsim/3rdparty/casadi3py-local-linux64/python2.7/site-packages/casadi"):
@@ -428,6 +434,7 @@ def addPython():
     addFileToDist("/home/mbsim/3rdparty/casadi3py-local-win64/python2.7/site-packages/casadi", "mbsim-env/Lib/site-packages/casadi")
 
   print("Add python files")
+  sys.stdout.flush()
 
   if platform=="linux":
     subdir="lib64/python2.7"
@@ -471,6 +478,7 @@ def basicExamples():
 
 def addExamples():
   print("Add some examples") # all examples with label "basic"
+  sys.stdout.flush()
 
   for ex in basicExamples():
     for file in subprocess.check_output(["git", "ls-files"], cwd=args.prefix+"/../mbsim/examples/"+ex).decode('utf-8').rstrip().splitlines():
@@ -486,6 +494,7 @@ def main():
   # open archives
   print("Create binary distribution")
   print("")
+  sys.stdout.flush()
 
   global distArchive, debugArchive
   if platform=="linux":
@@ -506,6 +515,7 @@ def main():
 
   # add prefix
   print("Add prefix dir of mbsim-env")
+  sys.stdout.flush()
   addFileToDist(args.prefix, "mbsim-env")
   # add DRI drivers (see openmbv/mainwindow.cc)
   if platform=="linux":
@@ -521,6 +531,7 @@ def main():
   # close archives
   print("")
   print("Finished")
+  sys.stdout.flush()
   distArchive.close()
   debugArchive.close()
 
@@ -532,3 +543,4 @@ if __name__=="__main__":
   distArchiveName, debugArchiveName=main()
   print("distArchiveName="+distArchiveName)
   print("debugArchiveName="+debugArchiveName)
+  sys.stdout.flush()

@@ -48,6 +48,7 @@ for texMain in mainFiles:
   except subprocess.CalledProcessError as ex:
     print(ex)
     print(ex.output)
+    sys.stdout.flush()
     nrDocFailed+=1
   f.flush()
 

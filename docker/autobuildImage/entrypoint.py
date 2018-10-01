@@ -99,6 +99,7 @@ if len(args.updateReferences)>0:
   if subprocess.call(["./runexamples.py", "--action", "copyToReference"]+args.updateReferences)!=0:
     ret=ret+1
     print("runexamples.py --action copyToReference ... failed.")
+    sys.stdout.flush()
   os.chdir(CURDIR)
 
   # update references for download
@@ -106,6 +107,7 @@ if len(args.updateReferences)>0:
   if subprocess.call(["./runexamples.py", "--action", "pushReference=/mbsim-report/references"])!=0:
     ret=ret+1
     print("pushing references to download dir failed.")
+    sys.stdout.flush()
   os.chdir(CURDIR)
 
   if "--forceBuild" not in ARGS:
@@ -136,6 +138,7 @@ if args.statusAccessTokenFile!=None:
 if localRet!=0:
   ret=ret+1
   print("build.py failed.")
+  sys.stdout.flush()
 
 if args.valgrindExamples:
   # run examples with valgrind
@@ -155,6 +158,7 @@ if args.valgrindExamples:
   if subprocess.call(["git", "pull"])!=0:
     ret=ret+1
     print("git pull of mbsim-valgrind/examples failed.")
+    sys.stdout.flush()
   valgrindEnv=os.environ
   valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
   # build
@@ -170,6 +174,7 @@ if args.valgrindExamples:
   if localRet!=0:
     ret=ret+1
     print("running examples with valgrind failed.")
+    sys.stdout.flush()
   os.chdir(CURDIR)
   # set github statuses
   endTime=datetime.datetime.now()
@@ -184,5 +189,6 @@ if args.buildDoc:
                       "/mbsim-env/mbsim/manuals", "/mbsim-report/manuals"])!=0:
     ret=ret+1
     print("builddoc.py failed.")
+    sys.stdout.flush()
 
 sys.exit(ret)

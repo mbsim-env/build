@@ -83,8 +83,6 @@ openmbvBranch=tobuild['openmbv'].encode('utf-8')
 mbsimBranch=tobuild['mbsim'].encode('utf-8')
 
 # run linux64-ci
-with open("/proc/1/fd/1", "w") as f:
-  # linux64-ci
-  setup.run("autobuild-linux64-ci", args.servername, args.jobs, printStartStopFile=f,
-            fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch,
-            openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
+setup.run("autobuild-linux64-ci", args.servername, args.jobs, printLog=False,
+          fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch,
+          openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)

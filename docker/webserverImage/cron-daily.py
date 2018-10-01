@@ -17,9 +17,8 @@ argparser.add_argument("--servername", type=str, help="Servername")
 
 args=argparser.parse_args()
 
-with open("/proc/1/fd/1", "w") as f:
-  # linux64-dailydebug
-  setup.run("autobuild-linux64-dailydebug", args.servername, args.jobs, printStartStopFile=f)
+# linux64-dailydebug
+setup.run("autobuild-linux64-dailydebug", args.servername, args.jobs, printLog=False)
 
-  # linux64-dailyrelease
-  setup.run("autobuild-linux64-dailyrelease", args.servername, args.jobs, printStartStopFile=f)
+# linux64-dailyrelease
+setup.run("autobuild-linux64-dailyrelease", args.servername, args.jobs, printLog=False)

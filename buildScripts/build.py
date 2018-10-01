@@ -268,6 +268,7 @@ def setStatus(statusAccessToken, commitidfull, state, currentID, timeID, target_
     # call github api
     if statusAccessToken==None:
       print("Warning: Cannot create github status on repo "+repo+": No configuration file/no access token with github credential found.")
+      sys.stdout.flush()
       return
     headers={'Authorization': 'token '+statusAccessToken,
              'Accept': 'application/vnd.github.v3+json'}
@@ -279,6 +280,7 @@ def setStatus(statusAccessToken, commitidfull, state, currentID, timeID, target_
       if "errors" in response.json():
         for e in response.json()['errors']:
           if 'message' in e: print(e["message"])
+      sys.stdout.flush()
 
 # the main routine being called ones
 def main():
@@ -401,6 +403,7 @@ def main():
   print("See the log file "+pj(args.reportOutDir, "result_current", "index.html")+" for detailed results.")
   if args.docOutDir!=None:
     print("See also the generated documentation "+pj(args.docOutDir, "index.html")+".\n")
+  sys.stdout.flush()
 
   # rotate (modifies args.reportOutDir)
   currentID, lastcommitidfull=rotateOutput()
@@ -462,6 +465,7 @@ def main():
   # check if last build was the same as this build
   if not args.forceBuild and args.buildSystemRun and lastcommitidfull==commitidfull:
     print('Skipping this build: the last build was exactly the same.')
+    sys.stdout.flush()
     # revert the outdir
     args.reportOutDir=os.path.sep.join(args.reportOutDir.split(os.path.sep)[0:-1])
     shutil.rmtree(pj(args.reportOutDir, "result_%010d"%(currentID)))
@@ -537,14 +541,16 @@ def main():
   if not args.disableRunExamples:
     savedDir=os.getcwd()
     os.chdir(pj(args.sourceDir, "mbsim", "examples"))
-    print("Run runexamples.py in "+os.getcwd()); sys.stdout.flush()
+    print("Run runexamples.py in "+os.getcwd())
+    sys.stdout.flush()
     runExamplesErrorCode=runexamples(mainFD)
     os.chdir(savedDir)
 
   # create distribution
   if args.enableDistribution:
     nrRun=nrRun+1
-    print("Create distribution"); sys.stdout.flush()
+    print("Create distribution")
+    sys.stdout.flush()
     cdRet, distArchiveName=createDistribution(mainFD)
     if cdRet!=0:
       nrFailed=nrFailed+1
@@ -591,6 +597,7 @@ def main():
 
   if nrFailed>0:
     print("\nERROR: %d of %d build parts failed!!!!!"%(nrFailed, nrRun));
+    sys.stdout.flush()
 
   # dump the repo state (commitid) to a file
   with codecs.open(pj(args.reportOutDir, "repoState.json"), "w", encoding="utf-8") as f:
@@ -650,6 +657,7 @@ def repoUpdate(mainFD, currentID):
   savedDir=os.getcwd()
   if not args.disableUpdate:
     print('Updating repositories: ', end="")
+    sys.stdout.flush()
 
   print('<h2>Repository State</h2>', file=mainFD)
   print('<table style="width:auto;" class="table table-striped table-hover table-bordered table-condensed">', file=mainFD)
@@ -718,6 +726,7 @@ def repoUpdate(mainFD, currentID):
       print('failed')
     else:
       print('passed')
+    sys.stdout.flush()
 
   os.chdir(savedDir)
   return ret, commitidfull
@@ -725,7 +734,8 @@ def repoUpdate(mainFD, currentID):
 
 
 def build(nr, nrAll, tool, mainFD):
-  print("Building "+str(nr)+"/"+str(nrAll)+": "+tool+": ", end=""); sys.stdout.flush()
+  print("Building "+str(nr)+"/"+str(nrAll)+": "+tool+": ", end="")
+  sys.stdout.flush()
 
   nrFailed=0
   nrRun=0
@@ -741,7 +751,8 @@ def build(nr, nrAll, tool, mainFD):
   savedDir=os.getcwd()
 
   # configure
-  print("configure", end=""); sys.stdout.flush()
+  print("configure", end="")
+  sys.stdout.flush()
   failed, run=configure(tool, mainFD)
   nrFailed+=failed
   nrRun+=run
@@ -751,25 +762,29 @@ def build(nr, nrAll, tool, mainFD):
   os.chdir(pj(args.sourceDir, buildTool(tool)))
 
   # make
-  print(", make", end=""); sys.stdout.flush()
+  print(", make", end="")
+  sys.stdout.flush()
   failed, run=make(tool, mainFD)
   nrFailed+=failed
   nrRun+=run
 
   # make check
-  print(", check", end=""); sys.stdout.flush()
+  print(", check", end="")
+  sys.stdout.flush()
   failed, run=check(tool, mainFD)
   nrFailed+=failed
   nrRun+=run
 
   # doxygen
-  print(", doxygen-doc", end=""); sys.stdout.flush()
+  print(", doxygen-doc", end="")
+  sys.stdout.flush()
   failed, run=doc(tool, mainFD, args.disableDoxygen, "doc")
   nrFailed+=failed
   nrRun+=run
 
   # xmldoc
-  print(", xml-doc", end=""); sys.stdout.flush()
+  print(", xml-doc", end="")
+  sys.stdout.flush()
   failed, run=doc(tool, mainFD, args.disableXMLDoc, "xmldoc")
   nrFailed+=failed
   nrRun+=run
@@ -777,6 +792,7 @@ def build(nr, nrAll, tool, mainFD):
   os.chdir(savedDir)
 
   print("")
+  sys.stdout.flush()
   print('</tr>', file=mainFD)
   mainFD.flush()
 
@@ -1049,6 +1065,7 @@ def runexamples(mainFD):
   print("")
   print("Output of runexamples.py")
   print("")
+  sys.stdout.flush()
   if not os.path.isdir(pj(args.reportOutDir, "runexamples_report")): os.makedirs(pj(args.reportOutDir, "runexamples_report"))
   ret=abs(subprocess.call(command, stderr=subprocess.STDOUT))
 
