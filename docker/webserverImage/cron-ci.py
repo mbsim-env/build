@@ -15,7 +15,7 @@ processLock=socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
 try:
   processLock.bind('\0'+os.path.basename(__file__))
 except socket.error:
-  sys.exit()
+  sys.exit(0)
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -67,6 +67,9 @@ if tobuild==None:
   # nothing to do, return with code 0
   sys.exit(0)
 
+print("Found something to build: "+str(tobuild))
+sys.stdout.flush()
+
 # wait at least 2 minutes after the timestamp to give the user the chance to update also other repos
 while True:
   delta=tobuild['timestamp']+1*60 - time.time()
@@ -76,13 +79,17 @@ while True:
   else:
     break
 
+print("Starting build: "+str(tobuild))
+sys.stdout.flush()
+
 # set branches
-fmatvecBranch=tobuild['fmatvec'].encode('utf-8')
-hdf5serieBranch=tobuild['hdf5serie'].encode('utf-8')
-openmbvBranch=tobuild['openmbv'].encode('utf-8')
-mbsimBranch=tobuild['mbsim'].encode('utf-8')
+fmatvecBranch=tobuild['fmatvec']
+hdf5serieBranch=tobuild['hdf5serie']
+openmbvBranch=tobuild['openmbv']
+mbsimBranch=tobuild['mbsim']
 
 # run linux64-ci
-setup.run("autobuild-linux64-ci", args.servername, args.jobs, printLog=False,
-          fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch,
-          openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
+ret=setup.run("autobuild-linux64-ci", args.servername, args.jobs, printLog=False,
+              fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch,
+              openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
+sys.exit(ret)

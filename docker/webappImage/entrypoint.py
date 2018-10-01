@@ -14,7 +14,7 @@ import socket
 import subprocess
 
 # configuration
-DEBUG=True
+DEBUG=False
 
 def waitForOpenPort(host, port, timeout):
   def portOpen(host, port):

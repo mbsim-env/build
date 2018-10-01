@@ -62,8 +62,9 @@ COPY webserverImage/conf/le-redirect-mbsim-env.conf /etc/httpd/conf.d/
 
 # set crontab for
 # - cert updates (once a day at arbitary time)
-RUN echo '1 0 * * * python -c "import time; import random; time.sleep(random.randint(0,24*60*60-100))"; \
-  /usr/bin/certbot-2 renew --webroot -w /var/www/html --post-hook "httpd -k graceful" 2> >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/2) > >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/1)' | crontab /dev/stdin
+RUN echo -e 'SHELL=/bin/bash\n\
+1 0 * * * python -c "import time; import random; time.sleep(random.randint(0,24*60*60-100))"; \
+/usr/bin/certbot-2 renew --webroot -w /var/www/html --post-hook "httpd -k graceful" 2> >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/2) > >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/1)' | crontab /dev/stdin
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \

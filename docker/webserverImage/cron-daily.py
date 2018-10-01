@@ -18,7 +18,9 @@ argparser.add_argument("--servername", type=str, help="Servername")
 args=argparser.parse_args()
 
 # linux64-dailydebug
-setup.run("autobuild-linux64-dailydebug", args.servername, args.jobs, printLog=False)
+ret1=setup.run("autobuild-linux64-dailydebug", args.servername, args.jobs, printLog=False)
 
 # linux64-dailyrelease
-setup.run("autobuild-linux64-dailyrelease", args.servername, args.jobs, printLog=False)
+ret2=setup.run("autobuild-linux64-dailyrelease", args.servername, args.jobs, printLog=False)
+
+sys.exit(0 if ret1==0 and ret2==0 else 1)

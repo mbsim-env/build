@@ -99,13 +99,19 @@ def main():
 
   if args.command=="build":
     for s in args.service:
-      build(s, args.jobs)
+      ret=build(s, args.jobs)
+      if ret!=0:
+        break
+    return ret
   
   if args.command=="run":
     for s in args.service:
-      run(s, args.servername, args.jobs,
-          clientID=args.clientID, clientSecret=args.clientSecret, webhookSecret=args.webhookSecret, statusAccessToken=args.statusAccessToken,
-          token=args.token)
+      ret=run(s, args.servername, args.jobs,
+              clientID=args.clientID, clientSecret=args.clientSecret, webhookSecret=args.webhookSecret,
+              statusAccessToken=args.statusAccessToken, token=args.token)
+      if ret!=0:
+        break
+    return ret
 
 
 
@@ -116,16 +122,14 @@ def build(s, jobs=4):
       buildargs={"JOBS": str(jobs)},
       path=scriptdir+"/baseImage",
       rm=False)
-    ret=syncLogBuildImage(build)
-    sys.exit(ret)
+    return syncLogBuildImage(build)
 
   elif s=="build":
     build=dockerClientLL.build(tag="mbsimenv/build",
       buildargs={"JOBS": str(jobs)},
       path=scriptdir+"/buildImage",
       rm=False)
-    ret=syncLogBuildImage(build)
-    sys.exit(ret)
+    return syncLogBuildImage(build)
 
   elif s=="run":
     build=dockerClientLL.build(tag="mbsimenv/run",
@@ -134,38 +138,33 @@ def build(s, jobs=4):
       dockerfile="docker/runImage/Dockerfile",
       nocache=True,
       rm=False)
-    ret=syncLogBuildImage(build)
-    sys.exit(ret)
+    return syncLogBuildImage(build)
 
   elif s=="autobuild":
     build=dockerClientLL.build(tag="mbsimenv/autobuild",
       path=scriptdir+"/..",
       dockerfile="docker/autobuildImage/Dockerfile",
       rm=False)
-    ret=syncLogBuildImage(build)
-    sys.exit(ret)
+    return syncLogBuildImage(build)
 
   elif s=="webserver":
     build=dockerClientLL.build(tag="mbsimenv/webserver",
       path=scriptdir,
       dockerfile="webserverImage/Dockerfile",
       rm=False)
-    ret=syncLogBuildImage(build)
-    sys.exit(ret)
+    return syncLogBuildImage(build)
 
   elif s=="webapp":
     build=dockerClientLL.build(tag="mbsimenv/webapp",
       path=scriptdir+"/webappImage",
       rm=False)
-    ret=syncLogBuildImage(build)
-    sys.exit(ret)
+    return syncLogBuildImage(build)
 
   elif s=="webapprun":
     build=dockerClientLL.build(tag="mbsimenv/webapprun",
       path=scriptdir+"/webapprunImage",
       rm=False)
-    ret=syncLogBuildImage(build)
-    sys.exit(ret)
+    return syncLogBuildImage(build)
 
   else:
     raise RuntimeError("Unknown image "+s+" to build.")
@@ -206,7 +205,7 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     if not printLog:
       print("Finished running "+s+" as container ID "+autobuild.id)
       sys.stdout.flush()
-    sys.exit(ret)
+    return ret
 
   elif s=="autobuild-linux64-dailydebug":
     if servername==None:
@@ -233,7 +232,7 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     if not printLog:
       print("Finished running "+s+" as container ID "+autobuild.id)
       sys.stdout.flush()
-    sys.exit(ret)
+    return ret
 
   elif s=="autobuild-linux64-dailyrelease":
     if servername==None:
@@ -260,7 +259,7 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     if not printLog:
       print("Finished running "+s+" as container ID "+autobuild.id)
       sys.stdout.flush()
-    sys.exit(ret)
+    return ret
 
   elif s=="service":
     if servername==None:
@@ -332,7 +331,7 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
       c.stop()
     # remove network
     network.remove()
-    sys.exit(0 if retwebserver==0 and retwebapp==0 else 1)
+    return 0 if retwebserver==0 and retwebapp==0 else 1
 
   elif s=="webapprun":
     if token==None:
@@ -359,7 +358,7 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     if not printLog:
       print("Finished running "+s+" as container ID "+webapprun.id)
       sys.stdout.flush()
-    sys.exit(ret)
+    return ret
 
   else:
     raise RuntimeError("Unknown container "+s+" to run.")
@@ -368,4 +367,5 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
 
 # call the main routine (from command line)
 if __name__=="__main__":
-  main()
+  ret=main()
+  sys.exit(ret)
