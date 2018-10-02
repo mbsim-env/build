@@ -60,6 +60,9 @@ if args.valgrindExamples and not os.path.isdir("/mbsim-env/mbsim-valgrind"):
   subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/mbsim.git", "mbsim-valgrind"], cwd="/mbsim-env",
     stdout=sys.stdout, stderr=sys.stderr)
 
+# ccache config
+subprocess.check_call(["ccache", "-M", "20G"], stdout=sys.stdout, stderr=sys.stderr)
+
 # compile flags
 if args.buildType == "linux64-ci" or args.buildType == "linux64-dailydebug":
   os.environ["CXXFLAGS"]="-O0 -g"

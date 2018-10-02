@@ -156,7 +156,8 @@ def build(s, jobs=4):
 
   elif s=="webapp":
     build=dockerClientLL.build(tag="mbsimenv/webapp",
-      path=scriptdir+"/webappImage",
+      path=scriptdir,
+      dockerfile="webappImage/Dockerfile",
       rm=False)
     return syncLogBuildImage(build)
 
@@ -172,9 +173,19 @@ def build(s, jobs=4):
 
 
 
+def runWait(containers, printLog=True):
+  ret=0
+  for c in containers:
+    ret=ret+abs(waitContainer(c))
+    if not printLog:
+      print("Finished running container ID "+c.id)
+      sys.stdout.flush()
+  return ret
+
 def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=None, statusAccessToken=None, token=None,
         fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
-        printLog=True):
+        networkID=None, hostname=None,
+        wait=True, printLog=True):
 
   if s=="autobuild-linux64-ci":
     if servername==None:
@@ -201,11 +212,10 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     runningContainers.add(autobuild)
     if printLog:
       asyncLogContainer(autobuild)
-    ret=waitContainer(autobuild)
-    if not printLog:
-      print("Finished running "+s+" as container ID "+autobuild.id)
-      sys.stdout.flush()
-    return ret
+    if wait:
+      return runWait([autobuild], printLog=printLog)
+    else:
+      return [autobuild]
 
   elif s=="autobuild-linux64-dailydebug":
     if servername==None:
@@ -228,11 +238,10 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     runningContainers.add(autobuild)
     if printLog:
       asyncLogContainer(autobuild)
-    ret=waitContainer(autobuild)
-    if not printLog:
-      print("Finished running "+s+" as container ID "+autobuild.id)
-      sys.stdout.flush()
-    return ret
+    if wait:
+      return runWait([autobuild], printLog=printLog)
+    else:
+      return [autobuild]
 
   elif s=="autobuild-linux64-dailyrelease":
     if servername==None:
@@ -255,11 +264,10 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     runningContainers.add(autobuild)
     if printLog:
       asyncLogContainer(autobuild)
-    ret=waitContainer(autobuild)
-    if not printLog:
-      print("Finished running "+s+" as container ID "+autobuild.id)
-      sys.stdout.flush()
-    return ret
+    if wait:
+      return runWait([autobuild], printLog=printLog)
+    else:
+      return [autobuild]
 
   elif s=="service":
     if servername==None:
@@ -319,23 +327,23 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
       asyncLogContainer(webapp, "webapp: ")
 
     # wait for running containers
-    retwebserver=waitContainer(webserver, "webserver: ")
-    retwebapp=waitContainer(webapp, "webapp: ")
-    if not printLog:
-      print("Finished running "+s+" as container ID "+webserver.id)
-      print("Finished running "+s+" as container ID "+webapp.id)
-      sys.stdout.flush()
+    ret=runWait([webserver, webapp], printLog=printLog)
     # stop all other containers connected to network (this may be webapprun and autbuild containers)
     network.reload()
     for c in network.containers:
       c.stop()
     # remove network
     network.remove()
-    return 0 if retwebserver==0 and retwebapp==0 else 1
+    return ret
 
   elif s=="webapprun":
     if token==None:
       raise RuntimeError("Option --token is required.")
+    if networkID==None:
+      raise RuntimeError("Option --networkID is required.")
+    if hostname==None:
+      raise RuntimeError("Option --hostname is required.")
+    network=dockerClient.networks.get(networkID)
     webapprun=dockerClient.containers.run(image="mbsimenv/webapprun",
       init=True,
       command=[token],
@@ -344,9 +352,6 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
         'mbsimenv_mbsim-linux64-dailydebug':   {"bind": "/mbsim-env-linux64-dailydebug",   "mode": "ro"},
         'mbsimenv_mbsim-linux64-dailyrelease': {"bind": "/mbsim-env-linux64-dailyrelease", "mode": "ro"},
       },
-      ports={
-        5901: 5901,
-      },
       detach=True, stdout=True, stderr=True)
     if not printLog:
       print("Started running "+s+" as container ID "+webapprun.id)
@@ -354,11 +359,11 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     runningContainers.add(webapprun)
     if printLog:
       asyncLogContainer(webapprun)
-    ret=waitContainer(webapprun)
-    if not printLog:
-      print("Finished running "+s+" as container ID "+webapprun.id)
-      sys.stdout.flush()
-    return ret
+    network.connect(webapprun, aliases=[hostname])
+    if wait:
+      return runWait([webapprun], printLog=printLog)
+    else:
+      return [webapprun]
 
   else:
     raise RuntimeError("Unknown container "+s+" to run.")
