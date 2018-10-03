@@ -82,8 +82,7 @@ RUN mkdir /3rdparty/swig-build
 RUN set -o pipefail && \
   wget -q -O - https://kent.dl.sourceforge.net/project/qwt/qwt/$QWTVERSION/qwt-$QWTVERSION.tar.bz2 | tar -xj
 # fix the install dir (this cannot be done via options in qwt)
-RUN sed -re "s~^( *QWT_INSTALL_PREFIX *= *).*~\1/3rdparty/local~" qwt-$QWTVERSION/qwtconfig.pri > qwt-$QWTVERSION/qwtconfig.pri.new && \
-  mv -f qwt-$QWTVERSION/qwtconfig.pri.new qwt-$QWTVERSION/qwtconfig.pri
+RUN sed -i -re "s~^( *QWT_INSTALL_PREFIX *= *).*~\1/3rdparty/local~" qwt-$QWTVERSION/qwtconfig.pri
 RUN mkdir /3rdparty/qwt-build
 
 # coin

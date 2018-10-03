@@ -140,6 +140,12 @@ def build(s, jobs=4):
       rm=False)
     return syncLogBuildImage(build)
 
+  elif s=="proxy":
+    build=dockerClientLL.build(tag="mbsimenv/proxy",
+      path=scriptdir+"/proxyImage",
+      rm=False)
+    return syncLogBuildImage(build)
+
   elif s=="autobuild":
     build=dockerClientLL.build(tag="mbsimenv/autobuild",
       path=scriptdir+"/..",
@@ -182,103 +188,99 @@ def runWait(containers, printLog=True):
       sys.stdout.flush()
   return ret
 
+def runAutobuild(s, servername, buildType, addCommand, jobs=4,
+                 fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
+                 printLog=True):
+  if servername==None:
+    raise RuntimeError("Argument --servername is required.")
+
+  # networks
+  networki=dockerClient.networks.create(name="mbsimenv_autobuild_"+buildType+"_intern", internal=True)
+  networke=dockerClient.networks.create(name="mbsimenv_autobuild_"+buildType+"_extern")
+
+  # autobuild
+  autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
+    init=True,
+    network=networki.id,
+    labels={"buildtype": buildType},
+    command=["--buildType", buildType, "-j", str(jobs),
+             "--fmatvecBranch", fmatvecBranch,
+             "--hdf5serieBranch", hdf5serieBranch,
+             "--openmbvBranch", openmbvBranch,
+             "--mbsimBranch", mbsimBranch]+addCommand,
+    environment={"MBSIMENVSERVERNAME": servername},
+    volumes={
+      'mbsimenv_mbsim-'+buildType:  {"bind": "/mbsim-env",    "mode": "rw"},
+      'mbsimenv_report-'+buildType: {"bind": "/mbsim-report", "mode": "rw"},
+      'mbsimenv_ccache':            {"bind": "/mbsim-ccache", "mode": "rw"},
+      'mbsimenv_state':             {"bind": "/mbsim-state",  "mode": "rw"},
+    },
+    detach=True, stdout=True, stderr=True)
+  networki.disconnect(autobuild)
+  networki.connect(autobuild, aliases=["autobuild"])
+  if not printLog:
+    print("Started running "+s+" as container ID "+autobuild.id)
+    sys.stdout.flush()
+  runningContainers.add(autobuild)
+  if printLog:
+    asyncLogContainer(autobuild)
+
+  # proxy
+  proxy=dockerClient.containers.run(image="mbsimenv/proxy",
+    init=True,
+    network=networki.id,
+    # allow access to github.com (via https) to update repos
+    command=["^github\\.com$"],
+    detach=True, stdout=True, stderr=True)
+  networki.disconnect(proxy)
+  networki.connect(proxy, aliases=["proxy"])
+  networke.connect(proxy)
+  if not printLog:
+    print("Started running "+s+" as container ID "+proxy.id)
+    sys.stdout.flush()
+  runningContainers.add(proxy)
+  if printLog:
+    asyncLogContainer(proxy)
+
+  # wait for running containers
+  ret=runWait([autobuild], printLog=printLog)
+  proxy.stop()
+  # remove network
+  networki.remove()
+  return ret
+
 def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=None, statusAccessToken=None, token=None,
         fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
         networkID=None, hostname=None,
         wait=True, printLog=True):
 
   if s=="autobuild-linux64-ci":
-    if servername==None:
-      raise RuntimeError("Argument --servername is required.")
-    autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
-      init=True,
-      labels={"buildtype": "linux64-ci"},
-      command=["--buildType", "linux64-ci", "-j", str(jobs),
-               "--fmatvecBranch", fmatvecBranch,
-               "--hdf5serieBranch", hdf5serieBranch,
-               "--openmbvBranch", openmbvBranch,
-               "--mbsimBranch", mbsimBranch],
-      environment={"MBSIMENVSERVERNAME": servername},
-      volumes={
-        'mbsimenv_mbsim-linux64-ci':  {"bind": "/mbsim-env",    "mode": "rw"},
-        'mbsimenv_report-linux64-ci': {"bind": "/mbsim-report", "mode": "rw"},
-        'mbsimenv_ccache':            {"bind": "/mbsim-ccache", "mode": "rw"},
-        'mbsimenv_state':             {"bind": "/mbsim-state",  "mode": "rw"},
-      },
-      detach=True, stdout=True, stderr=True)
-    if not printLog:
-      print("Started running "+s+" as container ID "+autobuild.id)
-      sys.stdout.flush()
-    runningContainers.add(autobuild)
-    if printLog:
-      asyncLogContainer(autobuild)
-    if wait:
-      return runWait([autobuild], printLog=printLog)
-    else:
-      return [autobuild]
+    return runAutobuild(s, servername, "linux64-ci", [], jobs=jobs,
+                 fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
+                 printLog=printLog)
 
   elif s=="autobuild-linux64-dailydebug":
-    if servername==None:
-      raise RuntimeError("Argument --servername is required.")
-    autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
-      init=True,
-      labels={"buildtype": "linux64-dailydebug"},
-      command=["--buildType", "linux64-dailydebug", "--buildDoc", "--valgrindExamples", "-j", str(jobs)],
-      environment={"MBSIMENVSERVERNAME": servername},
-      volumes={
-        'mbsimenv_mbsim-linux64-dailydebug':  {"bind": "/mbsim-env",    "mode": "rw"},
-        'mbsimenv_report-linux64-dailydebug': {"bind": "/mbsim-report", "mode": "rw"},
-        'mbsimenv_ccache':                    {"bind": "/mbsim-ccache", "mode": "rw"},
-        'mbsimenv_state':                     {"bind": "/mbsim-state",  "mode": "rw"},
-      },
-      detach=True, stdout=True, stderr=True)
-    if not printLog:
-      print("Started running "+s+" as container ID "+autobuild.id)
-      sys.stdout.flush()
-    runningContainers.add(autobuild)
-    if printLog:
-      asyncLogContainer(autobuild)
-    if wait:
-      return runWait([autobuild], printLog=printLog)
-    else:
-      return [autobuild]
+    return runAutobuild(s, servername, "linux64-dailydebug", ["--buildDoc", "--valgrindExamples"], jobs=jobs,
+                 fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
+                 printLog=printLog)
 
   elif s=="autobuild-linux64-dailyrelease":
-    if servername==None:
-      raise RuntimeError("Argument --servername is required.")
-    autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
-      init=True,
-      labels={"buildtype": "linux64-dailyrelease"},
-      command=["--buildType", "linux64-dailyrelease", "-j", str(jobs)],
-      environment={"MBSIMENVSERVERNAME": servername},
-      volumes={
-        'mbsimenv_mbsim-linux64-dailyrelease':  {"bind": "/mbsim-env",    "mode": "rw"},
-        'mbsimenv_report-linux64-dailyrelease': {"bind": "/mbsim-report", "mode": "rw"},
-        'mbsimenv_ccache':                      {"bind": "/mbsim-ccache", "mode": "rw"},
-        'mbsimenv_state':                       {"bind": "/mbsim-state",  "mode": "rw"},
-      },
-      detach=True, stdout=True, stderr=True)
-    if not printLog:
-      print("Started running "+s+" as container ID "+autobuild.id)
-      sys.stdout.flush()
-    runningContainers.add(autobuild)
-    if printLog:
-      asyncLogContainer(autobuild)
-    if wait:
-      return runWait([autobuild], printLog=printLog)
-    else:
-      return [autobuild]
+    return runAutobuild(s, servername, "linux64-dailyrelease", [], jobs=jobs,
+                 fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
+                 printLog=printLog)
 
   elif s=="service":
     if servername==None:
       raise RuntimeError("Argument --servername is required.")
 
-    # network
-    network=dockerClient.networks.create(name="mbsimenv_service")
+    # networks
+    networki=dockerClient.networks.create(name="mbsimenv_service_intern", internal=True)
+    networke=dockerClient.networks.create(name="mbsimenv_service_extern")
 
     # webserver
     webserver=dockerClient.containers.run(image="mbsimenv/webserver",
       init=True,
+      network=networki.id,
       command=["-j", str(jobs)]+\
         (["--clientID", clientID] if clientID!=None else [])+\
         (["--clientSecret", clientSecret] if clientSecret!=None else [])+\
@@ -301,39 +303,44 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
         443: 443,
       },
       detach=True, stdout=True, stderr=True)
+    networki.disconnect(webserver)
+    networki.connect(webserver, aliases=["webserver"])
+    networke.connect(webserver)
     if not printLog:
       print("Started running "+s+" as container ID "+webserver.id)
       sys.stdout.flush()
     runningContainers.add(webserver)
-    network.connect(webserver, aliases=["webserver"])
     if printLog:
       asyncLogContainer(webserver, "webserver: ")
 
     # webapp
     webapp=dockerClient.containers.run(image="mbsimenv/webapp",
       init=True,
-      command=[network.id],
+      network=networki.id,
+      command=[networki.id],
       environment={"MBSIMENVSERVERNAME": servername},
       volumes={
         '/var/run/docker.sock': {"bind": "/var/run/docker.sock", "mode": "rw"},
       },
       detach=True, stdout=True, stderr=True)
+    networki.disconnect(webapp)
+    networki.connect(webapp, aliases=["webapp"])
+    networke.connect(webapp)
     if not printLog:
       print("Started running "+s+" as container ID "+webapp.id)
       sys.stdout.flush()
     runningContainers.add(webapp)
-    network.connect(webapp, aliases=["webapp"])
     if printLog:
       asyncLogContainer(webapp, "webapp: ")
 
     # wait for running containers
     ret=runWait([webserver, webapp], printLog=printLog)
     # stop all other containers connected to network (this may be webapprun and autbuild containers)
-    network.reload()
-    for c in network.containers:
+    networki.reload()
+    for c in networki.containers:
       c.stop()
     # remove network
-    network.remove()
+    networki.remove()
     return ret
 
   elif s=="webapprun":
@@ -343,9 +350,10 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
       raise RuntimeError("Option --networkID is required.")
     if hostname==None:
       raise RuntimeError("Option --hostname is required.")
-    network=dockerClient.networks.get(networkID)
+    networki=dockerClient.networks.get(networkID)
     webapprun=dockerClient.containers.run(image="mbsimenv/webapprun",
       init=True,
+      network=networki.id,
       command=[token],
       volumes={
         'mbsimenv_mbsim-linux64-ci':           {"bind": "/mbsim-env-linux64-ci",           "mode": "ro"},
@@ -353,13 +361,14 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
         'mbsimenv_mbsim-linux64-dailyrelease': {"bind": "/mbsim-env-linux64-dailyrelease", "mode": "ro"},
       },
       detach=True, stdout=True, stderr=True)
+    networki.disconnect(webapprun)
+    networki.connect(webapprun, aliases=[hostname])
     if not printLog:
       print("Started running "+s+" as container ID "+webapprun.id)
       sys.stdout.flush()
     runningContainers.add(webapprun)
     if printLog:
       asyncLogContainer(webapprun)
-    network.connect(webapprun, aliases=[hostname])
     if wait:
       return runWait([webapprun], printLog=printLog)
     else:

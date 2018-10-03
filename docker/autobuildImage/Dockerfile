@@ -13,11 +13,6 @@ RUN yum install -y \
   ghostscript \
   && yum clean all
 
-# ccache
-ENV CCACHE_DIR=/mbsim-ccache
-# enable swig interface to mbsim
-ENV MBSIM_SWIG=1
-
 # copy build repo
 COPY docker/autobuildImage/entrypoint.py /context/entrypoint.py
 COPY docker/autobuildImage/builddoc.py /context/builddoc.py
@@ -39,6 +34,13 @@ RUN groupadd -g 48 -r apache && useradd --no-log-init -u 48 -g apache -c "Apache
   mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state /mbsim-config && \
   chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state && \
   chown dockeruser:apache /mbsim-config && chmod ug+rw /mbsim-config
+
+# ccache
+# enable swig interface to mbsim
+# proxy
+ENV CCACHE_DIR=/mbsim-ccache \
+    MBSIM_SWIG=1 \
+    https_proxy=proxy:8888
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser

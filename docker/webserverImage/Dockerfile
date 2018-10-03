@@ -54,9 +54,7 @@ RUN set -o pipefail && \
 
 # webserver SSL
 RUN set -o pipefail && \
-  sed -r "s|^( *< *VirtualHost +_default_ *: *443 *> *(#.*)?)$|\1\nServerName \${MBSIMENVSERVERNAME}\n|" /etc/httpd/conf.d/ssl.conf > \
-  /etc/httpd/conf.d/ssl.conf.new && \
-  mv -f /etc/httpd/conf.d/ssl.conf.new /etc/httpd/conf.d/ssl.conf
+  sed -i -r "s|^( *< *VirtualHost +_default_ *: *443 *> *(#.*)?)$|\1\nServerName \${MBSIMENVSERVERNAME}\n|" /etc/httpd/conf.d/ssl.conf
 COPY webserverImage/conf/mpm_prefork.conf /etc/httpd/cond.d/
 COPY webserverImage/conf/le-redirect-mbsim-env.conf /etc/httpd/conf.d/
 

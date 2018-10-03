@@ -33,9 +33,8 @@ RUN yum -y install epel-release && \
   octave \
   && yum clean all
 # fix octave 3.8.2: it is not initializing when runnig without a DISPLAY
-RUN sed -re "s/\<__have_fltk__ *\( *\) *&& *have_window_system *\( *\)/have_window_system () \&\& __have_fltk__ ()/" \
-  /usr/lib64/octave/3.8.2/oct/x86_64-redhat-linux-gnu/PKG_ADD > /tmp/mbsim-env.tmp && \
-  mv -f /tmp/mbsim-env.tmp /usr/lib64/octave/3.8.2/oct/x86_64-redhat-linux-gnu/PKG_ADD
+RUN sed -i -re "s/\<__have_fltk__ *\( *\) *&& *have_window_system *\( *\)/have_window_system () \&\& __have_fltk__ ()/" \
+  /usr/lib64/octave/3.8.2/oct/x86_64-redhat-linux-gnu/PKG_ADD
 
 
 

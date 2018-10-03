@@ -1,6 +1,7 @@
 FROM mbsimenv/autobuild
 
 USER root:root
+ENV https_proxy=
 
 RUN yum install -y \
   xfwm4 \
