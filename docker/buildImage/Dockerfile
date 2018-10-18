@@ -41,7 +41,9 @@ RUN yum -y install \
   libarchive-devel \
   ccache \
   mesa-libGLU-devel \
+  npm \
   && yum clean all
+RUN npm install mathjax-node
 
 
 
