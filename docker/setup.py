@@ -230,7 +230,9 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4,
     init=True,
     network=networki.id,
     # allow access to github.com (via https) to update repos
-    command=["^github\\.com$"],
+    command=["^github\\.com$\n"+
+             "^api\\.github\\.com$\n"+
+             "^www\\.mbsim-env\\.de$\n"],
     detach=True, stdout=True, stderr=True)
   networki.disconnect(proxy)
   networki.connect(proxy, aliases=["proxy"])
@@ -344,6 +346,13 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     return ret
 
   elif s=="webapprun":
+    # Network in webapprun is disablewd. Maybe we need to enanble it partially using a proxy for:
+    # www.mbsim-env.de
+    # cdn.datatables.net
+    # cdnjs.cloudflare.com
+    # code.jquery.com
+    # maxcdn.bootstrapcdn.com
+    # www.anwalt.de
     if token==None:
       raise RuntimeError("Option --token is required.")
     if networkID==None:
