@@ -57,11 +57,13 @@ ARG QWTVERSION=6.1.3
 ARG COINBRANCH=7e191c8f6a31
 ARG SOQTBRANCH=945ec22f6219
 ARG CASADIBRANCH=470b5b3f0cc4044e3cb0eb20dfb2a85e247c62a6
+ARG NUHTMLVERSION=18.8.29
 
 # install additional packaged needed to build the tools not part of centos7
 RUN yum -y install \
   wget \
   bzip2 \
+  unzip \
   qt5-qttools-devel \
   mercurial \
   cmake3 \
@@ -100,6 +102,11 @@ RUN git clone https://github.com/friedrichatgc/casadi.git
 WORKDIR /3rdparty/casadi
 RUN git checkout $CASADIBRANCH
 RUN mkdir /3rdparty/casadi-build
+
+# nu-html
+WORKDIR /3rdparty/nuhtml
+RUN wget -q https://github.com/validator/validator/releases/download/$NUHTMLVERSION/vnu.jar_$NUHTMLVERSION.zip
+RUN unzip vnu.jar_$NUHTMLVERSION.zip
 
 # compile/install
 
@@ -155,10 +162,13 @@ ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/mbsim-env/local/lib/pkgconfig:/mbsim-env/l
 
 # copy over the local dir from the 3rd party build stage
 COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local
+COPY --from=thirdpartyBuildImage /3rdparty/nuhtml/dist/vnu.jar /3rdparty/vnu.jar
 
-# enable ccache (after all other things are done); note /mbsim-env is usually a persistent Docker volume
+# enable ccache (after all other things are done); note /mbsim-env is usually a persistent Docker volume;
+# enable nu-html -> add to CLASSPATH
 ENV PATH=/usr/lib64/ccache:/mbsim-env/mbsim/examples:/mbsim-env/build/buildScripts:$PATH \
-    CCACHE_DIR=/mbsim-env/.ccache
+    CCACHE_DIR=/mbsim-env/.ccache \
+    CLASSPATH=$CLASSPATH:/3rdparty/vnu.jar
 
 # run bash per default
 CMD ["bash"]
