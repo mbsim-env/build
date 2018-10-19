@@ -1,7 +1,7 @@
 docker_builder:
   env:
     DOCKER_USERNAME: fm12
-    DOCKER_PASSWORD: dummy
+    DOCKER_PASSWORD: ENCRYPTED[9171dc098e2ab6d394f7ed8a7ebe39e3bc82415981bb0b9836841be148742181bd2aca1b3fbfc99242a19c5c2e4e2e14]
     JOBS: 2
   build_script: ./.cirrus.docker_build_script.sh
   login_script: docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
