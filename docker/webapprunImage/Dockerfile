@@ -1,4 +1,5 @@
-FROM mbsimenv/autobuild
+ARG FROMTAG=latest
+FROM mbsimenv/autobuild:$FROMTAG
 
 USER root:root
 ENV https_proxy=

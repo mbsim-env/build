@@ -1,5 +1,6 @@
 # use the build image as base
-FROM mbsimenv/build
+ARG FROMTAG=latest
+FROM mbsimenv/build:$FROMTAG
 
 # install software
 RUN yum install -y \
