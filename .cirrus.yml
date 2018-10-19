@@ -1,0 +1,8 @@
+docker_builder:
+  env:
+    DOCKER_USERNAME: fm12
+    DOCKER_PASSWORD: dummy
+    JOBS: 2
+  build_script: ./.cirrus.docker_build_script.sh
+  login_script: docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+  push_script: ./.cirrus.docker_push_script.sh
