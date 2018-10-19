@@ -1,8 +1,53 @@
-docker_builder:
+login_task:
   env:
     DOCKER_USERNAME: fm12
     DOCKER_PASSWORD: ENCRYPTED[9171dc098e2ab6d394f7ed8a7ebe39e3bc82415981bb0b9836841be148742181bd2aca1b3fbfc99242a19c5c2e4e2e14]
-    JOBS: 2
-  build_script: ./.cirrus.docker_build_script.sh
   login_script: docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
-  push_script: ./.cirrus.docker_push_script.sh
+
+base_docker_builder:
+  depends_on: 
+    - login
+  build_script: docker pull mbsimenv/base:$CIRRUS_BRANCH || true; docker build --cache-from mbsimenv/base:$CIRRUS_BRANCH --tag mbsimenv/base:$CIRRUS_BRANCH --build-arg=2 docker/baseImage
+  push_script: docker push mbsimenv/base:$CIRRUS_BRANCH
+  
+build_docker_builder:
+  depends_on: 
+    - base
+  build_script: docker pull mbsimenv/build:$CIRRUS_BRANCH || true; docker build --cache-from mbsimenv/build:$CIRRUS_BRANCH --tag mbsimenv/build:$CIRRUS_BRANCH --build-arg=2 docker/buildImage
+  push_script: docker push mbsimenv/build:$CIRRUS_BRANCH
+  
+run_docker_builder:
+  depends_on: 
+    - build
+  build_script: docker build --no-cache --tag mbsimenv/run:$CIRRUS_BRANCH --build-arg=2 -f docker/runImage/Dockerfile docker/..
+  push_script: docker push-tag mbsimenv/run:$CIRRUS_BRANCH
+  
+proxy_docker_builder:
+  depends_on: 
+    - login
+  build_script: docker pull mbsimenv/proxy:$CIRRUS_BRANCH || true; docker build --cache-from mbsimenv/proxy:$CIRRUS_BRANCH --tag mbsimenv/proxy:$CIRRUS_BRANCH docker/proxyImage
+  push_script: docker push mbsimenv/proxy:$CIRRUS_BRANCH
+  
+autobuild_docker_builder:
+  depends_on: 
+    - build
+  build_script: docker pull mbsimenv/autobuild:$CIRRUS_BRANCH || true; docker build --cache-from mbsimenv/autobuild:$CIRRUS_BRANCH --tag mbsimenv/autobuild:$CIRRUS_BRANCH -f docker/autobuildImage/Dockerfile docker/..
+  push_script: docker push mbsimenv/autobuild:$CIRRUS_BRANCH
+  
+webserver_docker_builder:
+  depends_on: 
+    - login
+  build_script: docker pull mbsimenv/webserver:$CIRRUS_BRANCH || true; docker build --cache-from mbsimenv/webserver:$CIRRUS_BRANCH --tag mbsimenv/webserver:$CIRRUS_BRANCH -f webserverImage/Dockerfile docker/.
+  push_script: docker push mbsimenv/webserver:$CIRRUS_BRANCH
+  
+webapp_docker_builder:
+  depends_on: 
+    - login
+  build_script: docker pull mbsimenv/webapp:$CIRRUS_BRANCH || true; docker build --cache-from mbsimenv/webapp:$CIRRUS_BRANCH --tag mbsimenv/webapp:$CIRRUS_BRANCH -f webappImage/Dockerfile docker/.
+  push_script: docker push mbsimenv/webapp:$CIRRUS_BRANCH
+  
+webapprun_docker_builder:
+  depends_on: 
+    - login
+  build_script: docker pull mbsimenv/webapprun:$CIRRUS_BRANCH || true; docker build --cache-from mbsimenv/webapprun:$CIRRUS_BRANCH --tag mbsimenv/webapprun:$CIRRUS_BRANCH docker/webappImage
+  push_script: docker push mbsimenv/webapprun:$CIRRUS_BRANCH
