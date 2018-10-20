@@ -16,12 +16,12 @@ build_docker_builder:
   login_script: docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
   push_script: docker push mbsimenv/build:$CIRRUS_BRANCH
   
-#run_docker_builder:
-#  depends_on: 
-#    - build
-#  build_script: docker build --no-cache --tag mbsimenv/run:$CIRRUS_BRANCH --build-arg=FROMTAG=$CIRRUS_BRANCH --build-arg=JOBS=2 -f docker/runImage/Dockerfile docker/..
-#  login_script: docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
-#  push_script: docker push-tag mbsimenv/run:$CIRRUS_BRANCH
+run_docker_builder:
+  depends_on: 
+    - build
+  build_script: docker build --no-cache --tag mbsimenv/run:$CIRRUS_BRANCH --build-arg=FROMTAG=$CIRRUS_BRANCH --build-arg=JOBS=2 -f docker/runImage/Dockerfile docker/..
+  login_script: docker login --username $DOCKER_USERNAME --password $DOCKER_PASSWORD
+  push_script: docker push mbsimenv/run:$CIRRUS_BRANCH
   
 proxy_docker_builder:
   build_script: docker pull mbsimenv/proxy:$CIRRUS_BRANCH || true; docker build --cache-from mbsimenv/proxy:$CIRRUS_BRANCH --tag mbsimenv/proxy:$CIRRUS_BRANCH docker/proxyImage
