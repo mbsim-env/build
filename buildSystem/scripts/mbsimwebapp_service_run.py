@@ -63,6 +63,8 @@ def run(token, display):
   xenv=os.environ.copy()
   xenv['XAUTHORITY']=XAUTHTMPL%(display)
   xenv['DISPLAY']=':%d'%(display)
+  xenv['COIN_FULL_INDIRECT_RENDERING']='1'
+  xenv['LIBGL_ALWAYS_INDIRECT']='1'
   xenv['QT_X11_NO_MITSHM']='1' # required for Qt!??
   xenv['LD_LIBRARY_PATH']='/usr/local/mbsim/3rdparty/casadi3py-local-linux64/lib:/usr/local/mbsim/3rdparty/qwt-6.1.3-local-linux64/lib:/usr/local/mbsim/3rdparty/coin-soqt-bb-local-linux64/lib64'
   xenv['WINEPATH']="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/usr/local/mbsim/3rdparty/lapack-local-win64/bin;/usr/local/mbsim/3rdparty/xerces-c-local-win64/bin;/usr/local/mbsim/3rdparty/casadi3py-local-win64/lib;/usr/local/mbsim/win64-dailyrelease2/local/bin;/usr/local/mbsim/3rdparty/octave-local-win64/bin;/usr/local/mbsim/3rdparty/hdf5-local-win64/bin;/usr/local/mbsim/3rdparty/libarchive-local-win64/bin;/usr/local/mbsim/3rdparty/python-win64;/usr/local/mbsim/3rdparty/qwt-6.1.3-local-win64/lib;/usr/local/mbsim/3rdparty/coin-soqt-bb-local-win64/bin"

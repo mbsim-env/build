@@ -102,9 +102,9 @@ os.environ["MBSIM_SET_MINIMAL_TEND"]="1"
 ret=simplesandbox.call(["./runexamples.py", "--rotate", "20", "-j", "2", "--coverage", SRCDIR+"::"+SRCDIR+"/local", "--reportOutDir",
           outDir, "--url",
           "https://www.mbsim-env.de/mbsim/linux64-dailydebug/report/runexamples_valgrind_report",
-          "--buildSystemRun",
+          "--buildSystemRun", "--checkGUIs",
           "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
-          "valgrind --trace-children=yes --trace-children-skip=*/rm --num-callers=150 --gen-suppressions=all --suppressions="+
+          "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch --num-callers=150 --gen-suppressions=all --suppressions="+
           SCRIPTDIR+"/../../buildScripts/valgrind-mbsim.supp --leak-check=full", "--disableCompare", "--disableValidate",
           "--buildType", "linux64-dailydebug-valgrind"],
           shareddir=[".", "/var/www/html/mbsim/linux64-dailydebug/report/runexamples_valgrind_report",

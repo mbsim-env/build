@@ -229,3 +229,98 @@
    ...
    obj:*/libpython*.so*
 }
+
+
+{
+   QTDBUS
+   Memcheck:Leak
+   match-leak-kinds: definite
+   ...
+   fun:_ZN22QDBusConnectionManager3runEv
+   ...
+}
+{
+   QTXCB
+   Memcheck:Leak
+   match-leak-kinds: definite
+   ...
+   fun:_ZNK15QXcbIntegration20createPlatformWindowEP7QWindow
+   ...
+}
+{
+   QT
+   Memcheck:Value8
+   ...
+   fun:_ZN16QCoreApplication4execEv
+   ...
+}
+{
+   QT
+   Memcheck:Cond
+   ...
+   fun:_ZN16QCoreApplication4execEv
+   ...
+}
+{
+   QTWEBKIT
+   Memcheck:Value8
+   ...
+   fun:_ZN3JSC17ConservativeRoots14genericAddSpanINS_13DummyMarkHookEEEvPvS3_RT_
+   ...
+}
+{
+   QTDBUS
+   Memcheck:Addr2
+   ...
+   fun:_ZN12_GLOBAL__N_131qdbus_unloadLibDBus_dtor_class_D1Ev
+   fun:__run_exit_handlers
+   ...
+}
+{
+   GCOV
+   Memcheck:Addr2
+   ...
+   fun:gcov_exit
+   ...
+   fun:__run_exit_handlers
+   ...
+}
+{
+   QT
+   Memcheck:Leak
+   match-leak-kinds: definite
+   ...
+   fun:_ZN16QCoreApplication4execEv
+   ...
+}
+{
+   COIN
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN10SoSFUInt3214createInstanceEv
+   fun:_ZN4SoDB17createGlobalFieldERK6SbName6SoType
+   fun:_ZN10OpenMBVGUI10MainWindowC1ERSt4listISsSaISsEE
+   ...
+}
+{
+   COIN
+   Memcheck:Leak
+   match-leak-kinds: definite
+   ...
+   fun:_ZN15SoRenderManager6renderEii
+   fun:_ZN10OpenMBVGUI10MainWindow11updateSceneEv
+   fun:main
+}
+{
+   GOBJECT
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:gobject_init
+   fun:gobject_init_ctor
+   fun:call_init
+   fun:_dl_init
+   obj:/usr/lib64/ld-2.17.so
+   ...
+}

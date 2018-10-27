@@ -83,7 +83,9 @@ ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/mbsim-env/local/lib/pkgconfig
 # (simulations hang)
 RUN /mbsim-env/mbsim/examples/runexamples.py -j $JOBS --filter "'basic' in labels and not src" /mbsim-env/mbsim/examples
 # MISSING as a workaround we test now the GUI tools by hand
-ENV DISPLAY=:0
+ENV DISPLAY=:0 \
+    COIN_FULL_INDIRECT_RENDERING=1 \
+    LIBGL_ALWAYS_INDIRECT=1
 RUN vncserver :0 -SecurityTypes None && \
   mbsimgui --autoExit && \
   openmbv --autoExit && \
