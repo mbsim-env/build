@@ -194,14 +194,9 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4,
   if servername==None:
     raise RuntimeError("Argument --servername is required.")
 
-  # networks
-  networki=dockerClient.networks.create(name="mbsimenv_autobuild_"+buildType+"_intern", internal=True)
-  networke=dockerClient.networks.create(name="mbsimenv_autobuild_"+buildType+"_extern")
-
   # autobuild
   autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
     init=True,
-    network=networki.id,
     labels={"buildtype": buildType},
     command=["--buildType", buildType, "-j", str(jobs),
              "--fmatvecBranch", fmatvecBranch,
@@ -216,8 +211,6 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4,
       'mbsimenv_state':             {"bind": "/mbsim-state",  "mode": "rw"},
     },
     detach=True, stdout=True, stderr=True)
-  networki.disconnect(autobuild)
-  networki.connect(autobuild, aliases=["autobuild"])
   if not printLog:
     print("Started running "+s+" as container ID "+autobuild.id)
     sys.stdout.flush()
@@ -225,30 +218,8 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4,
   if printLog:
     asyncLogContainer(autobuild)
 
-  # proxy
-  proxy=dockerClient.containers.run(image="mbsimenv/proxy",
-    init=True,
-    network=networki.id,
-    # allow access to github.com (via https) to update repos
-    command=["^github\\.com$\n"+
-             "^api\\.github\\.com$\n"+
-             "^www\\.mbsim-env\\.de$\n"],
-    detach=True, stdout=True, stderr=True)
-  networki.disconnect(proxy)
-  networki.connect(proxy, aliases=["proxy"])
-  networke.connect(proxy)
-  if not printLog:
-    print("Started running "+s+" as container ID "+proxy.id)
-    sys.stdout.flush()
-  runningContainers.add(proxy)
-  if printLog:
-    asyncLogContainer(proxy)
-
   # wait for running containers
   ret=runWait([autobuild], printLog=printLog)
-  proxy.stop()
-  # remove network
-  networki.remove()
   return ret
 
 def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=None, statusAccessToken=None, token=None,
@@ -335,24 +306,40 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     if printLog:
       asyncLogContainer(webapp, "webapp: ")
 
+    # proxy
+    proxy=dockerClient.containers.run(image="mbsimenv/proxy",
+      init=True,
+      network=networki.id,
+      # allow access to these sites
+      command=["www\\.mbsim-env\\.de\n"+
+               "cdn\\.datatables\\.net\n"+
+               "cdnjs\\.cloudflare\\.com\n"+
+               "code\\.jquery\\.com\n"+
+               "maxcdn\\.bootstrapcdn\\.com\n"+
+               "www\\.anwalt\\.de\n"],
+      detach=True, stdout=True, stderr=True)
+    networki.disconnect(proxy)
+    networki.connect(proxy, aliases=["proxy"])
+    networke.connect(proxy)
+    if not printLog:
+      print("Started running "+s+" as container ID "+proxy.id)
+      sys.stdout.flush()
+    runningContainers.add(proxy)
+    if printLog:
+      asyncLogContainer(proxy, "proxy: ")
+
     # wait for running containers
-    ret=runWait([webserver, webapp], printLog=printLog)
+    ret=runWait([webserver, webapp, proxy], printLog=printLog)
     # stop all other containers connected to network (this may be webapprun and autbuild containers)
     networki.reload()
     for c in networki.containers:
       c.stop()
     # remove network
     networki.remove()
+    networke.remove()
     return ret
 
   elif s=="webapprun":
-    # Network in webapprun is disablewd. Maybe we need to enanble it partially using a proxy for:
-    # www.mbsim-env.de
-    # cdn.datatables.net
-    # cdnjs.cloudflare.com
-    # code.jquery.com
-    # maxcdn.bootstrapcdn.com
-    # www.anwalt.de
     if token==None:
       raise RuntimeError("Option --token is required.")
     if networkID==None:

@@ -38,10 +38,8 @@ RUN groupadd -g 48 -r apache && useradd --no-log-init -u 48 -g apache -c "Apache
 
 # ccache
 # enable swig interface to mbsim
-# proxy
 ENV CCACHE_DIR=/mbsim-ccache \
-    MBSIM_SWIG=1 \
-    https_proxy=proxy:8888
+    MBSIM_SWIG=1
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser
