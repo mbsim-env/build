@@ -51,6 +51,8 @@ xvnc.send_signal(signal.SIGCONT) # continue Xvnc
 xenv=os.environ.copy()
 xenv['XAUTHORITY']=XAUTHTMPL
 xenv['DISPLAY']=':1'
+xenv['COIN_FULL_INDIRECT_RENDERING']='1'
+xenv['LIBGL_ALWAYS_INDIRECT']='1'
 xenv['QT_X11_NO_MITSHM']='1' # required for Qt!??
 
 # run window manager

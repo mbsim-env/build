@@ -169,8 +169,8 @@ if args.valgrindExamples:
   localRet=subprocess.call(["./runexamples.py", "--rotate", "20", "-j", str(args.jobs)]+coverage+["--reportOutDir",
             "/mbsim-report/report/runexamples_valgrind_report", "--url",
             "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
-            "--buildSystemRun", "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
-            "valgrind --trace-children=yes --trace-children-skip=*/rm --num-callers=150 --gen-suppressions=all --suppressions="+
+            "--buildSystemRun", "--checkGUIs", "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
+            "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch --num-callers=150 --gen-suppressions=all --suppressions="+
             "/mbsim-build/build/buildScripts/valgrind-mbsim.supp --leak-check=full", "--disableCompare", "--disableValidate",
             "--buildType", args.buildType+"-valgrind"]
             , env=valgrindEnv)
