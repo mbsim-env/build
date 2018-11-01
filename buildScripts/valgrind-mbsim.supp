@@ -324,3 +324,10 @@
    obj:/usr/lib64/ld-2.17.so
    ...
 }
+{
+   QT BUG
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_ZN16QWebFrameAdapter7setHtmlERK7QStringRK4QUrl
+   ...
+}
