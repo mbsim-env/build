@@ -12,6 +12,7 @@ const uid_t rootUID=0;
 const uid_t mbsimUID=1000;
 const gid_t mbsimGID=1000;
 const uid_t mbsimsbUID=1001;
+const uid_t mbsimsbGID=1001;
 const set<path> allowedDirs=boost::assign::list_of
   (canonical("/var/www/html/mbsim"))
   (canonical("/home/mbsim"))
@@ -32,7 +33,7 @@ void changeOwner(const path &f, uid_t newUID) {
   }
   
   // reown
-  if(chown(f.string().c_str(), newUID, -1)!=0)
+  if(chown(f.string().c_str(), newUID, newUID == mbsimUID ? mbsimsbGID : mbsimGID)!=0)
     throw runtime_error("Internal error: Cannot change owner of "+f.string()+".");
 }
 
