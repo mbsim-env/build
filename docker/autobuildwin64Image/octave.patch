@@ -1,0 +1,24 @@
+--- libgnu/unistd.in.h	2018-11-03 13:00:55.908551397 +0000
++++ libgnu/unistd.in.h	2018-11-03 13:09:11.072584362 +0000
+@@ -716,8 +716,8 @@
+    Return 0 if successful, otherwise set errno and return -1.  */
+ # if @UNISTD_H_HAVE_WINSOCK2_H@
+ #  if !(defined __cplusplus && defined GNULIB_NAMESPACE)
+-#   undef gethostname
+-#   define gethostname rpl_gethostname
++//#   undef gethostname
++//#   define gethostname rpl_gethostname
+ #  endif
+ _GL_FUNCDECL_RPL (gethostname, int, (char *name, size_t len)
+                                     _GL_ARG_NONNULL ((1)));
+--- liboctave/system/oct-env.cc	2018-11-03 13:00:21.574937435 +0000
++++ liboctave/system/oct-env.cc	2018-11-03 13:22:32.702966573 +0000
+@@ -452,7 +452,7 @@
+     {
+       char hostname[1024];
+ 
+-      int status = gnulib::gethostname (hostname, 1023);
++      int status = gethostname (hostname, 1023);
+ 
+       host_name = (status < 0) ? "unknown" : hostname;
+     }

@@ -153,6 +153,14 @@ def build(s, jobs=4):
       rm=False)
     return syncLogBuildImage(build)
 
+  elif s=="autobuildwin64":
+    build=dockerClientLL.build(tag="mbsimenv/autobuildwin64",
+      buildargs={"JOBS": str(jobs)},
+      path=scriptdir+"/..",
+      dockerfile="docker/autobuildwin64Image/Dockerfile",
+      rm=False)
+    return syncLogBuildImage(build)
+
   elif s=="webserver":
     build=dockerClientLL.build(tag="mbsimenv/webserver",
       path=scriptdir,
@@ -195,7 +203,7 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4,
     raise RuntimeError("Argument --servername is required.")
 
   # autobuild
-  autobuild=dockerClient.containers.run(image="mbsimenv/autobuild",
+  autobuild=dockerClient.containers.run(image=("mbsimenv/autobuildwin64" if buildType=="win64-dailyrelease" else "mbsimenv/autobuild"),
     init=True,
     labels={"buildtype": buildType},
     command=["--buildType", buildType, "-j", str(jobs),
@@ -239,6 +247,11 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
 
   elif s=="autobuild-linux64-dailyrelease":
     return runAutobuild(s, servername, "linux64-dailyrelease", [], jobs=jobs,
+                 fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
+                 printLog=printLog)
+
+  elif s=="autobuild-win64-dailyrelease":
+    return runAutobuild(s, servername, "win64-dailyrelease", [], jobs=jobs,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog)
 
