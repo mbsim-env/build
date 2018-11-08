@@ -219,7 +219,7 @@ COPY buildScripts /mbsim-build/build/buildScripts
 COPY docker/autobuildImage/buildSystemState.py /context/buildSystemState.py
 COPY docker/autobuildImage/distribute.py /context/distribute.py
 COPY docker/autobuildwin64Image/entrypoint.py /context/entrypoint.py
-COPY docker/autobuildwin64Image/jni_md.h /context/jni_md.h
+COPY docker/autobuildwin64Image/jni_md.h /context/java_jni/jni_md.h
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
