@@ -88,6 +88,7 @@ ret=subprocess.call(
   "--with-qwt-inc-prefix=/3rdparty/local/include", "--with-qwt-lib-name=qwt", "--with-qwt-lib-prefix=/3rdparty/local/lib",
   "--with-windres=x86_64-w64-mingw32-windres", "--with-swigpath=/3rdparty/local/bin",
   "--with-mkoctfile=/3rdparty/local/bin/mkoctfile.exe",
+  "--with-javajniosdir=/context/jni_md.h",
   "PYTHON_CFLAGS=-I/3rdparty/local/python-win64/include -DMS_WIN64",
   "PYTHON_LIBS=-L/3rdparty/local/python-win64/libs -lpython27",
   "PYTHON_BIN=/3rdparty/local/python-win64/python.exe",
@@ -97,7 +98,6 @@ ret=subprocess.call(
   "SOQT_CFLAGS=-I/3rdparty/local/include",
   "--passToRunexamples"]+RUNEXAMPLES,
   stdout=sys.stdout, stderr=sys.stderr, stdin=statusAccessTokenPipe.stdout if args.statusAccessTokenFile!=None else None)
-#mfmf --passToConfigure", "--with-javajniosdir="+SCRIPTDIR+"/buildPreparation/windows",
 if args.statusAccessTokenFile!=None:
   statusAccessTokenPipe.wait()
 if ret!=0:

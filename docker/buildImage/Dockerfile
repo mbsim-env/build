@@ -43,6 +43,7 @@ RUN yum -y install \
   ccache \
   mesa-libGLU-devel \
   npm \
+  java-1.8.0-openjdk-devel \
   && yum clean all
 RUN npm install mathjax-node
 
