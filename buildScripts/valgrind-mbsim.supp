@@ -125,7 +125,6 @@
    fun:_ZN6casadi6MatrixINS_9SXElementEE3setERKS2_bRKNS0_IiEES7_
    fun:_ZN6casadi6MatrixINS_9SXElementEE3setERKS2_bRKNS_5SliceES7_
    fun:_ZN6casadi9SubMatrixINS_6MatrixINS_9SXElementEEENS_5SliceES4_EaSERKS3_
-   ...
 }
 {
    dummy
@@ -237,7 +236,6 @@
    match-leak-kinds: definite
    ...
    fun:_ZN22QDBusConnectionManager3runEv
-   ...
 }
 {
    QTXCB
@@ -245,28 +243,24 @@
    match-leak-kinds: definite
    ...
    fun:_ZNK15QXcbIntegration20createPlatformWindowEP7QWindow
-   ...
 }
 {
    QT
    Memcheck:Value8
    ...
    fun:_ZN16QCoreApplication4execEv
-   ...
 }
 {
    QT
    Memcheck:Cond
    ...
    fun:_ZN16QCoreApplication4execEv
-   ...
 }
 {
    QTWEBKIT
    Memcheck:Value8
    ...
    fun:_ZN3JSC17ConservativeRoots14genericAddSpanINS_13DummyMarkHookEEEvPvS3_RT_
-   ...
 }
 {
    QTDBUS
@@ -274,7 +268,6 @@
    ...
    fun:_ZN12_GLOBAL__N_131qdbus_unloadLibDBus_dtor_class_D1Ev
    fun:__run_exit_handlers
-   ...
 }
 {
    GCOV
@@ -283,7 +276,6 @@
    fun:gcov_exit
    ...
    fun:__run_exit_handlers
-   ...
 }
 {
    QT
@@ -291,7 +283,6 @@
    match-leak-kinds: definite
    ...
    fun:_ZN16QCoreApplication4execEv
-   ...
 }
 {
    COIN
@@ -301,7 +292,6 @@
    fun:_ZN10SoSFUInt3214createInstanceEv
    fun:_ZN4SoDB17createGlobalFieldERK6SbName6SoType
    fun:_ZN10OpenMBVGUI10MainWindowC1ERSt4listISsSaISsEE
-   ...
 }
 {
    COIN
@@ -322,12 +312,43 @@
    fun:call_init
    fun:_dl_init
    obj:/usr/lib64/ld-2.17.so
-   ...
 }
 {
    QT BUG
    Memcheck:Leak
    match-leak-kinds: possible
-   fun:_ZN16QWebFrameAdapter7setHtmlERK7QStringRK4QUrl
    ...
+   fun:_ZN16QWebFrameAdapter7setHtmlERK7QStringRK4QUrl
+}
+{
+   QTHREAD BUG
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZN7QThread5startENS_8PriorityE
+}
+{
+   QTBUG
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   fun:allocate_dtv
+   fun:_dl_allocate_tls
+   fun:allocate_stack
+   fun:pthread_create@@GLIBC_2.2.5
+   fun:_ZN3WTF17TCMalloc_PageHeap19initializeScavengerEv
+   fun:_ZN3WTF20TCMalloc_ThreadCache10InitModuleEv
+   fun:GetCache
+   fun:do_malloc<true>
+   fun:fastMalloc<true>
+   fun:_ZN3WTF10fastMallocEm
+   fun:operator new
+   fun:_ZN3WTF10StringImpl5emptyEv
+   fun:_ZN3WTF19initializeThreadingEv
+   fun:initializeThreadingOnce
+   fun:_ZN3JSC19initializeThreadingEv
+   fun:_ZN7WebCore16ScriptController19initializeThreadingEv
+   fun:_ZN7WebCore19initializeWebCoreQtEv
+   fun:_ZN15QWebPagePrivateC1EP8QWebPage
+   fun:_ZN8QWebPageC1EP7QObject
 }
