@@ -39,20 +39,6 @@ def config():
   # find "import deplibs"
   sys.path.append(args.prefix+"/share/mbxmlutils/python")
 
-  # enviroment variables
-  if platform=="linux":
-    os.environ["LD_LIBRARY_PATH"]="/home/mbsim/3rdparty/casadi3py-local-linux64/lib:"+\
-      "/home/mbsim/3rdparty/coin-soqt-bb-local-linux64/lib64:/home/mbsim/3rdparty/qwt-6.1.3-local-linux64/lib"+\
-      (":"+os.environ["LD_LIBRARY_PATH"] if "LD_LIBRARY_PATH" in os.environ else "")
-  if platform=="win":
-    os.environ["WINEPATH"]="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/home/mbsim/3rdparty/lapack-local-win64/bin;"+ \
-      "/home/mbsim/3rdparty/xerces-c-local-win64/bin;/home/mbsim/3rdparty/casadi3py-local-win64/lib;"+ \
-      "/home/mbsim/win64-dailyrelease/local/bin;/home/mbsim/3rdparty/octave-local-win64/bin;"+ \
-      "/home/mbsim/3rdparty/hdf5-local-win64/bin;/home/mbsim/3rdparty/libarchive-local-win64/bin;"+\
-      "/home/mbsim/3rdparty/qwt-6.1.3-local-win64/lib;/home/mbsim/3rdparty/coin-soqt-bb-local-win64/bin;"+\
-      "/home/mbsim/3rdparty/python-win64;/home/mbsim/3rdparty/python-win64/Lib/site-packages/numpy/core"+\
-      (";"+os.environ["WINEPATH"] if "WINEPATH" in os.environ else "")
-
 
 
 def parseArguments():
@@ -129,7 +115,7 @@ def addFileToDist(name, arcname, addDepLibs=True):
         # strip or not
         if ((re.search('ELF [0-9]+-bit LSB', content)!=None and re.search('not stripped', content)!=None) or \
             (re.search('PE32\+? executable', content)!=None and re.search('stripped to external PDB', content)==None)) and \
-           not name.startswith("/home/mbsim/3rdparty/python-win64/") and not name.startswith("/usr/lib64/python2.7/"):# do not strip python files (these are not build with mingw)
+           not name.startswith("/3rdparty/local/python-win64/") and not name.startswith("/usr/lib64/python2.7/"):# do not strip python files (these are not build with mingw)
           # not stripped binary file
           try:
             subprocess.check_call(["objcopy", "--only-keep-debug", tmpDir+"/"+basename+".rpath", tmpDir+"/"+basename+".debug"])
@@ -138,12 +124,12 @@ def addFileToDist(name, arcname, addDepLibs=True):
             if platform=="linux":
               distArchive.add(tmpDir+"/"+basename, arcname)
               # only add debug files of mbsim-env
-              if name.startswith("/home/mbsim/linux64-dailyrelease/") or name.startswith("/home/mbsim/win64-dailyrelease/"):
+              if name.startswith("/mbsim-env/"):
                 debugArchive.add(tmpDir+"/"+basename+".debug", arcname+".debug")
             if platform=="win":
               distArchive.write(tmpDir+"/"+basename, arcname)
               # only add debug files of mbsim-env
-              if name.startswith("/home/mbsim/linux64-dailyrelease/") or name.startswith("/home/mbsim/win64-dailyrelease/"):
+              if name.startswith("/mbsim-env/"):
                 debugArchive.write(tmpDir+"/"+basename+".debug", arcname+".debug")
           finally:
             if os.path.exists(tmpDir+"/"+basename): os.remove(tmpDir+"/"+basename)
@@ -399,7 +385,7 @@ def addOctave():
   if platform=="linux":
     addFileToDist("/usr/share/octave", "mbsim-env/share/octave")
   if platform=="win":
-    addFileToDist("/home/mbsim/3rdparty/octave-local-win64/share/octave", "mbsim-env/share/octave")
+    addFileToDist("/3rdparty/local/share/octave", "mbsim-env/share/octave")
 
   print("Add octave executable")
   sys.stdout.flush()
@@ -414,8 +400,8 @@ $INSTDIR/bin/.octave-3.8.2.envvar "$@"
     addFileToDist("/usr/bin/octave", "mbsim-env/bin/.octave-3.8.2.envvar")
     addFileToDist("/usr/bin/octave-cli", "mbsim-env/bin/octave-cli-3.8.2")
   if platform=="win":
-    addFileToDist("/home/mbsim/3rdparty/octave-local-win64/bin/octave-3.8.2.exe", "mbsim-env/bin/octave.exe")
-    addFileToDist("/home/mbsim/3rdparty/octave-local-win64/bin/octave-cli-3.8.2.exe", "mbsim-env/bin/octave-cli-3.8.2.exe")
+    addFileToDist("/3rdparty/local/bin/octave-3.8.2.exe", "mbsim-env/bin/octave.exe")
+    addFileToDist("/3rdparty/local/bin/octave-cli-3.8.2.exe", "mbsim-env/bin/octave-cli-3.8.2.exe")
 
 
 
@@ -424,14 +410,14 @@ def addPython():
   sys.stdout.flush()
 
   if platform=="linux":
-    if os.path.isdir("/home/mbsim/3rdparty/casadi3py-local-linux64/python2.7/site-packages/casadi"):
-      addFileToDist("/home/mbsim/3rdparty/casadi3py-local-linux64/python2.7/site-packages/casadi",
+    if os.path.isdir("/3rdparty/local/python2.7/site-packages/casadi"):
+      addFileToDist("/3rdparty/local/python2.7/site-packages/casadi",
                     "mbsim-env/lib64/python2.7/site-packages/casadi")
     else:
       addFileToDist("/3rdparty/local/python2.7/site-packages/casadi",
                     "mbsim-env/lib64/python2.7/site-packages/casadi")
   if platform=="win":
-    addFileToDist("/home/mbsim/3rdparty/casadi3py-local-win64/python2.7/site-packages/casadi", "mbsim-env/Lib/site-packages/casadi")
+    addFileToDist("/3rdparty/local/python-win64/Lib/site-packages/casadi", "mbsim-env/Lib/site-packages/casadi")
 
   print("Add python files")
   sys.stdout.flush()
@@ -441,7 +427,7 @@ def addPython():
     pysrcdir="/usr/"+subdir
   if platform=="win":
     subdir="Lib"
-    pysrcdir="/home/mbsim/3rdparty/python-win64/"+subdir
+    pysrcdir="/3rdparty/local/python-win64/"+subdir
   # everything in pysrcdir except some special dirs
   for d in os.listdir(pysrcdir):
     if d=="site-packages": # some subdirs of site-packages are added later
@@ -461,8 +447,8 @@ def addPython():
   if platform=="linux":
     addFileToDist("/usr/bin/python2.7", "mbsim-env/bin/python")
   if platform=="win":
-    addFileToDist("/home/mbsim/3rdparty/python-win64/python.exe", "mbsim-env/bin/python.exe")
-    addFileToDist("/home/mbsim/3rdparty/python-win64/pythonw.exe", "mbsim-env/bin/pythonw.exe")
+    addFileToDist("/3rdparty/local/python-win64/python.exe", "mbsim-env/bin/python.exe")
+    addFileToDist("/3rdparty/local/python-win64/pythonw.exe", "mbsim-env/bin/pythonw.exe")
 
 
 

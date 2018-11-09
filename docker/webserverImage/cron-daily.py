@@ -23,4 +23,7 @@ ret1=setup.run("autobuild-linux64-dailydebug", args.servername, args.jobs, print
 # linux64-dailyrelease
 ret2=setup.run("autobuild-linux64-dailyrelease", args.servername, args.jobs, printLog=False)
 
-sys.exit(0 if ret1==0 and ret2==0 else 1)
+# win64-dailyrelease
+ret3=setup.run("autobuild-win64-dailyrelease", args.servername, args.jobs, printLog=False)
+
+sys.exit(0 if ret1==0 and ret2==0 and ret3==0 else 1)

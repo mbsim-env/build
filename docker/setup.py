@@ -277,6 +277,7 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
         'mbsimenv_report-linux64-ci':           {"bind": "/var/www/html/mbsim/linux64-ci",           "mode": "ro"},
         'mbsimenv_report-linux64-dailydebug':   {"bind": "/var/www/html/mbsim/linux64-dailydebug",   "mode": "ro"},
         'mbsimenv_report-linux64-dailyrelease': {"bind": "/var/www/html/mbsim/linux64-dailyrelease", "mode": "ro"},
+        'mbsimenv_report-win64-dailyrelease':   {"bind": "/var/www/html/mbsim/win64-dailyrelease",   "mode": "ro"},
         'mbsimenv_state':                       {"bind": "/var/www/html/mbsim/buildsystemstate",     "mode": "ro"},
         'mbsimenv_config':                      {"bind": "/mbsim-config",                            "mode": "rw"},
         'mbsimenv_releases':                    {"bind": "/var/www/html/mbsim/releases",             "mode": "rw"},
@@ -368,6 +369,7 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
         'mbsimenv_mbsim-linux64-ci':           {"bind": "/mbsim-env-linux64-ci",           "mode": "ro"},
         'mbsimenv_mbsim-linux64-dailydebug':   {"bind": "/mbsim-env-linux64-dailydebug",   "mode": "ro"},
         'mbsimenv_mbsim-linux64-dailyrelease': {"bind": "/mbsim-env-linux64-dailyrelease", "mode": "ro"},
+        'mbsimenv_mbsim-win64-dailyrelease':   {"bind": "/mbsim-env-win64-dailyrelease",   "mode": "ro"},
       },
       detach=True, stdout=True, stderr=True)
     networki.disconnect(webapprun)

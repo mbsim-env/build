@@ -73,7 +73,6 @@ def parseArguments():
   cfgOpts.add_argument("--staticCodeAnalyzis", action="store_true", help='Enable static code analyzis using LLVM Clang Analyzer.')
   cfgOpts.add_argument("--webapp", action="store_true", help='Just passed to runexamples.py.')
   cfgOpts.add_argument("--buildFailedExit", default=None, type=int, help='Define the exit code when the build fails - e.g. use --buildFailedExit 125 to skip a failed build when running as "git bisect run".')
-  cfgOpts.add_argument("--configDir", default="/home/mbsim/BuildServiceConfig", type=str, help='Config directory used for --buildSystemRun.')
   
   outOpts=argparser.add_argument_group('Output Options')
   outOpts.add_argument("--reportOutDir", default="build_report", type=str, help="the output directory of the report")
@@ -882,7 +881,7 @@ def make(tool, mainFD):
         if not os.path.exists(staticCodeAnalyzeDir[0]): os.mkdir(staticCodeAnalyzeDir[0])
         staticCodeAnalyzeComm=[scriptdir+"/scan-build", "-analyze-headers",
            "--exclude", "*_swig_python.cc", "--exclude", "*_swig_octave.cc", "--exclude", "*_swig_java.cc",
-           "--exclude", "/usr/include/*", "--exclude", "/home/mbsim/3rdparty/*",
+           "--exclude", "/usr/include/*", "--exclude",
            "--exclude", "*/mbsim/kernel/mbsim/numerics/csparse.*",
            "-o", staticCodeAnalyzeDir[0], "--html-title", tool+" - Static Code Analyzis"]
       # make

@@ -76,10 +76,10 @@ LABEL org.label-schema.schema-version="1.0" \
 RUN test $(id -u apache) -eq 48 && test $(id -g apache) -eq 48 && \
   groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
   mkdir -p /var/www/html/mbsim/linux64-ci /var/www/html/mbsim/linux64-dailydebug \
-    /var/www/html/mbsim/linux64-dailyrelease /var/www/html/mbsim/buildsystemstate \
+    /var/www/html/mbsim/linux64-dailyrelease /var/www/html/mbsim/win64-dailyrelease /var/www/html/mbsim/buildsystemstate \
     /etc/letsencrypt /var/www/html/mbsim/releases /mbsim-config && \
   chown dockeruser:dockeruser /var/www/html/mbsim/linux64-ci /var/www/html/mbsim/linux64-dailydebug \
-    /var/www/html/mbsim/linux64-dailyrelease /var/www/html/mbsim/buildsystemstate && \
+    /var/www/html/mbsim/linux64-dailyrelease /var/www/html/mbsim/win64-dailyrelease /var/www/html/mbsim/buildsystemstate && \
   chown apache:apache /var/www/html/mbsim/releases && \
   chown dockeruser:apache /mbsim-config && chmod ug+rw /mbsim-config
   # chown root:root /etc/letsencrypt # not needed

@@ -17,8 +17,8 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.vendor="MBSim-Environment"
 
 # Add user dockeruser, create volumes and set volume ownership and permissions
-RUN mkdir -p /mbsim-env-linux64-ci /mbsim-env-linux64-dailydebug /mbsim-env-linux64-dailyrelease && \
-  chown dockeruser:dockeruser /mbsim-env-linux64-ci /mbsim-env-linux64-dailydebug /mbsim-env-linux64-dailyrelease
+RUN mkdir -p /mbsim-env-linux64-ci /mbsim-env-linux64-dailydebug /mbsim-env-linux64-dailyrelease /mbsim-env-win64-dailyrelease && \
+  chown dockeruser:dockeruser /mbsim-env-linux64-ci /mbsim-env-linux64-dailydebug /mbsim-env-linux64-dailyrelease /mbsim-env-win64-dailyrelease
 
 # proxy
 ENV https_proxy=proxy:8888

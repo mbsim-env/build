@@ -23,7 +23,7 @@ prog=cmd.get('prog', [None])[0]
 file=cmd.get('file', [])
 
 # check arg
-if buildType not in ["linux64-dailydebug", "linux64-ci", "linux64-dailyrelease"] or \
+if buildType not in ["linux64-dailydebug", "linux64-ci", "linux64-dailyrelease", "win64-dailyrelease"] or \
    prog not in ["openmbv", "h5plotserie", "mbsimgui"]:
   raise RuntimeError('Unknown buildType or prog.')
 
