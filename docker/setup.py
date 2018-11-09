@@ -9,25 +9,31 @@ import time
 import threading
 import sys
 import signal
+import multiprocessing
+import math
 
 
 
 def parseArgs():
   argparser=argparse.ArgumentParser(
     formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-    description="Manage and run the MBSim-Env docker images, containers, ...")
+    description='''Manage and run the MBSim-Env docker images, containers, ...
+    When using --command=run then all unknown arguments are passed to the 
+    corresponding docker run CMD command. Such arguments are e.g.
+    --clientID: type=str, help="GitHub OAuth App client ID"
+    --clientSecret: type=str, help="GitHub OAuth App client secret"
+    --webhookSecret: type=str, help="GitHub web hook secret"
+    --statusAccessToken: type=str, help="GitHub access token for status updates"
+    --token: type=str, help="Webapprun token"
+    --forceBuild: help="run build even if it was already run"
+    ''')
   
   argparser.add_argument("command", type=str, choices=["build", "run"], help="Command to execute")
-  argparser.add_argument("service", nargs="*", help="Service or image to run or build")
+  argparser.add_argument("service", nargs="+", help="Service or image to run or build (for build command 'ALL' can be used)")
   argparser.add_argument("--servername", type=str, default=None, help="Set the hostname of webserver")
-  argparser.add_argument("--jobs", "-j", type=int, default=4, help="Number of jobs to run in parallel")
-  argparser.add_argument("--clientID", type=str, default=None, help="GitHub OAuth App client ID")
-  argparser.add_argument("--clientSecret", type=str, default=None, help="GitHub OAuth App client secret")
-  argparser.add_argument("--webhookSecret", type=str, default=None, help="GitHub web hook secret")
-  argparser.add_argument("--statusAccessToken", type=str, default=None, help="GitHub access token for status updates")
-  argparser.add_argument("--token", type=str, default=None, help="Webapprun token")
+  argparser.add_argument("--jobs", "-j", type=int, default=int(math.ceil(multiprocessing.cpu_count()/2)), help="Number of jobs to run in parallel")
   
-  return argparser.parse_args()
+  return argparser.parse_known_args()
 
 
 
@@ -81,7 +87,7 @@ def waitContainer(container, prefix=""):
 runningContainers=set()
 
 def main():
-  args=parseArgs()
+  args, argsRest=parseArgs()
 
   # terminate handler for command "run"
   def terminateHandler(signalnum, stack):
@@ -98,6 +104,18 @@ def main():
 
 
   if args.command=="build":
+    if "ALL" in args.service:
+      args.service=[ # must be in order
+        "base",
+        "build",
+        #"run",
+        "proxy",
+        "autobuild",
+        "autobuildwin64",
+        "webserver",
+        "webapp",
+        "webapprun",
+      ]
     for s in args.service:
       ret=build(s, args.jobs)
       if ret!=0:
@@ -106,9 +124,7 @@ def main():
   
   if args.command=="run":
     for s in args.service:
-      ret=run(s, args.servername, args.jobs,
-              clientID=args.clientID, clientSecret=args.clientSecret, webhookSecret=args.webhookSecret,
-              statusAccessToken=args.statusAccessToken, token=args.token)
+      ret=run(s, args.servername, args.jobs, addCommands=argsRest)
       if ret!=0:
         break
     return ret
@@ -230,28 +246,29 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4,
   ret=runWait([autobuild], printLog=printLog)
   return ret
 
-def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=None, statusAccessToken=None, token=None,
+def run(s, servername, jobs=4,
+        addCommands=[],
         fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
         networkID=None, hostname=None,
         wait=True, printLog=True):
 
   if s=="autobuild-linux64-ci":
-    return runAutobuild(s, servername, "linux64-ci", [], jobs=jobs,
+    return runAutobuild(s, servername, "linux64-ci", addCommands, jobs=jobs,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog)
 
   elif s=="autobuild-linux64-dailydebug":
-    return runAutobuild(s, servername, "linux64-dailydebug", ["--buildDoc", "--valgrindExamples"], jobs=jobs,
+    return runAutobuild(s, servername, "linux64-dailydebug", ["--buildDoc", "--valgrindExamples"]+addCommands, jobs=jobs,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog)
 
   elif s=="autobuild-linux64-dailyrelease":
-    return runAutobuild(s, servername, "linux64-dailyrelease", [], jobs=jobs,
+    return runAutobuild(s, servername, "linux64-dailyrelease", addCommands, jobs=jobs,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog)
 
   elif s=="autobuild-win64-dailyrelease":
-    return runAutobuild(s, servername, "win64-dailyrelease", [], jobs=jobs,
+    return runAutobuild(s, servername, "win64-dailyrelease", addCommands, jobs=jobs,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog)
 
@@ -267,11 +284,7 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     webserver=dockerClient.containers.run(image="mbsimenv/webserver",
       init=True,
       network=networki.id,
-      command=["-j", str(jobs)]+\
-        (["--clientID", clientID] if clientID!=None else [])+\
-        (["--clientSecret", clientSecret] if clientSecret!=None else [])+\
-        (["--webhookSecret", webhookSecret] if webhookSecret!=None else [])+\
-        (["--statusAccessToken", statusAccessToken] if statusAccessToken!=None else []),
+      command=["-j", str(jobs)]+addCommands,
       environment={"MBSIMENVSERVERNAME": servername},
       volumes={
         'mbsimenv_report-linux64-ci':           {"bind": "/var/www/html/mbsim/linux64-ci",           "mode": "ro"},
@@ -304,7 +317,7 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     webapp=dockerClient.containers.run(image="mbsimenv/webapp",
       init=True,
       network=networki.id,
-      command=[networki.id],
+      command=[networki.id]+addCommands,
       environment={"MBSIMENVSERVERNAME": servername},
       volumes={
         '/var/run/docker.sock': {"bind": "/var/run/docker.sock", "mode": "rw"},
@@ -330,7 +343,7 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
                "cdnjs\\.cloudflare\\.com\n"+
                "code\\.jquery\\.com\n"+
                "maxcdn\\.bootstrapcdn\\.com\n"+
-               "www\\.anwalt\\.de\n"],
+               "www\\.anwalt\\.de\n"]+addCommands,
       detach=True, stdout=True, stderr=True)
     networki.disconnect(proxy)
     networki.connect(proxy, aliases=["proxy"])
@@ -354,7 +367,7 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     return ret
 
   elif s=="webapprun":
-    if token==None:
+    if "--token" not in addCommands:
       raise RuntimeError("Option --token is required.")
     if networkID==None:
       raise RuntimeError("Option --networkID is required.")
@@ -364,7 +377,7 @@ def run(s, servername, jobs=4, clientID=None, clientSecret=None, webhookSecret=N
     webapprun=dockerClient.containers.run(image="mbsimenv/webapprun",
       init=True,
       network=networki.id,
-      command=[token],
+      command=addCommands,
       volumes={
         'mbsimenv_mbsim-linux64-ci':           {"bind": "/mbsim-env-linux64-ci",           "mode": "ro"},
         'mbsimenv_mbsim-linux64-dailydebug':   {"bind": "/mbsim-env-linux64-dailydebug",   "mode": "ro"},

@@ -7,15 +7,21 @@ import random
 import time
 import signal
 import urlparse
+import argparse
 
-token=sys.argv[1]
+argparser=argparse.ArgumentParser(
+  formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+  description="Run GUI in VNC via websocket.")
+argparser.add_argument("--token", type=str, help="URI token")
+
+args=argparser.parse_args()
 
 XAUTHTMPL='/tmp/mbsimwebapp-xauth'
 
 # parse the token
-print("Running webapp with token: "+token)
+print("Running webapp with token: "+args.token)
 sys.stdout.flush()
-cmd=urlparse.parse_qs(token)
+cmd=urlparse.parse_qs(args.token)
 
 # get prog of file
 buildType=cmd.get('buildType', [None])[0]
@@ -23,7 +29,7 @@ prog=cmd.get('prog', [None])[0]
 file=cmd.get('file', [])
 
 # check arg
-if buildType not in ["linux64-dailydebug", "linux64-ci", "linux64-dailyrelease", "win64-dailyrelease"] or \
+if buildType not in ["linux64-dailydebug", "linux64-ci", "linux64-dailyrelease"] or \
    prog not in ["openmbv", "h5plotserie", "mbsimgui"]:
   raise RuntimeError('Unknown buildType or prog.')
 
