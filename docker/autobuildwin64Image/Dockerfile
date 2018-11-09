@@ -1,4 +1,4 @@
-FROM centos:7 AS centosBaseImage
+FROM centos:centos7 AS centosBaseImage
 
 RUN yum -y install epel-release && yum -y install \
   git \
