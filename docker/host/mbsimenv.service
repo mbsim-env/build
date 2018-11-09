@@ -1,0 +1,12 @@
+# copy this file to /lib/systemd/system/mbsimenv.service
+# and start and enable the service using
+# systemctl start mbsimenv.service
+# systemctl enable mbsimenv.service
+
+[Unit]
+Description=MBSim-Env Service
+Requires=docker.service
+After=docker.service
+
+[Service]
+ExecStart=/home/dockeruser/build/docker/setup.py run service --servername www2.mbsim-env.de

@@ -28,8 +28,8 @@ def parseArgs():
     --forceBuild: help="run build even if it was already run"
     ''')
   
-  argparser.add_argument("command", type=str, choices=["build", "run"], help="Command to execute")
-  argparser.add_argument("service", nargs="+", help="Service or image to run or build (for build command 'ALL' can be used)")
+  argparser.add_argument("command", type=str, choices=["build", "run", "pull", "push"], help="Command to execute")
+  argparser.add_argument("service", nargs="+", help="Service or image to run or build ('ALL' can be used on some commands)")
   argparser.add_argument("--servername", type=str, default=None, help="Set the hostname of webserver")
   argparser.add_argument("--jobs", "-j", type=int, default=int(math.ceil(multiprocessing.cpu_count()/2)), help="Number of jobs to run in parallel")
   
@@ -89,6 +89,18 @@ runningContainers=set()
 def main():
   args, argsRest=parseArgs()
 
+  allServices=[ # must be in order
+    "base",
+    "build",
+    #"run",
+    "proxy",
+    "autobuild",
+    "autobuildwin64",
+    "webserver",
+    "webapp",
+    "webapprun",
+  ]
+
   # terminate handler for command "run"
   def terminateHandler(signalnum, stack):
     print("Got "+("SIGINT" if signalnum==signal.SIGINT else "SIGTERM")+", stopping all containers")
@@ -105,17 +117,7 @@ def main():
 
   if args.command=="build":
     if "ALL" in args.service:
-      args.service=[ # must be in order
-        "base",
-        "build",
-        #"run",
-        "proxy",
-        "autobuild",
-        "autobuildwin64",
-        "webserver",
-        "webapp",
-        "webapprun",
-      ]
+      args.service=allServices
     for s in args.service:
       ret=build(s, args.jobs)
       if ret!=0:
@@ -128,6 +130,21 @@ def main():
       if ret!=0:
         break
     return ret
+
+  if args.command=="pull":
+    if "ALL" in args.service:
+      args.service=allServices
+      dockerClient.images.pull("centos", "centos7")
+    for s in args.service:
+      dockerClient.images.pull("mbsimenv/"+s, "latest")
+    return 0
+
+  if args.command=="push":
+    if "ALL" in args.service:
+      args.service=allServices
+    for s in args.service:
+      dockerClient.images.push("mbsimenv/"+s, "latest")
+    return 0
 
 
 
