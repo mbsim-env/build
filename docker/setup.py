@@ -51,6 +51,9 @@ def syncLogBuildImage(build):
     if "stream" in entry:
       print(entry["stream"], end="")
       sys.stdout.flush()
+    if "status" in entry:
+      print(entry["status"]+(": "+entry["id"] if "id" in entry else "")+(": "+entry["progress"] if "progress" in entry else ""))
+      sys.stdout.flush()
     if "error" in entry:
       ret=1
       print("Exited with an error")
@@ -134,16 +137,22 @@ def main():
   if args.command=="pull":
     if "ALL" in args.service:
       args.service=allServices
-      dockerClient.images.pull("centos", "centos7")
+      pull=dockerClientLL.pull("centos", "centos7", stream=True)
+      if syncLogBuildImage(pull)!=0:
+        return 1
     for s in args.service:
-      dockerClient.images.pull("mbsimenv/"+s, "latest")
+      pull=dockerClientLL.pull("mbsimenv/"+s, "latest", stream=True)
+      if syncLogBuildImage(pull)!=0:
+        return 1
     return 0
 
   if args.command=="push":
     if "ALL" in args.service:
       args.service=allServices
     for s in args.service:
-      dockerClient.images.push("mbsimenv/"+s, "latest")
+      push=dockerClient.images.push("mbsimenv/"+s, "latest", stream=True)
+      if syncLogBuildImage(push)!=0:
+        return 1
     return 0
 
 
