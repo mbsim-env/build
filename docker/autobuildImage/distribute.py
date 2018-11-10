@@ -391,14 +391,16 @@ def addOctave():
   sys.stdout.flush()
 
   if platform=="linux":
-    addStrToDist('''#!/bin/bash
+    octaveEnvvar='''#!/bin/bash
 INSTDIR="$(readlink -f $(dirname $0)/..)"
 export OCTAVE_HOME="$INSTDIR"
 export LD_LIBRARY_PATH="$INSTDIR/lib"
-$INSTDIR/bin/.octave-3.8.2.envvar "$@"
-''', "mbsim-env/bin/octave", True)
-    addFileToDist("/usr/bin/octave", "mbsim-env/bin/.octave-3.8.2.envvar")
-    addFileToDist("/usr/bin/octave-cli", "mbsim-env/bin/octave-cli-3.8.2")
+$INSTDIR/bin/.%s-envvar "$@"
+'''
+    addStrToDist(octaveEnvvar%("octave"), "mbsim-env/bin/octave", True)
+    addStrToDist(octaveEnvvar%("octave-cli"), "mbsim-env/bin/octave-cli", True)
+    addFileToDist("/usr/bin/octave", "mbsim-env/bin/.octave-envvar")
+    addFileToDist("/usr/bin/octave-cli", "mbsim-env/bin/.octave-cli-envvar")
   if platform=="win":
     addFileToDist("/3rdparty/local/bin/octave-3.8.2.exe", "mbsim-env/bin/octave.exe")
     addFileToDist("/3rdparty/local/bin/octave-cli-3.8.2.exe", "mbsim-env/bin/octave-cli-3.8.2.exe")
