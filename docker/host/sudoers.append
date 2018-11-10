@@ -1,0 +1,2 @@
+# allow the user dockeruser to restart the mbsimenv service
+dockeruser ALL=(root) NOPASSWD: /usr/bin/systemctl restart mbsimenv
