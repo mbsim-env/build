@@ -92,7 +92,7 @@ RUN sed -ire "s|^ *QWT_INSTALL_PREFIX *=.*$|QWT_INSTALL_PREFIX = /3rdparty/local
 RUN sed -ire "s|^ *CONFIG *+= *debug_and_release *$|CONFIG += release|" /3rdparty/qwt-$QWTVERSION/qwtbuild.pri
 RUN mingw64-qmake-qt5 ../qwt-$QWTVERSION
 # the first make fails but the second not???
-RUN make -j $JOBS || make -j $JOBS
+RUN make -j $JOBS || make -j $JOBS || make -j 1
 RUN make install
 
 # python
@@ -209,7 +209,7 @@ COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local
 ENV CCACHE_DIR=/mbsim-ccache \
     MBSIM_SWIG=1 \
     PATH=/usr/lib64/ccache:$PATH \
-    WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/mbsim-env/local/bin" \
+    WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/mbsim-env/local/bin" \
     MOC=/usr/x86_64-w64-mingw32/bin/qt5/moc \
     UIC=/usr/x86_64-w64-mingw32/bin/qt5/uic \
     RCC=/usr/x86_64-w64-mingw32/bin/qt5/rcc
