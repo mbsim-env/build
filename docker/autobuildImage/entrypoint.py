@@ -138,6 +138,8 @@ localRet=subprocess.call(
   stdout=sys.stdout, stderr=sys.stderr, stdin=statusAccessTokenPipe.stdout if args.statusAccessTokenFile!=None else None)
 if args.statusAccessTokenFile!=None:
   statusAccessTokenPipe.wait()
+if localRet==255:
+  sys.exit(0)
 if localRet!=0:
   ret=ret+1
   print("build.py failed.")
