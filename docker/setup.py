@@ -244,6 +244,13 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4,
   if servername==None:
     raise RuntimeError("Argument --servername is required.")
 
+  updateReferences=[]
+  if buildType=="linux64-dailydebug" and os.path.isfile("/mbsim-config/mbsimBuildService.conf")
+    with open("/mbsim-config/mbsimBuildService.conf", "r") as f:
+      config=json.load(f)
+    if len(config["checkedExamples"])>0:
+      updateReferences=["--updateReferences"]+config["checkedExamples"]
+
   # autobuild
   autobuild=dockerClient.containers.run(image=("mbsimenv/autobuildwin64" if buildType=="win64-dailyrelease" else "mbsimenv/autobuild"),
     init=True,
@@ -252,7 +259,7 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4,
              "--fmatvecBranch", fmatvecBranch,
              "--hdf5serieBranch", hdf5serieBranch,
              "--openmbvBranch", openmbvBranch,
-             "--mbsimBranch", mbsimBranch]+addCommand,
+             "--mbsimBranch", mbsimBranch]+updateReferences+addCommand,
     environment={"MBSIMENVSERVERNAME": servername},
     volumes={
       'mbsimenv_mbsim-'+buildType:  {"bind": "/mbsim-env",    "mode": "rw"},
