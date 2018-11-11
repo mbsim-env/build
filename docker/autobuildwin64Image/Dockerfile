@@ -212,7 +212,8 @@ ENV CCACHE_DIR=/mbsim-ccache \
     WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/mbsim-env/local/bin" \
     MOC=/usr/x86_64-w64-mingw32/bin/qt5/moc \
     UIC=/usr/x86_64-w64-mingw32/bin/qt5/uic \
-    RCC=/usr/x86_64-w64-mingw32/bin/qt5/rcc
+    RCC=/usr/x86_64-w64-mingw32/bin/qt5/rcc \
+    PYTHONHOME=/3rdparty/local/python-win64
 
 # copy
 COPY buildScripts /mbsim-build/build/buildScripts

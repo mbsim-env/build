@@ -31,6 +31,7 @@ def parseArgs():
   argparser.add_argument("service", nargs="+", help="Service or image to run or build ('ALL' can be used on some commands)")
   argparser.add_argument("--servername", type=str, default=None, help="Set the hostname of webserver")
   argparser.add_argument("--jobs", "-j", type=int, default=multiprocessing.cpu_count(), help="Number of jobs to run in parallel")
+  argparser.add_argument("--interactive", "-i", action='store_true', help="Run container, wait and print how to attach to it")
   
   return argparser.parse_known_args()
 
@@ -128,7 +129,7 @@ def main():
   
   if args.command=="run":
     for s in args.service:
-      ret=run(s, args.servername, args.jobs, addCommands=argsRest)
+      ret=run(s, args.servername, args.jobs, addCommands=argsRest, interactive=args.interactive)
       if ret!=0:
         break
     return ret
@@ -237,7 +238,7 @@ def runWait(containers, printLog=True):
       sys.stdout.flush()
   return ret
 
-def runAutobuild(s, servername, buildType, addCommand, jobs=4,
+def runAutobuild(s, servername, buildType, addCommand, jobs=4, interactive=False,
                  fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
                  printLog=True):
   if servername==None:
@@ -254,11 +255,12 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4,
   autobuild=dockerClient.containers.run(image=("mbsimenv/autobuildwin64" if buildType=="win64-dailyrelease" else "mbsimenv/autobuild"),
     init=True,
     labels={"buildtype": buildType},
-    command=["--buildType", buildType, "-j", str(jobs),
-             "--fmatvecBranch", fmatvecBranch,
-             "--hdf5serieBranch", hdf5serieBranch,
-             "--openmbvBranch", openmbvBranch,
-             "--mbsimBranch", mbsimBranch]+updateReferences+addCommand,
+    entrypoint=None if not interactive else ["sleep", "infinity"],
+    command=(["--buildType", buildType, "-j", str(jobs),
+              "--fmatvecBranch", fmatvecBranch,
+              "--hdf5serieBranch", hdf5serieBranch,
+              "--openmbvBranch", openmbvBranch,
+              "--mbsimBranch", mbsimBranch]+updateReferences+addCommand) if not interactive else [],
     environment={"MBSIMENVSERVERNAME": servername},
     volumes={
       'mbsimenv_mbsim-'+buildType:  {"bind": "/mbsim-env",    "mode": "rw"},
@@ -267,6 +269,11 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4,
       'mbsimenv_state':             {"bind": "/mbsim-state",  "mode": "rw"},
     },
     detach=True, stdout=True, stderr=True)
+  if interactive:
+    print(autobuild.short_id)
+    print("Use")
+    print("docker exec -ti %s bash"%(autobuild.short_id))
+    print("to attach to this container")
   if not printLog:
     print("Started running "+s+" as container ID "+autobuild.id)
     sys.stdout.flush()
@@ -280,27 +287,29 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4,
 
 def run(s, servername, jobs=4,
         addCommands=[],
+        interactive=False,
         fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
         networkID=None, hostname=None,
         wait=True, printLog=True):
 
   if s=="autobuild-linux64-ci":
-    return runAutobuild(s, servername, "linux64-ci", addCommands, jobs=jobs,
+    return runAutobuild(s, servername, "linux64-ci", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog)
 
   elif s=="autobuild-linux64-dailydebug":
-    return runAutobuild(s, servername, "linux64-dailydebug", ["--buildDoc", "--valgrindExamples"]+addCommands, jobs=jobs,
+    return runAutobuild(s, servername, "linux64-dailydebug", ["--buildDoc", "--valgrindExamples"]+addCommands,
+                 jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog)
 
   elif s=="autobuild-linux64-dailyrelease":
-    return runAutobuild(s, servername, "linux64-dailyrelease", addCommands, jobs=jobs,
+    return runAutobuild(s, servername, "linux64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog)
 
   elif s=="autobuild-win64-dailyrelease":
-    return runAutobuild(s, servername, "win64-dailyrelease", addCommands, jobs=jobs,
+    return runAutobuild(s, servername, "win64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog)
 
