@@ -10,7 +10,6 @@ import threading
 import sys
 import signal
 import multiprocessing
-import math
 
 
 
@@ -31,7 +30,7 @@ def parseArgs():
   argparser.add_argument("command", type=str, choices=["build", "run", "pull", "push"], help="Command to execute")
   argparser.add_argument("service", nargs="+", help="Service or image to run or build ('ALL' can be used on some commands)")
   argparser.add_argument("--servername", type=str, default=None, help="Set the hostname of webserver")
-  argparser.add_argument("--jobs", "-j", type=int, default=int(math.ceil(multiprocessing.cpu_count()/2)), help="Number of jobs to run in parallel")
+  argparser.add_argument("--jobs", "-j", type=int, default=multiprocessing.cpu_count(), help="Number of jobs to run in parallel")
   
   return argparser.parse_known_args()
 
@@ -245,7 +244,7 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4,
     raise RuntimeError("Argument --servername is required.")
 
   updateReferences=[]
-  if buildType=="linux64-dailydebug" and os.path.isfile("/mbsim-config/mbsimBuildService.conf")
+  if buildType=="linux64-dailydebug" and os.path.isfile("/mbsim-config/mbsimBuildService.conf"):
     with open("/mbsim-config/mbsimBuildService.conf", "r") as f:
       config=json.load(f)
     if len(config["checkedExamples"])>0:

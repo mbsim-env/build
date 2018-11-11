@@ -78,7 +78,7 @@ ret=subprocess.call(
   (["--statusAccessTokenFile", "/dev/stdin"] if args.statusAccessTokenFile!=None else [])+\
   ["--rotate", "20", "--fmatvecBranch", args.fmatvecBranch,
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
-  "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix", "--webapp",
+  "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix",
   "--reportOutDir", "/mbsim-report/report", "--buildType", args.buildType,
   "--passToConfigure", "--enable-shared", "--disable-static", "--enable-python",
   "--build=x86_64-redhat-linux", "--host=x86_64-w64-mingw32",
