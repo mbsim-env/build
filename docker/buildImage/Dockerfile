@@ -8,6 +8,7 @@ RUN yum -y install \
   chrpath \
   gdb \
   valgrind \
+  xsltproc \
   lcov \
   tigervnc-server \
   git \
