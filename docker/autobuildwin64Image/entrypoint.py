@@ -46,6 +46,9 @@ if not os.path.isdir("/mbsim-env/mbsim"):
   subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/mbsim.git"], cwd="/mbsim-env",
     stdout=sys.stdout, stderr=sys.stderr)
 
+# start wine server
+subprocess.check_call(["wineserver", "-p"], stdout=sys.stdout, stderr=sys.stderr)
+
 # ccache config
 subprocess.check_call(["ccache", "-M", "20G"], stdout=sys.stdout, stderr=sys.stderr)
 

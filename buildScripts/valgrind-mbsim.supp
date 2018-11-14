@@ -201,17 +201,23 @@
    fun:H5Z_pipeline
 }
 {
-   hdf5
+   DEFLAT
+   Memcheck:Cond
+   ...
+   fun:deflate
+   fun:compress2
+   ...
+   fun:H5Z_pipeline
+}
+{
+   HDF5
    Memcheck:Param
    write(buf)
    fun:__write_nocancel
-   fun:H5FD_sec2_write
+   ...
    fun:H5FD_write
    fun:H5F_accum_write
    fun:H5F_block_write
-   fun:H5D__chunk_flush_entry
-   fun:H5D__chunk_flush
-   fun:H5D__flush_real
 }
 # PYTHON memory leaks
 {
@@ -328,9 +334,6 @@
    match-leak-kinds: possible
    ...
    obj:/usr/lib64/libgobject-2.0.so.0.5400.2
-   fun:g_type_register_fundamental
-   obj:/usr/lib64/libgobject-2.0.so.0.5400.2
-   obj:/usr/lib64/libgobject-2.0.so.0.5400.2
    fun:_dl_init
    obj:/usr/lib64/ld-2.17.so
 }
@@ -393,6 +396,24 @@
    fun:_ZN8QWebPageC1EP7QObject
 }
 {
+   QT
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   fun:_dl_allocate_tls
+   fun:pthread_create@@GLIBC_2.2.5
+   obj:/usr/lib64/libQt5WebKit.so.5.9.1
+   obj:/usr/lib64/libQt5WebKit.so.5.9.1
+   fun:_ZN3WTF10fastMallocEm
+   fun:_ZN3WTF10StringImpl5emptyEv
+   fun:_ZN3WTF19initializeThreadingEv
+   fun:_ZN3JSC19initializeThreadingEv
+   obj:/usr/lib64/libQt5WebKit.so.5.9.1
+   fun:_ZN7WebCore19initializeWebCoreQtEv
+   obj:/usr/lib64/libQt5WebKitWidgets.so.5.9.1
+   fun:_ZN8QWebPageC1EP7QObject
+}
+{
    UNKNOWN
    Memcheck:Leak
    match-leak-kinds: definite
@@ -420,4 +441,41 @@
    obj:/usr/lib64/libQt5Core.so.5.9.2
    fun:start_thread
    fun:clone
+}
+{
+   QT
+   Memcheck:Value8
+   obj:/usr/lib64/libQt5WebKit.so.5.9.1
+}
+{
+   QT
+   Memcheck:Addr2
+   fun:getenv
+   fun:_Z25qEnvironmentVariableIsSetPKc
+   obj:/usr/lib64/libQt5DBus.so.5.9.2
+   fun:__run_exit_handlers
+   fun:exit
+   fun:(below main)
+}
+{
+   XERCES
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN11xercesc_3_117MemoryManagerImpl8allocateEm
+   fun:_ZN11xercesc_3_119DOMLSSerializerImplC1EPNS_13MemoryManagerE
+   fun:_ZN11xercesc_3_121DOMImplementationImpl18createLSSerializerEPNS_13MemoryManagerE
+   fun:_ZN8MBSimGUI10MainWindowC1ER11QStringList
+   fun:main
+}
+{
+   UNKNOWN
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN11xercesc_3_117MemoryManagerImpl8allocateEm
+   fun:_ZN11xercesc_3_19XMLAttDefC1EPKtNS0_8AttTypesENS0_11DefAttTypesES2_PNS_13MemoryManagerE
+   fun:_ZN11xercesc_3_112SchemaAttDefC1EPKS0_
+   ...
+   fun:_ZN11xercesc_3_115DOMLSParserImpl11loadGrammarEPKtNS_7Grammar11GrammarTypeEb
 }

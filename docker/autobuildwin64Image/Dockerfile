@@ -99,7 +99,7 @@ RUN make install
 ARG PYTHONVERSION=2.7.13
 WORKDIR /3rdparty
 RUN wget https://www.python.org/ftp/python/2.7.13/python-$PYTHONVERSION.amd64.msi
-RUN wine msiexec -i python-$PYTHONVERSION.amd64.msi TARGETDIR="$(winepath -w /3rdparty/local/python-win64)"
+RUN wine msiexec -i python-$PYTHONVERSION.amd64.msi TARGETDIR="$(winepath -w /3rdparty/local/python-win64)"; wineserver -w
 
 # swig3 (centos7 only provides swig2)
 ARG SWIGVERSION=3.0.7
@@ -212,8 +212,7 @@ ENV CCACHE_DIR=/mbsim-ccache \
     WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/mbsim-env/local/bin" \
     MOC=/usr/x86_64-w64-mingw32/bin/qt5/moc \
     UIC=/usr/x86_64-w64-mingw32/bin/qt5/uic \
-    RCC=/usr/x86_64-w64-mingw32/bin/qt5/rcc \
-    PYTHONHOME=/3rdparty/local/python-win64
+    RCC=/usr/x86_64-w64-mingw32/bin/qt5/rcc
 
 # copy
 COPY buildScripts /mbsim-build/build/buildScripts
@@ -236,6 +235,12 @@ RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser d
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser
+
+#mfmf# configure wine
+RUN mkdir $HOME/.wine
+#mfmfCOPY docker/autobuildwin64Image/wine.reg /context/wine.reg
+#mfmfRUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\\\\\+g'); sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.reg > /tmp/wine.reg
+#mfmfRUN wine regedit /tmp/wine.reg; wineserver -w
 
 # these are the default arguments when running the container
 CMD []
