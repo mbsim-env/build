@@ -1,0 +1,88 @@
+--- SPECS/mingw-qt5-qtwebkit.spec	2018-11-15 14:42:35.782353773 +0100
++++ SPECS/mingw-qt5-qtwebkit.spec	2018-11-15 16:13:29.522477928 +0100
+@@ -45,7 +45,6 @@
+ BuildRequires:  mingw32-qt5-qtsensors >= 5.5.1
+ BuildRequires:  mingw32-qt5-qtlocation >= 5.5.1
+ BuildRequires:  mingw32-qt5-qtmultimedia >= 5.5.1
+-BuildRequires:  mingw32-angleproject >= 0-0.11.git.30d6c2.20141113
+ BuildRequires:  mingw32-fontconfig
+ BuildRequires:  mingw32-libpng
+ BuildRequires:  mingw32-libjpeg-turbo
+@@ -62,7 +61,6 @@
+ BuildRequires:  mingw64-qt5-qtsensors >= 5.5.1
+ BuildRequires:  mingw64-qt5-qtlocation >= 5.5.1
+ BuildRequires:  mingw64-qt5-qtmultimedia >= 5.5.1
+-BuildRequires:  mingw64-angleproject >= 0-0.11.git.30d6c2.20141113
+ BuildRequires:  mingw64-fontconfig
+ BuildRequires:  mingw64-libpng
+ BuildRequires:  mingw64-libjpeg-turbo
+@@ -87,9 +85,6 @@
+ # However, we're using it in the Fedora MinGW toolchain so make sure it is used automatically
+ Patch2:         qt5-qtwebkit-enable-pkgconfig-support-for-win32-target.patch
+ 
+-# Make sure the bundled copy of the ANGLE library isn't used
+-Patch3:         qtwebkit-dont-use-bundled-angle-libraries.patch
+-
+ # qtwebkit depends on qtbase with ICU support.
+ # As ICU support in qtbase also introduces over 20MB of additional dependency
+ # bloat (and the qtbase libraries itself are only 13MB) the decision was made
+@@ -120,12 +115,12 @@
+ # Revert commit 151422 to fix a build failure which happens because we're not using ICU
+ Patch11:        webkit-commit-151422.patch
+ 
+-# Fix compatibility issue when using the latest ANGLE
+-Patch12:        qt5-qtwebkit-fix-compatibility-with-latest-angle.patch
+-
+ # Use linux shell commands instead of windows cmd commands
+ Patch13:        qt5-qtwebkit-use-linux-shell.patch
+ 
++# Dont use 3D_GRAPHICS
++Patch14:        no-3d-graphics.patch
++
+ 
+ %description
+ This package contains the Qt software toolkit for developing
+@@ -166,17 +161,13 @@
+ %setup -q -n %{source_folder}
+ %patch0 -p1 -b .icu
+ %patch2 -p0 -b .pkgconfig
+-%patch3 -p1 -b .angle
+ %patch4 -p1 -b .no_icu
+ %patch5 -p1 -b .qt4_unicode -R
+ %patch6 -p0 -b .export
+ %patch10 -p1 -b .debuginfo
+ %patch11 -p1 -b .no_icu -R
+-%patch12 -p1 -b .angle_git
+ %patch13 -p1 -b .no_cmd
+-
+-# Make sure the bundled copy of the ANGLE libraries isn't used
+-rm -rf Source/ThirdParty/ANGLE
++%patch14 -p1 -b .no_3d_graphics
+ 
+ 
+ %build
+@@ -195,16 +186,11 @@
+ # .prl files aren't interesting for us
+ find $RPM_BUILD_ROOT -name "*.prl" -delete
+ 
+-# The QtWebProcess executable is placed in the wrong folder, move it manually
+-mv $RPM_BUILD_ROOT%{mingw32_datadir}/qt5/bin/QtWebProcess.exe $RPM_BUILD_ROOT%{mingw32_bindir}/
+-mv $RPM_BUILD_ROOT%{mingw64_datadir}/qt5/bin/QtWebProcess.exe $RPM_BUILD_ROOT%{mingw64_bindir}/
+-
+ 
+ # Win32
+ %files -n mingw32-qt5-%{qt_module}
+ %doc Source/WebCore/LICENSE*
+ %doc VERSION
+-%{mingw32_bindir}/QtWebProcess.exe
+ %{mingw32_bindir}/Qt5WebKit.dll
+ %{mingw32_bindir}/Qt5WebKitWidgets.dll
+ %{mingw32_includedir}/qt5/QtWebKit/
+@@ -225,7 +211,6 @@
+ %files -n mingw64-qt5-%{qt_module}
+ %doc Source/WebCore/LICENSE*
+ %doc VERSION
+-%{mingw64_bindir}/QtWebProcess.exe
+ %{mingw64_bindir}/Qt5WebKit.dll
+ %{mingw64_bindir}/Qt5WebKitWidgets.dll
+ %{mingw64_includedir}/qt5/QtWebKit/

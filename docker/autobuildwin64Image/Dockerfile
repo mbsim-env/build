@@ -233,6 +233,37 @@ RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser d
   mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state && \
   chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state
 
+
+
+RUN yum install -y rpm-build gcc-c++
+
+WORKDIR /3rdparty
+RUN yumdownloader --source mingw-qt5-qtbase
+RUN rpm -ivh ./mingw-qt5-qtbase*.src.rpm
+WORKDIR /root/rpmbuild/SPECS
+RUN yum-builddep -y mingw-qt5-qtbase
+COPY docker/autobuildwin64Image/qt5base.patch /context/qt5base.patch
+RUN patch -d /root/rpmbuild -p0 < /context/qt5base.patch
+RUN rpmbuild -ba mingw-qt5-qtbase.spec
+RUN rpm --reinstall /root/rpmbuild/RPMS/noarch/mingw64-qt5-qtbase-5.6.0-3.el7.noarch.rpm /root/rpmbuild/RPMS/x86_64/mingw64-qt5-qmake-5.6.0-3.el7.x86_64.rpm
+
+WORKDIR /3rdparty
+RUN yumdownloader --source mingw-qt5-qtwebkit
+RUN rpm -ivh ./mingw-qt5-qtwebkit*.src.rpm
+WORKDIR /root/rpmbuild/SPECS
+RUN yum-builddep -y mingw-qt5-qtwebkit
+COPY docker/autobuildwin64Image/qt5webkit.patch /context/qt5webkit.patch
+COPY docker/autobuildwin64Image/no-3d-graphics.patch /root/rpmbuild/SOURCES/no-3d-graphics.patch
+RUN patch -d /root/rpmbuild -p0 < /context/qt5webkit.patch
+#mfmf remove the || true
+RUN rpmbuild -ba mingw-qt5-qtwebkit.spec || true
+RUN rpm --reinstall /root/rpmbuild/RPMS/noarch/mingw64-qt5-qtwebkit-5.5.1-1.el7.noarch.rpm
+
+WORKDIR /tmp
+
+
+
+
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser
 
