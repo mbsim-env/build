@@ -1,0 +1,27 @@
+#!/usr/bin/python
+
+import subprocess
+import sys
+import os
+import fnmatch
+
+cpp=True if sys.argv[0].endswith("c++-analyzer") else False
+
+skipSCA=False
+
+if "MBSIMENV_SCA_EXCLUDES" in os.environ:
+  globs=os.environ["MBSIMENV_SCA_EXCLUDES"].split()
+
+  for f in sys.argv[1:]:
+    if f.endswith(".c") or f.endswith(".cc") or f.endswith(".cpp") or f.endswith(".c++"):
+      for g in globs:
+        if fnmatch.fnmatch(f, g):
+          skipSCA=True
+          break
+      break
+
+if skipSCA:
+  ret=subprocess.call(["g++" if cpp else "gcc"]+sys.argv[1:])
+else:
+  ret=subprocess.call(["/usr/libexec/clang-analyzer/scan-build/"+("c++" if cpp else "ccc")+"-analyzer"]+sys.argv[1:])
+sys.exit(ret)

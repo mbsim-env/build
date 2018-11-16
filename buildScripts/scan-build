@@ -1645,8 +1645,8 @@ $HtmlDir = GetHTMLRunDir($HtmlDir);
 
 # Determine the location of ccc-analyzer.
 my $AbsRealBin = Cwd::realpath($RealBin);
-my $Cmd = "$AbsRealBin/libexec/ccc-analyzer";
-my $CmdCXX = "$AbsRealBin/libexec/c++-analyzer";
+my $Cmd = "/context/ccc-analyzer";
+my $CmdCXX = "/context/c++-analyzer";
 
 # Portability: use less strict but portable check -e (file exists) instead of 
 # non-portable -x (file is executable). On some windows ports -x just checks

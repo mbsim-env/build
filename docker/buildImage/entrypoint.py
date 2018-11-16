@@ -23,7 +23,6 @@ argparser.add_argument("--openmbvBranch", type=str, default="master", help="open
 argparser.add_argument("--mbsimBranch", type=str, default="master", help="mbsim branch")
 argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs to run in parallel")
 argparser.add_argument('--forceBuild', action="store_true", help="Passed to buily.py if existing")
-argparser.add_argument("--staticCodeAnalyzis", action="store_true", help="Passed to build.py if existing")
 argparser.add_argument("--valgrindExamples", action="store_true", help="Run examples also with valgrind.")
 argparser.add_argument("--statusAccessTokenFile", type=str, default=None, help="Filename containing the GitHub token to update statuses. (should be a pipe for security reasons)")
 argparser.add_argument("--updateReferences", nargs='*', default=[], help="Update these references.")
@@ -76,7 +75,7 @@ if args.buildType == "linux64-ci":
   ARGS=["--forceBuild", "--disableConfigure", "--disableMakeClean", "--disableDoxygen", "--disableXMLDoc"]
   RUNEXAMPLES=["--disableCompare", "--disableMakeClean", "--filter", "'basic' in labels"]
 elif args.buildType == "linux64-dailydebug":
-  ARGS=["--docOutDir", "/mbsim-report/doc", "--coverage"]
+  ARGS=["--docOutDir", "/mbsim-report/doc", "--coverage", "--staticCodeAnalyzis"]
   RUNEXAMPLES=["--checkGUIs"]
 elif args.buildType == "linux64-dailyrelease":
   ARGS=["--enableDistribution"]
@@ -85,11 +84,6 @@ elif args.buildType == "linux64-dailyrelease":
 # pass arguments to build.py
 if args.forceBuild:
   ARGS.append('--forceBuild')
-if args.staticCodeAnalyzis:
-  ARGS.append("--staticCodeAnalyzis")
-
-# uncomment this to run static code analyzis
-# ARGS.append("--staticCodeAnalyzis")
 
 # update references of examples
 if len(args.updateReferences)>0:

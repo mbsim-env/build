@@ -46,6 +46,8 @@ RUN yum -y install \
   npm \
   java-1.8.0-openjdk-devel \
   python-requests \
+  perl-Text-Glob \
+  clang-analyzer \
   && yum clean all
 RUN npm install mathjax-node
 
@@ -174,6 +176,8 @@ COPY --from=thirdpartyBuildImage /3rdparty/nuhtml/dist/vnu.jar /3rdparty/vnu.jar
 COPY docker/buildImage/entrypoint.py /context/entrypoint.py
 COPY docker/buildImage/buildSystemState.py /context/buildSystemState.py
 COPY docker/buildImage/distribute.py /context/distribute.py
+COPY docker/buildImage/c++-analyzer /context/c++-analyzer
+COPY docker/buildImage/ccc-analyzer /context/ccc-analyzer
 COPY buildScripts /mbsim-build/build/buildScripts
 
 # enable ccache (after all other things are done); note /mbsim-env is usually a persistent Docker volume;

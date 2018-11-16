@@ -23,7 +23,6 @@ else:
   import urllib.request as myurllib
 
 # global variables
-scriptdir=os.path.dirname(os.path.realpath(__file__))
 toolDependencies=dict()
 docDir=None
 timeID=None
@@ -880,14 +879,16 @@ def make(tool, mainFD):
       run=1
       staticCodeAnalyzeDir=[]
       staticCodeAnalyzeComm=[]
+      makeEnv=os.environ.copy()
       if args.staticCodeAnalyzis and tool != "mbsim/thirdparty/nurbs++": # skip nurbs++ being a 3rd party tool
         staticCodeAnalyzeDir=[pj(args.reportOutDir, tool, "static-code-analyze")]
         if not os.path.exists(staticCodeAnalyzeDir[0]): os.mkdir(staticCodeAnalyzeDir[0])
-        staticCodeAnalyzeComm=[scriptdir+"/scan-build", "-analyze-headers",
-           "--exclude", "*_swig_python.cc", "--exclude", "*_swig_octave.cc", "--exclude", "*_swig_java.cc",
-           "--exclude", "/usr/include/*", "--exclude",
-           "--exclude", "*/mbsim/kernel/mbsim/numerics/csparse.*",
-           "-o", staticCodeAnalyzeDir[0], "--html-title", tool+" - Static Code Analyzis"]
+        excludes=["*_swig_python.cc", "*_swig_octave.cc", "*_swig_java.cc", "/usr/*", "/3rdparty/*",
+                  "*/mbsim/kernel/mbsim/numerics/csparse.*", "*.moc.cc", "*.qrc.cc"]
+        makeEnv["MBSIMENV_SCA_EXCLUDES"]=" ".join(excludes)
+        staticCodeAnalyzeComm=["/mbsim-build/build/buildScripts/scan-build", "-analyze-headers"]+ \
+          [v for il in map(lambda x: ["--exclude", x], excludes) for v in il]+ \
+          ["-o", staticCodeAnalyzeDir[0], "--html-title", tool+" - Static Code Analyzis"]
       # make
       errStr=""
       if not args.disableMakeClean:
@@ -902,7 +903,7 @@ def make(tool, mainFD):
               if os.path.splitext(f)[1]==".gcda": os.remove(pj(d, f))
       print("\n\nRUNNING make -k\n", file=makeFD); makeFD.flush()
       if subprocess.call(staticCodeAnalyzeComm+["make", "-k", "-j", str(args.j)],
-                            stderr=subprocess.STDOUT, stdout=makeFD)!=0:
+                         stderr=subprocess.STDOUT, stdout=makeFD, env=makeEnv)!=0:
         errStr=errStr+"make failed; "
       if not args.disableMakeInstall:
         print("\n\nRUNNING make install\n", file=makeFD); makeFD.flush()
@@ -938,7 +939,7 @@ def make(tool, mainFD):
           pass
         print('<td data-order="%d" class="%s"><span class="glyphicon glyphicon-%s"></span>&nbsp;'%(numErr==0, "success" if numErr==0 else "warning",
           "ok-sign alert-success" if numErr==0 else "warning-sign alert-warning"), file=mainFD)
-        print('  <a href="%s">%s</a>'%(myurllib.pathname2url(pj(tool, "static-code-analyze", d, "")),
+        print('  <a href="%s">%s</a>'%(myurllib.pathname2url(pj(tool, "static-code-analyze", d, "index.html")),
           "passed" if numErr==0 else 'error&nbsp;<span class="badge">%d</span>'%(numErr)), file=mainFD)
         print('</td>', file=mainFD)
       else:
