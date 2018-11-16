@@ -29,7 +29,7 @@ curdir=os.getcwd()
 
 nrDocFailed=0
 f=open(outDir+"/manualsbuild.log", "w")
-print("Logfile of the build process of the manuals. Generated on "+str(datetime.datetime.now()), file=f)
+print("Logfile of the build process of the manuals. Generated on "+datetime.datetime.utcnow()+"+00:00", file=f)
 print("", file=f)
 f.flush()
 mainFiles=glob.glob("*/main.tex")
