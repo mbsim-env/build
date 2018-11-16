@@ -150,7 +150,7 @@ if args.valgrindExamples:
   
   # set github statuses
   currentID=int(os.readlink("/mbsim-report/report/result_current")[len("result_"):])
-  timeID=datetime.datetime.now()
+  timeID=datetime.datetime.utcnow()
   timeID=datetime.datetime(timeID.year, timeID.month, timeID.day, timeID.hour, timeID.minute, timeID.second)
   with codecs.open("/mbsim-report/report/result_current/repoState.json", "r", encoding="utf-8") as f:
     commitidfull=json.load(f)

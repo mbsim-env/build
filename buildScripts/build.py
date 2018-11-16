@@ -233,13 +233,14 @@ def mainDocPage():
   print('  <a href="/mbsim/html/impressum_disclaimer_datenschutz.html#datenschutz">Datenschutz</a>', file=docFD)
   print('</span>', file=docFD)
   print('<span class="pull-right small">', file=docFD)
-  print('  Generated on %s'%(str(timeID)), file=docFD)
+  print('  Generated on <span class="DATETIME">%s</span>'%(timeID.isoformat()+"+00:00"), file=docFD)
   print('  <a href="/">Home</a>', file=docFD)
   print('</span>', file=docFD)
   print('</body>', file=docFD)
   print('</html>', file=docFD)
   docFD.close()
 
+#mfmf currentID is not required
 def setStatus(statusAccessToken, commitidfull, state, currentID, timeID, target_url, buildType, endTime=None):
   import requests
   for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
@@ -257,7 +258,7 @@ def setStatus(statusAccessToken, commitidfull, state, currentID, timeID, target_
       raise RuntimeError("Unknown buildType "+buildType+" provided")
     # note description must be less than 140 characters
     if state=="pending":
-      data["description"]="Building since %s on MBSim-Env (%s)"%(str(timeID), buildType)
+      data["description"]="Building since %s on MBSim-Env (%s)"%(timeID.isoformat()+"+00:00", buildType)
     elif state=="failure":
       data["description"]="Failed after %.1f min on MBSim-Env (%s)"%((endTime-timeID).total_seconds()/60, buildType)
     elif state=="success":
@@ -387,7 +388,7 @@ def main():
     os.environ["PKG_CONFIG_PATH"]=pkgConfigDir
 
   global timeID
-  timeID=datetime.datetime.now()
+  timeID=datetime.datetime.utcnow()
   timeID=datetime.datetime(timeID.year, timeID.month, timeID.day, timeID.hour, timeID.minute, timeID.second)
 
   # enable coverage
@@ -444,7 +445,7 @@ def main():
   <code class="dropdown-menu" style="padding-left: 0.5em; padding-right: 0.5em;" aria-labelledby="calledCommandID">'''%(args.buildType), file=mainFD)
   for argv in sys.argv: print(argv.replace('/', u'/\u200B')+' ', file=mainFD)
   print('</code></div></dd>', file=mainFD)
-  print('  <dt>Time ID</dt><dd>'+str(timeID)+'</dd>', file=mainFD)
+  print('  <dt>Time ID</dt><dd class="DATETIME">'+timeID.isoformat()+'+00:00</dd>', file=mainFD)
   print('  <dt>End time</dt><dd><span id="STILLRUNNINGORABORTED" class="text-danger"><b>still running or aborted</b></span><!--E_ENDTIME--></dd>', file=mainFD)
   print('  <dt>Navigate</dt><dd><a class="btn btn-info btn-xs" href="../result_%010d/index.html"><span class="glyphicon glyphicon-step-backward"></span>&nbsp;previous</a>'%(currentID-1), file=mainFD)
   print('                    <a class="btn btn-info btn-xs" href="../result_%010d/index.html"><span class="glyphicon glyphicon-step-forward"></span>&nbsp;next</a>'%(currentID+1), file=mainFD)
@@ -566,7 +567,7 @@ def main():
   print('  <a href="/mbsim/html/impressum_disclaimer_datenschutz.html#datenschutz">Datenschutz</a>', file=mainFD)
   print('</span>', file=mainFD)
   print('<span class="pull-right small">', file=mainFD)
-  print('  Generated on %s'%(str(timeID)), file=mainFD)
+  print('  Generated on <span class="DATETIME">%s</span>'%(timeID.isoformat()+"+00:00"), file=mainFD)
   print('  <a href="/">Home</a>', file=mainFD)
   print('</span>', file=mainFD)
   print('</body>', file=mainFD)
@@ -575,9 +576,9 @@ def main():
   mainFD.close()
   # replace <span id="STILLRUNNINGORABORTED"...</span> in index.html
   for line in fileinput.FileInput(pj(args.reportOutDir, "index.html"),inplace=1):
-    endTime=datetime.datetime.now()
+    endTime=datetime.datetime.utcnow()
     endTime=datetime.datetime(endTime.year, endTime.month, endTime.day, endTime.hour, endTime.minute, endTime.second)
-    line=re.sub('<span id="STILLRUNNINGORABORTED".*?</span>', str(endTime), line)
+    line=re.sub('<span id="STILLRUNNINGORABORTED".*?</span>', '<span class="DATETIME">'+endTime.isoformat()+'+00:00</span>', line)
     print(line, end="")
 
   # update build system state
@@ -1051,7 +1052,7 @@ def runexamples(mainFD):
   command.extend(["--buildType", args.buildType])
   command.extend(["--reportOutDir", pj(args.reportOutDir, "runexamples_report")])
   command.extend(["--currentID", str(currentID)])
-  command.extend(["--timeID", timeID.strftime("%Y-%m-%dT%H:%M:%S")])
+  command.extend(["--timeID", timeID.isoformat()+"+00:00"])
   if args.buildSystemRun:
     command.extend(["--buildSystemRun"])
   if args.coverage:
