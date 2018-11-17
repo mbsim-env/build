@@ -246,13 +246,20 @@ RUN rpm -i /3rdparty/mingw64-qt5-qtwebkit-5.5.1-1.el7.noarch.rpm \
 
 # ccache
 # enable swig interface to mbsim
+# compile flags
 ENV CCACHE_DIR=/mbsim-ccache \
     MBSIM_SWIG=1 \
     PATH=/usr/lib64/ccache:$PATH \
     WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/mbsim-env/local/bin" \
     MOC=/usr/x86_64-w64-mingw32/bin/qt5/moc \
     UIC=/usr/x86_64-w64-mingw32/bin/qt5/uic \
-    RCC=/usr/x86_64-w64-mingw32/bin/qt5/rcc
+    RCC=/usr/x86_64-w64-mingw32/bin/qt5/rcc \
+    CXXFLAGS="-g -O2 -gdwarf-2 -DNDEBUG" \
+    CFLAGS="-g -O2 -gdwarf-2 -DNDEBUG" \
+    FFLAGS="-g -O2 -gdwarf-2 -DNDEBUG" \
+    PKG_CONFIG_PATH=/3rdparty/local/lib/pkgconfig \
+    PLATFORM=Windows \
+    CXX=x86_64-w64-mingw32-g++
 
 # copy
 COPY buildScripts /mbsim-build/build/buildScripts

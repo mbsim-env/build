@@ -52,14 +52,6 @@ subprocess.check_call(["wineserver", "-p"], stdout=sys.stdout, stderr=sys.stderr
 # ccache config
 subprocess.check_call(["ccache", "-M", "20G"], stdout=sys.stdout, stderr=sys.stderr)
 
-# compile flags
-os.environ["CXXFLAGS"]="-g -O2 -gdwarf-2 -DNDEBUG"
-os.environ["CFLAGS"]="-g -O2 -gdwarf-2 -DNDEBUG"
-os.environ["FFLAGS"]="-g -O2 -gdwarf-2 -DNDEBUG"
-os.environ["PKG_CONFIG_PATH"]="/3rdparty/local/lib/pkgconfig"
-os.environ["PLATFORM"]="Windows" # required for source code examples
-os.environ["CXX"]="x86_64-w64-mingw32-g++" # required for source code examples
-
 # args
 ARGS=["--enableDistribution"]
 RUNEXAMPLES=["--disableCompare", "--disableValidate", "--checkGUIs", "--exeExt", ".exe", "--filter", "'basic' in labels"]

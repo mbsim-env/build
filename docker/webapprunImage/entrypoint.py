@@ -16,8 +16,6 @@ argparser.add_argument("--token", type=str, help="URI token")
 
 args=argparser.parse_args()
 
-XAUTHTMPL='/tmp/mbsimwebapp-xauth'
-
 # parse the token
 print("Running webapp with token: "+args.token)
 sys.stdout.flush()
@@ -33,16 +31,13 @@ if buildType not in ["linux64-dailydebug", "linux64-ci", "linux64-dailyrelease"]
    prog not in ["openmbv", "h5plotserie", "mbsimgui"]:
   raise RuntimeError('Unknown buildType or prog.')
 
-# create XAUTH file
-os.open(XAUTHTMPL, os.O_CREAT, 0o600)
-
 # create XAUTH content
 COOKIE=''.join(random.SystemRandom().choice('0123456789abcdef') for _ in range(32))
-subprocess.check_call(['/usr/bin/xauth', '-f', XAUTHTMPL, 'add', 'localhost:1', '.', COOKIE])
+subprocess.check_call(['/usr/bin/xauth', '-f', '/tmp/mbsimwebapp-xauth', 'add', 'localhost:1', '.', COOKIE])
 
 # start Xvnc in background ...
 xvnc=subprocess.Popen(['Xvnc', ':1', '-SecurityTypes', 'None',
-  '-auth', XAUTHTMPL, "-sigstop", "-NeverShared", "-DisconnectClients"])
+  '-auth', '/tmp/mbsimwebapp-xauth', "-sigstop", "-NeverShared", "-DisconnectClients"])
 # ... and wait for Xvnc to be ready (Xvnc stops itself, using -sigstop option, if ready; than we continoue it)
 count=0
 while open('/proc/%d/stat'%(xvnc.pid)).readline().split()[2]!='T' and count<1000:
@@ -53,16 +48,8 @@ if open('/proc/%d/stat'%(xvnc.pid)).readline().split()[2]!='T':
   raise RuntimeError("Xvnc failed to start.")
 xvnc.send_signal(signal.SIGCONT) # continue Xvnc
 
-# prepare env for starting programs in the vnc server
-xenv=os.environ.copy()
-xenv['XAUTHORITY']=XAUTHTMPL
-xenv['DISPLAY']=':1'
-xenv['COIN_FULL_INDIRECT_RENDERING']='1'
-xenv['LIBGL_ALWAYS_INDIRECT']='1'
-xenv['QT_X11_NO_MITSHM']='1' # required for Qt!??
-
 # run window manager
-wm=subprocess.Popen(['/usr/bin/xfwm4'], env=xenv)
+wm=subprocess.Popen(['/usr/bin/xfwm4'])
 
 # run the main program according to token
 absFile=[]
@@ -73,7 +60,7 @@ for f in file:
     absFile.append(af)
     if cdir==None: # use first file as current dir for the started program
       cdir=os.path.dirname(af)
-p=subprocess.Popen(['/mbsim-env-'+buildType+'/local/bin/'+prog, '--fullscreen']+absFile, cwd=cdir, env=xenv)
+p=subprocess.Popen(['/mbsim-env-'+buildType+'/local/bin/'+prog, '--fullscreen']+absFile, cwd=cdir)
 
 # wait for all child processes
 p.wait()
