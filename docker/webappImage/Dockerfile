@@ -43,6 +43,10 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/webappImage" \
   org.label-schema.vendor="MBSim-Environment"
 
+HEALTHCHECK --interval=60s --timeout=30s --start-period=30s --retries=3 \
+  CMD curl -i -N -d dummydata -H "Connection: Upgrade" -H "Upgrade: websocket" -H "Host: webapp" \
+  -H "Origin: http://webapp:10080" http://webapp:10080 || exit 1
+
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
