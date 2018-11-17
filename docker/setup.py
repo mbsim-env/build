@@ -129,7 +129,7 @@ def main():
     return ret
   
   if args.command=="run":
-    run=0
+    ret=0
     for s in args.service:
       ret=run(s, args.servername, args.jobs, addCommands=argsRest, interactive=args.interactive)
       if ret!=0:
