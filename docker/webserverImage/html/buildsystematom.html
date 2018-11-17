@@ -16,7 +16,7 @@
 <script>
   $(document).ready(function() {
     $('#FeedTable').dataTable({
-      "columns": [{"width": "15%"}, {"width": "25%"}, {"width": "60%"}],
+      "columns": [{"width": "20%"}, {"width": "30%"}, {"width": "50%"}],
       "order": [0, 'des'],
       "ajax": {
         "url": "../buildsystemstate/failures.atom.xml",
@@ -30,15 +30,14 @@
             var content=$($(this).get(0).getElementsByTagNameNS(NS, "content")).text();
             var link=$($(this).get(0).getElementsByTagNameNS(NS, "link")).attr("href");
             var updated=$($(this).get(0).getElementsByTagNameNS(NS, "updated")).text();
-            ret.push(['<span class="DATETIME">'+updated+'</span>', title, '<a href="../'+link.substring("https://"+window.location.hostname+"/mbsim/".length)+'">'+content+'</a>']);
+            ret.push([moment(updated).tz(moment.tz.guess()).format("ddd, YYYY-MM-DD - HH:mm:ss z"),
+                      title,
+                      '<a href="../'+link.substring("https://"+window.location.hostname+"/mbsim/".length)+'">'+content+'</a>']);
           });
           return ret;
         }
       }
     });
-    $('.DATETIME').each(function() {
-      $(this).text(moment($(this).text()).tz(moment.tz.guess()).format("ddd, YYYY-MM-DD - HH:mm:ss z"));
-    }); 
   });
 </script>
 

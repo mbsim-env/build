@@ -10,6 +10,7 @@ import threading
 import sys
 import signal
 import multiprocessing
+import re
 
 
 
@@ -27,8 +28,8 @@ def parseArgs():
     --forceBuild: help="run build even if it was already run"
     ''')
   
-  argparser.add_argument("command", type=str, choices=["build", "run", "pull", "push"], help="Command to execute")
-  argparser.add_argument("service", nargs="+", help="Service or image to run or build ('ALL' can be used on some commands)")
+  argparser.add_argument("command", type=str, choices=["build", "run", "pull", "push", "prune"], help="Command to execute")
+  argparser.add_argument("service", nargs="*", help="Service or image to run or build")
   argparser.add_argument("--servername", type=str, default=None, help="Set the hostname of webserver")
   argparser.add_argument("--jobs", "-j", type=int, default=multiprocessing.cpu_count(), help="Number of jobs to run in parallel")
   argparser.add_argument("--interactive", "-i", action='store_true', help="Run container, wait and print how to attach to it")
@@ -119,7 +120,7 @@ def main():
 
 
   if args.command=="build":
-    if "ALL" in args.service:
+    if len(args.service)==0:
       args.service=allServices
     for s in args.service:
       ret=build(s, args.jobs)
@@ -128,6 +129,7 @@ def main():
     return ret
   
   if args.command=="run":
+    run=0
     for s in args.service:
       ret=run(s, args.servername, args.jobs, addCommands=argsRest, interactive=args.interactive)
       if ret!=0:
@@ -135,7 +137,7 @@ def main():
     return ret
 
   if args.command=="pull":
-    if "ALL" in args.service:
+    if len(args.service)==0:
       args.service=allServices
       pull=dockerClientLL.pull("centos", "centos7", stream=True)
       if syncLogBuildImage(pull)!=0:
@@ -147,7 +149,7 @@ def main():
     return 0
 
   if args.command=="push":
-    if "ALL" in args.service:
+    if len(args.service)==0:
       args.service=allServices
     for s in args.service:
       push=dockerClient.images.push("mbsimenv/"+s, "latest", stream=True)
@@ -155,73 +157,92 @@ def main():
         return 1
     return 0
 
+  if args.command=="prune":
+    days=30
+    p=dockerClient.containers.prune(filters={'until': str(days*24)+"h"})
+    print("Reclaimed container space: %.1fGB (only containers older then %d days are reclaimed)"%(p["SpaceReclaimed"]/1e9, days))
+    p=dockerClient.images.prune()
+    print("Reclaimed image space: %.1fGB"%(p["SpaceReclaimed"]/1e9))
+    return 0
 
+
+
+def buildImage(tag, tagMultistageImage=True, **kwargs):
+  if tagMultistageImage:
+    if "dockerfile" in kwargs:
+      dockerfile=kwargs["path"]+"/"+kwargs["dockerfile"]
+    else:
+      dockerfile=kwargs["path"]+"/Dockerfile"
+    fromRE=re.compile("^ *FROM .* AS (.*)$")
+    with open(dockerfile, "r") as f:
+      for line in f.readlines():
+        match=fromRE.match(line)
+        if match:
+          multistageName=match.group(1).lower()
+          print("Building multistage image "+multistageName+" and tag it as "+tag+"--"+multistageName)
+          build=dockerClientLL.build(tag=tag+"--"+multistageName, target=multistageName, **kwargs)
+          ret=syncLogBuildImage(build)
+          if ret!=0:
+            return ret
+  build=dockerClientLL.build(tag=tag, **kwargs)
+  return syncLogBuildImage(build)
 
 def build(s, jobs=4):
 
   if s=="base":
-    build=dockerClientLL.build(tag="mbsimenv/base",
+    return buildImage(tag="mbsimenv/base",
       buildargs={"JOBS": str(jobs)},
       path=scriptdir+"/baseImage",
       rm=False)
-    return syncLogBuildImage(build)
 
   elif s=="build":
-    build=dockerClientLL.build(tag="mbsimenv/build",
+    return buildImage(tag="mbsimenv/build",
       buildargs={"JOBS": str(jobs)},
       path=scriptdir+"/buildImage",
       rm=False)
-    return syncLogBuildImage(build)
 
   elif s=="run":
-    build=dockerClientLL.build(tag="mbsimenv/run",
+    return buildImage(tag="mbsimenv/run",
       buildargs={"JOBS": str(jobs)},
       path=scriptdir+"/..",
       dockerfile="docker/runImage/Dockerfile",
       nocache=True,
       rm=False)
-    return syncLogBuildImage(build)
 
   elif s=="proxy":
-    build=dockerClientLL.build(tag="mbsimenv/proxy",
+    return buildImage(tag="mbsimenv/proxy",
       path=scriptdir+"/proxyImage",
       rm=False)
-    return syncLogBuildImage(build)
 
   elif s=="autobuild":
-    build=dockerClientLL.build(tag="mbsimenv/autobuild",
+    return buildImage(tag="mbsimenv/autobuild",
       path=scriptdir+"/..",
       dockerfile="docker/autobuildImage/Dockerfile",
       rm=False)
-    return syncLogBuildImage(build)
 
   elif s=="autobuildwin64":
-    build=dockerClientLL.build(tag="mbsimenv/autobuildwin64",
+    return buildImage(tag="mbsimenv/autobuildwin64",
       buildargs={"JOBS": str(jobs)},
       path=scriptdir+"/..",
       dockerfile="docker/autobuildwin64Image/Dockerfile",
       rm=False)
-    return syncLogBuildImage(build)
 
   elif s=="webserver":
-    build=dockerClientLL.build(tag="mbsimenv/webserver",
+    return buildImage(tag="mbsimenv/webserver",
       path=scriptdir,
       dockerfile="webserverImage/Dockerfile",
       rm=False)
-    return syncLogBuildImage(build)
 
   elif s=="webapp":
-    build=dockerClientLL.build(tag="mbsimenv/webapp",
+    return buildImage(tag="mbsimenv/webapp",
       path=scriptdir,
       dockerfile="webappImage/Dockerfile",
       rm=False)
-    return syncLogBuildImage(build)
 
   elif s=="webapprun":
-    build=dockerClientLL.build(tag="mbsimenv/webapprun",
+    return buildImage(tag="mbsimenv/webapprun",
       path=scriptdir+"/webapprunImage",
       rm=False)
-    return syncLogBuildImage(build)
 
   else:
     raise RuntimeError("Unknown image "+s+" to build.")
