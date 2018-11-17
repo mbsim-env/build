@@ -211,7 +211,16 @@ def mainDocPage():
   print('</head>', file=docFD)
   print('<body style="margin:0.5em">', file=docFD)
   print('<script src="https://code.jquery.com/jquery-2.1.4.min.js"> </script>', file=docFD)
+  print('<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"> </script>', file=docFD)
+  print('<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.23/moment-timezone-with-data-2012-2022.min.js"> </script>', file=docFD)
   print('<script src="/mbsim/html/cookiewarning.js"> </script>', file=docFD)
+  print('<script>', file=docFD)
+  print('  $(document).ready(function() {', file=docFD)
+  print("    $('.DATETIME').each(function() {", file=docFD)
+  print('      $(this).text(moment($(this).text()).tz(moment.tz.guess()).format("ddd, YYYY-MM-DD - HH:mm:ss z"));', file=docFD)
+  print('    }); ', file=docFD)
+  print('  });', file=docFD)
+  print('</script>', file=docFD)
   print('<h1>Documentation of the MBSim-Environment</h1>', file=docFD)
   print('<div class="panel panel-success">', file=docFD)
   print('  <div class="panel-heading"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;XML Documentation</div>', file=docFD)
@@ -233,7 +242,7 @@ def mainDocPage():
   print('  <a href="/mbsim/html/impressum_disclaimer_datenschutz.html#datenschutz">Datenschutz</a>', file=docFD)
   print('</span>', file=docFD)
   print('<span class="pull-right small">', file=docFD)
-  print('  Generated on <span class="DATETIME">%s</span>'%(timeID.isoformat()+"+00:00"), file=docFD)
+  print('  Generated on <span class="DATETIME">%s</span>'%(timeID.isoformat()+"Z"), file=docFD)
   print('  <a href="/">Home</a>', file=docFD)
   print('</span>', file=docFD)
   print('</body>', file=docFD)
@@ -258,7 +267,7 @@ def setStatus(statusAccessToken, commitidfull, state, currentID, timeID, target_
       raise RuntimeError("Unknown buildType "+buildType+" provided")
     # note description must be less than 140 characters
     if state=="pending":
-      data["description"]="Building since %s on MBSim-Env (%s)"%(timeID.isoformat()+"+00:00", buildType)
+      data["description"]="Building since %s on MBSim-Env (%s)"%(timeID.isoformat()+"Z", buildType)
     elif state=="failure":
       data["description"]="Failed after %.1f min on MBSim-Env (%s)"%((endTime-timeID).total_seconds()/60, buildType)
     elif state=="success":
@@ -423,10 +432,15 @@ def main():
 </head>
 <body style="margin:0.5em">
 <script src="https://cdn.datatables.net/s/bs-3.3.5/jq-2.1.4,dt-1.10.10/datatables.min.js"> </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"> </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.23/moment-timezone-with-data-2012-2022.min.js"> </script>
 <script src="/mbsim/html/cookiewarning.js"> </script>
 <script src="../../../html/mbsimBuildServiceClient.js"></script>
 <script>
   $(document).ready(function() {
+    $('.DATETIME').each(function() {
+      $(this).text(moment($(this).text()).tz(moment.tz.guess()).format("ddd, YYYY-MM-DD - HH:mm:ss z"));
+    }); 
     $.fn.dataTableExt.sErrMode = 'throw';
     $('#SortThisTable').dataTable({'lengthMenu': [ [1, 5, 10, 25, -1], [1, 5, 10, 25, 'All'] ], 'pageLength': -1, 'aaSorting': [], stateSave: true});'''%(args.buildType), file=mainFD)
 
@@ -445,7 +459,7 @@ def main():
   <code class="dropdown-menu" style="padding-left: 0.5em; padding-right: 0.5em;" aria-labelledby="calledCommandID">'''%(args.buildType), file=mainFD)
   for argv in sys.argv: print(argv.replace('/', u'/\u200B')+' ', file=mainFD)
   print('</code></div></dd>', file=mainFD)
-  print('  <dt>Time ID</dt><dd class="DATETIME">'+timeID.isoformat()+'+00:00</dd>', file=mainFD)
+  print('  <dt>Time ID</dt><dd class="DATETIME">'+timeID.isoformat()+'Z</dd>', file=mainFD)
   print('  <dt>End time</dt><dd><span id="STILLRUNNINGORABORTED" class="text-danger"><b>still running or aborted</b></span><!--E_ENDTIME--></dd>', file=mainFD)
   print('  <dt>Navigate</dt><dd><a class="btn btn-info btn-xs" href="../result_%010d/index.html"><span class="glyphicon glyphicon-step-backward"></span>&nbsp;previous</a>'%(currentID-1), file=mainFD)
   print('                    <a class="btn btn-info btn-xs" href="../result_%010d/index.html"><span class="glyphicon glyphicon-step-forward"></span>&nbsp;next</a>'%(currentID+1), file=mainFD)
@@ -567,7 +581,7 @@ def main():
   print('  <a href="/mbsim/html/impressum_disclaimer_datenschutz.html#datenschutz">Datenschutz</a>', file=mainFD)
   print('</span>', file=mainFD)
   print('<span class="pull-right small">', file=mainFD)
-  print('  Generated on <span class="DATETIME">%s</span>'%(timeID.isoformat()+"+00:00"), file=mainFD)
+  print('  Generated on <span class="DATETIME">%s</span>'%(timeID.isoformat()+"Z"), file=mainFD)
   print('  <a href="/">Home</a>', file=mainFD)
   print('</span>', file=mainFD)
   print('</body>', file=mainFD)
@@ -578,7 +592,7 @@ def main():
   for line in fileinput.FileInput(pj(args.reportOutDir, "index.html"),inplace=1):
     endTime=datetime.datetime.utcnow()
     endTime=datetime.datetime(endTime.year, endTime.month, endTime.day, endTime.hour, endTime.minute, endTime.second)
-    line=re.sub('<span id="STILLRUNNINGORABORTED".*?</span>', '<span class="DATETIME">'+endTime.isoformat()+'+00:00</span>', line)
+    line=re.sub('<span id="STILLRUNNINGORABORTED".*?</span>', '<span class="DATETIME">'+endTime.isoformat()+'Z</span>', line)
     print(line, end="")
 
   # update build system state
@@ -1052,7 +1066,7 @@ def runexamples(mainFD):
   command.extend(["--buildType", args.buildType])
   command.extend(["--reportOutDir", pj(args.reportOutDir, "runexamples_report")])
   command.extend(["--currentID", str(currentID)])
-  command.extend(["--timeID", timeID.isoformat()+"+00:00"])
+  command.extend(["--timeID", timeID.isoformat()+"Z"])
   if args.buildSystemRun:
     command.extend(["--buildSystemRun"])
   if args.coverage:
