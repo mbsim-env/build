@@ -84,7 +84,7 @@ for filename in ["/var/www/html/mbsim/html/index.html", "/var/www/html/mbsim/htm
 # add daily build to crontab (starting at 01:00)
 crontab=subprocess.check_output(["crontab", "-l"])
 crontab=crontab+\
-  "0 1 * * * python3 /context/cron-daily.py -j %d --servername %s 2> >(sed -re 's/^/DAILY: /' > /proc/1/fd/2) > >(sed -re 's/^/DAILY: /' > /proc/1/fd/1)\n"%(args.jobs, os.environ["MBSIMENVSERVERNAME"])+\
+  "0 0 * * * python3 /context/cron-daily.py -j %d --servername %s 2> >(sed -re 's/^/DAILY: /' > /proc/1/fd/2) > >(sed -re 's/^/DAILY: /' > /proc/1/fd/1)\n"%(args.jobs, os.environ["MBSIMENVSERVERNAME"])+\
   "* * * * * python3 /context/cron-ci.py -j %d --servername %s 2> >(sed -re 's/^/CI: /' > /proc/1/fd/2) > >(sed -re 's/^/CI: /' > /proc/1/fd/1)\n"%(args.jobs, os.environ["MBSIMENVSERVERNAME"])
 subprocess.check_call(["crontab", "/dev/stdin"], )
 p=subprocess.Popen(['crontab', '/dev/stdin'], stdin=subprocess.PIPE)    
