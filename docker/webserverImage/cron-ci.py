@@ -89,7 +89,7 @@ openmbvBranch=tobuild['openmbv']
 mbsimBranch=tobuild['mbsim']
 
 # run linux64-ci
-ret=setup.run("autobuild-linux64-ci", args.servername, args.jobs, printLog=False,
+ret=setup.run("build-linux64-ci", args.servername, args.jobs, printLog=False,
               fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch,
               openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
 sys.exit(ret)

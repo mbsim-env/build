@@ -1,5 +1,5 @@
 ARG FROMTAG=latest
-FROM mbsimenv/autobuild:$FROMTAG
+FROM mbsimenv/build:$FROMTAG
 
 USER root:root
 

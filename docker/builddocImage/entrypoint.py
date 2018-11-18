@@ -10,8 +10,7 @@ import subprocess
 import datetime
 import shutil
 
-inDir=sys.argv[1]
-outDir=sys.argv[2]
+outDir="/mbsim-report/manuals"
 
 def buildLatex(f):
   subprocess.check_call(["pdflatex", "-halt-on-error", "-file-line-error", "main.tex"], stderr=subprocess.STDOUT, stdout=f)
@@ -24,12 +23,12 @@ def buildLatex(f):
 if not os.path.isdir(outDir):
   os.makedirs(outDir)
 
-os.chdir(inDir)
+os.chdir("/mbsim-env/mbsim/manuals")
 curdir=os.getcwd()
 
 nrDocFailed=0
 f=open(outDir+"/manualsbuild.log", "w")
-print("Logfile of the build process of the manuals. Generated on "+datetime.datetime.utcnow()+"Z", file=f)
+print("Logfile of the build process of the manuals. Generated on "+datetime.datetime.utcnow().isoformat()+"Z", file=f)
 print("", file=f)
 f.flush()
 mainFiles=glob.glob("*/main.tex")

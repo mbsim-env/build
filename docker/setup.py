@@ -96,10 +96,10 @@ def main():
   allServices=[ # must be in order
     "base",
     "build",
+    "buildwin64",
+    "builddoc",
     #"run",
     "proxy",
-    "autobuild",
-    "autobuildwin64",
     "webserver",
     "webapp",
     "webapprun",
@@ -198,7 +198,8 @@ def build(s, jobs=4):
   elif s=="build":
     return buildImage(tag="mbsimenv/build",
       buildargs={"JOBS": str(jobs)},
-      path=scriptdir+"/buildImage",
+      path=scriptdir+"/..",
+      dockerfile="docker/buildImage/Dockerfile",
       rm=False)
 
   elif s=="run":
@@ -214,17 +215,17 @@ def build(s, jobs=4):
       path=scriptdir+"/proxyImage",
       rm=False)
 
-  elif s=="autobuild":
-    return buildImage(tag="mbsimenv/autobuild",
-      path=scriptdir+"/..",
-      dockerfile="docker/autobuildImage/Dockerfile",
-      rm=False)
-
-  elif s=="autobuildwin64":
-    return buildImage(tag="mbsimenv/autobuildwin64",
+  elif s=="buildwin64":
+    return buildImage(tag="mbsimenv/buildwin64",
       buildargs={"JOBS": str(jobs)},
       path=scriptdir+"/..",
-      dockerfile="docker/autobuildwin64Image/Dockerfile",
+      dockerfile="docker/buildwin64Image/Dockerfile",
+      rm=False)
+
+  elif s=="builddoc":
+    return buildImage(tag="mbsimenv/builddoc",
+      path=scriptdir+"/..",
+      dockerfile="docker/builddocImage/Dockerfile",
       rm=False)
 
   elif s=="webserver":
@@ -272,8 +273,8 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4, interactive=False
     if len(config["checkedExamples"])>0:
       updateReferences=["--updateReferences"]+config["checkedExamples"]
 
-  # autobuild
-  autobuild=dockerClient.containers.run(image=("mbsimenv/autobuildwin64" if buildType=="win64-dailyrelease" else "mbsimenv/autobuild"),
+  # build
+  build=dockerClient.containers.run(image=("mbsimenv/buildwin64" if buildType=="win64-dailyrelease" else "mbsimenv/build"),
     init=True,
     labels={"buildtype": buildType},
     entrypoint=None if not interactive else ["sleep", "infinity"],
@@ -291,19 +292,19 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4, interactive=False
     },
     detach=True, stdout=True, stderr=True)
   if interactive:
-    print(autobuild.short_id)
+    print(build.short_id)
     print("Use")
-    print("docker exec -ti %s bash"%(autobuild.short_id))
+    print("docker exec -ti %s bash"%(build.short_id))
     print("to attach to this container")
   if not printLog:
-    print("Started running "+s+" as container ID "+autobuild.id)
+    print("Started running "+s+" as container ID "+build.id)
     sys.stdout.flush()
-  runningContainers.add(autobuild)
+  runningContainers.add(build)
   if printLog:
-    asyncLogContainer(autobuild)
+    asyncLogContainer(build)
 
   # wait for running containers
-  ret=runWait([autobuild], printLog=printLog)
+  ret=runWait([build], printLog=printLog)
   return ret
 
 def run(s, servername, jobs=4,
@@ -313,26 +314,56 @@ def run(s, servername, jobs=4,
         networkID=None, hostname=None,
         wait=True, printLog=True):
 
-  if s=="autobuild-linux64-ci":
+  if s=="build-linux64-ci":
     return runAutobuild(s, servername, "linux64-ci", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog)
 
-  elif s=="autobuild-linux64-dailydebug":
-    return runAutobuild(s, servername, "linux64-dailydebug", ["--buildDoc", "--valgrindExamples"]+addCommands,
+  elif s=="build-linux64-dailydebug":
+    return runAutobuild(s, servername, "linux64-dailydebug", ["--valgrindExamples"]+addCommands,
                  jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog)
 
-  elif s=="autobuild-linux64-dailyrelease":
+  elif s=="build-linux64-dailyrelease":
     return runAutobuild(s, servername, "linux64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog)
 
-  elif s=="autobuild-win64-dailyrelease":
+  elif s=="build-win64-dailyrelease":
     return runAutobuild(s, servername, "win64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog)
+
+  elif s=="builddoc":
+    if servername==None:
+      raise RuntimeError("Argument --servername is required.")
+
+    builddoc=dockerClient.containers.run(image="mbsimenv/builddoc",
+      init=True,
+      entrypoint=None if not interactive else ["sleep", "infinity"],
+      environment={"MBSIMENVSERVERNAME": servername},
+      volumes={
+        'mbsimenv_mbsim-linux64-dailydebug':  {"bind": "/mbsim-env",    "mode": "rw"},
+        'mbsimenv_report-linux64-dailydebug': {"bind": "/mbsim-report", "mode": "rw"},
+        'mbsimenv_state':                     {"bind": "/mbsim-state",  "mode": "rw"},
+      },
+      detach=True, stdout=True, stderr=True)
+    if interactive:
+      print(builddoc.short_id)
+      print("Use")
+      print("docker exec -ti %s bash"%(builddoc.short_id))
+      print("to attach to this container")
+    if not printLog:
+      print("Started running "+s+" as container ID "+builddoc.id)
+      sys.stdout.flush()
+    runningContainers.add(builddoc)
+    if printLog:
+      asyncLogContainer(builddoc)
+
+    # wait for running containers
+    ret=runWait([builddoc], printLog=printLog)
+    return ret
 
   elif s=="service":
     if servername==None:

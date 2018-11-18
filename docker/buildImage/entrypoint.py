@@ -14,7 +14,7 @@ import build
 # arguments
 argparser=argparse.ArgumentParser(
   formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-  description="Entrypoint for container mbsimenv/autobuild.")
+  description="Entrypoint for container mbsimenv/build.")
   
 argparser.add_argument("--buildType", type=str, required=True, help="The build type")
 argparser.add_argument("--fmatvecBranch", type=str, default="master", help="fmatvec branch")
@@ -24,7 +24,6 @@ argparser.add_argument("--mbsimBranch", type=str, default="master", help="mbsim 
 argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs to run in parallel")
 argparser.add_argument('--forceBuild', action="store_true", help="Passed to buily.py if existing")
 argparser.add_argument("--staticCodeAnalyzis", action="store_true", help="Passed to build.py if existing")
-argparser.add_argument("--buildDoc", action="store_true", help="Build external docu, like papers ...")
 argparser.add_argument("--valgrindExamples", action="store_true", help="Run examples also with valgrind.")
 argparser.add_argument("--statusAccessTokenFile", type=str, default=None, help="Filename containing the GitHub token to update statuses. (should be a pipe for security reasons)")
 argparser.add_argument("--updateReferences", nargs='*', default=[], help="Update these references.")
@@ -59,9 +58,6 @@ if not os.path.isdir("/mbsim-env/mbsim"):
 if args.valgrindExamples and not os.path.isdir("/mbsim-env/mbsim-valgrind"):
   subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/mbsim.git", "mbsim-valgrind"], cwd="/mbsim-env",
     stdout=sys.stdout, stderr=sys.stderr)
-
-# ccache config
-subprocess.check_call(["ccache", "-M", "20G"], stdout=sys.stdout, stderr=sys.stderr)
 
 # compile flags
 if args.buildType == "linux64-ci" or args.buildType == "linux64-dailydebug":
@@ -187,13 +183,5 @@ if args.valgrindExamples:
   build.setStatus(statusAccessToken, commitidfull, "success" if ret==0 else "failure", currentID, timeID,
         "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report/result_%010d/index.html"%(currentID),
         args.buildType+"-valgrind", endTime)
-
-if args.buildDoc:
-  # build doc
-  if subprocess.call(["/context/builddoc.py",
-                      "/mbsim-env/mbsim/manuals", "/mbsim-report/manuals"])!=0:
-    ret=ret+1
-    print("builddoc.py failed.")
-    sys.stdout.flush()
 
 sys.exit(ret)

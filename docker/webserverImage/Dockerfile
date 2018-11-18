@@ -71,7 +71,7 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/webserverImage" \
   org.label-schema.vendor="MBSim-Environment"
 
-# Check apache user and group id (must be in sync with the one in autobuildImage)
+# Check apache user and group id (must be in sync with the one in buildImage)
 # Add user dockeruser, create volumes and set volume ownership and permissions
 RUN test $(id -u apache) -eq 48 && test $(id -g apache) -eq 48 && \
   groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \

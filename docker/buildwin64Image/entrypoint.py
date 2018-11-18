@@ -9,7 +9,7 @@ import sys
 # arguments
 argparser=argparse.ArgumentParser(
   formatter_class=argparse.ArgumentDefaultsHelpFormatter,
-  description="Entrypoint for container mbsimenv/autobuild.")
+  description="Entrypoint for container mbsimenv/buildwin64.")
   
 argparser.add_argument("--buildType", type=str, required=True, help="The build type")
 argparser.add_argument("--fmatvecBranch", type=str, default="master", help="fmatvec branch")
@@ -48,9 +48,6 @@ if not os.path.isdir("/mbsim-env/mbsim"):
 
 # start wine server
 subprocess.check_call(["wineserver", "-p"], stdout=sys.stdout, stderr=sys.stderr)
-
-# ccache config
-subprocess.check_call(["ccache", "-M", "20G"], stdout=sys.stdout, stderr=sys.stderr)
 
 # args
 ARGS=["--enableDistribution"]

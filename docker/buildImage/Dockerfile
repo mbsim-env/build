@@ -45,6 +45,7 @@ RUN yum -y install \
   mesa-libGLU-devel \
   npm \
   java-1.8.0-openjdk-devel \
+  python-requests \
   && yum clean all
 RUN npm install mathjax-node
 
@@ -169,11 +170,31 @@ ENV PKG_CONFIG_PATH=$PKG_CONFIG_PATH:/mbsim-env/local/lib/pkgconfig:/mbsim-env/l
 COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local
 COPY --from=thirdpartyBuildImage /3rdparty/nuhtml/dist/vnu.jar /3rdparty/vnu.jar
 
+# copy build repo
+COPY docker/buildImage/entrypoint.py /context/entrypoint.py
+COPY docker/buildImage/buildSystemState.py /context/buildSystemState.py
+COPY docker/buildImage/distribute.py /context/distribute.py
+COPY buildScripts /mbsim-build/build/buildScripts
+
 # enable ccache (after all other things are done); note /mbsim-env is usually a persistent Docker volume;
 # enable nu-html -> add to CLASSPATH
 ENV PATH=/usr/lib64/ccache:/mbsim-env/mbsim/examples:/mbsim-env/build/buildScripts:$PATH \
-    CCACHE_DIR=/mbsim-env/.ccache \
+    CCACHE_DIR=/mbsim-ccache \
+    MBSIM_SWIG=1 \
     CLASSPATH=$CLASSPATH:/3rdparty/vnu.jar
 
-# run bash per default
-CMD ["bash"]
+# Add user dockeruser, create volumes and set volume ownership and permissions
+RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
+  mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state && \
+  chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state
+
+# use a unpriviliged user to run the container
+USER dockeruser:dockeruser
+
+# ccache config
+RUN ccache -M 10G
+
+# these are the default arguments when running the container
+CMD []
+# call this script when running the container
+ENTRYPOINT ["/context/entrypoint.py"]

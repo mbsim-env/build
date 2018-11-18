@@ -30,7 +30,7 @@ RUN yum -y install mingw64-qt5-qtsvg mingw64-qt5-qtwebkit && \
   yum clean all
 
 # fix mingw
-COPY docker/autobuildwin64Image/mingw64.patch /context/mingw64.patch
+COPY docker/buildwin64Image/mingw64.patch /context/mingw64.patch
 RUN patch -d / -p0 < /context/mingw64.patch
 
 
@@ -62,7 +62,7 @@ RUN yumdownloader --source mingw-qt5-qtbase
 RUN rpm -ivh ./mingw-qt5-qtbase*.src.rpm
 WORKDIR /root/rpmbuild/SPECS
 RUN yum-builddep -y mingw-qt5-qtbase
-COPY docker/autobuildwin64Image/qt5base.patch /context/qt5base.patch
+COPY docker/buildwin64Image/qt5base.patch /context/qt5base.patch
 RUN patch -d /root/rpmbuild -p0 < /context/qt5base.patch
 RUN rpmbuild -ba mingw-qt5-qtbase.spec
 RUN rpm -i /root/rpmbuild/RPMS/noarch/mingw64-qt5-qtbase-5.6.0-3.el7.noarch.rpm /root/rpmbuild/RPMS/x86_64/mingw64-qt5-qmake-5.6.0-3.el7.x86_64.rpm
@@ -75,15 +75,15 @@ RUN yumdownloader --source mingw-qt5-qtwebkit
 RUN rpm -ivh ./mingw-qt5-qtwebkit*.src.rpm
 WORKDIR /root/rpmbuild/SPECS
 RUN yum-builddep -y mingw-qt5-qtwebkit
-COPY docker/autobuildwin64Image/qt5webkit.patch /context/qt5webkit.patch
-COPY docker/autobuildwin64Image/no-3d-graphics.patch /root/rpmbuild/SOURCES/no-3d-graphics.patch
+COPY docker/buildwin64Image/qt5webkit.patch /context/qt5webkit.patch
+COPY docker/buildwin64Image/no-3d-graphics.patch /root/rpmbuild/SOURCES/no-3d-graphics.patch
 RUN patch -d /root/rpmbuild -p0 < /context/qt5webkit.patch
 RUN rpmbuild -ba mingw-qt5-qtwebkit.spec
 RUN rpm -i /root/rpmbuild/RPMS/noarch/mingw64-qt5-qtwebkit-5.5.1-1.el7.noarch.rpm
 
 # 3rd party
 
-COPY docker/autobuildwin64Image/toolchain-mingw64.cmake /context/toolchain-mingw64.cmake
+COPY docker/buildwin64Image/toolchain-mingw64.cmake /context/toolchain-mingw64.cmake
 
 # lapack
 ARG LAPACKVERSION=3.4.2
@@ -102,7 +102,7 @@ WORKDIR /3rdparty
 RUN git clone --depth 1 -b hdf5-$HDF5VERSION https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git
 WORKDIR /3rdparty/hdf5
 RUN git checkout -b test
-COPY docker/autobuildwin64Image/hdf5.patch /context/hdf5.patch
+COPY docker/buildwin64Image/hdf5.patch /context/hdf5.patch
 RUN git apply /context/hdf5.patch
 RUN mkdir /3rdparty/hdf5-build
 WORKDIR /3rdparty/hdf5-build
@@ -139,7 +139,7 @@ ARG SWIGVERSION=3.0.7
 WORKDIR /3rdparty
 RUN set -o pipefail && \
   wget -q -O - https://kent.dl.sourceforge.net/project/swig/swig/swig-$SWIGVERSION/swig-$SWIGVERSION.tar.gz | tar -xz
-COPY docker/autobuildwin64Image/swig.patch /context/swig.patch
+COPY docker/buildwin64Image/swig.patch /context/swig.patch
 RUN patch -d /3rdparty/swig-$SWIGVERSION -p0 < /context/swig.patch
 RUN mkdir /3rdparty/swig-build
 WORKDIR /3rdparty/swig-build
@@ -176,7 +176,7 @@ RUN set -o pipefail && \
   wget -q -O - https://ftp.gnu.org/gnu/octave/octave-$OCTAVEVERSION.tar.bz2 | tar -xj
 RUN mkdir /3rdparty/octave-build
 WORKDIR /3rdparty/octave-build
-COPY docker/autobuildwin64Image/octave.patch /context/octave.patch
+COPY docker/buildwin64Image/octave.patch /context/octave.patch
 RUN patch -d /3rdparty/octave-$OCTAVEVERSION -p0 < /context/octave.patch
 RUN ../octave-$OCTAVEVERSION/configure --enable-shared --disable-static --build=x86_64-redhat-linux --host=x86_64-w64-mingw32 --prefix=/3rdparty/local --disable-java --disable-gui --without-opengl --with-blas="-L/3rdparty/local/lib -lblas" --with-lapack="-L/3rdparty/local/lib -llapack" --disable-readline
 RUN make -j $JOBS
@@ -188,7 +188,7 @@ WORKDIR /3rdparty
 RUN set -o pipefail && \
   wget -q -O - https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-$XERCESCVERSION.tar.bz2 | tar -xj
 RUN mkdir /3rdparty/xercesc-build
-COPY docker/autobuildwin64Image/xercesc.patch /context/xercesc.patch
+COPY docker/buildwin64Image/xercesc.patch /context/xercesc.patch
 RUN patch -d /3rdparty/xerces-c-$XERCESCVERSION -p0 < /context/xercesc.patch
 WORKDIR /3rdparty/xercesc-build
 RUN ../xerces-c-$XERCESCVERSION/configure --enable-shared --disable-static --build=x86_64-redhat-linux --host=x86_64-w64-mingw32 --prefix=/3rdparty/local
@@ -199,7 +199,7 @@ RUN make install
 ARG COINBRANCH=3d7321d07d57
 WORKDIR /3rdparty
 RUN hg clone https://bitbucket.org/Coin3D/coin -r $COINBRANCH
-COPY docker/autobuildwin64Image/coin.patch /context/coin.patch
+COPY docker/buildwin64Image/coin.patch /context/coin.patch
 WORKDIR /3rdparty/coin
 RUN hg import --no-commit /context/coin.patch
 RUN mkdir /3rdparty/coin-build
@@ -263,16 +263,16 @@ ENV CCACHE_DIR=/mbsim-ccache \
 
 # copy
 COPY buildScripts /mbsim-build/build/buildScripts
-COPY docker/autobuildImage/buildSystemState.py /context/buildSystemState.py
-COPY docker/autobuildImage/distribute.py /context/distribute.py
-COPY docker/autobuildwin64Image/entrypoint.py /context/entrypoint.py
-COPY docker/autobuildwin64Image/jni_md.h /context/java_jni/jni_md.h
+COPY docker/buildImage/buildSystemState.py /context/buildSystemState.py
+COPY docker/buildImage/distribute.py /context/distribute.py
+COPY docker/buildwin64Image/entrypoint.py /context/entrypoint.py
+COPY docker/buildwin64Image/jni_md.h /context/java_jni/jni_md.h
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
-  org.label-schema.name="mbsimenv/autobuildwin64" \
+  org.label-schema.name="mbsimenv/buildwin64" \
   org.label-schema.description="Automatic build (win64) for the MBSim-Environment." \
-  org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/autobuildwin64Image" \
+  org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/buildwin64Image" \
   org.label-schema.vendor="MBSim-Environment"
 
 # Add user dockeruser, create volumes and set volume ownership and permissions
@@ -283,9 +283,12 @@ RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser d
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser
 
+# config ccache
+RUN ccache -M 10G
+
 #mfmf# configure wine
 RUN mkdir $HOME/.wine
-#mfmfCOPY docker/autobuildwin64Image/wine.reg /context/wine.reg
+#mfmfCOPY docker/buildwin64Image/wine.reg /context/wine.reg
 #mfmfRUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\\\\\+g'); sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.reg > /tmp/wine.reg
 #mfmfRUN wine regedit /tmp/wine.reg; wineserver -w
 
