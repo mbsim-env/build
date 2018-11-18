@@ -12,7 +12,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
   
   # help
   if [ $# -le 0 ]; then
-    echo "This script runs the command provided as first argument in the mbsimenv/build Docker image."
+    echo "This script runs the command provided as first argument in the mbsimenv/buildwin64 Docker image."
     echo "All other arguments are passed to the command running in Docker."
     echo "If this script is started via a symbolic link to it, then the name of the program to run is"
     echo "the name of link and all arguments are passed."
@@ -62,18 +62,22 @@ if [ "$BASENAME" == "mbsbd" ]; then
   done
   
   # run in mbsimenv/build docker image
+  # We need to change WINEPATH since we use a different local dir in "user" builds compared to "auto" builds
+  exePrefix=""
+  test ${ARGS: -4} == ".exe" && exePrefix=wine
   docker run --init --entrypoint= --rm \
     --user $(id -u):$(id -g) \
     -v "$MBSIMENVDIR":/mbsim-env \
     -v "$MBSIMENVDIR/.ccache":/mbsim-ccache \
     -v "$MBSIMENVDIR/.home":/tmp/home \
     -e HOME=/tmp/home \
+    -e WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/usr/lib64/wine/fakedlls;/mbsim-env/localwin64/bin" \
     -w "$CURDIR" \
     -e DISPLAY \
     -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
     --net=host \
-    mbsimenv/build \
-    "${ARGS[@]}"
+    mbsimenv/buildwin64 \
+    $exePrefix "${ARGS[@]}"
 
 else
   # run via a link

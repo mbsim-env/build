@@ -7,7 +7,7 @@ MBSIMENVDIR=$(readlink -f "$SCRIPTDIR"/../../..)
 for A in "$@"; do
   if [ "$A" == "-h" -o "$A" == "--help" ]; then
     echo "This script runs the build.py script from mbsim-env."
-    echo "It automatically passes all required arguments to build.py needed for the Docker build of mbsim-env."
+    echo "It automatically passes all required arguments to build.py needed for the Docker win64 build of mbsim-env."
     echo "All arguments to this script are also passed (added) to build.py."
     echo "Moreover, when the mbsim-env git repositories are not already cloned, it does for you."
     echo "(Hence, just cloning https://github.com/mbsim-env/build.git and running this script will build mbsim-env using Docker)"
@@ -34,7 +34,7 @@ fi
 ADDTOARGS=normal
 NORMALARGS=()
 CONFIGUREARGS=()
-RUNEXAMPLEARGS=()
+RUNEXAMPLEARGS=(--exeExt .exe)
 while [ $# -ge 1 ]; do
   test "$1" == "--passToConfigure" && { ADDTOARGS=configure; shift; continue; }
   test "$1" == "--passToRunexamples" && { ADDTOARGS=runExamples; shift; continue; }
@@ -59,20 +59,31 @@ mkdir -p $MBSIMENVDIR/.home
 
 # run using mbsbd with all required args all all user args appended
 "$SCRIPTDIR"/mbsbd "$MBSIMENVDIR"/build/buildScripts/build.py \
-  --reportOutDir $MBSIMENVDIR/build_report \
+  --reportOutDir $MBSIMENVDIR/buildwin64_report \
   --sourceDir "$MBSIMENVDIR" \
-  --binSuffix=-build \
-  --prefix "$MBSIMENVDIR"/local \
+  --binSuffix=-buildwin64 \
+  --prefix "$MBSIMENVDIR"/localwin64 \
   "${NORMALARGS[@]}" \
   --passToConfigure \
   --enable-shared --disable-static \
   --enable-python \
+  --build=x86_64-redhat-linux \
+  --host=x86_64-w64-mingw32 \
+  --with-lapack-lib-prefix=/3rdparty/local/lib \
+  --with-hdf5-prefix=/3rdparty/local \
   --with-qwt-inc-prefix=/3rdparty/local/include \
   --with-qwt-lib-prefix=/3rdparty/local/lib \
   --with-qwt-lib-name=qwt \
-  --with-qmake=qmake-qt5 \
+  --with-qmake=/usr/bin/x86_64-w64-mingw32-qmake-qt5 \
   COIN_CFLAGS=-I/3rdparty/local/include \
-  COIN_LIBS="-L/3rdparty/local/lib64 -lCoin" \
+  COIN_LIBS="-L/3rdparty/local/lib -lCoin" \
   SOQT_CFLAGS=-I/3rdparty/local/include \
-  SOQT_LIBS="-L/3rdparty/local/lib64 -lSoQt" \
+  SOQT_LIBS="-L/3rdparty/local/lib -lSoQt" \
+  --with-windres=x86_64-w64-mingw32-windres \
+  --with-swigpath=/3rdparty/local/bin \
+  --with-mkoctfile=/3rdparty/local/bin/mkoctfile.exe \
+  --with-javajniosdir=/context/java_jni \
+  PYTHON_CFLAGS="-I/3rdparty/local/python-win64/include -DMS_WIN64" \
+  PYTHON_LIBS="-L/3rdparty/local/python-win64/libs -lpython27" \
+  PYTHON_BIN="/3rdparty/local/python-win64/python.exe" \
   "${CONFIGUREARGS[@]}" "${RUNEXAMPLEARGS[@]}"
