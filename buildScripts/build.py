@@ -249,8 +249,7 @@ def mainDocPage():
   print('</html>', file=docFD)
   docFD.close()
 
-#mfmf currentID is not required
-def setStatus(statusAccessToken, commitidfull, state, currentID, timeID, target_url, buildType, endTime=None):
+def setStatus(statusAccessToken, commitidfull, state, timeID, target_url, buildType, endTime=None):
   import requests
   for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
     # create github status (for linux64-ci build on all master branch)
@@ -378,17 +377,7 @@ def main():
 
   # set docDir
   global docDir
-  if args.prefix==None:
-    raise RuntimeError("MISSING: calling without --prefix is currently not supported. sandboxing is missing")
-    output=subprocess.check_output([pj(args.sourceDir, "openmbv"+args.binSuffix, "mbxmlutils", "config.status"), "--config"]).decode("utf-8")
-    for opt in output.split():
-      match=re.search("'?--prefix[= ]([^']*)'?", opt)
-      if match!=None:
-        docDir=pj(match.expand("\\1"), "share", "mbxmlutils", "doc")
-        args.prefixAuto=match.expand("\\1")
-        break
-  else:
-    docDir=pj(args.prefix, "share", "mbxmlutils", "doc")
+  docDir=pj(args.prefix, "share", "mbxmlutils", "doc")
   # append path to PKG_CONFIG_PATH to find mbxmlutils and co. by runexmaples.py
   pkgConfigDir=os.path.normpath(pj(docDir, os.pardir, os.pardir, os.pardir, "lib", "pkgconfig"))
   if "PKG_CONFIG_PATH" in os.environ:
@@ -496,7 +485,7 @@ def main():
     if args.statusAccessTokenFile!=None:
       with open(args.statusAccessTokenFile, 'r') as f:
         statusAccessToken=f.read()
-    setStatus(statusAccessToken, commitidfull, "pending", currentID, timeID,
+    setStatus(statusAccessToken, commitidfull, "pending", timeID,
       "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/%s/report/result_%010d/index.html"%(args.buildType, currentID), args.buildType)
 
   # clean prefix dir
@@ -606,7 +595,7 @@ def main():
 
   # update status on commitid
   if args.buildSystemRun:
-    setStatus(statusAccessToken, commitidfull, "success" if nrFailed+abs(runExamplesErrorCode)==0 else "failure", currentID, timeID,
+    setStatus(statusAccessToken, commitidfull, "success" if nrFailed+abs(runExamplesErrorCode)==0 else "failure", timeID,
       "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/%s/report/result_%010d/index.html"%(args.buildType, currentID), args.buildType, endTime)
 
   if nrFailed>0:

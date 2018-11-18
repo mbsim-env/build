@@ -62,7 +62,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
   done
   
   # run in mbsimenv/build docker image
-  docker run --rm --user $(id -u):$(id -g) -e HOME=/tmp -v "$MBSIMENVDIR":/mbsim-env -w "$CURDIR" -e DISPLAY -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority --net=host mbsimenv/build "${ARGS[@]}"
+  docker run --init --entrypoint= --rm --user $(id -u):$(id -g) -v "$MBSIMENVDIR":/mbsim-env -v "$MBSIMENVDIR/.ccache":/mbsim-ccache -w "$CURDIR" -e DISPLAY -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority --net=host mbsimenv/build "${ARGS[@]}"
 
 else
   # run via a link

@@ -51,6 +51,8 @@ if [ ${#RUNEXAMPLEARGS[*]} -gt 0 ]; then
   RUNEXAMPLEARGS=(--passToRunexamples "${RUNEXAMPLEARGS[@]}")
 fi
 
+# config ccache
+CCACHE_DIR=$MBSIMENVDIR/.ccache ccache -M 10G
+
 # run using mbsbd with all required args all all user args appended
-#mfmf ccache config in the docker container
 "$SCRIPTDIR"/mbsbd "$MBSIMENVDIR"/build/buildScripts/build.py --reportOutDir $MBSIMENVDIR/build_report --sourceDir "$MBSIMENVDIR" --binSuffix=-build --prefix "$MBSIMENVDIR"/local "${NORMALARGS[@]}" --passToConfigure --disable-static --enable-python --with-qwt-inc-prefix=/3rdparty/local/include --with-qwt-lib-prefix=/3rdparty/local/lib --with-qwt-lib-name=qwt --with-qmake=qmake-qt5 COIN_CFLAGS=-I/3rdparty/local/include COIN_LIBS="-L/3rdparty/local/lib64 -lCoin" SOQT_CFLAGS=-I/3rdparty/local/include SOQT_LIBS="-L/3rdparty/local/lib64 -lSoQt" "${CONFIGUREARGS[@]}" "${RUNEXAMPLEARGS[@]}"
