@@ -262,7 +262,7 @@ def runWait(containers, printLog=True):
 
 def runAutobuild(s, servername, buildType, addCommand, jobs=4, interactive=False,
                  fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
-                 printLog=True):
+                 printLog=True, detach=False):
   if servername==None:
     raise RuntimeError("Argument --servername is required.")
 
@@ -299,41 +299,48 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4, interactive=False
   if not printLog:
     print("Started running "+s+" as container ID "+build.id)
     sys.stdout.flush()
-  runningContainers.add(build)
+  if not detach:
+    runningContainers.add(build)
   if printLog:
     asyncLogContainer(build)
 
   # wait for running containers
-  ret=runWait([build], printLog=printLog)
-  return ret
+  if detach:
+    return build
+  else:
+    ret=runWait([build], printLog=printLog)
+    return ret
 
 def run(s, servername, jobs=4,
         addCommands=[],
         interactive=False,
         fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
         networkID=None, hostname=None,
-        wait=True, printLog=True):
+        wait=True, printLog=True, detach=False):
+
+  if detach and interactive:
+    raise RuntimeError("Cannot run detached an interactively.")
 
   if s=="build-linux64-ci":
     return runAutobuild(s, servername, "linux64-ci", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog)
+                 printLog=printLog, detach=detach)
 
   elif s=="build-linux64-dailydebug":
     return runAutobuild(s, servername, "linux64-dailydebug", ["--valgrindExamples"]+addCommands,
                  jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog)
+                 printLog=printLog, detach=detach)
 
   elif s=="build-linux64-dailyrelease":
     return runAutobuild(s, servername, "linux64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog)
+                 printLog=printLog, detach=detach)
 
   elif s=="build-win64-dailyrelease":
     return runAutobuild(s, servername, "win64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog)
+                 printLog=printLog, detach=detach)
 
   elif s=="builddoc":
     if servername==None:
@@ -357,17 +364,23 @@ def run(s, servername, jobs=4,
     if not printLog:
       print("Started running "+s+" as container ID "+builddoc.id)
       sys.stdout.flush()
-    runningContainers.add(builddoc)
+    if not detach:
+      runningContainers.add(builddoc)
     if printLog:
       asyncLogContainer(builddoc)
 
     # wait for running containers
-    ret=runWait([builddoc], printLog=printLog)
-    return ret
+    if detach:
+      return builddoc
+    else:
+      ret=runWait([builddoc], printLog=printLog)
+      return ret
 
   elif s=="service":
     if servername==None:
       raise RuntimeError("Argument --servername is required.")
+    if detach==True:
+      raise RuntimeError("Cannot run service detached.")
 
     # networks
     networki=dockerClient.networks.create(name="mbsimenv_service_intern", internal=True)
@@ -466,6 +479,8 @@ def run(s, servername, jobs=4,
       raise RuntimeError("Option --networkID is required.")
     if hostname==None:
       raise RuntimeError("Option --hostname is required.")
+    if detach==True:
+      raise RuntimeError("Cannot run webapprun detached.")
     networki=dockerClient.networks.get(networkID)
     webapprun=dockerClient.containers.run(image="mbsimenv/webapprun",
       init=True,

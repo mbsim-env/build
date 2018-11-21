@@ -18,15 +18,21 @@ argparser.add_argument("--servername", type=str, help="Servername")
 args=argparser.parse_args()
 
 # linux64-dailydebug
-ret1=setup.run("build-linux64-dailydebug", args.servername, args.jobs, printLog=False)
+contldd=setup.run("build-linux64-dailydebug", args.servername, 6, printLog=False, detach=True, addCommands=["--forceBuild"])
 
 # build doc
-ret2=setup.run("builddoc", args.servername, args.jobs, printLog=False)
+contd=setup.run("builddoc", args.servername, 2, printLog=False, detach=True, addCommands=["--forceBuild"])
+retd=contd.wait()
 
 # linux64-dailyrelease
-ret3=setup.run("build-linux64-dailyrelease", args.servername, args.jobs, printLog=False)
+contldr=setup.run("build-linux64-dailyrelease", args.servername, 2, printLog=False, detach=True, addCommands=["--forceBuild"])
+retldr=contldr.wait()
 
 # win64-dailyrelease
-ret4=setup.run("build-win64-dailyrelease", args.servername, args.jobs, printLog=False)
+contwdr=setup.run("build-win64-dailyrelease", args.servername, 2, printLog=False, detach=True, addCommands=["--forceBuild"])
+retwdr=contwdr.wait()
 
-sys.exit(0 if ret1==0 and ret2==0 and ret3==0 and ret4==0 else 1)
+retldd=contldd.wait()
+
+# return
+sys.exit(0 if retldd["StatusCode"]==0 and retd["StatusCode"]==0 and retldr["StatusCode"]==0 and retwdr["StatusCode"]==0 else 1)
