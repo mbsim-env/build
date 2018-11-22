@@ -32,7 +32,7 @@ configFilename="/mbsim-config/mbsimBuildService.conf"
 
 def checkToBuild(tobuild):
   if not os.path.exists(configFilename):
-    return None
+    return None, ""
   # read file config file
   fd=open(configFilename, 'r+')
   fcntl.lockf(fd, fcntl.LOCK_EX)
@@ -59,9 +59,9 @@ def checkToBuild(tobuild):
   fcntl.lockf(fd, fcntl.LOCK_UN)
   fd.close()
 
-  return tobuild
+  return tobuild, config["status_access_token"]
 
-tobuild=checkToBuild(None)
+tobuild, statusAccessToken=checkToBuild(None)
 
 if tobuild==None:
   # nothing to do, return with code 0
@@ -75,7 +75,7 @@ while True:
   delta=tobuild['timestamp']+1*60 - time.time()
   if delta>0:
     time.sleep(delta)
-    tobuild=checkToBuild(tobuild)
+    tobuild, _=checkToBuild(tobuild)
   else:
     break
 
@@ -91,5 +91,6 @@ mbsimBranch=tobuild['mbsim']
 # run linux64-ci
 ret=setup.run("build-linux64-ci", args.servername, args.jobs, printLog=False,
               fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch,
-              openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
+              openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
+              statusAccessToken=statusAccessToken)
 sys.exit(ret)

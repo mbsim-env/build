@@ -67,7 +67,6 @@ def parseArguments():
   cfgOpts.add_argument("--openmbvBranch", default="", help='In the openmbv repo checkout the branch OPENMBVBRANCH')
   cfgOpts.add_argument("--mbsimBranch", default="", help='In the mbsim repo checkout the branch MBSIMBRANCH')
   cfgOpts.add_argument("--buildSystemRun", action="store_true", help='Run in build system mode: generate build system state files.')
-  cfgOpts.add_argument("--statusAccessTokenFile", type=str, default=None, help="Filename containing the GitHub token to update statuses. (should be a pipe for security reasons)")
   cfgOpts.add_argument("--coverage", action="store_true", help='Enable coverage analyzis using gcov/lcov.')
   cfgOpts.add_argument("--staticCodeAnalyzis", action="store_true", help='Enable static code analyzis using LLVM Clang Analyzer.')
   cfgOpts.add_argument("--webapp", action="store_true", help='Just passed to runexamples.py.')
@@ -273,7 +272,7 @@ def setStatus(statusAccessToken, commitidfull, state, timeID, target_url, buildT
     else:
       raise RuntimeError("Unknown state "+state+" provided")
     # call github api
-    if statusAccessToken==None:
+    if statusAccessToken=="":
       print("Warning: Cannot create github status on repo "+repo+": No configuration file/no access token with github credential found.")
       sys.stdout.flush()
       return
@@ -291,6 +290,9 @@ def setStatus(statusAccessToken, commitidfull, state, timeID, target_url, buildT
 
 # the main routine being called ones
 def main():
+  statusAccessToken=os.environ["STATUSACCESSTOKEN"]
+  os.environ["STATUSACCESSTOKEN"]=""
+
   parseArguments()
   args.sourceDir=os.path.abspath(args.sourceDir)
   args.reportOutDir=os.path.abspath(args.reportOutDir)
@@ -479,11 +481,6 @@ def main():
 
   # set status on commit
   if args.buildSystemRun:
-    # read statusAccessToken
-    statusAccessToken=None
-    if args.statusAccessTokenFile!=None:
-      with open(args.statusAccessTokenFile, 'r') as f:
-        statusAccessToken=f.read()
     setStatus(statusAccessToken, commitidfull, "pending", timeID,
       "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/%s/report/result_%010d/index.html"%(args.buildType, currentID), args.buildType)
 

@@ -18,9 +18,11 @@ argparser.add_argument("--openmbvBranch", type=str, default="master", help="open
 argparser.add_argument("--mbsimBranch", type=str, default="master", help="mbsim branch")
 argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs to run in parallel")
 argparser.add_argument('--forceBuild', action="store_true", help="Passed to buily.py if existing")
-argparser.add_argument("--statusAccessTokenFile", type=str, default=None, help="Filename containing the GitHub token to update statuses. (should be a pipe for security reasons)")
 
 args=argparser.parse_args()
+
+statusAccessToken=os.environ["STATUSACCESSTOKEN"]
+os.environ["STATUSACCESSTOKEN"]=""
 
 # check environment
 if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="":
@@ -57,18 +59,12 @@ RUNEXAMPLES=["--disableCompare", "--disableValidate", "--checkGUIs", "--exeExt",
 if args.forceBuild:
   ARGS.append('--forceBuild')
 
-# read statusAccessToken
-statusAccessToken=None
-if args.statusAccessTokenFile!=None:
-  with open(args.statusAccessTokenFile, 'r') as f:
-    statusAccessToken=f.read()
-  statusAccessTokenPipe=subprocess.Popen(["echo", statusAccessToken], stdout=subprocess.PIPE)
 # run build
+os.environ["STATUSACCESSTOKEN"]=statusAccessToken
 ret=subprocess.call(
   ["/mbsim-build/build/buildScripts/build.py"]+ARGS+["--url", "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report",
-  "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun"]+\
-  (["--statusAccessTokenFile", "/dev/stdin"] if args.statusAccessTokenFile!=None else [])+\
-  ["--rotate", "20", "--fmatvecBranch", args.fmatvecBranch,
+  "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun",
+  "--rotate", "20", "--fmatvecBranch", args.fmatvecBranch,
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
   "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix",
   "--reportOutDir", "/mbsim-report/report", "--buildType", args.buildType,
@@ -88,9 +84,8 @@ ret=subprocess.call(
   "SOQT_LIBS=-L/3rdparty/local/lib -lSoQt",
   "SOQT_CFLAGS=-I/3rdparty/local/include",
   "--passToRunexamples"]+RUNEXAMPLES,
-  stdout=sys.stdout, stderr=sys.stderr, stdin=statusAccessTokenPipe.stdout if args.statusAccessTokenFile!=None else None)
-if args.statusAccessTokenFile!=None:
-  statusAccessTokenPipe.wait()
+  stdout=sys.stdout, stderr=sys.stderr)
+os.environ["STATUSACCESSTOKEN"]=""
 if ret!=255:
   sys.exit(0)
 if ret!=0:

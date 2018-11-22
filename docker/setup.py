@@ -23,7 +23,6 @@ def parseArgs():
     --clientID: type=str, help="GitHub OAuth App client ID"
     --clientSecret: type=str, help="GitHub OAuth App client secret"
     --webhookSecret: type=str, help="GitHub web hook secret"
-    --statusAccessToken: type=str, help="GitHub access token for status updates"
     --token: type=str, help="Webapprun token"
     --forceBuild: help="run build even if it was already run"
     ''')
@@ -262,7 +261,7 @@ def runWait(containers, printLog=True):
 
 def runAutobuild(s, servername, buildType, addCommand, jobs=4, interactive=False,
                  fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
-                 printLog=True, detach=False):
+                 printLog=True, detach=False, statusAccessToken=""):
   if servername==None:
     raise RuntimeError("Argument --servername is required.")
 
@@ -283,7 +282,7 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4, interactive=False
               "--hdf5serieBranch", hdf5serieBranch,
               "--openmbvBranch", openmbvBranch,
               "--mbsimBranch", mbsimBranch]+updateReferences+addCommand) if not interactive else [],
-    environment={"MBSIMENVSERVERNAME": servername},
+    environment={"MBSIMENVSERVERNAME": servername, "STATUSACCESSTOKEN": statusAccessToken},
     volumes={
       'mbsimenv_mbsim-'+buildType:  {"bind": "/mbsim-env",    "mode": "rw"},
       'mbsimenv_report-'+buildType: {"bind": "/mbsim-report", "mode": "rw"},
@@ -316,7 +315,7 @@ def run(s, servername, jobs=4,
         interactive=False,
         fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
         networkID=None, hostname=None,
-        wait=True, printLog=True, detach=False):
+        wait=True, printLog=True, detach=False, statusAccessToken=""):
 
   if detach and interactive:
     raise RuntimeError("Cannot run detached an interactively.")
@@ -324,23 +323,23 @@ def run(s, servername, jobs=4,
   if s=="build-linux64-ci":
     return runAutobuild(s, servername, "linux64-ci", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
 
   elif s=="build-linux64-dailydebug":
     return runAutobuild(s, servername, "linux64-dailydebug", ["--valgrindExamples"]+addCommands,
                  jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
 
   elif s=="build-linux64-dailyrelease":
     return runAutobuild(s, servername, "linux64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
 
   elif s=="build-win64-dailyrelease":
     return runAutobuild(s, servername, "win64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
 
   elif s=="builddoc":
     if servername==None:
