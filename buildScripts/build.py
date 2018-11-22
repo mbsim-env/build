@@ -914,6 +914,7 @@ def make(tool, mainFD):
   except RuntimeError as ex:
     result=str(ex)
   makeFD.close()
+  numErr=0
   if not args.disableMake:
     print('<td data-order="%d" class="%s"><span class="glyphicon glyphicon-%s"></span>&nbsp;'%(int(result!="done"), "success" if result=="done" else "danger",
       "ok-sign alert-success" if result=="done" else "exclamation-sign alert-danger"), file=mainFD)
@@ -922,7 +923,6 @@ def make(tool, mainFD):
     if args.staticCodeAnalyzis:
       if tool != "mbsim/thirdparty/nurbs++": # skip nurbs++ being a 3rd party tool
         d=""
-        numErr=0
         try:
           d=os.path.basename(glob.glob(pj(args.reportOutDir, tool, "static-code-analyze", "*"))[0])
           # search "scan-build: 2 bugs found." in index.html
@@ -934,8 +934,9 @@ def make(tool, mainFD):
               break
         except:
           pass
-        print('<td data-order="%d" class="%s"><span class="glyphicon glyphicon-%s"></span>&nbsp;'%(numErr==0, "success" if numErr==0 else "warning",
-          "ok-sign alert-success" if numErr==0 else "warning-sign alert-warning"), file=mainFD)
+        print('<td data-order="%d" class="%s"><span class="glyphicon glyphicon-%s"></span>&nbsp;'%(int(numErr!=0),
+          "success" if numErr==0 else "danger",
+          "ok-sign alert-success" if numErr==0 else "exclamation-sign alert-danger"), file=mainFD)
         print('  <a href="%s">%s</a>'%(myurllib.pathname2url(pj(tool, "static-code-analyze", d, "index.html")),
           "passed" if numErr==0 else 'error&nbsp;<span class="badge">%d</span>'%(numErr)), file=mainFD)
         print('</td>', file=mainFD)
@@ -943,9 +944,12 @@ def make(tool, mainFD):
         print('<td data-order="0">-</td>', file=mainFD)
   mainFD.flush()
 
+  ret=0
   if result!="done":
-    return 1, run
-  return 0, run
+    ret=ret+1
+  if numErr>0:
+    ret=ret+1
+  return ret, run
 
 
 
