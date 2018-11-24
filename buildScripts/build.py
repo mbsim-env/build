@@ -290,7 +290,9 @@ def setStatus(statusAccessToken, commitidfull, state, timeID, target_url, buildT
 
 # the main routine being called ones
 def main():
-  statusAccessToken=os.environ["STATUSACCESSTOKEN"]
+  statusAccessToken=""
+  if "STATUSACCESSTOKEN" in os.environ:
+    statusAccessToken=os.environ["STATUSACCESSTOKEN"]
   os.environ["STATUSACCESSTOKEN"]=""
 
   parseArguments()

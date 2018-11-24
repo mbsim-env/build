@@ -7,6 +7,7 @@ import fcntl
 import hashlib
 import base64
 import os.path
+import sys
 
 def update(buildType, title, content, link, nrFailed, nrRun):
 
@@ -84,6 +85,8 @@ def update(buildType, title, content, link, nrFailed, nrRun):
     fd.close() # close lockfile
 
 def createStateSVGFile(filename, text, color):
+  if sys.version_info >= (3,) and type(text)==bytes:
+    text=text.decode("utf8")
   fd=open(filename, "w")
   print('''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="36" height="20">
