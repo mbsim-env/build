@@ -412,14 +412,10 @@ def addPython():
   sys.stdout.flush()
 
   if platform=="linux":
-    if os.path.isdir("/3rdparty/local/python2.7/site-packages/casadi"):
-      addFileToDist("/3rdparty/local/python2.7/site-packages/casadi",
-                    "mbsim-env/lib64/python2.7/site-packages/casadi")
-    else:
-      addFileToDist("/3rdparty/local/python2.7/site-packages/casadi",
-                    "mbsim-env/lib64/python2.7/site-packages/casadi")
+    addFileToDist("/3rdparty/local/python2.7/site-packages/casadi",
+                  "mbsim-env/lib64/python2.7/site-packages/casadi")
   if platform=="win":
-    addFileToDist("/3rdparty/local/python-win64/Lib/site-packages/casadi", "mbsim-env/Lib/site-packages/casadi")
+    addFileToDist("/3rdparty/local/python2.7/site-packages/casadi", "mbsim-env/Lib/site-packages/casadi")
 
   print("Add python files")
   sys.stdout.flush()
