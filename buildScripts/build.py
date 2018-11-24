@@ -299,6 +299,10 @@ def main():
   args.sourceDir=os.path.abspath(args.sourceDir)
   args.reportOutDir=os.path.abspath(args.reportOutDir)
 
+  if args.buildSystemRun:
+    buildSystemState.createStateSVGFile("/mbsim-state/"+args.buildType+"-build.nrFailed.svg", b"\xc2\xb7\xc2\xb7\xc2\xb7", "#777")
+    buildSystemState.createStateSVGFile("/mbsim-state/"+args.buildType+"-build.nrAll.svg", b"\xc2\xb7\xc2\xb7\xc2\xb7", "#777")
+
   # all tools to be build including the tool dependencies
   global toolDependencies
 

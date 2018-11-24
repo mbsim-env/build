@@ -10,6 +10,9 @@ import subprocess
 import datetime
 import shutil
 
+buildSystemState.createStateSVGFile("/mbsim-state/build-manuals.nrFailed.svg", b"\xc2\xb7\xc2\xb7\xc2\xb7", "#777")
+buildSystemState.createStateSVGFile("/mbsim-state/build-manuals.nrAll.svg", b"\xc2\xb7\xc2\xb7\xc2\xb7", "#777")
+
 outDir="/mbsim-report/manuals"
 
 def buildLatex(f):
