@@ -165,7 +165,7 @@ RUN git checkout $CASADIBRANCH
 WORKDIR /3rdparty
 RUN mkdir /3rdparty/casadi-build
 WORKDIR /3rdparty/casadi-build
-RUN cmake3 -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DWITH_DEPRECATED_FEATURES=OFF -DCMAKE_BUILD_TYPE=release -DWITH_PYTHON=ON -DPYTHON_EXECUTABLE=/3rdparty/local/python-win64/python.exe -DPYTHON_INCLUDE_DIR=/3rdparty/local/python-win64/include -DPYTHON_LIBRARY=/3rdparty/local/python-win64/libs/libpython27.a -DPYTHON_PREFIX=/3rdparty/local/python-win64/Lib/site-packages -DSWIG_EXECUTABLE=/3rdparty/local/bin/swig -DSWIG_DIR=/3rdparty/local -DNUMPY_PATH=/3rdparty/local/python-win64/Lib/site-packages/numpy -DNUMPY_INCLUDED_DIRS=/3rdparty/local/python-win64/Lib/site-packages/numpy/core/include/numpy -DCMAKE_C_FLAGS="-DMS_WIN64 -g -O2" -DCMAKE_CXX_FLAGS="-DMS_WIN64 -g -O2" ../casadi -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake
+RUN cmake3 -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DWITH_DEPRECATED_FEATURES=OFF -DCMAKE_BUILD_TYPE=release -DWITH_PYTHON=ON -DPYTHON_EXECUTABLE=/3rdparty/local/python-win64/python.exe -DPYTHON_INCLUDE_DIR=/3rdparty/local/python-win64/include -DPYTHON_LIBRARY=/3rdparty/local/python-win64/libs/libpython27.a -DPYTHON_PREFIX=/3rdparty/local/python2.7/site-packages -DSWIG_EXECUTABLE=/3rdparty/local/bin/swig -DSWIG_DIR=/3rdparty/local -DNUMPY_PATH=/3rdparty/local/python-win64/Lib/site-packages/numpy -DNUMPY_INCLUDED_DIRS=/3rdparty/local/python-win64/Lib/site-packages/numpy/core/include/numpy -DCMAKE_C_FLAGS="-DMS_WIN64 -g -O2" -DCMAKE_CXX_FLAGS="-DMS_WIN64 -g -O2" ../casadi -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake
 RUN make -j $JOBS
 RUN make install
 
@@ -280,17 +280,20 @@ RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser d
   mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state && \
   chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state
 
+
+# if we call winepath after "USER dockeruser" then something goes wrong!!!???
+COPY docker/buildwin64Image/wine.reg /context/wine.reg
+RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\\\\\+g'); \
+    sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.reg > /tmp/wine.reg
+
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser
 
 # config ccache
 RUN ccache -M 10G
 
-#mfmf# configure wine
-RUN mkdir $HOME/.wine
-#mfmfCOPY docker/buildwin64Image/wine.reg /context/wine.reg
-#mfmfRUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\\\\\+g'); sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.reg > /tmp/wine.reg
-#mfmfRUN wine regedit /tmp/wine.reg; wineserver -w
+# configure wine
+RUN wine regedit /tmp/wine.reg; wineserver -w
 
 # these are the default arguments when running the container
 CMD []
