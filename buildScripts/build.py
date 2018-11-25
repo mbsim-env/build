@@ -300,6 +300,8 @@ def main():
   args.reportOutDir=os.path.abspath(args.reportOutDir)
 
   if args.buildSystemRun:
+    sys.path.append("/context")
+    import buildSystemState
     buildSystemState.createStateSVGFile("/mbsim-state/"+args.buildType+"-build.nrFailed.svg", b"\xc2\xb7\xc2\xb7\xc2\xb7", "#777")
     buildSystemState.createStateSVGFile("/mbsim-state/"+args.buildType+"-build.nrAll.svg", b"\xc2\xb7\xc2\xb7\xc2\xb7", "#777")
 
