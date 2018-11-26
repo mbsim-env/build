@@ -479,3 +479,12 @@
    ...
    fun:_ZN11xercesc_3_115DOMLSParserImpl11loadGrammarEPKtNS_7Grammar11GrammarTypeEb
 }
+{
+   Coin
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znam
+   fun:_ZN7SoField24extendStorageIfNecessaryEv
+   fun:_ZN7SoField10addAuditorEPvN8SoNotRec4TypeE
+   fun:_ZN13SoFieldSensor6attachEP7SoField
+}
