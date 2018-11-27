@@ -484,7 +484,7 @@
    Memcheck:Leak
    match-leak-kinds: possible
    fun:_Znam
-   fun:_ZN7SoField24extendStorageIfNecessaryEv
+   ...
    fun:_ZN7SoField10addAuditorEPvN8SoNotRec4TypeE
    fun:_ZN13SoFieldSensor6attachEP7SoField
 }
