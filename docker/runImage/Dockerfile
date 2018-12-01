@@ -85,7 +85,8 @@ RUN /mbsim-env/mbsim/examples/runexamples.py -j $JOBS --filter "'basic' in label
 # MISSING as a workaround we test now the GUI tools by hand
 ENV DISPLAY=:0 \
     COIN_FULL_INDIRECT_RENDERING=1 \
-    LIBGL_ALWAYS_INDIRECT=1
+    LIBGL_ALWAYS_INDIRECT=1 \
+    QT_X11_NO_MITSHM=1
 RUN vncserver :0 -SecurityTypes None && \
   mbsimgui --autoExit && \
   openmbv --autoExit && \
