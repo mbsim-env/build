@@ -82,6 +82,7 @@ FROM baseImage
 
 # copy over the osupdate dir from the mesa build image
 COPY --from=mesaBuild /osupdate/local /osupdate/local
+ENV LIBGL_ALWAYS_INDIRECT=1 
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
