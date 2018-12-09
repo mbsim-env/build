@@ -36,23 +36,9 @@ Dependent of your use case you should use one of the following options.
 
 ### Running MBSim-Env Tools as a User
 
-MBSim-Env can be run on any Linux computer (and also on Windows computers) using Docker.
-Please note that you can also run MBSim-Env natively on Linux and Windows using the binary
-releases provided by [MBSim-Env](https://www.mbsim-env.de).
-To run it using Docker the following needs to be done once.
+The Docker image for running the MBSim-Env is till now not available.
 
-1. Install Docker. Please look on [Docker](https://www.docker.com/) or your Linux distribution how to do this.
-Allow Docker for the user of your choice, e.g. by giving this user access to the Docker socket.
-2. Clone or download this repository to your preferred directory (`<mypath>`) which should have enough 
-space to hold all your MBSim-Env models and data.
-3. Configure your shell to add `<mypath>/build/docker/runScripts` to your `PATH`.
-This is not really required but recommended.
-
-You are done. Now start the GUI of MBSim by running `mbsimgui` in the above configured shell.
-Note that this will take a long time if started the first time since a large Docker image is downloaded.
-All other MBSim-Env commands like `mbsimxml`, `openmbv` or `h5plotserie` are also available.
-
-### Building and Running MBSim-Env Tools as a Developer
+### Building and Running the Linux MBSim-Env Tools as a Developer
 
 Building MBSim-Env from scratch is quite complicated since it has many dependencies to other tools. And not all these
 tools are available via your preferred Linux package manager or minor differences on these lead to problems dependent
@@ -67,19 +53,33 @@ Allow Docker for the user of your choice, e.g. by giving this user access to the
 space to hold the MBSim-Env source code the build directories as well as all your MBSim-Env models and data.
 3. Configure your shell to add `<mypath>/build/docker/buildScripts` to your `PATH`.
 This is not really required but recommended.
-4. Call `build.py` in the above configured shell. This will clone all MBSim-Env repositories, if not already done manually,
+4. Call `build.sh` in the above configured shell. This will clone all MBSim-Env repositories, if not already done manually,
 to `<mypath>/fmatvec`, `<mypath>/hdf5serie`, ... Then it will download a large Docker image of MBSim-Env. After that it will completely build MBSim-Env, so this all may take some time.
 For the current progress of building MBSim-Env see the output of the script or view `file://<mypath>/build_report/result_current/index.html`
 via your browser.
+Note that running `build.sh` without any parameters will build everything and also run ALL examples. See `build.sh -h` for available
+options to change this default behaviour.
 
 You are done. Now start the GUI of MBSim by running `mbsimgui` in the above configured shell.
 All other MBSim-Env commands like `mbsimxml`, `openmbv` or `h5plotserie` are also available.
 
-Make adaptions to the source code and rerun `build.py` (with proper options to speed up the build) or run `make` in the corresponding
+Make adaptions to the source code and rerun `build.sh` (with proper options to speed up the build) or run `make` in the corresponding
 build directory (`fmatvec-build`, `hdf5serie-build`, ...) to rebuild your changed code parts.
 
 Note that you do not need to have any development tools installed on your host computer (no make, not gcc, ... is required) since
 everything comes along with the Docker image automatically and consistently.
+
+### Building and Running the Windows MBSim-Env Tools as a Developer
+
+You can also build (cross-compile) all MBSim-Env tools for Windows using a Docker image. You can than run the generated Windows
+executables using Wine on Linux or run these natively on a Windows PC.
+
+To build and run MBSim-Env for Windows just follow the instructions from the previous section but replace in 3. 
+`<mypath>/build/docker/buildScripts` with `<mypath>/build/docker/buildwin64Scripts`.
+The build output report will be available at `file://<mypath>/buildwin64_report/result_current/index.html` and the build directories
+are `fmatvec-build`, `hdf5serie-build`, ...
+Note that you can use the same base directory (`<mypath>`) for the Linux and Windows build. This will use the same git clones of the source for both platforms.
+
 
 
 ## codeStyle
