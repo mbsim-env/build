@@ -59,10 +59,10 @@ mkdir -p $MBSIMENVDIR/.home
 
 # run using mbsbd with all required args all all user args appended
 "$SCRIPTDIR"/mbsbd "$MBSIMENVDIR"/build/buildScripts/build.py \
-  --reportOutDir $MBSIMENVDIR/buildwin64_report \
+  --reportOutDir $MBSIMENVDIR/dockerbuildwin64_report \
   --sourceDir "$MBSIMENVDIR" \
-  --binSuffix=-buildwin64 \
-  --prefix "$MBSIMENVDIR"/localwin64 \
+  --binSuffix=-dockerbuildwin64 \
+  --prefix "$MBSIMENVDIR"/dockerlocalwin64 \
   "${NORMALARGS[@]}" \
   --passToConfigure \
   --enable-shared --disable-static \
