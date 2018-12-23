@@ -819,22 +819,22 @@ def configure(tool, mainFD):
       # pre configure
       os.chdir(pj(args.sourceDir, tool))
       print("\n\nRUNNING aclocal\n", file=configureFD); configureFD.flush()
-      if subprocess.call(["aclocal"], stderr=subprocess.STDOUT, stdout=configureFD)!=0:
+      if subprocess.call(["aclocal", "--force"], stderr=subprocess.STDOUT, stdout=configureFD)!=0:
         raise RuntimeError("aclocal failed")
       print("\n\nRUNNING autoheader\n", file=configureFD); configureFD.flush()
-      if subprocess.call(["autoheader"], stderr=subprocess.STDOUT, stdout=configureFD)!=0:
+      if subprocess.call(["autoheader", "--force"], stderr=subprocess.STDOUT, stdout=configureFD)!=0:
         raise RuntimeError("autoheader failed")
       print("\n\nRUNNING libtoolize\n", file=configureFD); configureFD.flush()
-      if subprocess.call(["libtoolize", "-c"], stderr=subprocess.STDOUT, stdout=configureFD)!=0:
+      if subprocess.call(["libtoolize", "-c", "--force"], stderr=subprocess.STDOUT, stdout=configureFD)!=0:
         raise RuntimeError("libtoolize failed")
       print("\n\nRUNNING automake\n", file=configureFD); configureFD.flush()
-      if subprocess.call(["automake", "-a", "-c"], stderr=subprocess.STDOUT, stdout=configureFD)!=0:
+      if subprocess.call(["automake", "-a", "-c", "-f"], stderr=subprocess.STDOUT, stdout=configureFD)!=0:
         raise RuntimeError("automake failed")
       print("\n\nRUNNING autoconf\n", file=configureFD); configureFD.flush()
-      if subprocess.call(["autoconf"], stderr=subprocess.STDOUT, stdout=configureFD)!=0:
+      if subprocess.call(["autoconf", "--force"], stderr=subprocess.STDOUT, stdout=configureFD)!=0:
         raise RuntimeError("autoconf failed")
       print("\n\nRUNNING autoreconf\n", file=configureFD); configureFD.flush()
-      if subprocess.call(["autoreconf"], stderr=subprocess.STDOUT, stdout=configureFD)!=0:
+      if subprocess.call(["autoreconf", "--force"], stderr=subprocess.STDOUT, stdout=configureFD)!=0:
         raise RuntimeError("autoreconf failed")
       # configure
       os.chdir(savedDir)
