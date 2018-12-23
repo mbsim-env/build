@@ -71,7 +71,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
     -v "$MBSIMENVDIR/.ccache":/mbsim-ccache \
     -v "$MBSIMENVDIR/.home":/tmp/home \
     -e HOME=/tmp/home \
-    -e WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/usr/lib64/wine/fakedlls;/mbsim-env/dockerlocalwin64/bin" \
+    -e WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/usr/lib64/wine/fakedlls;/mbsim-env/local-dockerwin64/bin" \
     -w "$CURDIR" \
     -e DISPLAY \
     -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
