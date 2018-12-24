@@ -286,6 +286,9 @@ COPY docker/buildwin64Image/wine.reg /context/wine.reg
 RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\\\\\+g'); \
     sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.reg > /tmp/wine.reg
 
+#MISSING: move to yum install at the beginning
+RUN yum -y install graphviz && yum clean all
+
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser
 

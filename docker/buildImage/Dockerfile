@@ -192,6 +192,9 @@ RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser d
   mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state && \
   chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state
 
+#MISSING: move to yum install at the beginning
+RUN yum -y install graphviz && yum clean all
+
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser
 
