@@ -21,6 +21,7 @@ RUN yum -y install epel-release && yum -y install \
   dos2unix \
   file \
   java-1.8.0-openjdk-devel \
+  graphviz \
   && yum clean all
 
 # install install mingw64-qt5-qtsvg and mingw64-qt5-qtwebkit to add its dependencies and then
@@ -250,7 +251,7 @@ RUN rpm -i /3rdparty/mingw64-qt5-qtwebkit-5.5.1-1.el7.noarch.rpm \
 ENV CCACHE_DIR=/mbsim-ccache \
     MBSIM_SWIG=1 \
     PATH=/usr/lib64/ccache:$PATH \
-    WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/usr/lib64/wine/fakedlls;/mbsim-env/local/bin" \
+    WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/usr/lib64/wine/fakedlls" \
     MOC=/usr/x86_64-w64-mingw32/bin/qt5/moc \
     UIC=/usr/x86_64-w64-mingw32/bin/qt5/uic \
     RCC=/usr/x86_64-w64-mingw32/bin/qt5/rcc \
@@ -285,9 +286,6 @@ RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser d
 COPY docker/buildwin64Image/wine.reg /context/wine.reg
 RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\\\\\+g'); \
     sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.reg > /tmp/wine.reg
-
-#MISSING: move to yum install at the beginning
-RUN yum -y install graphviz && yum clean all
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser

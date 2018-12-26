@@ -68,6 +68,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
     -v "$MBSIMENVDIR/.ccache":/mbsim-ccache \
     -v "$MBSIMENVDIR/.home":/tmp/home \
     -e HOME=/tmp/home \
+    -e PATH="/usr/lib64/ccache:/mbsim-env/mbsim/examples:/mbsim-env/build/buildScripts:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/3rdparty/local/bin:/mbsim-env/local-docker/bin" \
     -w "$CURDIR" \
     -e DISPLAY \
     -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \

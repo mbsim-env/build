@@ -10,7 +10,7 @@ RUN mkdir /run/user/$UID
 # environment variables to find the osupdate, 3rd party and mbsim libraries and binaries
 ENV LD_LIBRARY_PATH=/osupdate/local/lib:/osupdate/local/lib64:/3rdparty/local/lib:/3rdparty/local/lib64:/mbsim-env/local/lib:/mbsim-env/local/lib64 \
     PKG_CONFIG_PATH=/osupdate/local/lib/pkgconfig:/osupdate/local/lib64/pkgconfig:/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfig \
-    PATH=$PATH:/3rdparty/local/bin:/mbsim-env/local/bin \
+    PATH=$PATH:/3rdparty/local/bin \
     XDG_RUNTIME_DIR=/run/user/$UID
 
 # install everything from centos7 needed to run mbsim-env tools
