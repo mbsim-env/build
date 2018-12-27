@@ -1,7 +1,7 @@
 # base image: this image is used for the images build and run
 
-# centos7 is our operating system
-FROM centos:centos7 AS baseImage
+# centos7.5.1804 is our operating system
+FROM centos:centos7.5.1804 AS baseImage
 
 # configuration, mainly for X11
 RUN systemd-machine-id-setup
@@ -13,7 +13,7 @@ ENV LD_LIBRARY_PATH=/osupdate/local/lib:/osupdate/local/lib64:/3rdparty/local/li
     PATH=$PATH:/3rdparty/local/bin \
     XDG_RUNTIME_DIR=/run/user/$UID
 
-# install everything from centos7 needed to run mbsim-env tools
+# install everything from centos7.5.1804 needed to run mbsim-env tools
 RUN yum -y install epel-release && \
   yum -y install \
   hdf5 \

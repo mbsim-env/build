@@ -1,4 +1,4 @@
-FROM centos:centos7 AS webapp
+FROM centos:centos7.5.1804 AS webapp
 
 RUN yum install -y epel-release && yum install -y \
   numpy \

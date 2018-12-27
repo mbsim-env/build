@@ -1,4 +1,4 @@
-FROM centos:centos7 AS centosBaseImage
+FROM centos:centos7.5.1804 AS centosBaseImage
 
 RUN yum -y install epel-release && yum -y install \
   git \
@@ -135,7 +135,7 @@ WORKDIR /3rdparty
 RUN wget https://www.python.org/ftp/python/2.7.13/python-$PYTHONVERSION.amd64.msi
 RUN wine msiexec -i python-$PYTHONVERSION.amd64.msi TARGETDIR="$(winepath -w /3rdparty/local/python-win64)"; wineserver -w
 
-# swig3 (centos7 only provides swig2)
+# swig3 (centos7.5.1804 only provides swig2)
 ARG SWIGVERSION=3.0.7
 WORKDIR /3rdparty
 RUN set -o pipefail && \

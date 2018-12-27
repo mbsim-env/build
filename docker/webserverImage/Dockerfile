@@ -1,5 +1,5 @@
 # get noVNC
-FROM centos:centos7 AS temp
+FROM centos:centos7.5.1804 AS temp
 ARG NOVNCBRANCH=v0.6.2
 RUN yum install -y git && yum clean all
 # install noVNC (the package from yum is to old)
@@ -11,7 +11,7 @@ RUN git checkout $NOVNCBRANCH
 
 
 # use the build image as base
-FROM centos:centos7
+FROM centos:centos7.5.1804
 
 # install software
 RUN yum install -y epel-release && yum install -y \
