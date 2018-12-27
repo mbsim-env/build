@@ -69,6 +69,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
     -v "$MBSIMENVDIR/.home":/tmp/home \
     -e HOME=/tmp/home \
     -e PATH="/usr/lib64/ccache:/mbsim-env/mbsim/examples:/mbsim-env/build/buildScripts:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/3rdparty/local/bin:/mbsim-env/local-docker/bin" \
+    -e PKG_CONFIG_PATH="/osupdate/local/lib/pkgconfig:/osupdate/local/lib64/pkgconfig:/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfig:/mbsim-env/local-docker/lib/pkgconfig:/mbsim-env/local-docker/lib64/pkgconfig" \
     -w "$CURDIR" \
     -e DISPLAY \
     -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
