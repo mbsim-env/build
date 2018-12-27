@@ -1,6 +1,6 @@
 #!/bin/bash
 
-docker run --rm --entrypoint rpm centos:centos7.5.1804 -qa > /tmp/rpm-centos
+docker run --rm --entrypoint rpm centos:centos7 -qa > /tmp/rpm-centos
 docker run --rm --entrypoint rpm mbsimenv/base -qa > /tmp/rpm-base
 docker run --rm --entrypoint rpm mbsimenv/build -qa > /tmp/rpm-build
 docker run --rm --entrypoint rpm mbsimenv/buildwin64 -qa > /tmp/rpm-buildwin64

@@ -3,7 +3,7 @@
 ARG FROMTAG=latest
 FROM mbsimenv/base:$FROMTAG AS centosBaseImage
 
-# install everything needed to build mbsim-env tools from centos7.5.1804
+# install everything needed to build mbsim-env tools from centos7
 RUN yum -y install \
   chrpath \
   gdb \
@@ -56,7 +56,7 @@ RUN npm install mathjax-node
 
 
 
-# build/install additional tools needed by mbsim-env but not available from centos7.5.1804
+# build/install additional tools needed by mbsim-env but not available from centos7
 FROM centosBaseImage AS thirdpartyBuildImage
 
 # configuration
@@ -68,7 +68,7 @@ ARG SOQTBRANCH=945ec22f6219
 ARG CASADIBRANCH=470b5b3f0cc4044e3cb0eb20dfb2a85e247c62a6
 ARG NUHTMLVERSION=18.8.29
 
-# install additional packaged needed to build the tools not part of centos7.5.1804
+# install additional packaged needed to build the tools not part of centos7
 RUN yum -y install \
   wget \
   bzip2 \
@@ -119,7 +119,7 @@ RUN unzip vnu.jar_$NUHTMLVERSION.zip
 
 # compile/install
 
-# swig3 (centos7.5.1804 only provides swig2)
+# swig3 (centos7 only provides swig2)
 WORKDIR /3rdparty/swig-build
 RUN ../swig-$SWIGVERSION/configure --disable-static --enable-shared CXXFLAGS="-O2" CFLAGS="-O2" --prefix=/3rdparty/local
 RUN make -j $JOBS

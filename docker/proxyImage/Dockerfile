@@ -1,4 +1,4 @@
-FROM centos:centos7.5.1804
+FROM centos:centos7
 
 # install tinyproxy
 RUN yum -y install epel-release && \

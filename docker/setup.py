@@ -138,7 +138,7 @@ def main():
   if args.command=="pull":
     if len(args.service)==0:
       args.service=allServices
-      pull=dockerClientLL.pull("centos", "centos7.5.1804", stream=True)
+      pull=dockerClientLL.pull("centos", "centos7", stream=True)
       if syncLogBuildImage(pull)!=0:
         return 1
     for s in args.service:
