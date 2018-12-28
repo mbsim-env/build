@@ -149,9 +149,9 @@ RUN make -j $JOBS
 RUN make install
 
 # numpy
-ARG NUMPYVERSION=1.12.0b1
+ARG NUMPYVERSION=1.15.4
 WORKDIR /3rdparty
-RUN wget http://qpypi.qpython.org/repository/2314/numpy-$NUMPYVERSION-cp27-none-win_amd64.whl
+RUN wget https://files.pythonhosted.org/packages/74/a4/1bae5948ac37ee6769ffdf01fef3e1c731981574d4d416e2876070441688/numpy-1.15.4-cp27-none-win_amd64.whl
 RUN mkdir /3rdparty/numpy-build
 WORKDIR /3rdparty/numpy-build
 RUN unzip ../numpy-$NUMPYVERSION-cp27-none-win_amd64.whl
