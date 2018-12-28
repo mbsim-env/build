@@ -59,6 +59,8 @@ RUNEXAMPLES=["--disableCompare", "--disableValidate", "--checkGUIs", "--exeExt",
 if args.forceBuild:
   ARGS.append('--forceBuild')
 
+os.environ['WINEPATH']=((os.environ['WINEPATH']+";") if 'WINEPATH' in os.environ else "")+"/mbsim-env/local/bin"
+
 # run build
 os.environ["STATUSACCESSTOKEN"]=statusAccessToken
 ret=subprocess.call(
