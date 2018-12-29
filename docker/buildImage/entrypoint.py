@@ -87,6 +87,10 @@ elif args.buildType == "linux64-dailyrelease":
 if args.forceBuild:
   ARGS.append('--forceBuild')
 
+# env
+os.environ['PKG_CONFIG_PATH']=((os.environ['PKG_CONFIG_PATH']+":") if 'PKG_CONFIG_PATH' in os.environ else "")+\
+                              "/mbsim-env/local/lib/pkgconfig:/mbsim-env/local/lib64/pkgconfig"
+
 # update references of examples
 if len(args.updateReferences)>0:
   CURDIR=os.getcwd()

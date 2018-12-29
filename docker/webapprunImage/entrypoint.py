@@ -36,7 +36,7 @@ COOKIE=''.join(random.SystemRandom().choice('0123456789abcdef') for _ in range(3
 subprocess.check_call(['/usr/bin/xauth', '-f', '/tmp/mbsimwebapp-xauth', 'add', 'localhost:1', '.', COOKIE])
 
 # start Xvnc in background ...
-xvnc=subprocess.Popen(['Xvnc', ':1', '-noxstartup', '-SecurityTypes', 'None',
+xvnc=subprocess.Popen(['Xvnc', ':1', '-SecurityTypes', 'None',
   '-auth', '/tmp/mbsimwebapp-xauth', "-sigstop", "-NeverShared", "-DisconnectClients"])
 # ... and wait for Xvnc to be ready (Xvnc stops itself, using -sigstop option, if ready; than we continoue it)
 count=0
