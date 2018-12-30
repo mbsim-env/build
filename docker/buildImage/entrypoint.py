@@ -138,13 +138,12 @@ if args.valgrindExamples:
   # run examples with valgrind
   
   # set github statuses
-  currentID=int(os.readlink("/mbsim-report/report/result_current")[len("result_"):])
   timeID=datetime.datetime.utcnow()
   timeID=datetime.datetime(timeID.year, timeID.month, timeID.day, timeID.hour, timeID.minute, timeID.second)
   with codecs.open("/mbsim-report/report/result_current/repoState.json", "r", encoding="utf-8") as f:
     commitidfull=json.load(f)
   build.setStatus(statusAccessToken, commitidfull, "pending", timeID,
-        "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report/result_%010d/index.html"%(currentID),
+        "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
         args.buildType+"-valgrind")
   # update
   CURDIR=os.getcwd()
@@ -157,7 +156,7 @@ if args.valgrindExamples:
   valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
   # build
   coverage = ["--coverage", "/mbsim-env:-build:/mbsim-env/local"] if "--coverage" in ARGS else []
-  localRet=subprocess.call(["./runexamples.py", "--rotate", "20", "-j", str(args.jobs)]+coverage+["--reportOutDir",
+  localRet=subprocess.call(["./runexamples.py", "--timeID", timeID.isoformat()+"Z", "--rotate", "20", "-j", str(args.jobs)]+coverage+["--reportOutDir",
             "/mbsim-report/report/runexamples_valgrind_report", "--url",
             "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
             "--buildSystemRun", "--checkGUIs", "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
@@ -173,6 +172,8 @@ if args.valgrindExamples:
   # set github statuses
   endTime=datetime.datetime.now()
   endTime=datetime.datetime(endTime.year, endTime.month, endTime.day, endTime.hour, endTime.minute, endTime.second)
+  linkName=os.readlink("/mbsim-report/report/runexamples_valgrind_report/result_current")
+  currentID=int(re.sub(".*result_([0-9]+)$", "\\1", linkName))
   build.setStatus(statusAccessToken, commitidfull, "success" if ret==0 else "failure", timeID,
         "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report/result_%010d/index.html"%(currentID),
         args.buildType+"-valgrind", endTime)
