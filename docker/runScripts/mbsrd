@@ -30,7 +30,7 @@ if [ "$BASENAME" == "mbsrd" ]; then
     echo '(not recommended) run this script as root.'
   fi
 
-  TAGNAME=${TAGNAME:-latest}
+  MBSIMENVTAGNAME=${MBSIMENVTAGNAME:-latest}
   
   # convert the absolute path stored in PABS to the corresponding docker path
   function convertPABS {
@@ -72,7 +72,7 @@ if [ "$BASENAME" == "mbsrd" ]; then
     -e DISPLAY \
     -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
     --net=host \
-    mbsimenv/run:$TAGNAME \
+    mbsimenv/run:$MBSIMENVTAGNAME \
     "${ARGS[@]}"
 
 else

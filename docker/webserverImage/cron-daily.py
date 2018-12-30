@@ -15,7 +15,6 @@ argparser=argparse.ArgumentParser(
   description="Daily cron job.")
   
 argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs to run in parallel")
-argparser.add_argument("--servername", type=str, help="Servername")
 
 args=argparser.parse_args()
 
@@ -32,21 +31,21 @@ def readConfigFile():
 config=readConfigFile()
 
 # linux64-dailydebug
-contldd=setup.run("build-linux64-dailydebug", args.servername, 6, printLog=False, detach=True, addCommands=["--forceBuild"],
+contldd=setup.run("build-linux64-dailydebug", 6, printLog=False, detach=True, addCommands=["--forceBuild"],
                   statusAccessToken=config["status_access_token"])
 
 # build doc
-contd=setup.run("builddoc", args.servername, 2, printLog=False, detach=True, addCommands=["--forceBuild"],
+contd=setup.run("builddoc", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
                 statusAccessToken=config["status_access_token"])
 retd=contd.wait()
 
 # linux64-dailyrelease
-contldr=setup.run("build-linux64-dailyrelease", args.servername, 2, printLog=False, detach=True, addCommands=["--forceBuild"],
+contldr=setup.run("build-linux64-dailyrelease", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
                   statusAccessToken=config["status_access_token"])
 retldr=contldr.wait()
 
 # win64-dailyrelease
-contwdr=setup.run("build-win64-dailyrelease", args.servername, 2, printLog=False, detach=True, addCommands=["--forceBuild"],
+contwdr=setup.run("build-win64-dailyrelease", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
                   statusAccessToken=config["status_access_token"])
 retwdr=contwdr.wait()
 

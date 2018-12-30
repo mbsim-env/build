@@ -26,14 +26,14 @@ def parseArgs():
     --webhookSecret: type=str, help="GitHub web hook secret"
     --token: type=str, help="Webapprun token"
     --forceBuild: help="run build even if it was already run"
+    The environment variable MBSIMENVTAGNAME is used as tagname everywhere.
+    It defaults to "latest".
     ''')
   
   argparser.add_argument("command", type=str, choices=["build", "run", "pull", "push", "prune"], help="Command to execute")
   argparser.add_argument("service", nargs="*", help="Service or image to run or build")
-  argparser.add_argument("--servername", type=str, default=None, help="Set the hostname of webserver")
   argparser.add_argument("--jobs", "-j", type=int, default=multiprocessing.cpu_count(), help="Number of jobs to run in parallel")
   argparser.add_argument("--interactive", "-i", action='store_true', help="Run container, wait and print how to attach to it")
-  argparser.add_argument("--tagname", type=str, default="latest", help="The tag to use for all actions; default: latest")
   
   return argparser.parse_known_args()
 
@@ -45,6 +45,15 @@ dockerClient=docker.from_env()
 dockerClientLL=docker.APIClient()
 
 
+def getServername():
+  if "MBSIMENVSERVERNAME" not in os.environ:
+    raise RuntimeError("The MBSIMENVSERVERNAME envvar is required.")
+  return os.environ["MBSIMENVSERVERNAME"]
+
+def getTagname():
+  if "MBSIMENVTAGNAME" in os.environ:
+    return os.environ["MBSIMENVTAGNAME"]
+  return "latest"
 
 def syncLogBuildImage(build):
   ret=0
@@ -124,7 +133,7 @@ def main():
     if len(args.service)==0:
       args.service=allServices
     for s in args.service:
-      ret=build(s, args.jobs, tagname=args.tagname)
+      ret=build(s, args.jobs)
       if ret!=0:
         break
     return ret
@@ -132,7 +141,7 @@ def main():
   if args.command=="run":
     ret=0
     for s in args.service:
-      ret=run(s, args.servername, args.jobs, addCommands=argsRest, interactive=args.interactive, tagname=args.tagname)
+      ret=run(s, args.jobs, addCommands=argsRest, interactive=args.interactive)
       if ret!=0:
         break
     return ret
@@ -144,7 +153,7 @@ def main():
       if syncLogBuildImage(pull)!=0:
         return 1
     for s in args.service:
-      pull=dockerClientLL.pull("mbsimenv/"+s, args.tagname, stream=True)
+      pull=dockerClientLL.pull("mbsimenv/"+s, getTagname(), stream=True)
       if syncLogBuildImage(pull)!=0:
         return 1
     return 0
@@ -153,7 +162,7 @@ def main():
     if len(args.service)==0:
       args.service=allServices
     for s in args.service:
-      push=dockerClient.images.push("mbsimenv/"+s, args.tagname, stream=True)
+      push=dockerClient.images.push("mbsimenv/"+s, getTagname(), stream=True)
       if syncLogBuildImage(push)!=0:
         return 1
     return 0
@@ -189,61 +198,66 @@ def buildImage(tag, tagMultistageImage=True, **kwargs):
   build=dockerClientLL.build(tag=tag, **kwargs)
   return syncLogBuildImage(build)
 
-def build(s, jobs=4, tagname="latest"):
+def build(s, jobs=4):
 
   if s=="base":
-    return buildImage(tag="mbsimenv/base:"+tagname,
-      buildargs={"JOBS": str(jobs)},
+    return buildImage(tag="mbsimenv/base:"+getTagname(),
+      buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=scriptdir+"/baseImage",
       rm=False)
 
   elif s=="build":
-    return buildImage(tag="mbsimenv/build:"+tagname,
-      buildargs={"JOBS": str(jobs)},
+    return buildImage(tag="mbsimenv/build:"+getTagname(),
+      buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=scriptdir+"/..",
       dockerfile="docker/buildImage/Dockerfile",
       rm=False)
 
   elif s=="run":
-    return buildImage(tag="mbsimenv/run:"+tagname,
-      buildargs={"JOBS": str(jobs)},
+    return buildImage(tag="mbsimenv/run:"+getTagname(),
+      buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=scriptdir+"/..",
       dockerfile="docker/runImage/Dockerfile",
       nocache=True,
       rm=False)
 
   elif s=="proxy":
-    return buildImage(tag="mbsimenv/proxy:"+tagname,
+    return buildImage(tag="mbsimenv/proxy:"+getTagname(),
+      buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=scriptdir+"/proxyImage",
       rm=False)
 
   elif s=="buildwin64":
-    return buildImage(tag="mbsimenv/buildwin64:"+tagname,
-      buildargs={"JOBS": str(jobs)},
+    return buildImage(tag="mbsimenv/buildwin64:"+getTagname(),
+      buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=scriptdir+"/..",
       dockerfile="docker/buildwin64Image/Dockerfile",
       rm=False)
 
   elif s=="builddoc":
-    return buildImage(tag="mbsimenv/builddoc:"+tagname,
+    return buildImage(tag="mbsimenv/builddoc:"+getTagname(),
+      buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=scriptdir+"/..",
       dockerfile="docker/builddocImage/Dockerfile",
       rm=False)
 
   elif s=="webserver":
-    return buildImage(tag="mbsimenv/webserver:"+tagname,
+    return buildImage(tag="mbsimenv/webserver:"+getTagname(),
+      buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=scriptdir,
       dockerfile="webserverImage/Dockerfile",
       rm=False)
 
   elif s=="webapp":
-    return buildImage(tag="mbsimenv/webapp:"+tagname,
+    return buildImage(tag="mbsimenv/webapp:"+getTagname(),
+      buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=scriptdir,
       dockerfile="webappImage/Dockerfile",
       rm=False)
 
   elif s=="webapprun":
-    return buildImage(tag="mbsimenv/webapprun:"+tagname,
+    return buildImage(tag="mbsimenv/webapprun:"+getTagname(),
+      buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=scriptdir+"/webapprunImage",
       rm=False)
 
@@ -262,12 +276,9 @@ def runWait(containers, printLog=True):
       sys.stdout.flush()
   return ret
 
-def runAutobuild(s, servername, buildType, addCommand, jobs=4, interactive=False,
+def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
                  fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
-                 printLog=True, detach=False, statusAccessToken="", tagname="latest"):
-  if servername==None:
-    raise RuntimeError("Argument --servername is required.")
-
+                 printLog=True, detach=False, statusAccessToken=""):
   updateReferences=[]
   if buildType=="linux64-dailydebug" and os.path.isfile("/mbsim-config/mbsimBuildService.conf"):
     with open("/mbsim-config/mbsimBuildService.conf", "r") as f:
@@ -276,7 +287,8 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4, interactive=False
       updateReferences=["--updateReferences"]+config["checkedExamples"]
 
   # build
-  build=dockerClient.containers.run(image=("mbsimenv/buildwin64" if buildType=="win64-dailyrelease" else "mbsimenv/build")+":"+tagname,
+  build=dockerClient.containers.run(
+    image=("mbsimenv/buildwin64" if buildType=="win64-dailyrelease" else "mbsimenv/build")+":"+getTagname(),
     init=True,
     labels={"buildtype": buildType},
     entrypoint=None if not interactive else ["sleep", "infinity"],
@@ -285,12 +297,12 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4, interactive=False
               "--hdf5serieBranch", hdf5serieBranch,
               "--openmbvBranch", openmbvBranch,
               "--mbsimBranch", mbsimBranch]+updateReferences+addCommand) if not interactive else [],
-    environment={"MBSIMENVSERVERNAME": servername, "STATUSACCESSTOKEN": statusAccessToken},
+    environment={"MBSIMENVSERVERNAME": getServername(), "STATUSACCESSTOKEN": statusAccessToken, "MBSIMENVTAGNAME": getTagname()},
     volumes={
-      'mbsimenv_mbsim-'+buildType:  {"bind": "/mbsim-env",    "mode": "rw"},
-      'mbsimenv_report-'+buildType: {"bind": "/mbsim-report", "mode": "rw"},
-      'mbsimenv_ccache':            {"bind": "/mbsim-ccache", "mode": "rw"},
-      'mbsimenv_state':             {"bind": "/mbsim-state",  "mode": "rw"},
+      'mbsimenv_mbsim-'+buildType+"."+getTagname():  {"bind": "/mbsim-env",    "mode": "rw"},
+      'mbsimenv_report-'+buildType+"."+getTagname(): {"bind": "/mbsim-report", "mode": "rw"},
+      'mbsimenv_ccache.'+getTagname():               {"bind": "/mbsim-ccache", "mode": "rw"},
+      'mbsimenv_state.'+getTagname():                {"bind": "/mbsim-state",  "mode": "rw"},
     },
     detach=True, stdout=True, stderr=True)
   if interactive:
@@ -313,49 +325,46 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4, interactive=False
     ret=runWait([build], printLog=printLog)
     return ret
 
-def run(s, servername, jobs=4,
+def run(s, jobs=4,
         addCommands=[],
         interactive=False,
         fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
         networkID=None, hostname=None,
-        wait=True, printLog=True, detach=False, statusAccessToken="", tagname="latest"):
+        wait=True, printLog=True, detach=False, statusAccessToken=""):
 
   if detach and interactive:
     raise RuntimeError("Cannot run detached an interactively.")
 
   if s=="build-linux64-ci":
-    return runAutobuild(s, servername, "linux64-ci", addCommands, jobs=jobs, interactive=interactive,
+    return runAutobuild(s, "linux64-ci", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken, tagname=tagname)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
 
   elif s=="build-linux64-dailydebug":
-    return runAutobuild(s, servername, "linux64-dailydebug", ["--valgrindExamples"]+addCommands,
+    return runAutobuild(s, "linux64-dailydebug", ["--valgrindExamples"]+addCommands,
                  jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken, tagname=tagname)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
 
   elif s=="build-linux64-dailyrelease":
-    return runAutobuild(s, servername, "linux64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
+    return runAutobuild(s, "linux64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken, tagname=tagname)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
 
   elif s=="build-win64-dailyrelease":
-    return runAutobuild(s, servername, "win64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
+    return runAutobuild(s, "win64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken, tagname=tagname)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
 
   elif s=="builddoc":
-    if servername==None:
-      raise RuntimeError("Argument --servername is required.")
-
-    builddoc=dockerClient.containers.run(image="mbsimenv/builddoc:"+tagname,
+    builddoc=dockerClient.containers.run(image="mbsimenv/builddoc:"+getTagname(),
       init=True,
       entrypoint=None if not interactive else ["sleep", "infinity"],
-      environment={"MBSIMENVSERVERNAME": servername},
+      environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
       volumes={
-        'mbsimenv_mbsim-linux64-dailydebug':  {"bind": "/mbsim-env",    "mode": "rw"},
-        'mbsimenv_report-linux64-dailydebug': {"bind": "/mbsim-report", "mode": "rw"},
-        'mbsimenv_state':                     {"bind": "/mbsim-state",  "mode": "rw"},
+        'mbsimenv_mbsim-linux64-dailydebug.'+getTagname():  {"bind": "/mbsim-env",    "mode": "rw"},
+        'mbsimenv_report-linux64-dailydebug.'+getTagname(): {"bind": "/mbsim-report", "mode": "rw"},
+        'mbsimenv_state.'+getTagname():                     {"bind": "/mbsim-state",  "mode": "rw"},
       },
       detach=True, stdout=True, stderr=True)
     if interactive:
@@ -379,41 +388,41 @@ def run(s, servername, jobs=4,
       return ret
 
   elif s=="service":
-    if servername==None:
-      raise RuntimeError("Argument --servername is required.")
+    getServername() # just to fail early if the envvar is not set
     if detach==True:
       raise RuntimeError("Cannot run service detached.")
 
     # networks
-    networki=dockerClient.networks.create(name="mbsimenv_service_intern", internal=True)
-    networke=dockerClient.networks.create(name="mbsimenv_service_extern")
+    networki=dockerClient.networks.create(name="mbsimenv_service_intern:"+getTagname(), internal=True)
+    networke=dockerClient.networks.create(name="mbsimenv_service_extern:"+getTagname())
 
     # port binding
-    ports={}
-    addr=socket.getaddrinfo(servername, None, 0, socket.SOCK_STREAM)
-    for p in [80, 443]:
-      ports[p]=[]
-      for a in addr:
-        ports[p].append((a[4][0], p))
+    addrinfo=socket.getaddrinfo(getServername(), None, 0, socket.SOCK_STREAM)
+    if len(addrinfo)==0:
+      raise RuntimeError("Cannot get address of MBSIMENVSERVERNAME.")
+    ports={80: [], 443: []}
+    for ai in addrinfo:
+      for p in [80, 443]:
+        ports[p].append((ai[4][0], p))
 
     # webserver
-    webserver=dockerClient.containers.run(image="mbsimenv/webserver:"+tagname,
+    webserver=dockerClient.containers.run(image="mbsimenv/webserver:"+getTagname(),
       init=True,
       network=networki.id,
       command=["-j", str(jobs)]+addCommands,
-      environment={"MBSIMENVSERVERNAME": servername},
+      environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
       volumes={
-        'mbsimenv_report-linux64-ci':           {"bind": "/var/www/html/mbsim/linux64-ci",           "mode": "ro"},
-        'mbsimenv_report-linux64-dailydebug':   {"bind": "/var/www/html/mbsim/linux64-dailydebug",   "mode": "ro"},
-        'mbsimenv_report-linux64-dailyrelease': {"bind": "/var/www/html/mbsim/linux64-dailyrelease", "mode": "ro"},
-        'mbsimenv_report-win64-dailyrelease':   {"bind": "/var/www/html/mbsim/win64-dailyrelease",   "mode": "ro"},
-        'mbsimenv_state':                       {"bind": "/var/www/html/mbsim/buildsystemstate",     "mode": "ro"},
-        'mbsimenv_config':                      {"bind": "/mbsim-config",                            "mode": "rw"},
-        'mbsimenv_releases':                    {"bind": "/var/www/html/mbsim/releases",             "mode": "rw"},
-        'mbsimenv_letsencrypt':                 {"bind": "/etc/letsencrypt",                         "mode": "rw"},
-        '/var/run/docker.sock':                 {"bind": "/var/run/docker.sock", "mode": "rw"},
+        'mbsimenv_report-linux64-ci.'+getTagname():           {"bind": "/var/www/html/mbsim/linux64-ci",           "mode": "ro"},
+        'mbsimenv_report-linux64-dailydebug.'+getTagname():   {"bind": "/var/www/html/mbsim/linux64-dailydebug",   "mode": "ro"},
+        'mbsimenv_report-linux64-dailyrelease.'+getTagname(): {"bind": "/var/www/html/mbsim/linux64-dailyrelease", "mode": "ro"},
+        'mbsimenv_report-win64-dailyrelease.'+getTagname():   {"bind": "/var/www/html/mbsim/win64-dailyrelease",   "mode": "ro"},
+        'mbsimenv_state.'+getTagname():                       {"bind": "/var/www/html/mbsim/buildsystemstate",     "mode": "ro"},
+        'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config",                            "mode": "rw"},
+        'mbsimenv_releases.'+getTagname():                    {"bind": "/var/www/html/mbsim/releases",             "mode": "rw"},
+        'mbsimenv_letsencrypt.'+getTagname():                 {"bind": "/etc/letsencrypt",                         "mode": "rw"},
+        '/var/run/docker.sock':                               {"bind": "/var/run/docker.sock",                     "mode": "rw"},
       },
-      hostname=servername,
+      hostname=getServername(),
       ports=ports,
       detach=True, stdout=True, stderr=True)
     networki.disconnect(webserver)
@@ -427,11 +436,11 @@ def run(s, servername, jobs=4,
       asyncLogContainer(webserver, "webserver: ")
 
     # webapp
-    webapp=dockerClient.containers.run(image="mbsimenv/webapp:"+tagname,
+    webapp=dockerClient.containers.run(image="mbsimenv/webapp:"+getTagname(),
       init=True,
       network=networki.id,
       command=[networki.id]+addCommands,
-      environment={"MBSIMENVSERVERNAME": servername},
+      environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
       volumes={
         '/var/run/docker.sock': {"bind": "/var/run/docker.sock", "mode": "rw"},
       },
@@ -447,7 +456,7 @@ def run(s, servername, jobs=4,
       asyncLogContainer(webapp, "webapp: ")
 
     # proxy
-    proxy=dockerClient.containers.run(image="mbsimenv/proxy:"+tagname,
+    proxy=dockerClient.containers.run(image="mbsimenv/proxy:"+getTagname(),
       init=True,
       network=networki.id,
       # allow access to these sites
@@ -457,6 +466,7 @@ def run(s, servername, jobs=4,
                "code\\.jquery\\.com\n"+
                "maxcdn\\.bootstrapcdn\\.com\n"+
                "www\\.anwalt\\.de\n"]+addCommands,
+      environment={"MBSIMENVTAGNAME": getTagname()},
       detach=True, stdout=True, stderr=True)
     networki.disconnect(proxy)
     networki.connect(proxy, aliases=["proxy"])
@@ -489,15 +499,16 @@ def run(s, servername, jobs=4,
     if detach==True:
       raise RuntimeError("Cannot run webapprun detached.")
     networki=dockerClient.networks.get(networkID)
-    webapprun=dockerClient.containers.run(image="mbsimenv/webapprun:"+tagname,
+    webapprun=dockerClient.containers.run(image="mbsimenv/webapprun:"+getTagname(),
       init=True,
       network=networki.id,
       command=addCommands,
+      environment={"MBSIMENVTAGNAME": getTagname()},
       volumes={
-        'mbsimenv_mbsim-linux64-ci':           {"bind": "/mbsim-env-linux64-ci",           "mode": "ro"},
-        'mbsimenv_mbsim-linux64-dailydebug':   {"bind": "/mbsim-env-linux64-dailydebug",   "mode": "ro"},
-        'mbsimenv_mbsim-linux64-dailyrelease': {"bind": "/mbsim-env-linux64-dailyrelease", "mode": "ro"},
-        'mbsimenv_mbsim-win64-dailyrelease':   {"bind": "/mbsim-env-win64-dailyrelease",   "mode": "ro"},
+        'mbsimenv_mbsim-linux64-ci.'+getTagname():           {"bind": "/mbsim-env-linux64-ci",           "mode": "ro"},
+        'mbsimenv_mbsim-linux64-dailydebug.'+getTagname():   {"bind": "/mbsim-env-linux64-dailydebug",   "mode": "ro"},
+        'mbsimenv_mbsim-linux64-dailyrelease.'+getTagname(): {"bind": "/mbsim-env-linux64-dailyrelease", "mode": "ro"},
+        'mbsimenv_mbsim-win64-dailyrelease.'+getTagname():   {"bind": "/mbsim-env-win64-dailyrelease",   "mode": "ro"},
       },
       detach=True, stdout=True, stderr=True)
     networki.disconnect(webapprun)

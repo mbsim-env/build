@@ -26,6 +26,6 @@ networkID=sys.argv[1]
 token=sys.argv[2]
 hostname=sys.argv[3]
 
-webapprun=setup.run("webapprun", None, -1, addCommands=["--token", token], networkID=networkID, hostname=hostname, wait=False, printLog=False)
+webapprun=setup.run("webapprun", -1, addCommands=["--token", token], networkID=networkID, hostname=hostname, wait=False, printLog=False)
 ret=setup.runWait(webapprun, printLog=False)
 sys.exit(ret)
