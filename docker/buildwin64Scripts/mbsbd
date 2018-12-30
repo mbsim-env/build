@@ -29,6 +29,8 @@ if [ "$BASENAME" == "mbsbd" ]; then
     echo 'Cannot run docker. Please install and enable docker as the current user or'
     echo '(not recommended) run this script as root.'
   fi
+
+  TAGNAME=${TAGNAME:-latest}
   
   # convert the absolute path stored in PABS to the corresponding docker path
   function convertPABS {
@@ -86,7 +88,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
     -e DISPLAY \
     -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
     --net=host \
-    mbsimenv/buildwin64 \
+    mbsimenv/buildwin64:$TAGNAME \
     $exePrefix "${ARGS[@]}"
 
 else

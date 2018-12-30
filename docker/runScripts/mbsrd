@@ -29,6 +29,8 @@ if [ "$BASENAME" == "mbsrd" ]; then
     echo 'Cannot run docker. Please install and enable docker as the current user or'
     echo '(not recommended) run this script as root.'
   fi
+
+  TAGNAME=${TAGNAME:-latest}
   
   # convert the absolute path stored in PABS to the corresponding docker path
   function convertPABS {
@@ -62,7 +64,16 @@ if [ "$BASENAME" == "mbsrd" ]; then
   done
   
   # run in mbsimenv/build docker image
-  docker run --rm --user $(id -u):$(id -g) -e HOME=/tmp -v "$MBSIMENVDIR":/mount -w "$CURDIR" -e DISPLAY -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority --net=host mbsimenv/run "${ARGS[@]}"
+  docker run --rm \
+    --user $(id -u):$(id -g) \
+    -e HOME=/tmp \
+    -v "$MBSIMENVDIR":/mount \
+    -w "$CURDIR" \
+    -e DISPLAY \
+    -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
+    --net=host \
+    mbsimenv/run:$TAGNAME \
+    "${ARGS[@]}"
 
 else
   # run via a link

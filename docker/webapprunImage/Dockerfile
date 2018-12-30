@@ -1,5 +1,5 @@
-ARG FROMTAG=latest
-FROM mbsimenv/build:$FROMTAG
+ARG TAGNAME=latest
+FROM mbsimenv/build:$TAGNAME
 
 USER root:root
 

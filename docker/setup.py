@@ -32,6 +32,7 @@ def parseArgs():
   argparser.add_argument("--servername", type=str, default=None, help="Set the hostname of webserver")
   argparser.add_argument("--jobs", "-j", type=int, default=multiprocessing.cpu_count(), help="Number of jobs to run in parallel")
   argparser.add_argument("--interactive", "-i", action='store_true', help="Run container, wait and print how to attach to it")
+  argparser.add_argument("--tagname", type=str, default="latest", help="The tag to use for all actions; default: latest")
   
   return argparser.parse_known_args()
 
@@ -122,7 +123,7 @@ def main():
     if len(args.service)==0:
       args.service=allServices
     for s in args.service:
-      ret=build(s, args.jobs)
+      ret=build(s, args.jobs, tagname=args.tagname)
       if ret!=0:
         break
     return ret
@@ -130,7 +131,7 @@ def main():
   if args.command=="run":
     ret=0
     for s in args.service:
-      ret=run(s, args.servername, args.jobs, addCommands=argsRest, interactive=args.interactive)
+      ret=run(s, args.servername, args.jobs, addCommands=argsRest, interactive=args.interactive, tagname=args.tagname)
       if ret!=0:
         break
     return ret
@@ -142,7 +143,7 @@ def main():
       if syncLogBuildImage(pull)!=0:
         return 1
     for s in args.service:
-      pull=dockerClientLL.pull("mbsimenv/"+s, "latest", stream=True)
+      pull=dockerClientLL.pull("mbsimenv/"+s, args.tagname, stream=True)
       if syncLogBuildImage(pull)!=0:
         return 1
     return 0
@@ -151,7 +152,7 @@ def main():
     if len(args.service)==0:
       args.service=allServices
     for s in args.service:
-      push=dockerClient.images.push("mbsimenv/"+s, "latest", stream=True)
+      push=dockerClient.images.push("mbsimenv/"+s, args.tagname, stream=True)
       if syncLogBuildImage(push)!=0:
         return 1
     return 0
@@ -186,23 +187,23 @@ def buildImage(tag, tagMultistageImage=True, **kwargs):
   build=dockerClientLL.build(tag=tag, **kwargs)
   return syncLogBuildImage(build)
 
-def build(s, jobs=4):
+def build(s, jobs=4, tagname="latest"):
 
   if s=="base":
-    return buildImage(tag="mbsimenv/base",
+    return buildImage(tag="mbsimenv/base:"+tagname,
       buildargs={"JOBS": str(jobs)},
       path=scriptdir+"/baseImage",
       rm=False)
 
   elif s=="build":
-    return buildImage(tag="mbsimenv/build",
+    return buildImage(tag="mbsimenv/build:"+tagname,
       buildargs={"JOBS": str(jobs)},
       path=scriptdir+"/..",
       dockerfile="docker/buildImage/Dockerfile",
       rm=False)
 
   elif s=="run":
-    return buildImage(tag="mbsimenv/run",
+    return buildImage(tag="mbsimenv/run:"+tagname,
       buildargs={"JOBS": str(jobs)},
       path=scriptdir+"/..",
       dockerfile="docker/runImage/Dockerfile",
@@ -210,37 +211,37 @@ def build(s, jobs=4):
       rm=False)
 
   elif s=="proxy":
-    return buildImage(tag="mbsimenv/proxy",
+    return buildImage(tag="mbsimenv/proxy:"+tagname,
       path=scriptdir+"/proxyImage",
       rm=False)
 
   elif s=="buildwin64":
-    return buildImage(tag="mbsimenv/buildwin64",
+    return buildImage(tag="mbsimenv/buildwin64:"+tagname,
       buildargs={"JOBS": str(jobs)},
       path=scriptdir+"/..",
       dockerfile="docker/buildwin64Image/Dockerfile",
       rm=False)
 
   elif s=="builddoc":
-    return buildImage(tag="mbsimenv/builddoc",
+    return buildImage(tag="mbsimenv/builddoc:"+tagname,
       path=scriptdir+"/..",
       dockerfile="docker/builddocImage/Dockerfile",
       rm=False)
 
   elif s=="webserver":
-    return buildImage(tag="mbsimenv/webserver",
+    return buildImage(tag="mbsimenv/webserver:"+tagname,
       path=scriptdir,
       dockerfile="webserverImage/Dockerfile",
       rm=False)
 
   elif s=="webapp":
-    return buildImage(tag="mbsimenv/webapp",
+    return buildImage(tag="mbsimenv/webapp:"+tagname,
       path=scriptdir,
       dockerfile="webappImage/Dockerfile",
       rm=False)
 
   elif s=="webapprun":
-    return buildImage(tag="mbsimenv/webapprun",
+    return buildImage(tag="mbsimenv/webapprun:"+tagname,
       path=scriptdir+"/webapprunImage",
       rm=False)
 
@@ -261,7 +262,7 @@ def runWait(containers, printLog=True):
 
 def runAutobuild(s, servername, buildType, addCommand, jobs=4, interactive=False,
                  fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
-                 printLog=True, detach=False, statusAccessToken=""):
+                 printLog=True, detach=False, statusAccessToken="", tagname="latest"):
   if servername==None:
     raise RuntimeError("Argument --servername is required.")
 
@@ -273,7 +274,7 @@ def runAutobuild(s, servername, buildType, addCommand, jobs=4, interactive=False
       updateReferences=["--updateReferences"]+config["checkedExamples"]
 
   # build
-  build=dockerClient.containers.run(image=("mbsimenv/buildwin64" if buildType=="win64-dailyrelease" else "mbsimenv/build"),
+  build=dockerClient.containers.run(image=("mbsimenv/buildwin64" if buildType=="win64-dailyrelease" else "mbsimenv/build")+":"+tagname,
     init=True,
     labels={"buildtype": buildType},
     entrypoint=None if not interactive else ["sleep", "infinity"],
@@ -315,7 +316,7 @@ def run(s, servername, jobs=4,
         interactive=False,
         fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
         networkID=None, hostname=None,
-        wait=True, printLog=True, detach=False, statusAccessToken=""):
+        wait=True, printLog=True, detach=False, statusAccessToken="", tagname="latest"):
 
   if detach and interactive:
     raise RuntimeError("Cannot run detached an interactively.")
@@ -323,29 +324,29 @@ def run(s, servername, jobs=4,
   if s=="build-linux64-ci":
     return runAutobuild(s, servername, "linux64-ci", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken, tagname=tagname)
 
   elif s=="build-linux64-dailydebug":
     return runAutobuild(s, servername, "linux64-dailydebug", ["--valgrindExamples"]+addCommands,
                  jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken, tagname=tagname)
 
   elif s=="build-linux64-dailyrelease":
     return runAutobuild(s, servername, "linux64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken, tagname=tagname)
 
   elif s=="build-win64-dailyrelease":
     return runAutobuild(s, servername, "win64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken, tagname=tagname)
 
   elif s=="builddoc":
     if servername==None:
       raise RuntimeError("Argument --servername is required.")
 
-    builddoc=dockerClient.containers.run(image="mbsimenv/builddoc",
+    builddoc=dockerClient.containers.run(image="mbsimenv/builddoc:"+tagname,
       init=True,
       entrypoint=None if not interactive else ["sleep", "infinity"],
       environment={"MBSIMENVSERVERNAME": servername},
@@ -386,7 +387,7 @@ def run(s, servername, jobs=4,
     networke=dockerClient.networks.create(name="mbsimenv_service_extern")
 
     # webserver
-    webserver=dockerClient.containers.run(image="mbsimenv/webserver",
+    webserver=dockerClient.containers.run(image="mbsimenv/webserver:"+tagname,
       init=True,
       network=networki.id,
       command=["-j", str(jobs)]+addCommands,
@@ -419,7 +420,7 @@ def run(s, servername, jobs=4,
       asyncLogContainer(webserver, "webserver: ")
 
     # webapp
-    webapp=dockerClient.containers.run(image="mbsimenv/webapp",
+    webapp=dockerClient.containers.run(image="mbsimenv/webapp:"+tagname,
       init=True,
       network=networki.id,
       command=[networki.id]+addCommands,
@@ -439,7 +440,7 @@ def run(s, servername, jobs=4,
       asyncLogContainer(webapp, "webapp: ")
 
     # proxy
-    proxy=dockerClient.containers.run(image="mbsimenv/proxy",
+    proxy=dockerClient.containers.run(image="mbsimenv/proxy:"+tagname,
       init=True,
       network=networki.id,
       # allow access to these sites
@@ -481,7 +482,7 @@ def run(s, servername, jobs=4,
     if detach==True:
       raise RuntimeError("Cannot run webapprun detached.")
     networki=dockerClient.networks.get(networkID)
-    webapprun=dockerClient.containers.run(image="mbsimenv/webapprun",
+    webapprun=dockerClient.containers.run(image="mbsimenv/webapprun:"+tagname,
       init=True,
       network=networki.id,
       command=addCommands,

@@ -1,7 +1,7 @@
 # build image: this image is used to build mbsim-env
 
-ARG FROMTAG=latest
-FROM mbsimenv/base:$FROMTAG AS centosBaseImage
+ARG TAGNAME=latest
+FROM mbsimenv/base:$TAGNAME AS centosBaseImage
 
 # install everything needed to build mbsim-env tools from centos7
 RUN yum -y install \

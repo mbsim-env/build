@@ -1,8 +1,8 @@
 # run image: this image is used to run mbsim-env tools
 
 # build mbsim-env using the build image
-ARG FROMTAG=latest
-FROM mbsimenv/build:$FROMTAG AS buildImage
+ARG TAGNAME=latest
+FROM mbsimenv/build:$TAGNAME AS buildImage
 
 # configuration
 ARG JOBS=4
@@ -51,8 +51,8 @@ RUN /mbsim-build/build/buildScripts/build.py --sourceDir /mbsim-env --binSuffix=
 
 
 # now use the base image and copy the local dir of 3rd party and mbsim-env
-ARG FROMTAG=latest
-FROM mbsimenv/base:$FROMTAG AS intermediateImage
+ARG TAGNAME=latest
+FROM mbsimenv/base:$TAGNAME AS intermediateImage
 
 COPY --from=buildImage /3rdparty/local /3rdparty/local
 COPY --from=buildImage /mbsim-env/local /mbsim-env/local
