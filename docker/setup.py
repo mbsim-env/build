@@ -179,8 +179,9 @@ def buildImage(tag, tagMultistageImage=True, **kwargs):
         match=fromRE.match(line)
         if match:
           multistageName=match.group(1).lower()
-          print("Building multistage image "+multistageName+" and tag it as "+tag+"--"+multistageName)
-          build=dockerClientLL.build(tag=tag+"--"+multistageName, target=multistageName, **kwargs)
+          multistageImage=tag.split(':')[0]+"--"+multistageName+":"+tag.split(':')[1]
+          print("Building multistage image "+multistageName+" and tag it as "+multistageImage)
+          build=dockerClientLL.build(tag=multistageImage, target=multistageName, **kwargs)
           ret=syncLogBuildImage(build)
           if ret!=0:
             return ret
