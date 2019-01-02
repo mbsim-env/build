@@ -343,9 +343,6 @@ def main():
       ])],
     pj('mbsim', 'thirdparty', 'nurbs++'): [False, set([ # depends on
       ])],
-    pj('mbsim', 'modules', 'mbsimPowertrain'): [False, set([ # depends on
-        pj('mbsim', 'kernel')
-      ])],
     pj('mbsim', 'modules', 'mbsimElectronics'): [False, set([ # depends on
         pj('mbsim', 'kernel'),
         pj('mbsim', 'modules', 'mbsimControl')
@@ -364,7 +361,6 @@ def main():
         # dependencies to mbsim modules are only required for correct xmldoc generation 
         pj('mbsim', 'modules', 'mbsimHydraulics'),
         pj('mbsim', 'modules', 'mbsimFlexibleBody'),
-        pj('mbsim', 'modules', 'mbsimPowertrain'),
         pj('mbsim', 'modules', 'mbsimElectronics'),
         pj('mbsim', 'modules', 'mbsimControl'),
         pj('mbsim', 'modules', 'mbsimInterface')
