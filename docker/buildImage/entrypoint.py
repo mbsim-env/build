@@ -8,6 +8,7 @@ import sys
 import datetime
 import codecs
 import json
+import re
 sys.path.append("/mbsim-build/build/buildScripts")
 import build
 
