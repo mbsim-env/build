@@ -527,6 +527,14 @@ def main():
     print('</tr>', file=mainFD)
   mainFD.flush()
 
+  # remove all "*.gcno", "*.gcda" files
+  if not args.disableMake and not args.disableMakeClean and args.coverage:
+    for e in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
+      for d,_,files in os.walk(pj(args.sourceDir, e+args.binSuffix)):
+        for f in files:
+          if os.path.splitext(f)[1]==".gcno": os.remove(pj(d, f))
+          if os.path.splitext(f)[1]==".gcda": os.remove(pj(d, f))
+
   # build the other tools in order
   nr=1
   for tool in orderedBuildTools:
@@ -896,12 +904,6 @@ def make(tool, mainFD):
         print("\n\nRUNNING make clean\n", file=makeFD); makeFD.flush()
         if subprocess.call(["make", "clean"], stderr=subprocess.STDOUT, stdout=makeFD)!=0:
           errStr=errStr+"make clean failed; "
-        if args.coverage:
-          # remove all "*.gcno", "*.gcda" files
-          for d,_,files in os.walk('.'):
-            for f in files:
-              if os.path.splitext(f)[1]==".gcno": os.remove(pj(d, f))
-              if os.path.splitext(f)[1]==".gcda": os.remove(pj(d, f))
       print("\n\nRUNNING make -k\n", file=makeFD); makeFD.flush()
       if subprocess.call(staticCodeAnalyzeComm+["make", "-k", "-j", str(args.j)],
                          stderr=subprocess.STDOUT, stdout=makeFD, env=makeEnv)!=0:
@@ -1065,7 +1067,7 @@ def runexamples(mainFD):
   if args.buildSystemRun:
     command.extend(["--buildSystemRun"])
   if args.coverage:
-    command.extend(["--coverage", args.sourceDir+":"+args.binSuffix+":"+args.prefix])
+    command.extend(["--coverage", args.sourceDir+":"+args.binSuffix+":"+args.prefix+":"+pj(args.sourceDir, "mbsim", "examples")])
   if args.webapp:
     command.extend(["--webapp"])
   command.extend(args.passToRunexamples)

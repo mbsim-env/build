@@ -156,7 +156,7 @@ if args.valgrindExamples:
   valgrindEnv=os.environ
   valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
   # build
-  coverage = ["--coverage", "/mbsim-env:-build:/mbsim-env/local"] if "--coverage" in ARGS else []
+  coverage = ["--coverage", "/mbsim-env:-build:/mbsim-env/local:/mbsim-env/mbsim-valgrind/examples"] if "--coverage" in ARGS else []
   localRet=subprocess.call(["./runexamples.py", "--timeID", timeID.isoformat()+"Z", "--rotate", "20", "-j", str(args.jobs)]+coverage+["--reportOutDir",
             "/mbsim-report/report/runexamples_valgrind_report", "--url",
             "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
