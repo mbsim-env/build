@@ -11,6 +11,7 @@ import sys
 import signal
 import multiprocessing
 import re
+import socket
 
 
 
@@ -387,6 +388,14 @@ def run(s, servername, jobs=4,
     networki=dockerClient.networks.create(name="mbsimenv_service_intern", internal=True)
     networke=dockerClient.networks.create(name="mbsimenv_service_extern")
 
+    # port binding
+    ports={}
+    addr=socket.getaddrinfo(servername, None, 0, socket.SOCK_STREAM)
+    for p in [80, 443]:
+      ports[p]=[]
+      for a in addr:
+        ports[p].append((a[4][0], p))
+
     # webserver
     webserver=dockerClient.containers.run(image="mbsimenv/webserver:"+tagname,
       init=True,
@@ -405,10 +414,7 @@ def run(s, servername, jobs=4,
         '/var/run/docker.sock':                 {"bind": "/var/run/docker.sock", "mode": "rw"},
       },
       hostname=servername,
-      ports={
-        80:  80,
-        443: 443,
-      },
+      ports=ports,
       detach=True, stdout=True, stderr=True)
     networki.disconnect(webserver)
     networki.connect(webserver, aliases=["webserver"])
