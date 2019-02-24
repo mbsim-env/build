@@ -34,11 +34,6 @@ config=readConfigFile()
 contldd=setup.run("build-linux64-dailydebug", 6, printLog=False, detach=True, addCommands=["--forceBuild"],
                   statusAccessToken=config["status_access_token"])
 
-# build doc
-contd=setup.run("builddoc", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
-                statusAccessToken=config["status_access_token"])
-retd=contd.wait()
-
 # linux64-dailyrelease
 contldr=setup.run("build-linux64-dailyrelease", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
                   statusAccessToken=config["status_access_token"])
@@ -50,6 +45,11 @@ contwdr=setup.run("build-win64-dailyrelease", 2, printLog=False, detach=True, ad
 retwdr=contwdr.wait()
 
 retldd=contldd.wait()
+
+# build doc
+contd=setup.run("builddoc", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
+                statusAccessToken=config["status_access_token"])
+retd=contd.wait()
 
 # return
 sys.exit(0 if retldd["StatusCode"]==0 and retd["StatusCode"]==0 and retldr["StatusCode"]==0 and retwdr["StatusCode"]==0 else 1)
