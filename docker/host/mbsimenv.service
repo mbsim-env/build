@@ -9,5 +9,6 @@ Requires=docker.service
 After=docker.service
 
 [Service]
-Environment=MBSIMENVSERVERNAME=www2.mbsim-env.de
+Environment=MBSIMENVSERVERNAME=www.mbsim-env.de
+Environment=MBSIMENVTAGNAME=latest
 ExecStart=/home/dockeruser/build/docker/setup.py run service -j 6

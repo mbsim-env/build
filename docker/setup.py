@@ -27,7 +27,7 @@ def parseArgs():
     --token: type=str, help="Webapprun token"
     --forceBuild: help="run build even if it was already run"
     The environment variable MBSIMENVTAGNAME is used as tagname everywhere.
-    It defaults to "latest".
+    The environment variable MBSIMENVSERVERNAME is used as the server name everywhere.
     ''')
   
   argparser.add_argument("command", type=str, choices=["build", "run", "pull", "push", "prune"], help="Command to execute")
@@ -51,9 +51,9 @@ def getServername():
   return os.environ["MBSIMENVSERVERNAME"]
 
 def getTagname():
-  if "MBSIMENVTAGNAME" in os.environ:
-    return os.environ["MBSIMENVTAGNAME"]
-  return "latest"
+  if "MBSIMENVTAGNAME" not in os.environ:
+    raise RuntimeError("The MBSIMENVTAGNAME envvar is required.")
+  return os.environ["MBSIMENVTAGNAME"]
 
 def syncLogBuildImage(build):
   ret=0
