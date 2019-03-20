@@ -37,19 +37,19 @@ contldd=setup.run("build-linux64-dailydebug", 6, printLog=False, detach=True, ad
 # linux64-dailyrelease
 contldr=setup.run("build-linux64-dailyrelease", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
                   statusAccessToken=config["status_access_token"])
-retldr=contldr.wait()
+retldr=setup.waitContainer(contldr)
 
 # win64-dailyrelease
 contwdr=setup.run("build-win64-dailyrelease", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
                   statusAccessToken=config["status_access_token"])
-retwdr=contwdr.wait()
+retwdr=setup.waitContainer(contwdr)
 
-retldd=contldd.wait()
+retldd=setup.waitContainer(contldd)
 
 # build doc
 contd=setup.run("builddoc", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
                 statusAccessToken=config["status_access_token"])
-retd=contd.wait()
+retd=setup.waitContainer(contd)
 
 # return
-sys.exit(0 if retldd["StatusCode"]==0 and retd["StatusCode"]==0 and retldr["StatusCode"]==0 and retwdr["StatusCode"]==0 else 1)
+sys.exit(0 if retldd==0 and retd==0 and retldr==0 and retwdr==0 else 1)
