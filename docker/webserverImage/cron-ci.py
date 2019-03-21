@@ -26,6 +26,13 @@ argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs
 
 args=argparser.parse_args()
 
+if "MBSIMENVTAGNAME" not in os.environ or os.environ["MBSIMENVTAGNAME"]=="":
+  raise RuntimeError("Envvar MBSIMENVTAGNAME is not defined.")
+
+if os.environ["MBSIMENVTAGNAME"]=="staging":
+  # the staging service delays the CI script by 30min to avoid load conflicts with the production service (on the same machine)
+  time.sleep(30*60)
+
 # config files
 configFilename="/mbsim-config/mbsimBuildService.conf"
 

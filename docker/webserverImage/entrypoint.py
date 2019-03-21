@@ -88,7 +88,7 @@ crontab=\
   "MBSIMENVSERVERNAME=%s\n"%(os.environ["MBSIMENVSERVERNAME"])+\
   "MBSIMENVTAGNAME=%s\n"%(os.environ["MBSIMENVTAGNAME"])+\
   subprocess.check_output(["crontab", "-l"])+\
-  "0 0 * * * python3 /context/cron-daily.py -j %d 2> >(sed -re 's/^/DAILY: /' > /proc/1/fd/2) > >(sed -re 's/^/DAILY: /' > /proc/1/fd/1)\n"%(args.jobs)+\
+  "0 %d * * * python3 /context/cron-daily.py -j %d 2> >(sed -re 's/^/DAILY: /' > /proc/1/fd/2) > >(sed -re 's/^/DAILY: /' > /proc/1/fd/1)\n"%(0 if os.environ["MBSIMENVTAGNAME"]!="staging" else 12, args.jobs)+\
   "* * * * * python3 /context/cron-ci.py -j %d 2> >(sed -re 's/^/CI: /' > /proc/1/fd/2) > >(sed -re 's/^/CI: /' > /proc/1/fd/1)\n"%(args.jobs)
 subprocess.check_call(["crontab", "/dev/stdin"], )
 p=subprocess.Popen(['crontab', '/dev/stdin'], stdin=subprocess.PIPE)    
