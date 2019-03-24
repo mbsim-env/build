@@ -540,3 +540,32 @@
    fun:_ZN8SoAction5applyEP6SoNode
    fun:_ZN10OpenMBVGUI12SoQtMyViewer12actualRedrawEv
 }
+{
+   COIN
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:cc_dl_open
+   fun:cc_dl_handle_with_gl_symbols
+   fun:coin_glglue_dl_handle
+   fun:glxglue_getprocaddress
+   fun:cc_glglue_getprocaddress
+   fun:glxglue_init
+   fun:cc_glglue_instance
+   fun:_ZN18SoGLLightIdElement9incrementEP7SoStateP6SoNode
+   fun:_ZN18SoDirectionalLight8GLRenderEP16SoGLRenderAction
+   fun:_ZN11SoSeparator17GLRenderBelowPathEP16SoGLRenderAction
+   fun:_ZN8SoAction8traverseEP6SoNode
+   fun:_ZN16SoGLRenderAction14beginTraversalEP6SoNode
+   fun:_ZN17SoGLRenderActionP12renderSingleEP6SoNode
+   fun:_ZN17SoGLRenderActionP6renderEP6SoNode
+   fun:_ZN16SoGLRenderAction14beginTraversalEP6SoNode
+   fun:_ZN8SoAction5applyEP6SoNode
+   fun:_ZN15SoRenderManager11renderSceneEP16SoGLRenderActionP6SoNodej
+   fun:_ZN15SoRenderManager14actuallyRenderEP16SoGLRenderActioniii
+   fun:_ZN15SoRenderManager12renderSingleEP16SoGLRenderActioniii
+   fun:_ZN15SoRenderManager6renderEP16SoGLRenderActioniii
+   fun:_ZN15SoRenderManager6renderEii
+   fun:_ZN10OpenMBVGUI10MainWindow11updateSceneEv
+   fun:main
+}
