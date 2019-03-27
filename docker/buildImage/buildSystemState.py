@@ -1,6 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
-from __future__ import print_function # to enable the print function for backward compatiblity with python2
 import xml.etree.cElementTree as ET
 import datetime
 import fcntl
@@ -62,11 +61,11 @@ def update(buildType, title, content, link, nrFailed, nrRun):
     eletitle=ET.Element(NS+"title")
     eleentry.append(eletitle)
     # some feed reader use the title as id -> make the title a id by appending a hash
-    eletitle.text=title+" ("+base64.b64encode(hashlib.sha1(curtime.strftime("%s")).digest())[0:4]+")"
+    eletitle.text=title+" ("+base64.b64encode(hashlib.sha1(curtime.strftime("%s").encode("UTF-8")).digest()).decode("UTF-8")[0:4]+")"
     elecontent=ET.Element(NS+"content")
     eleentry.append(elecontent)
     # some feed reader use the content as id -> make the content a id by appending a hash
-    elecontent.text=content+" ("+base64.b64encode(hashlib.sha1(curtime.strftime("%s")).digest())[0:4]+")"
+    elecontent.text=content+" ("+base64.b64encode(hashlib.sha1(curtime.strftime("%s").encode("UTF-8")).digest()).decode("UTF-8")[0:4]+")"
     eleupdated=ET.Element(NS+"updated")
     eleentry.append(eleupdated)
     eleupdated.text=curtime.strftime("%Y-%m-%dT%H:%M:%SZ")
@@ -85,8 +84,6 @@ def update(buildType, title, content, link, nrFailed, nrRun):
     fd.close() # close lockfile
 
 def createStateSVGFile(filename, text, color):
-  if sys.version_info >= (3,) and type(text)==bytes:
-    text=text.decode("utf8")
   fd=open(filename, "w")
   print('''<?xml version="1.0" encoding="UTF-8" standalone="no"?>
 <svg xmlns="http://www.w3.org/2000/svg" version="1.1" width="36" height="20">

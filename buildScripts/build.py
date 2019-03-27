@@ -1,7 +1,6 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 
 # imports
-from __future__ import print_function # to enable the print function for backward compatiblity with python2
 import sys
 import os
 import argparse
@@ -302,8 +301,8 @@ def main():
   if args.buildSystemRun:
     sys.path.append("/context")
     import buildSystemState
-    buildSystemState.createStateSVGFile("/mbsim-state/"+args.buildType+"-build.nrFailed.svg", b"\xc2\xb7\xc2\xb7\xc2\xb7", "#777")
-    buildSystemState.createStateSVGFile("/mbsim-state/"+args.buildType+"-build.nrAll.svg", b"\xc2\xb7\xc2\xb7\xc2\xb7", "#777")
+    buildSystemState.createStateSVGFile("/mbsim-state/"+args.buildType+"-build.nrFailed.svg", "...", "#777")
+    buildSystemState.createStateSVGFile("/mbsim-state/"+args.buildType+"-build.nrAll.svg", "...", "#777")
 
   # all tools to be build including the tool dependencies
   global toolDependencies
@@ -586,11 +585,13 @@ def main():
 
   mainFD.close()
   # replace <span id="STILLRUNNINGORABORTED"...</span> in index.html
-  for line in fileinput.FileInput(pj(args.reportOutDir, "index.html"),inplace=1):
-    endTime=datetime.datetime.utcnow()
-    endTime=datetime.datetime(endTime.year, endTime.month, endTime.day, endTime.hour, endTime.minute, endTime.second)
-    line=re.sub('<span id="STILLRUNNINGORABORTED".*?</span>', '<span class="DATETIME">'+endTime.isoformat()+'Z</span>', line)
-    print(line, end="")
+  endTime=datetime.datetime.utcnow()
+  endTime=datetime.datetime(endTime.year, endTime.month, endTime.day, endTime.hour, endTime.minute, endTime.second)
+  with open(pj(args.reportOutDir, "index.html"), encoding="UTF-8") as f:
+    s=f.read()
+  s=re.sub('<span id="STILLRUNNINGORABORTED".*?</span>', '<span class="DATETIME">'+endTime.isoformat()+'Z</span>', s)
+  with open(pj(args.reportOutDir, "index.html"), "w", encoding="UTF-8") as f:
+    f.write(s)
 
   # update build system state
   if args.buildSystemRun:
@@ -881,6 +882,8 @@ def configure(tool, mainFD):
 
 
 def make(tool, mainFD):
+  staging=True if 'MBSIMENVTAGNAME' in os.environ and os.environ['MBSIMENVTAGNAME']=="staging" else False
+
   makeFD=codecs.open(pj(args.reportOutDir, tool, "make.txt"), "w", encoding="utf-8")
   run=0
   try:
@@ -889,7 +892,9 @@ def make(tool, mainFD):
       staticCodeAnalyzeDir=[]
       staticCodeAnalyzeComm=[]
       makeEnv=os.environ.copy()
-      if args.staticCodeAnalyzis and tool != "mbsim/thirdparty/nurbs++": # skip nurbs++ being a 3rd party tool
+      if args.staticCodeAnalyzis and \
+          ((not staging and tool!="mbsim/thirdparty/nurbs++") or # skip nurbs++ being a 3rd party tool (for normal builds)
+           (    staging and tool=="fmatvec"                 )):  # just process fmatvec (for time reasons; for staging builds)
         staticCodeAnalyzeDir=[pj(args.reportOutDir, tool, "static-code-analyze")]
         if not os.path.exists(staticCodeAnalyzeDir[0]): os.mkdir(staticCodeAnalyzeDir[0])
         excludes=["*_swig_python.cc", "*_swig_octave.cc", "*_swig_java.cc", "/usr/*", "/3rdparty/*",
@@ -927,7 +932,8 @@ def make(tool, mainFD):
     print('  <a href="'+myurllib.pathname2url(pj(tool, "make.txt"))+'">'+result+'</a>', file=mainFD)
     print('</td>', file=mainFD)
     if args.staticCodeAnalyzis:
-      if tool != "mbsim/thirdparty/nurbs++": # skip nurbs++ being a 3rd party tool
+      if ((not staging and tool!="mbsim/thirdparty/nurbs++") or # skip nurbs++ being a 3rd party tool (for normal builds)
+          (    staging and tool=="fmatvec"                 )):  # just process fmatvec (for time reasons; for staging builds)
         d=""
         try:
           d=os.path.basename(glob.glob(pj(args.reportOutDir, tool, "static-code-analyze", "*"))[0])
@@ -1057,7 +1063,7 @@ def runexamples(mainFD):
 
   # runexamples.py command
   currentID=int(os.path.basename(args.reportOutDir)[len("result_"):])
-  command=["./runexamples.py", "-j", str(args.j)]
+  command=["python3", "./runexamples.py", "-j", str(args.j)]
   if args.url!=None:
     command.extend(["--url", args.url+"/result_%010d/runexamples_report"%(currentID)])
   command.extend(["--buildType", args.buildType])

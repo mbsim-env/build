@@ -3,6 +3,7 @@ FROM centos:centos7
 # install tinyproxy
 RUN yum -y install epel-release && \
   yum -y install \
+  python34 \
   tinyproxy \
   && yum clean all
 

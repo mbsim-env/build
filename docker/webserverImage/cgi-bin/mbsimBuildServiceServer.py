@@ -1,13 +1,12 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
-from __future__ import print_function # to enable the print function for backward compatiblity with python2
 import json
 
 try:
 
   # imports
   import os
-  import urlparse
+  import urllib.parse
   import requests
   import hmac
   import hashlib
@@ -16,7 +15,7 @@ try:
   import threading
   import fcntl
   import datetime
-  import Cookie
+  import http.cookies
   import re
   import shutil
 
@@ -48,7 +47,7 @@ try:
   def checkCredicals(config, sessionid=None):
     if sessionid==None and 'HTTP_COOKIE' in os.environ:
       cookie=os.environ["HTTP_COOKIE"]
-      c=Cookie.SimpleCookie(cookie)
+      c=http.cookies.SimpleCookie(cookie)
       if 'mbsimenvsessionid' in c:
         sessionid=c['mbsimenvsessionid'].value
       else:
@@ -67,7 +66,7 @@ try:
         # get access token for login
         access_token=config['session'][sessionid]['access_token']
         # check whether the sessionid is correct
-        if not hmac.compare_digest(hmac.new(config['client_secret'].encode('utf-8'), access_token, hashlib.sha1).hexdigest(), sessionid.encode('utf-8')):
+        if not hmac.compare_digest(hmac.new(config['client_secret'].encode('utf-8'), access_token.encode('utf-8'), hashlib.sha1).hexdigest(), sessionid):
           response_data['success']=False
           response_data['message']="Invalid access token hmac! Maybe the login was faked! If not, try to relogin again."
         else:
@@ -107,7 +106,7 @@ try:
     # login using github
     if action=="/login" and method=="GET":
       # get the github code passed provided by html get methode
-      query=urlparse.parse_qs(os.environ['QUERY_STRING'])
+      query=urllib.parse.parse_qs(os.environ['QUERY_STRING'])
       if 'error' in query:
         response_data['success']=False
         response_data['message']="Authorization request failed: "+query['error']
@@ -134,7 +133,7 @@ try:
               response=response.json()
               login=response['login']
               # redirect to the example web side and pass login and access token hmac as http get methode
-              sessionid=hmac.new(config['client_secret'].encode('utf-8'), access_token, hashlib.sha1).hexdigest()
+              sessionid=hmac.new(config['client_secret'].encode('utf-8'), access_token.encode('utf-8'), hashlib.sha1).hexdigest()
               # save login and access token in a dictionary on the server (first remove all sessionid for login than add new sessionid)
               removeLogin(config, login)
               config['session'][sessionid]={'access_token': access_token,
@@ -142,7 +141,7 @@ try:
                                             'avatar_url': response['avatar_url'],
                                             'name': response['name']}
               # create cookie
-              c=Cookie.SimpleCookie()
+              c=http.cookies.SimpleCookie()
               # sessionid cookie not visible to javascript
               c['mbsimenvsessionid']=sessionid
               c['mbsimenvsessionid']['comment']="Session ID for "+os.environ['HTTP_HOST']
@@ -166,7 +165,7 @@ try:
     if action=="/logout" and method=="GET":
       # get login
       if 'HTTP_COOKIE' in os.environ:
-        c=Cookie.SimpleCookie(os.environ["HTTP_COOKIE"])
+        c=http.cookies.SimpleCookie(os.environ["HTTP_COOKIE"])
         if 'mbsimenvsessionid' in c:
           sessionid=c['mbsimenvsessionid'].value
         else:
@@ -212,7 +211,7 @@ try:
       # use a authentificated request if logged in (to avoid rate limit problems on github)
       headers={'Accept': 'application/vnd.github.v3+json'}
       if 'HTTP_COOKIE' in os.environ:
-        c=Cookie.SimpleCookie(os.environ["HTTP_COOKIE"])
+        c=http.cookies.SimpleCookie(os.environ["HTTP_COOKIE"])
         if 'mbsimenvsessionid' in c:
           sessionid=c['mbsimenvsessionid'].value
         else:
@@ -296,7 +295,7 @@ try:
     # get user information
     if action=="/getuser" and method=="GET":
       if 'HTTP_COOKIE' in os.environ:
-        c=Cookie.SimpleCookie(os.environ["HTTP_COOKIE"])
+        c=http.cookies.SimpleCookie(os.environ["HTTP_COOKIE"])
         if 'mbsimenvsessionid' in c:
           sessionid=c['mbsimenvsessionid'].value
         else:
@@ -326,7 +325,7 @@ try:
       with ConfigFile(True) as config:
         rawdata=sys.stdin.read()
         sig=os.environ['HTTP_X_HUB_SIGNATURE'][5:]
-        if not hmac.compare_digest(sig, hmac.new(config['webhook_secret'].encode('utf-8'), rawdata, hashlib.sha1).hexdigest()):
+        if not hmac.compare_digest(sig, hmac.new(config['webhook_secret'].encode('utf-8'), rawdata.encode('utf-8'), hashlib.sha1).hexdigest()):
           response_data['success']=False
           response_data['message']="Invalid signature. Only github is allowed to send hooks."
         else:
@@ -362,7 +361,7 @@ try:
         platform=re.sub("mbsim-env-(.*)-shared-build-xxx\..*", "\\1", data['distArchiveName'])
         relArchiveName=re.sub("mbsim-env-.*-shared-build-xxx(\..*)", "mbsim-env-release-"+data['relStr']+"-"+platform+"\\1", data['distArchiveName'])
         # access token from config file and standard http header
-        c=Cookie.SimpleCookie(os.environ["HTTP_COOKIE"])
+        c=http.cookies.SimpleCookie(os.environ["HTTP_COOKIE"])
         if 'mbsimenvsessionid' in c:
           sessionid=c['mbsimenvsessionid'].value
         else:

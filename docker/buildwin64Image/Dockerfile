@@ -9,10 +9,10 @@ RUN yum -y install epel-release && yum -y install \
   mingw64-gcc-c++ \
   mingw64-gcc-gfortran \
   wine \
-  python-requests \
+  python34-requests \
   libtool automake autoconf \
-  h5py \
-  numpy \
+  python34-pip \
+  python34-numpy \
   mingw64-boost \
   doxygen \
   tigervnc-server \
@@ -23,6 +23,7 @@ RUN yum -y install epel-release && yum -y install \
   java-1.8.0-openjdk-devel \
   graphviz \
   && yum clean all
+RUN pip3 install h5py
 
 # install install mingw64-qt5-qtsvg and mingw64-qt5-qtwebkit to add its dependencies and then
 # remove mingw64-qt5-qtwebkit mingw64-qt5-qtbase mingw64-qt5-qmake which is rebuild/reinstalled later
@@ -133,7 +134,7 @@ RUN make install
 ARG PYTHONVERSION=2.7.13
 WORKDIR /3rdparty
 RUN wget https://www.python.org/ftp/python/2.7.13/python-$PYTHONVERSION.amd64.msi
-RUN wine msiexec -i python-$PYTHONVERSION.amd64.msi TARGETDIR="$(winepath -w /3rdparty/local/python-win64)"; wineserver -w
+RUN wine msiexec -i python-$PYTHONVERSION.amd64.msi -q n TARGETDIR="$(winepath -w /3rdparty/local/python-win64)" && wineserver -w
 
 # swig3 (centos7 only provides swig2)
 ARG SWIGVERSION=3.0.7
@@ -294,7 +295,7 @@ USER dockeruser:dockeruser
 RUN ccache -M 10G
 
 # configure wine
-RUN wine regedit /tmp/wine.reg; wineserver -w
+RUN wine regedit /tmp/wine.reg && wineserver -w
 
 # these are the default arguments when running the container
 CMD []

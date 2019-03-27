@@ -17,7 +17,7 @@ ENV LD_LIBRARY_PATH=/osupdate/local/lib:/osupdate/local/lib64:/3rdparty/local/li
 RUN yum -y install epel-release && \
   yum -y install \
   hdf5 \
-  numpy \
+  python34-numpy \
   boost-regex \
   xerces-c \
   lapack \

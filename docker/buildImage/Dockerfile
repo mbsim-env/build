@@ -22,7 +22,7 @@ RUN yum -y install \
   qt5-qtbase-devel \
   qt5-qtsvg-devel \
   hdf5-devel \
-  h5py \
+  python34-pip \
   boost-devel \
   lapack-devel \
   doxygen \
@@ -45,12 +45,14 @@ RUN yum -y install \
   mesa-libGLU-devel \
   npm \
   java-1.8.0-openjdk-devel \
-  python-requests \
+  python34-requests \
   perl-Text-Glob \
   clang-analyzer \
   graphviz \
+  numpy \
   && yum clean all
 RUN npm install mathjax-node
+RUN pip3 install h5py
 
 
 

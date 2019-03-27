@@ -1,7 +1,6 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # imports
-from __future__ import print_function # to enable the print function for backward compatiblity with python2
 import subprocess
 import sys
 import os
@@ -11,6 +10,7 @@ import time
 import argparse
 import json
 import requests
+import setup
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -54,7 +54,7 @@ def createConfig(webhookSecret, clientID, clientSecret, statusAccessToken):
   json.dump(config, fd, indent=2)
   fd.close()
   os.chown(configFilename, 1065, 48)
-  os.chmod(configFilename, 0660)
+  os.chmod(configFilename, stat.S_IWUSR | stat.S_IWGRP | stat.S_IWGRP | stat.S_IRGRP)
   return config
 configFilename="/mbsim-config/mbsimBuildService.conf"
 if not os.path.isfile(configFilename):
@@ -87,12 +87,12 @@ for filename in ["/var/www/html/mbsim/html/index.html", "/var/www/html/mbsim/htm
 crontab=\
   "MBSIMENVSERVERNAME=%s\n"%(os.environ["MBSIMENVSERVERNAME"])+\
   "MBSIMENVTAGNAME=%s\n"%(os.environ["MBSIMENVTAGNAME"])+\
-  subprocess.check_output(["crontab", "-l"])+\
-  "0 %d * * * python3 /context/cron-daily.py -j %d 2> >(sed -re 's/^/DAILY: /' > /proc/1/fd/2) > >(sed -re 's/^/DAILY: /' > /proc/1/fd/1)\n"%(0 if os.environ["MBSIMENVTAGNAME"]!="staging" else 12, args.jobs)+\
-  "* * * * * python3 /context/cron-ci.py -j %d 2> >(sed -re 's/^/CI: /' > /proc/1/fd/2) > >(sed -re 's/^/CI: /' > /proc/1/fd/1)\n"%(args.jobs)
+  subprocess.check_output(["crontab", "-l"]).decode("UTF-8")+\
+  "0 %d * * * /context/cron-daily.py -j %d 2> >(sed -re 's/^/DAILY: /' > /proc/1/fd/2) > >(sed -re 's/^/DAILY: /' > /proc/1/fd/1)\n"%(0 if os.environ["MBSIMENVTAGNAME"]!="staging" else 12, args.jobs)+\
+  "* * * * * /context/cron-ci.py -j %d 2> >(sed -re 's/^/CI: /' > /proc/1/fd/2) > >(sed -re 's/^/CI: /' > /proc/1/fd/1)\n"%(args.jobs)
 subprocess.check_call(["crontab", "/dev/stdin"], )
 p=subprocess.Popen(['crontab', '/dev/stdin'], stdin=subprocess.PIPE)    
-p.communicate(input=crontab)
+p.communicate(input=crontab.encode("UTF-8"))
 p.wait()
 
 # run cron in background
@@ -128,6 +128,14 @@ for line in fileinput.FileInput("/etc/httpd/conf.d/ssl.conf", inplace=1):
   print(line, end="")
 # reload web server config
 subprocess.check_call(["httpd", "-k", "graceful"])
+
+if os.environ["MBSIMENVTAGNAME"]=="staging":
+  # for staging service run the CI at service startup
+  print("Starting linux-ci build.")
+  setup.run("build-linux64-ci", args.jobs, printLog=False, detach=True, addCommands=["--forceBuild"],
+            fmatvecBranch="master", hdf5serieBranch="master",
+            openmbvBranch="master", mbsimBranch="master",
+            statusAccessToken=args.statusAccessToken)
 
 # wait for the web server to finish (will never happen) and return its return code
 print("Service up and running.")

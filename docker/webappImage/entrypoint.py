@@ -1,10 +1,10 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import websockify.token_plugins
 import websockify.auth_plugins
 import os
 import requests
-import Cookie
+import http.cookies
 import time
 import threading
 import uuid
@@ -59,7 +59,7 @@ class MBSimWebappAuth(websockify.auth_plugins.BasePlugin):
       raise websockify.auth_plugins.AuthenticationError(log_msg="No cookie provided.")
     # get cookie and get the mbsimenvsessionid form the cookie
     cookie=headers['Cookie']
-    c=Cookie.SimpleCookie(cookie)
+    c=http.cookies.SimpleCookie(cookie)
     if 'mbsimenvsessionid' not in c:
       raise websockify.auth_plugins.AuthenticationError(log_msg="No mbsimenvsessionid provided in cookie.")
     sessionid=c['mbsimenvsessionid'].value
@@ -82,7 +82,7 @@ class MBSimWebappAuth(websockify.auth_plugins.BasePlugin):
     # start vnc and other processes in a new container (being reachable as hostname)
     # start this in a seperate process which stops the container if the parent (this process) terminates
     networkID=sys.argv[1]
-    subprocess.Popen(['/usr/bin/python', "/context/webapprun.py", networkID, token, hostname])
+    subprocess.Popen(["/context/webapprun.py", networkID, token, hostname])
     waitForOpenPort(hostname, 5901, 10)
 
 class MyWebSocket(websockify.websockifyserver.CompatibleWebSocket):

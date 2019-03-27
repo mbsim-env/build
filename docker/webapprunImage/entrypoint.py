@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 import sys
 import os
@@ -6,7 +6,7 @@ import subprocess
 import random
 import time
 import signal
-import urlparse
+import urllib.parse
 import argparse
 
 argparser=argparse.ArgumentParser(
@@ -19,7 +19,7 @@ args=argparser.parse_args()
 # parse the token
 print("Running webapp with token: "+args.token)
 sys.stdout.flush()
-cmd=urlparse.parse_qs(args.token)
+cmd=urllib.parse.parse_qs(args.token)
 
 # get prog of file
 buildType=cmd.get('buildType', [None])[0]

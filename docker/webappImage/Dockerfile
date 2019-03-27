@@ -1,9 +1,9 @@
 FROM centos:centos7 AS webapp
 
 RUN yum install -y epel-release && yum install -y \
-  numpy \
-  python-websocket-client \
-  python2-pip \
+  python34-numpy \
+  python34-docker \
+  python34-setuptools \
   && yum clean all
 
 
@@ -20,17 +20,14 @@ WORKDIR /3rdparty
 RUN git clone https://github.com/novnc/websockify.git
 WORKDIR /3rdparty/websockify
 RUN git checkout $WEBSOCKIFYBRANCH
-RUN python setup.py bdist_egg
+RUN python3 setup.py bdist_egg
 
 
 
 FROM webapp
 
-COPY --from=websockify /3rdparty/websockify/dist/websockify-0.8.0-py2.7.egg /3rdparty/websockify/dist/websockify-0.8.0-py2.7.egg
-RUN easy_install /3rdparty/websockify/dist/websockify-0.8.0-py2.7.egg
-
-# install docker python API
-RUN pip install docker
+COPY --from=websockify /3rdparty/websockify/dist/websockify-0.8.0-py3.4.egg /3rdparty/websockify/dist/websockify-0.8.0-py3.4.egg
+RUN easy_install-3.4 /3rdparty/websockify/dist/websockify-0.8.0-py3.4.egg
 
 COPY webappImage/entrypoint.py /context/entrypoint.py
 COPY webappImage/webapprun.py /context/webapprun.py

@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # imports
 import argparse
@@ -63,10 +63,11 @@ os.environ['WINEPATH']=((os.environ['WINEPATH']+";") if 'WINEPATH' in os.environ
 
 # run build
 os.environ["STATUSACCESSTOKEN"]=statusAccessToken
+ROTATE=3 if os.environ["MBSIMENVTAGNAME"]=="staging" else 20
 ret=subprocess.call(
   ["/mbsim-build/build/buildScripts/build.py"]+ARGS+["--url", "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report",
   "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun",
-  "--rotate", "20", "--fmatvecBranch", args.fmatvecBranch,
+  "--rotate", str(ROTATE), "--fmatvecBranch", args.fmatvecBranch,
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
   "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix",
   "--reportOutDir", "/mbsim-report/report", "--buildType", args.buildType,

@@ -1,7 +1,6 @@
-#! /usr/bin/python
+#! /usr/bin/python3
 
 # imports
-from __future__ import print_function # to enable the print function for backward compatiblity with python2
 import argparse
 import os
 import sys

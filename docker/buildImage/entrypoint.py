@@ -1,4 +1,4 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
 # imports
 import argparse
@@ -37,6 +37,8 @@ ret=0
 # check environment
 if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="":
   raise RuntimeError("Envvar MBSIMENVSERVERNAME is not defined.")
+if "MBSIMENVTAGNAME" not in os.environ or os.environ["MBSIMENVTAGNAME"]=="":
+  raise RuntimeError("Envvar MBSIMENVTAGNAME is not defined.")
 
 # check buildtype
 if args.buildType != "linux64-ci" and args.buildType != "linux64-dailydebug" and args.buildType != "linux64-dailyrelease":
@@ -76,13 +78,16 @@ else:
 # args
 if args.buildType == "linux64-ci":
   ARGS=["--forceBuild", "--disableConfigure", "--disableMakeClean", "--disableDoxygen", "--disableXMLDoc"]
-  RUNEXAMPLES=["--disableCompare", "--disableMakeClean", "--filter", "'basic' in labels"]
+  RUNEXAMPLESARGS=["--disableCompare", "--disableMakeClean"]
+  RUNEXAMPLESFILTER=["--filter", "'basic' in labels"]
 elif args.buildType == "linux64-dailydebug":
   ARGS=["--docOutDir", "/mbsim-report/doc", "--coverage", "--staticCodeAnalyzis"]
-  RUNEXAMPLES=["--checkGUIs"]
+  RUNEXAMPLESARGS=["--checkGUIs"]
+  RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] if os.environ["MBSIMENVTAGNAME"]=="staging" else [])
 elif args.buildType == "linux64-dailyrelease":
   ARGS=["--enableDistribution"]
-  RUNEXAMPLES=["--disableCompare", "--disableValidate", "--checkGUIs", "--filter", "'basic' in labels"]
+  RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs"]
+  RUNEXAMPLESFILTER=["--filter", "'basic' in labels"]
 
 # pass arguments to build.py
 if args.forceBuild:
@@ -96,7 +101,7 @@ os.environ['PKG_CONFIG_PATH']=((os.environ['PKG_CONFIG_PATH']+":") if 'PKG_CONFI
 if len(args.updateReferences)>0:
   CURDIR=os.getcwd()
   os.chdir("/mbsim-env/mbsim/examples")
-  if subprocess.call(["./runexamples.py", "--action", "copyToReference"]+args.updateReferences)!=0:
+  if subprocess.call(["python3", "./runexamples.py", "--action", "copyToReference"]+args.updateReferences)!=0:
     ret=ret+1
     print("runexamples.py --action copyToReference ... failed.")
     sys.stdout.flush()
@@ -104,7 +109,7 @@ if len(args.updateReferences)>0:
 
   # update references for download
   os.chdir("/mbsim-env/mbsim/examples")
-  if subprocess.call(["./runexamples.py", "--action", "pushReference=/mbsim-report/references"])!=0:
+  if subprocess.call(["python3", "./runexamples.py", "--action", "pushReference=/mbsim-report/references"]+RUNEXAMPLESFILTER)!=0:
     ret=ret+1
     print("pushing references to download dir failed.")
     sys.stdout.flush()
@@ -115,17 +120,18 @@ if len(args.updateReferences)>0:
 
 # run build
 os.environ["STATUSACCESSTOKEN"]=statusAccessToken
+ROTATE=3 if os.environ["MBSIMENVTAGNAME"]=="staging" else 20
 localRet=subprocess.call(
   ["/mbsim-build/build/buildScripts/build.py"]+ARGS+["--url", "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report",
   "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun",
-  "--rotate", "20", "--fmatvecBranch", args.fmatvecBranch,
+  "--rotate", str(ROTATE), "--fmatvecBranch", args.fmatvecBranch,
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
   "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix", "--webapp",
   "--reportOutDir", "/mbsim-report/report", "--buildType", args.buildType, "--passToConfigure", "--disable-static",
   "--enable-python", "--with-qwt-inc-prefix=/3rdparty/local/include", "--with-qwt-lib-prefix=/3rdparty/local/lib",
   "--with-qwt-lib-name=qwt", "--with-qmake=qmake-qt5", "COIN_CFLAGS=-I/3rdparty/local/include",
   "COIN_LIBS=-L/3rdparty/local/lib64 -lCoin", "SOQT_CFLAGS=-I/3rdparty/local/include",
-  "SOQT_LIBS=-L/3rdparty/local/lib64 -lSoQt", "--passToRunexamples"]+RUNEXAMPLES,
+  "SOQT_LIBS=-L/3rdparty/local/lib64 -lSoQt", "--passToRunexamples"]+RUNEXAMPLESARGS+RUNEXAMPLESFILTER,
   stdout=sys.stdout, stderr=sys.stderr)
 os.environ["STATUSACCESSTOKEN"]=""
 if localRet==255:
@@ -157,13 +163,13 @@ if args.valgrindExamples:
   valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
   # build
   coverage = ["--coverage", "/mbsim-env:-build:/mbsim-env/local:/mbsim-env/mbsim-valgrind/examples"] if "--coverage" in ARGS else []
-  localRet=subprocess.call(["./runexamples.py", "--timeID", timeID.isoformat()+"Z", "--rotate", "20", "-j", str(args.jobs)]+coverage+["--reportOutDir",
+  localRet=subprocess.call(["python3", "./runexamples.py", "--timeID", timeID.isoformat()+"Z", "--rotate", str(ROTATE), "-j", str(args.jobs)]+coverage+["--reportOutDir",
             "/mbsim-report/report/runexamples_valgrind_report", "--url",
             "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
             "--buildSystemRun", "--checkGUIs", "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
             "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch --child-silent-after-fork=yes --num-callers=150 --gen-suppressions=all --suppressions="+
             "/mbsim-build/build/buildScripts/valgrind-mbsim.supp --leak-check=full", "--disableCompare", "--disableValidate",
-            "--buildType", args.buildType+"-valgrind"]
+            "--buildType", args.buildType+"-valgrind"]+RUNEXAMPLESFILTER
             , env=valgrindEnv)
   if localRet!=0:
     ret=ret+1

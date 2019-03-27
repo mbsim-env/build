@@ -1,6 +1,5 @@
-#!/usr/bin/python2
+#!/usr/bin/python3
 
-from __future__ import print_function # to enable the print function for backward compatiblity with python2
 import argparse
 import docker
 import os
@@ -58,7 +57,7 @@ def getTagname():
 def syncLogBuildImage(build):
   ret=0
   for line in build:
-    entry=json.loads(line)
+    entry=json.loads(line.decode("UTF-8"))
     if "stream" in entry:
       print(entry["stream"], end="")
       sys.stdout.flush()
@@ -426,7 +425,7 @@ def run(s, jobs=4,
       ports=ports,
       detach=True, stdout=True, stderr=True)
     networki.disconnect(webserver)
-    networki.connect(webserver, aliases=["webserver"])
+    networki.connect(webserver, aliases=["webserver", getServername()])
     networke.connect(webserver)
     if not printLog:
       print("Started running "+s+" as container ID "+webserver.id)

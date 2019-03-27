@@ -1,6 +1,5 @@
-#!/usr/bin/python
+#!/usr/bin/python3
 
-from __future__ import print_function # to enable the print function for backward compatiblity with python2
 import os
 import glob
 import sys
@@ -10,8 +9,8 @@ import subprocess
 import datetime
 import shutil
 
-buildSystemState.createStateSVGFile("/mbsim-state/build-manuals.nrFailed.svg", b"\xc2\xb7\xc2\xb7\xc2\xb7", "#777")
-buildSystemState.createStateSVGFile("/mbsim-state/build-manuals.nrAll.svg", b"\xc2\xb7\xc2\xb7\xc2\xb7", "#777")
+buildSystemState.createStateSVGFile("/mbsim-state/build-manuals.nrFailed.svg", "...", "#777")
+buildSystemState.createStateSVGFile("/mbsim-state/build-manuals.nrAll.svg", "...", "#777")
 
 outDir="/mbsim-report/manuals"
 
