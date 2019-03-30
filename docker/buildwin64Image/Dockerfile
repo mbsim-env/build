@@ -130,6 +130,22 @@ RUN mingw64-qmake-qt5 ../qwt-$QWTVERSION
 RUN make -j $JOBS || make -j $JOBS || make -j 1
 RUN make install
 
+# wine
+RUN yum remove -y wine wine-courier-fonts wine-marlett-fonts wine-core wine-twain wine-capi wine-filesystem wine-small-fonts wine-system-fonts wine-common wine-alsa wine-cms wine-ms-sans-serif-fonts wine-symbol-fonts wine-fonts wine-desktop wine-pulseaudio wine-wingdings-fonts wine-fixedsys-fonts-4.0-2.el7.noarch wine-systemd-4.0-2.el7.noarch wine-ldap-4.0-2.el7.x86_64 wine-openal-4.0-2.el7.x86_64 wine-tahoma-fonts-4.0-2.el7.noarch
+WORKDIR /3rdparty
+RUN set -o pipefail && \
+  wget -q -O - https://dl.winehq.org/wine/source/3.0/wine-3.0.5.tar.xz | tar -xJ
+RUN mkdir /3rdparty/wine-build
+WORKDIR /3rdparty/wine-build
+RUN yum install -y libX11-devel
+RUN yum install -y freetype-devel
+# zlib-devel libxcb-devel libxslt-devel libgcrypt-devel libxml2-devel gnutls-devel libpng-devel libjpeg-turbo-devel libtiff-devel gstreamer-devel dbus-devel fontconfig-devel
+RUN ../wine-3.0.5/configure --enable-win64 --prefix=/3rdparty/local
+RUN make -j $JOBS
+RUN make install
+RUN ln -s /3rdparty/local/bin/wine64 /3rdparty/local/bin/wine
+ENV PATH=$PATH:/3rdparty/local/bin
+
 # python
 ARG PYTHONVERSION=2.7.13
 WORKDIR /3rdparty
