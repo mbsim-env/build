@@ -824,12 +824,12 @@ def configure(tool, mainFD):
   copyConfigLog=False
   savedDir=os.getcwd()
   run=0
-  if args.disableConfigure and not os.path.exists(pj(args.sourceDir, tool, "configure")):
+  if args.disableConfigure and not os.path.exists(pj(args.sourceDir, buildTool(tool), "config.status")):
     extraLinksForMake="" # add all links of the html output to this variable
   else:
     extraLinksForMake=None # do not add any links to this variable
   try:
-    if not args.disableConfigure or not os.path.exists(pj(args.sourceDir, tool, "configure")):
+    if not args.disableConfigure or not os.path.exists(pj(args.sourceDir, buildTool(tool), "config.status")):
       run=1
       # pre configure
       os.chdir(pj(args.sourceDir, tool))
