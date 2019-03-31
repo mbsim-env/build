@@ -353,6 +353,12 @@ def main():
         pj('mbsim', 'kernel'),
         pj('mbsim', 'modules', 'mbsimControl')
       ])],
+    pj('mbsim', 'modules', 'mbsimFcl'): [False, set([ # depends on
+        pj('mbsim', 'kernel'),
+      ])],
+    pj('mbsim', 'modules', 'mbsimPhysics'): [False, set([ # depends on
+        pj('mbsim', 'kernel'),
+      ])],
     pj('mbsim', 'mbsimxml'): [False, set([ # depends on
         pj('mbsim', 'kernel'),
         pj('openmbv', 'openmbvcppinterface'),
@@ -765,7 +771,7 @@ def build(nr, nrAll, tool, mainFD):
   # configure
   print("configure", end="")
   sys.stdout.flush()
-  failed, run=configure(tool, mainFD)
+  failed, run, extraLinksForMake=configure(tool, mainFD)
   nrFailed+=failed
   nrRun+=run
 
@@ -776,7 +782,7 @@ def build(nr, nrAll, tool, mainFD):
   # make
   print(", make", end="")
   sys.stdout.flush()
-  failed, run=make(tool, mainFD)
+  failed, run=make(tool, extraLinksForMake, mainFD)
   nrFailed+=failed
   nrRun+=run
 
@@ -818,6 +824,10 @@ def configure(tool, mainFD):
   copyConfigLog=False
   savedDir=os.getcwd()
   run=0
+  if args.disableConfigure and not os.path.exists(pj(args.sourceDir, tool, "configure")):
+    extraLinksForMake="" # add all links of the html output to this variable
+  else:
+    extraLinksForMake=None # do not add any links to this variable
   try:
     if not args.disableConfigure or not os.path.exists(pj(args.sourceDir, tool, "configure")):
       run=1
@@ -863,25 +873,31 @@ def configure(tool, mainFD):
     result="done"
   except RuntimeError as ex:
     result=str(ex)
+  if (not args.disableConfigure or extraLinksForMake!=None) and copyConfigLog:
+    shutil.copyfile("config.log", pj(args.reportOutDir, tool, "config.log.txt"))
   if not args.disableConfigure:
     print('<td data-order="%d" class="%s"><span class="glyphicon glyphicon-%s"></span>&nbsp;'%(int(result!="done"), "success" if result=="done" else "danger",
       "ok-sign alert-success" if result=="done" else "exclamation-sign alert-danger"), file=mainFD)
     print('  <a href="'+myurllib.pathname2url(pj(tool, "configure.txt"))+'">'+result+'</a>', file=mainFD)
     if copyConfigLog:
-      shutil.copyfile("config.log", pj(args.reportOutDir, tool, "config.log.txt"))
       print('  <a href="'+myurllib.pathname2url(pj(tool, "config.log.txt"))+'">config.log</a>', file=mainFD)
     print('</td>', file=mainFD)
+  if extraLinksForMake!=None:
+    extraLinksForMake+='; <a href="'+myurllib.pathname2url(pj(tool, "configure.txt"))+'">'+result+'</a>'
+  if copyConfigLog:
+    if extraLinksForMake!=None:
+      extraLinksForMake+='; <a href="'+myurllib.pathname2url(pj(tool, "config.log.txt"))+'">config.log</a>'
   configureFD.close()
   mainFD.flush()
   os.chdir(savedDir)
 
   if result!="done":
-    return 1, run
-  return 0, run
+    return 1, run, extraLinksForMake
+  return 0, run, extraLinksForMake
 
 
 
-def make(tool, mainFD):
+def make(tool, extraLinksForMake, mainFD):
   staging=True if 'MBSIMENVTAGNAME' in os.environ and os.environ['MBSIMENVTAGNAME']=="staging" else False
 
   makeFD=codecs.open(pj(args.reportOutDir, tool, "make.txt"), "w", encoding="utf-8")
@@ -930,6 +946,8 @@ def make(tool, mainFD):
     print('<td data-order="%d" class="%s"><span class="glyphicon glyphicon-%s"></span>&nbsp;'%(int(result!="done"), "success" if result=="done" else "danger",
       "ok-sign alert-success" if result=="done" else "exclamation-sign alert-danger"), file=mainFD)
     print('  <a href="'+myurllib.pathname2url(pj(tool, "make.txt"))+'">'+result+'</a>', file=mainFD)
+    if extraLinksForMake!=None:
+      print(extraLinksForMake, file=mainFD)
     print('</td>', file=mainFD)
     if args.staticCodeAnalyzis:
       if ((not staging and tool!="mbsim/thirdparty/nurbs++") or # skip nurbs++ being a 3rd party tool (for normal builds)

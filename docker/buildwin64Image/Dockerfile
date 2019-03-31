@@ -279,13 +279,6 @@ ENV CCACHE_DIR=/mbsim-ccache \
     PLATFORM=Windows \
     CXX=x86_64-w64-mingw32-g++
 
-# copy
-COPY buildScripts /mbsim-build/build/buildScripts
-COPY docker/buildImage/buildSystemState.py /context/buildSystemState.py
-COPY docker/buildImage/distribute.py /context/distribute.py
-COPY docker/buildwin64Image/entrypoint.py /context/entrypoint.py
-COPY docker/buildwin64Image/jni_md.h /context/java_jni/jni_md.h
-
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.name="mbsimenv/buildwin64" \
@@ -303,6 +296,13 @@ RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser d
 COPY docker/buildwin64Image/wine.reg /context/wine.reg
 RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\\\\\+g'); \
     sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.reg > /tmp/wine.reg
+
+# copy
+COPY buildScripts /mbsim-build/build/buildScripts
+COPY docker/buildImage/buildSystemState.py /context/buildSystemState.py
+COPY docker/buildImage/distribute.py /context/distribute.py
+COPY docker/buildwin64Image/entrypoint.py /context/entrypoint.py
+COPY docker/buildwin64Image/jni_md.h /context/java_jni/jni_md.h
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser
