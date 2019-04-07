@@ -465,7 +465,7 @@ def run(s, jobs=4,
                "code\\.jquery\\.com\n"+
                "maxcdn\\.bootstrapcdn\\.com\n"+
                "www\\.anwalt\\.de\n"]+addCommands,
-      environment={"MBSIMENVTAGNAME": getTagname()},
+      environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
       detach=True, stdout=True, stderr=True)
     networki.disconnect(proxy)
     networki.connect(proxy, aliases=["proxy"])

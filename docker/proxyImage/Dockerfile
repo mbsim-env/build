@@ -22,7 +22,7 @@ FilterExtended Yes\n\
 COPY entrypoint.py /context/entrypoint.py
 
 HEALTHCHECK --interval=60s --timeout=30s --start-period=30s --retries=3 \
-  CMD curl -I --proxy proxy:8888 https://www.mbsim-env.de || exit 1
+  CMD curl -I --proxy proxy:8888 https://${MBSIMENVSERVERNAME} || exit 1
 
 # start tinyproxy
 ENTRYPOINT ["/context/entrypoint.py"]

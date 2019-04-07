@@ -11,6 +11,7 @@ import argparse
 import json
 import requests
 import setup
+import stat
 
 # arguments
 argparser=argparse.ArgumentParser(
