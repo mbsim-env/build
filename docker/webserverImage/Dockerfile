@@ -21,6 +21,8 @@ RUN yum install -y epel-release && yum install -y \
   cronie \
   python34-docker \
   && yum clean all
+#mfmf
+RUN yum install -y git
 
 # a webserver is running on port 80
 EXPOSE 80/tcp 443/tcp

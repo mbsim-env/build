@@ -198,25 +198,25 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, **kwargs):
   build=dockerClientLL.build(tag=tag, **kwargs)
   return syncLogBuildImage(build, fd)
 
-def build(s, jobs=4, fd=sys.stdout):
+def build(s, jobs=4, fd=sys.stdout, baseDir=scriptdir):
 
   if s=="base":
     return buildImage(tag="mbsimenv/base:"+getTagname(), fd=fd,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
-      path=scriptdir+"/baseImage",
+      path=baseDir+"/baseImage",
       rm=False)
 
   elif s=="build":
     return buildImage(tag="mbsimenv/build:"+getTagname(), fd=fd,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
-      path=scriptdir+"/..",
+      path=baseDir+"/..",
       dockerfile="docker/buildImage/Dockerfile",
       rm=False)
 
   elif s=="run":
     return buildImage(tag="mbsimenv/run:"+getTagname(), fd=fd,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
-      path=scriptdir+"/..",
+      path=baseDir+"/..",
       dockerfile="docker/runImage/Dockerfile",
       nocache=True,
       rm=False)
@@ -224,41 +224,41 @@ def build(s, jobs=4, fd=sys.stdout):
   elif s=="proxy":
     return buildImage(tag="mbsimenv/proxy:"+getTagname(), fd=fd,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
-      path=scriptdir+"/proxyImage",
+      path=baseDir+"/proxyImage",
       rm=False)
 
   elif s=="buildwin64":
     return buildImage(tag="mbsimenv/buildwin64:"+getTagname(), fd=fd,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
-      path=scriptdir+"/..",
+      path=baseDir+"/..",
       dockerfile="docker/buildwin64Image/Dockerfile",
       rm=False)
 
   elif s=="builddoc":
     return buildImage(tag="mbsimenv/builddoc:"+getTagname(), fd=fd,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
-      path=scriptdir+"/..",
+      path=baseDir+"/..",
       dockerfile="docker/builddocImage/Dockerfile",
       rm=False)
 
   elif s=="webserver":
     return buildImage(tag="mbsimenv/webserver:"+getTagname(), fd=fd,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
-      path=scriptdir,
+      path=baseDir,
       dockerfile="webserverImage/Dockerfile",
       rm=False)
 
   elif s=="webapp":
     return buildImage(tag="mbsimenv/webapp:"+getTagname(), fd=fd,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
-      path=scriptdir,
+      path=baseDir,
       dockerfile="webappImage/Dockerfile",
       rm=False)
 
   elif s=="webapprun":
     return buildImage(tag="mbsimenv/webapprun:"+getTagname(), fd=fd,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
-      path=scriptdir+"/webapprunImage",
+      path=baseDir+"/webapprunImage",
       rm=False)
 
   else:
@@ -456,6 +456,8 @@ def run(s, jobs=4,
         'mbsimenv_report-linux64-dailydebug.'+getTagname():   {"bind": "/var/www/html/mbsim/linux64-dailydebug",   "mode": "ro"},
         'mbsimenv_report-linux64-dailyrelease.'+getTagname(): {"bind": "/var/www/html/mbsim/linux64-dailyrelease", "mode": "ro"},
         'mbsimenv_report-win64-dailyrelease.'+getTagname():   {"bind": "/var/www/html/mbsim/win64-dailyrelease",   "mode": "ro"},
+        'mbsimenv_report-docker.'+getTagname():               {"bind": "/var/www/html/mbsim/docker",               "mode": "rw"},
+        'mbsimenv_build-docker.'+getTagname():                {"bind": "/mbsim-docker",                            "mode": "rw"},
         'mbsimenv_state.'+getTagname():                       {"bind": "/var/www/html/mbsim/buildsystemstate",     "mode": "ro"},
         'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config",                            "mode": "rw"},
         'mbsimenv_releases.'+getTagname():                    {"bind": "/var/www/html/mbsim/releases",             "mode": "rw"},
