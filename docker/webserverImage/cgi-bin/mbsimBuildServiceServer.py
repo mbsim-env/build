@@ -337,15 +337,21 @@ try:
           # get current config
           curcibranch=config['curcibranch']
           tobuild=config['tobuild']
+          if "buildDocker" not in config: config['buildDocker']=[]
+          buildDocker=config['buildDocker']
           # get repo and branch from this push
           repo=data['repository']['name']
           branch=data['ref'][11:]
           # update tobuild
-          for c in curcibranch:
-            if c[repo]==branch:
-              toadd=c.copy()
-              toadd['timestamp']=int(time.time())
-              tobuild.append(toadd)
+          if repo=="fmatvec" or repo=="hdf5serie" or repo=="openmbv" or repo=="mbsim":
+            for c in curcibranch:
+              if c[repo]==branch:
+                toadd=c.copy()
+                toadd['timestamp']=int(time.time())
+                tobuild.append(toadd)
+          # add push to repo build on branch staging -> add to list of docker builds
+          if repo=="build" and branch=="staging":
+            buildDocker.append(data["after"])
           # create response
           response_data['success']=True
           response_data['message']="OK"

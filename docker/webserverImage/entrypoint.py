@@ -45,6 +45,7 @@ def createConfig(webhookSecret, clientID, clientSecret, statusAccessToken):
       }
     ], 
     "tobuild": [], 
+    "buildDocker": [], 
     "session": {}, 
     "webhook_secret": webhookSecret, 
     "client_id": clientID, 

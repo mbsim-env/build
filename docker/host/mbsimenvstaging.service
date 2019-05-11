@@ -1,0 +1,18 @@
+# copy this file to /lib/systemd/system/mbsimenvstaging.service
+# and start and enable the service using
+# systemctl start mbsimenvstaging.service
+# systemctl enable mbsimenvstaging.service
+
+[Unit]
+Description=MBSim-Env Stating Service
+Requires=docker.service
+After=docker.service
+
+[Service]
+Environment=MBSIMENVSERVERNAME=wwwstaging.mbsim-env.de
+Environment=MBSIMENVTAGNAME=staging
+Type=forking
+RemainAfterExit=yes
+GuessMainPID=no
+ExecStart=/home/dockeruser/buildstaging/docker/setup.py run service -j 6 -d start
+ExecStop=/home/dockeruser/buildstaging/docker/setup.py run service -j 6 -d stop

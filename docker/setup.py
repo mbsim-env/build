@@ -33,6 +33,7 @@ def parseArgs():
   argparser.add_argument("service", nargs="*", help="Service or image to run or build")
   argparser.add_argument("--jobs", "-j", type=int, default=multiprocessing.cpu_count(), help="Number of jobs to run in parallel")
   argparser.add_argument("--interactive", "-i", action='store_true', help="Run container, wait and print how to attach to it")
+  argparser.add_argument("--daemon", "-d", type=str, choices=["start", "status", "stop"], help="Only for 'run service'")
   
   return argparser.parse_known_args()
 
@@ -54,23 +55,23 @@ def getTagname():
     raise RuntimeError("The MBSIMENVTAGNAME envvar is required.")
   return os.environ["MBSIMENVTAGNAME"]
 
-def syncLogBuildImage(build):
+def syncLogBuildImage(build, fd=sys.stdout):
   ret=0
   for line in build:
     entry=json.loads(line.decode("UTF-8"))
     if "stream" in entry:
-      print(entry["stream"], end="")
-      sys.stdout.flush()
+      print(entry["stream"], end="", file=fd)
+      fd.flush()
     if "status" in entry:
-      print(entry["status"]+(": "+entry["id"] if "id" in entry else "")+(": "+entry["progress"] if "progress" in entry else ""))
-      sys.stdout.flush()
+      print(entry["status"]+(": "+entry["id"] if "id" in entry else "")+(": "+entry["progress"] if "progress" in entry else ""), file=fd)
+      fd.flush()
     if "error" in entry:
       ret=1
-      print("Exited with an error")
-      print(entry["error"])
+      print("Exited with an error", file=fd)
+      print(entry["error"], file=fd)
       if "errorDetail" in entry and "message" in entry["errorDetail"] and entry["errorDetail"]["message"]!=entry["error"]:
-        print(entry["errorDetail"])
-      sys.stdout.flush()
+        print(entry["errorDetail"], file=fd)
+      fd.flush()
   return ret
 
 def asyncLogContainer(container, prefix=""):
@@ -99,32 +100,32 @@ def waitContainer(container, prefix=""):
 
 runningContainers=set()
 
+allServices=[ # must be in order
+  "base",
+  "build",
+  "buildwin64",
+  "builddoc",
+  #"run",
+  "proxy",
+  "webserver",
+  "webapp",
+  "webapprun",
+]
+
 def main():
   args, argsRest=parseArgs()
 
-  allServices=[ # must be in order
-    "base",
-    "build",
-    "buildwin64",
-    "builddoc",
-    #"run",
-    "proxy",
-    "webserver",
-    "webapp",
-    "webapprun",
-  ]
-
-  # terminate handler for command "run"
-  def terminateHandler(signalnum, stack):
-    print("Got "+("SIGINT" if signalnum==signal.SIGINT else "SIGTERM")+", stopping all containers")
-    sys.stdout.flush()
-    for container in runningContainers:
-      container.stop()
-    print("All containers stopped")
-    sys.stdout.flush()
-  if args.command=="run":
-    signal.signal(signal.SIGINT , terminateHandler)
-    signal.signal(signal.SIGTERM, terminateHandler)
+#  # terminate handler for command "run"
+#  def terminateHandler(signalnum, stack):
+#    print("Got "+("SIGINT" if signalnum==signal.SIGINT else "SIGTERM")+", stopping all containers")
+#    sys.stdout.flush()
+#    for container in runningContainers:
+#      container.stop()
+#    print("All containers stopped")
+#    sys.stdout.flush()
+#  if args.command=="run":
+#    signal.signal(signal.SIGINT , terminateHandler)
+#    signal.signal(signal.SIGTERM, terminateHandler)
 
 
 
@@ -140,7 +141,7 @@ def main():
   if args.command=="run":
     ret=0
     for s in args.service:
-      ret=run(s, args.jobs, addCommands=argsRest, interactive=args.interactive)
+      ret=run(s, args.jobs, addCommands=argsRest, interactive=args.interactive, daemon=args.daemon)
       if ret!=0:
         break
     return ret
@@ -176,7 +177,7 @@ def main():
 
 
 
-def buildImage(tag, tagMultistageImage=True, **kwargs):
+def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, **kwargs):
   if tagMultistageImage:
     if "dockerfile" in kwargs:
       dockerfile=kwargs["path"]+"/"+kwargs["dockerfile"]
@@ -189,31 +190,31 @@ def buildImage(tag, tagMultistageImage=True, **kwargs):
         if match:
           multistageName=match.group(1).lower()
           multistageImage=tag.split(':')[0]+"--"+multistageName+":"+tag.split(':')[1]
-          print("Building multistage image "+multistageName+" and tag it as "+multistageImage)
+          print("Building multistage image "+multistageName+" and tag it as "+multistageImage, file=fd)
           build=dockerClientLL.build(tag=multistageImage, target=multistageName, **kwargs)
-          ret=syncLogBuildImage(build)
+          ret=syncLogBuildImage(build, fd)
           if ret!=0:
             return ret
   build=dockerClientLL.build(tag=tag, **kwargs)
-  return syncLogBuildImage(build)
+  return syncLogBuildImage(build, fd)
 
-def build(s, jobs=4):
+def build(s, jobs=4, fd=sys.stdout):
 
   if s=="base":
-    return buildImage(tag="mbsimenv/base:"+getTagname(),
+    return buildImage(tag="mbsimenv/base:"+getTagname(), fd=fd,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=scriptdir+"/baseImage",
       rm=False)
 
   elif s=="build":
-    return buildImage(tag="mbsimenv/build:"+getTagname(),
+    return buildImage(tag="mbsimenv/build:"+getTagname(), fd=fd,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=scriptdir+"/..",
       dockerfile="docker/buildImage/Dockerfile",
       rm=False)
 
   elif s=="run":
-    return buildImage(tag="mbsimenv/run:"+getTagname(),
+    return buildImage(tag="mbsimenv/run:"+getTagname(), fd=fd,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=scriptdir+"/..",
       dockerfile="docker/runImage/Dockerfile",
@@ -221,41 +222,41 @@ def build(s, jobs=4):
       rm=False)
 
   elif s=="proxy":
-    return buildImage(tag="mbsimenv/proxy:"+getTagname(),
+    return buildImage(tag="mbsimenv/proxy:"+getTagname(), fd=fd,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=scriptdir+"/proxyImage",
       rm=False)
 
   elif s=="buildwin64":
-    return buildImage(tag="mbsimenv/buildwin64:"+getTagname(),
+    return buildImage(tag="mbsimenv/buildwin64:"+getTagname(), fd=fd,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=scriptdir+"/..",
       dockerfile="docker/buildwin64Image/Dockerfile",
       rm=False)
 
   elif s=="builddoc":
-    return buildImage(tag="mbsimenv/builddoc:"+getTagname(),
+    return buildImage(tag="mbsimenv/builddoc:"+getTagname(), fd=fd,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=scriptdir+"/..",
       dockerfile="docker/builddocImage/Dockerfile",
       rm=False)
 
   elif s=="webserver":
-    return buildImage(tag="mbsimenv/webserver:"+getTagname(),
+    return buildImage(tag="mbsimenv/webserver:"+getTagname(), fd=fd,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=scriptdir,
       dockerfile="webserverImage/Dockerfile",
       rm=False)
 
   elif s=="webapp":
-    return buildImage(tag="mbsimenv/webapp:"+getTagname(),
+    return buildImage(tag="mbsimenv/webapp:"+getTagname(), fd=fd,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=scriptdir,
       dockerfile="webappImage/Dockerfile",
       rm=False)
 
   elif s=="webapprun":
-    return buildImage(tag="mbsimenv/webapprun:"+getTagname(),
+    return buildImage(tag="mbsimenv/webapprun:"+getTagname(), fd=fd,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=scriptdir+"/webapprunImage",
       rm=False)
@@ -329,7 +330,7 @@ def run(s, jobs=4,
         interactive=False,
         fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
         networkID=None, hostname=None,
-        wait=True, printLog=True, detach=False, statusAccessToken=""):
+        wait=True, printLog=True, detach=False, statusAccessToken="", daemon=""):
 
   if detach and interactive:
     raise RuntimeError("Cannot run detached an interactively.")
@@ -391,6 +392,46 @@ def run(s, jobs=4,
     if detach==True:
       raise RuntimeError("Cannot run service detached.")
 
+    idFile="/tmp/mbsimenv-"+getTagname()+".id"
+
+    if daemon=="stop":
+      print("Stopping mbsim-env "+getTagname())
+      if not os.path.exists(idFile):
+        print("No id file. Nothing to do")
+        return 0
+      with open(idFile, "r") as f:
+        dockerIDs=json.load(f)
+      for containerID in dockerIDs["container"]:
+        container=dockerClient.containers.get(containerID)
+        print("Stopping container "+containerID)
+        container.stop()
+      for networkID in dockerIDs["network"]:
+        network=dockerClient.networks.get(networkID)
+        print("Removing network "+networkID)
+        network.remove()
+      os.remove(idFile)
+      print("All done. id file removed")
+      return 0
+
+    if daemon=="status":
+      print("Status of mbsim-env "+getTagname())
+      if not os.path.exists(idFile):
+        print("No id file. mbsim-env "+getTagname()+" is not running")
+        return 1
+      with open(idFile, "r") as f:
+        dockerIDs=json.load(f)
+      for containerID in dockerIDs["container"]:
+        container=dockerClient.containers.get(containerID)
+        if container.status=="running":
+          print("Container "+containerID+" is running")
+        else:
+          print("Container "+containerID+" is not running")
+          return 1
+      for networkID in dockerIDs["network"]:
+        network=dockerClient.networks.get(networkID)
+        print("Network "+networkID+" exists")
+      return 0
+
     # networks
     networki=dockerClient.networks.create(name="mbsimenv_service_intern:"+getTagname(), internal=True)
     networke=dockerClient.networks.create(name="mbsimenv_service_extern:"+getTagname())
@@ -432,7 +473,10 @@ def run(s, jobs=4,
       sys.stdout.flush()
     runningContainers.add(webserver)
     if printLog:
-      asyncLogContainer(webserver, "webserver: ")
+      if daemon=="":
+        asyncLogContainer(webserver, "webserver: ")
+      else:
+        print("Started webserver in background")
 
     # webapp
     webapp=dockerClient.containers.run(image="mbsimenv/webapp:"+getTagname(),
@@ -452,7 +496,10 @@ def run(s, jobs=4,
       sys.stdout.flush()
     runningContainers.add(webapp)
     if printLog:
-      asyncLogContainer(webapp, "webapp: ")
+      if daemon=="":
+        asyncLogContainer(webapp, "webapp: ")
+      else:
+        print("Started webapp in background")
 
     # proxy
     proxy=dockerClient.containers.run(image="mbsimenv/proxy:"+getTagname(),
@@ -475,18 +522,28 @@ def run(s, jobs=4,
       sys.stdout.flush()
     runningContainers.add(proxy)
     if printLog:
-      asyncLogContainer(proxy, "proxy: ")
+      if daemon=="":
+        asyncLogContainer(proxy, "proxy: ")
+      else:
+        print("Started proxy in background")
 
-    # wait for running containers
-    ret=runWait([webserver, webapp, proxy], printLog=printLog)
-    # stop all other containers connected to network (this may be webapprun and autbuild containers)
-    networki.reload()
-    for c in networki.containers:
-      c.stop()
-    # remove network
-    networki.remove()
-    networke.remove()
-    return ret
+    if daemon=="start":
+      dockerIDs={'network': [networki.id, networke.id], 'container': [webserver.id, webapp.id, proxy.id]}
+      with open(idFile, "w") as f:
+        json.dump(dockerIDs, f)
+      print("Created id file")
+      return 0
+    else:
+      # wait for running containers
+      ret=runWait([webserver, webapp, proxy], printLog=printLog)
+      # stop all other containers connected to network (this may be webapprun and autbuild containers)
+      networki.reload()
+      for c in networki.containers:
+        c.stop()
+      # remove network
+      networki.remove()
+      networke.remove()
+      return ret
 
   elif s=="webapprun":
     if "--token" not in addCommands:

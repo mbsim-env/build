@@ -4,11 +4,15 @@
 # systemctl enable mbsimenv.service
 
 [Unit]
-Description=MBSim-Env Service
+Description=MBSim-Env Stating Service
 Requires=docker.service
 After=docker.service
 
 [Service]
 Environment=MBSIMENVSERVERNAME=www.mbsim-env.de
 Environment=MBSIMENVTAGNAME=latest
-ExecStart=/home/dockeruser/build/docker/setup.py run service -j 6
+Type=forking
+RemainAfterExit=yes
+GuessMainPID=no
+ExecStart=/home/dockeruser/build/docker/setup.py run service -j 6 -d start
+ExecStop=/home/dockeruser/build/docker/setup.py run service -j 6 -d stop
