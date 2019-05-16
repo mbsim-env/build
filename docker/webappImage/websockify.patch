@@ -1,0 +1,13 @@
+diff --git a/websockify/websocket.py b/websockify/websocket.py
+index c8226cc..e7b4888 100644
+--- a/websockify/websocket.py
++++ b/websockify/websocket.py
+@@ -762,6 +762,8 @@ class WebSocket(object):
+         elif payload_len >= 65536:
+             header = struct.pack('>BBQ', b1, 127 | mask_bit, payload_len)
+ 
++        if type(buf)==str:
++            buf = buf.encode("utf8")
+         if mask_key is not None:
+             return header + mask_key + buf
+         else:

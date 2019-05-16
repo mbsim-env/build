@@ -20,6 +20,8 @@ WORKDIR /3rdparty
 RUN git clone https://github.com/novnc/websockify.git
 WORKDIR /3rdparty/websockify
 RUN git checkout $WEBSOCKIFYBRANCH
+COPY webappImage/websockify.patch /context/websockify.patch
+RUN git apply /context/websockify.patch
 RUN python3 setup.py bdist_egg
 
 
