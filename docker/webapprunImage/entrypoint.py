@@ -49,7 +49,7 @@ if open('/proc/%d/stat'%(xvnc.pid)).readline().split()[2]!='T':
 xvnc.send_signal(signal.SIGCONT) # continue Xvnc
 
 # run window manager
-wm=subprocess.Popen(['/usr/bin/xfwm4'])
+wm=subprocess.Popen(['/usr/bin/xfwm4', '--compositor=off'])
 
 # run the main program according to token
 absFile=[]
