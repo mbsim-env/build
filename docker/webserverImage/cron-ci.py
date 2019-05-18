@@ -85,6 +85,7 @@ if bd!=None and os.environ["MBSIMENVTAGNAME"]=="staging":
   sys.stdout.flush()
   with open("/var/www/html/mbsim/docker/buildDocker.txt", "w") as f:
     if not os.path.isdir("/mbsim-docker/build"):
+#mfmf git checkout must be done with proper umask to avoid rebilding verything due to different umask of builddocker/*
       subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/build.git"], cwd="/mbsim-docker", stdout=f, stderr=f)
     subprocess.check_call(["git", "fetch"], cwd="/mbsim-docker/build", stdout=f, stderr=f)
     subprocess.check_call(["git", "checkout", bd], cwd="/mbsim-docker/build", stdout=f, stderr=f)

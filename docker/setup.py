@@ -115,7 +115,7 @@ allServices=[ # must be in order
 def main():
   args, argsRest=parseArgs()
 
-#  # terminate handler for command "run"
+#mfmf  # terminate handler for command "run"
 #  def terminateHandler(signalnum, stack):
 #    print("Got "+("SIGINT" if signalnum==signal.SIGINT else "SIGTERM")+", stopping all containers")
 #    sys.stdout.flush()
