@@ -4,11 +4,11 @@ ARG MBSIMENVTAGNAME=latest
 FROM mbsimenv/base:$MBSIMENVTAGNAME AS centosBaseImage
 
 # install everything needed to build mbsim-env tools from centos7
-RUN yum -y install \
+RUN yum --setopt=skip_missing_names_on_install=False -y install \
   chrpath \
   gdb \
   valgrind \
-  xsltproc \
+  libxslt \
   lcov \
   tigervnc-server \
   git \
@@ -22,7 +22,7 @@ RUN yum -y install \
   qt5-qtbase-devel \
   qt5-qtsvg-devel \
   hdf5-devel \
-  python34-pip \
+  python36-pip \
   boost-devel \
   lapack-devel \
   doxygen \
@@ -45,7 +45,7 @@ RUN yum -y install \
   mesa-libGLU-devel \
   npm \
   java-1.8.0-openjdk-devel \
-  python34-requests \
+  python36-requests \
   perl-Text-Glob \
   clang-analyzer \
   graphviz \
@@ -71,7 +71,7 @@ ARG CASADIBRANCH=470b5b3f0cc4044e3cb0eb20dfb2a85e247c62a6
 ARG NUHTMLVERSION=18.8.29
 
 # install additional packaged needed to build the tools not part of centos7
-RUN yum -y install \
+RUN yum --setopt=skip_missing_names_on_install=False -y install \
   wget \
   bzip2 \
   unzip \

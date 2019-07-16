@@ -14,10 +14,10 @@ ENV LD_LIBRARY_PATH=/osupdate/local/lib:/osupdate/local/lib64:/3rdparty/local/li
     XDG_RUNTIME_DIR=/run/user/$UID
 
 # install everything from centos7 needed to run mbsim-env tools
-RUN yum -y install epel-release && \
-  yum -y install \
+RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && \
+  yum --setopt=skip_missing_names_on_install=False -y install \
   hdf5 \
-  python34-numpy \
+  python36-numpy \
   boost-regex \
   xerces-c \
   lapack \
@@ -48,7 +48,7 @@ ARG JOBS=4
 ARG MESAVERSION=18.1.3
 
 # install required packages to build mesa
-RUN yum install -y \
+RUN yum --setopt=skip_missing_names_on_install=False install -y \
   wget \
   make \
   gcc-c++ \
@@ -82,7 +82,7 @@ FROM baseImage
 
 # copy over the osupdate dir from the mesa build image
 COPY --from=mesaBuild /osupdate/local /osupdate/local
-ENV LIBGL_ALWAYS_INDIRECT=1 
+ENV LIBGL_ALWAYS_INDIRECT=1
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \

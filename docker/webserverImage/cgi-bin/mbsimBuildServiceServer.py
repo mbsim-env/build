@@ -487,10 +487,15 @@ except:
   if __name__ == "__main__":
     # reset all output and generate a json error message
     import traceback
-    defaultOutput=True
+    defaultOutput=False
     response_data={}
     response_data['success']=False
     response_data['message']="Internal error: Please report the following error to the maintainer:\n"+traceback.format_exc()
+    print('Content-Type: application/json')
+    print('Status: 500 Internal Server Error')
+    print('Access-Control-Allow-Credentials: true')
+    print()
+    print(json.dumps(response_data))
   else:
     raise
   

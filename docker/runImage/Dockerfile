@@ -71,7 +71,7 @@ ARG JOBS=4
 COPY --from=buildImage /mbsim-env/mbsim/examples /mbsim-env/mbsim/examples
 
 # install everything and configure for X11 tests
-RUN yum install -y \
+RUN yum --setopt=skip_missing_names_on_install=False -y install \
   h5py \
   tigervnc-server \
   && yum clean all

@@ -3,7 +3,7 @@ FROM mbsimenv/build:$MBSIMENVTAGNAME
 
 USER root:root
 
-RUN yum install -y \
+RUN yum --setopt=skip_missing_names_on_install=False -y install \
   xfwm4 \
   && yum clean all
 

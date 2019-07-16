@@ -1,7 +1,8 @@
 FROM centos:centos7
 
 # install software
-RUN yum install -y epel-release && yum install -y \
+RUN yum --setopt=skip_missing_names_on_install=False install -y epel-release && \
+  yum --setopt=skip_missing_names_on_install=False install -y \
   texlive-latex-bin-bin \
   texlive-bibtex-bin \
   texlive-collection-fontsrecommended \
@@ -9,7 +10,7 @@ RUN yum install -y epel-release && yum install -y \
   texlive-pdftex-def \
   texlive-epstopdf-bin \
   ghostscript \
-  python34 \
+  python36 \
   && yum clean all
 
 # copy context files

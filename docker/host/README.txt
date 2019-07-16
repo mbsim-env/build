@@ -3,7 +3,7 @@ Install docker and docker-python and enable it
 # yum-config-manager --add-repo https://download.docker.com/linux/centos/docker-ce.repo
 # yum install docker-ce
 # yum install epel-release
-# yum install python34-docker
+# yum install python36-docker
 # systemctl start docker
 # systemctl enable docker
 

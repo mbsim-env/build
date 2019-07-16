@@ -1,9 +1,9 @@
 FROM centos:centos7
 
 # install tinyproxy
-RUN yum -y install epel-release && \
-  yum -y install \
-  python34 \
+RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && \
+  yum --setopt=skip_missing_names_on_install=False -y install \
+  python36 \
   tinyproxy \
   && yum clean all
 

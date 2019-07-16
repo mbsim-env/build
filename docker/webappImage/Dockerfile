@@ -1,9 +1,10 @@
 FROM centos:centos7 AS webapp
 
-RUN yum install -y epel-release && yum install -y \
-  python34-numpy \
-  python34-docker \
-  python34-setuptools \
+RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && \
+  yum --setopt=skip_missing_names_on_install=False -y install \
+  python36-numpy \
+  python36-docker \
+  python36-setuptools \
   && yum clean all
 
 
@@ -12,7 +13,7 @@ FROM webapp AS websockify
 
 ARG WEBSOCKIFYBRANCH=518e6e0e560e71b3176b54cc4b2023f07efc9d57
 
-RUN yum install -y git && yum clean all
+RUN yum --setopt=skip_missing_names_on_install=False -y install git && yum clean all
 
 # install websockify
 RUN mkdir /3rdparty
@@ -28,8 +29,8 @@ RUN python3 setup.py bdist_egg
 
 FROM webapp
 
-COPY --from=websockify /3rdparty/websockify/dist/websockify-0.8.0-py3.4.egg /3rdparty/websockify/dist/websockify-0.8.0-py3.4.egg
-RUN easy_install-3.4 /3rdparty/websockify/dist/websockify-0.8.0-py3.4.egg
+COPY --from=websockify /3rdparty/websockify/dist/websockify-0.8.0-py3.6.egg /3rdparty/websockify/dist/websockify-0.8.0-py3.6.egg
+RUN easy_install-3.6 /3rdparty/websockify/dist/websockify-0.8.0-py3.6.egg
 
 COPY webappImage/entrypoint.py /context/entrypoint.py
 COPY webappImage/webapprun.py /context/webapprun.py

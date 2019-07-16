@@ -1,7 +1,7 @@
 # get noVNC
 FROM centos:centos7 AS temp
 ARG NOVNCBRANCH=v0.6.2
-RUN yum install -y git && yum clean all
+RUN yum --setopt=skip_missing_names_on_install=False -y install git && yum clean all
 # install noVNC (the package from yum is to old)
 WORKDIR /tmp
 RUN git clone https://github.com/novnc/noVNC.git
@@ -14,15 +14,15 @@ RUN git checkout $NOVNCBRANCH
 FROM centos:centos7
 
 # install software
-RUN yum install -y epel-release && yum install -y \
+RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && \
+  yum --setopt=skip_missing_names_on_install=False -y install \
   httpd \
   mod_ssl \
   python2-certbot \
   cronie \
-  python34-docker \
+  python36-docker \
+  git \
   && yum clean all
-#mfmf
-RUN yum install -y git
 
 # a webserver is running on port 80
 EXPOSE 80/tcp 443/tcp

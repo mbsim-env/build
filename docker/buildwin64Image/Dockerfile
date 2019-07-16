@@ -1,6 +1,7 @@
 FROM centos:centos7 AS centosBaseImage
 
-RUN yum -y install epel-release && yum -y install \
+RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && \
+  yum --setopt=skip_missing_names_on_install=False -y install \
   git \
   ccache \
   patch \
@@ -9,10 +10,10 @@ RUN yum -y install epel-release && yum -y install \
   mingw64-gcc-c++ \
   mingw64-gcc-gfortran \
   wine \
-  python34-requests \
+  python36-requests \
   libtool automake autoconf \
-  python34-pip \
-  python34-numpy \
+  python36-pip \
+  python36-numpy \
   mingw64-boost \
   doxygen \
   tigervnc-server \
@@ -27,7 +28,7 @@ RUN pip3 install h5py
 
 # install install mingw64-qt5-qtsvg and mingw64-qt5-qtwebkit to add its dependencies and then
 # remove mingw64-qt5-qtwebkit mingw64-qt5-qtbase mingw64-qt5-qmake which is rebuild/reinstalled later
-RUN yum -y install mingw64-qt5-qtsvg mingw64-qt5-qtwebkit && \
+RUN yum --setopt=skip_missing_names_on_install=False -y install mingw64-qt5-qtsvg mingw64-qt5-qtwebkit && \
   rpm -e --nodeps mingw64-qt5-qtwebkit mingw64-qt5-qtbase mingw64-qt5-qmake && \
   yum clean all
 
@@ -43,7 +44,7 @@ FROM centosBaseImage AS thirdpartyBuildImage
 
 ARG JOBS=4
 
-RUN yum -y install \
+RUN yum --setopt=skip_missing_names_on_install=False -y install \
   wget \
   cmake3 \
   gcc-c++ \
@@ -131,7 +132,7 @@ RUN make -j $JOBS || make -j $JOBS || make -j 1
 RUN make install
 
 # wine
-RUN yum remove -y wine wine-courier-fonts wine-marlett-fonts wine-core wine-twain wine-capi wine-filesystem wine-small-fonts wine-system-fonts wine-common wine-alsa wine-cms wine-ms-sans-serif-fonts wine-symbol-fonts wine-fonts wine-desktop wine-pulseaudio wine-wingdings-fonts wine-fixedsys-fonts-4.0-2.el7.noarch wine-systemd-4.0-2.el7.noarch wine-ldap-4.0-2.el7.x86_64 wine-openal-4.0-2.el7.x86_64 wine-tahoma-fonts-4.0-2.el7.noarch
+RUN yum remove -y wine wine-courier-fonts wine-marlett-fonts wine-core wine-twain wine-capi wine-filesystem wine-small-fonts wine-system-fonts wine-common wine-alsa wine-cms wine-ms-sans-serif-fonts wine-symbol-fonts wine-fonts wine-desktop wine-pulseaudio wine-wingdings-fonts wine-fixedsys-fonts wine-systemd wine-ldap wine-openal wine-tahoma-fonts
 WORKDIR /3rdparty
 RUN set -o pipefail && \
   wget -q -O - https://dl.winehq.org/wine/source/3.0/wine-3.0.5.tar.xz | tar -xJ

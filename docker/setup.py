@@ -3,6 +3,7 @@
 import argparse
 import docker
 import os
+import stat
 import json
 import time
 import threading
@@ -115,17 +116,17 @@ allServices=[ # must be in order
 def main():
   args, argsRest=parseArgs()
 
-#mfmf  # terminate handler for command "run"
-#  def terminateHandler(signalnum, stack):
-#    print("Got "+("SIGINT" if signalnum==signal.SIGINT else "SIGTERM")+", stopping all containers")
-#    sys.stdout.flush()
-#    for container in runningContainers:
-#      container.stop()
-#    print("All containers stopped")
-#    sys.stdout.flush()
-#  if args.command=="run":
-#    signal.signal(signal.SIGINT , terminateHandler)
-#    signal.signal(signal.SIGTERM, terminateHandler)
+  # terminate handler for command "run"
+  def terminateHandler(signalnum, stack):
+    print("Got "+("SIGINT" if signalnum==signal.SIGINT else "SIGTERM")+", stopping all containers")
+    sys.stdout.flush()
+    for container in runningContainers:
+      container.stop()
+    print("All containers stopped")
+    sys.stdout.flush()
+  if args.command=="run":
+    signal.signal(signal.SIGINT , terminateHandler)
+    signal.signal(signal.SIGTERM, terminateHandler)
 
 
 
@@ -178,6 +179,14 @@ def main():
 
 
 def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, **kwargs):
+  # fix permissions (the permissions are part of the docker cache)
+  for d,_,files in os.walk(kwargs["path"]):
+    for f in files:
+      st=stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
+      if (stat.S_IMODE(os.lstat(d+"/"+f).st_mode) & stat.S_IXUSR)!=0:
+        st |= stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
+      os.chmod(d+"/"+f, st)
+
   if tagMultistageImage:
     if "dockerfile" in kwargs:
       dockerfile=kwargs["path"]+"/"+kwargs["dockerfile"]
