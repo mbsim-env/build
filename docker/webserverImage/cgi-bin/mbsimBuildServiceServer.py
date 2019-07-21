@@ -18,6 +18,7 @@ try:
   import http.cookies
   import re
   import shutil
+  import types
 
   # config file: this will lock the config file for the lifetime of this object
   class ConfigFile(object):
@@ -93,6 +94,19 @@ try:
       if so[s]['login']!=login:
         sn[s]=so[s]
     config['session']=sn
+
+  def requestsPost(out, url, headers, dataJson):
+    if os.environ["MBSIMENVTAGNAME"]=="latest":
+      return requests.post(url, headers=headers, data=json.dumps(dataJson))
+    else:
+      # fake post request
+      out['message']=out['message']+"\n"+"Skipping post request to\n"+url+"\nwith data\n"+\
+                     json.dumps(dataJson, indent=2).replace("\\n", "\n")+\
+                     "\nand header\n"+json.dumps(headers, indent=2).replace("\\n", "\n")
+      response=types.SimpleNamespace()
+      response.status_code=201
+      response.json=lambda: {'sha': '0123456789012345678901234567890123456789'}
+      return response
 
   if __name__ == "__main__":
     # get the script action = path info after the script url
@@ -400,59 +414,69 @@ try:
             repos=['fmatvec', 'hdf5serie', 'openmbv', 'mbsim']
             # worker function to make github api requests in parallel
             def tagRefRelease(repo, out):
-              # create the git tag object
-              createTagData={"tag": tagName,
-                             "message": "Release "+data['relStr']+" of MBSim-Env for "+platform+"\n"+\
-                                        "\n"+\
-                                        "The binary "+platform+" release can be downloaded from\n"+\
-                                        "https://"+os.environ['HTTP_HOST']+"/mbsim/releases/"+relArchiveName+"\n"+\
-                                        "Please note that this binary release includes a full build of MBSim-Env not only of this repository.\n"+\
-                                        "Also look at https://"+os.environ['HTTP_HOST']+"/mbsim/releases for other platforms of this release version.\n",
-                             "object": data['commitid'][repo],
-                             "type": "commit",
-                             "tagger": {
-                               "name": config['session'][sessionid]['name'],
-                               "email": email,
-                               "date": curtime.strftime("%Y-%m-%dT%H:%M:%SZ")
-                            }}
-              response=requests.post('https://api.github.com/repos/'+org+'/'+repo+'/git/tags',
-                                     headers=headers, data=json.dumps(createTagData))
-              # check if the create was successfull
-              if response.status_code!=201:
-                # not successfull -> set out
-                out['success']=False
-                out['message']="Unable to create the git tag object for repo "+repo+". Please check the tag status of (at least) this repository manually; "
-              else:
-                # git tag object created -> get the tag object id
-                tagObjectID=response.json()['sha']
-                # create the github ref
-                createRefData={"ref": "refs/tags/"+tagName,
-                               "sha": tagObjectID}
-                response=requests.post('https://api.github.com/repos/'+org+'/'+repo+'/git/refs',
-                                       headers=headers, data=json.dumps(createRefData))
+              try:
+                # create the git tag object
+                createTagData={"tag": tagName,
+                               "message": "Release "+data['relStr']+" of MBSim-Env for "+platform+"\n"+\
+                                          "\n"+\
+                                          "The binary "+platform+" release can be downloaded from\n"+\
+                                          "https://"+os.environ['HTTP_HOST']+"/mbsim/releases/"+relArchiveName+"\n"+\
+                                          "Please note that this binary release includes a full build of MBSim-Env not only of this repository.\n"+\
+                                          "Also look at https://"+os.environ['HTTP_HOST']+"/mbsim/releases for other platforms of this release version.\n",
+                               "object": data['commitid'][repo],
+                               "type": "commit",
+                               "tagger": {
+                                 "name": config['session'][sessionid]['name'],
+                                 "email": email,
+                                 "date": curtime.strftime("%Y-%m-%dT%H:%M:%SZ")
+                              }}
+                response=requestsPost(out, 'https://api.github.com/repos/'+org+'/'+repo+'/git/tags',
+                                      headers=headers, dataJson=createTagData)
                 # check if the create was successfull
                 if response.status_code!=201:
                   # not successfull -> set out
                   out['success']=False
-                  out['message']="Unable to create the git reference for repo "+repo+". Please check the tag status of (at least) this repository manually; "
+                  out['message']="Unable to create the git tag object for repo "+repo+". Please check the tag status of (at least) this repository manually; "
                 else:
-                  # git ref object created -> create GitHub release info
-                  createRelData={"tag_name": tagName,
-                                 "name": "Release "+data['relStr']+" of MBSim-Env for "+platform,
-                                 "body": "The binary "+platform+" release can be downloaded from\n"+\
-                                         "https://"+os.environ['HTTP_HOST']+"/mbsim/releases/"+relArchiveName+"\n"+\
-                                         "Please note that this binary release includes a full build of MBSim-Env not only of this repository. "+\
-                                         "Also look at https://"+os.environ['HTTP_HOST']+"/mbsim/releases for other platforms of this release version.",
-                                 "draft": False,
-                                 "prerelease": False}
-                  response=requests.post('https://api.github.com/repos/'+org+'/'+repo+'/releases',
-                                         headers=headers, data=json.dumps(createRelData))
-                  # check if the update was successfull
+                  # git tag object created -> get the tag object id
+                  tagObjectID=response.json()['sha']
+                  # create the github ref
+                  createRefData={"ref": "refs/tags/"+tagName,
+                                 "sha": tagObjectID}
+                  response=requestsPost(out, 'https://api.github.com/repos/'+org+'/'+repo+'/git/refs',
+                                        headers=headers, dataJson=createRefData)
+                  # check if the create was successfull
                   if response.status_code!=201:
                     # not successfull -> set out
                     out['success']=False
-                    out['message']="Unable to create the GitHub release info for repo "+repo+". "+\
-                                   "Please check the tag/release status of (at least) this repository manually; "
+                    out['message']="Unable to create the git reference for repo "+repo+". Please check the tag status of (at least) this repository manually; "
+                  else:
+                    # git ref object created -> create GitHub release info
+                    createRelData={"tag_name": tagName,
+                                   "name": "Release "+data['relStr']+" of MBSim-Env for "+platform,
+                                   "body": "The binary "+platform+" release can be downloaded from\n"+\
+                                           "https://"+os.environ['HTTP_HOST']+"/mbsim/releases/"+relArchiveName+"\n"+\
+                                           "Please note that this binary release includes a full build of MBSim-Env not only of this repository. "+\
+                                           "Also look at https://"+os.environ['HTTP_HOST']+"/mbsim/releases for other platforms of this release version.",
+                                   "draft": False,
+                                   "prerelease": False}
+                    response=requestsPost(out, 'https://api.github.com/repos/'+org+'/'+repo+'/releases',
+                                          headers=headers, dataJson=createRelData)
+                    # check if the update was successfull
+                    if response.status_code!=201:
+                      # not successfull -> set out
+                      out['success']=False
+                      out['message']="Unable to create the GitHub release info for repo "+repo+". "+\
+                                     "Please check the tag/release status of (at least) this repository manually; "
+              except:
+                if __name__ == "__main__":
+                  # reset all output and generate a json error message
+                  import traceback
+                  out.clear()
+                  out['success']=False
+                  out['message']="Internal error: Please report the following error to the maintainer:\n"+traceback.format_exc()
+                else:
+                  raise
             # start worker threads
             thread={}
             out={}
@@ -467,14 +491,28 @@ try:
             for repo in repos:
               if not out[repo]['success']:
                 response_data['success']=False
-              response_data['message']=response_data['message']+out[repo]['message']
+              response_data['message']=response_data['message']+("\n" if len(out[repo]['message'])>0 else "")+out[repo]['message']
             # set message if everything was done Successfully
             if response_data['success']==True:
-              response_data['message']="Successfully released and tagged this distribution."
+              response_data['message']="Successfully released and tagged this distribution."+\
+                                       ("\n" if len(response_data['message'])>0 else "")+response_data['message']
               # copy the distribution to the release dir
-              srcFile=data['reportOutDir']+"/distribute/"+data['distArchiveName']
-              dstFile="/var/www/html/mbsim/releases/"+relArchiveName
-              shutil.copyfile(srcFile, dstFile)
+              if not data['reportOutDir'].startswith('/mbsim-report/'):
+                response_data['success']=False
+                response_data['message']=response_data['message']+" Illegal reportOutDir provided."
+              else:
+                if data['distArchiveName']=='mbsim-env-win64-shared-build-xxx.zip':
+                  platformDir="win64-dailyrelease"
+                elif data['distArchiveName']=='mbsim-env-linux64-shared-build-xxx.tar.bz2':
+                  platformDir="linux64-dailyrelease"
+                else:
+                  response_data['success']=False
+                  response_data['message']=response_data['message']+" Illegal distArchiveName provided."
+                if response_data['success']==True:
+                  srcFile='/var/www/html/mbsim/'+platformDir+'/'+data['reportOutDir'][len('/mbsim-report/'):]+\
+                          "/distribute/"+data['distArchiveName']
+                  dstFile="/var/www/html/mbsim/releases/"+relArchiveName
+                  shutil.copyfile(srcFile, dstFile)
     
     # check if the session ID provided as POST is authorizised 
     if action=="/checkmbsimenvsessionid" and method=="POST":
@@ -492,7 +530,6 @@ except:
     response_data['success']=False
     response_data['message']="Internal error: Please report the following error to the maintainer:\n"+traceback.format_exc()
     print('Content-Type: application/json')
-    print('Status: 500 Internal Server Error')
     print('Access-Control-Allow-Credentials: true')
     print()
     print(json.dumps(response_data))

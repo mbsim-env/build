@@ -99,9 +99,9 @@ if bd!=None and os.environ["MBSIMENVTAGNAME"]=="staging":
 
 if os.environ["MBSIMENVTAGNAME"]=="staging":
   # the staging service delays the CI script by 30min to avoid load conflicts with the production service (on the same machine)
-  print("Found something to build, but wait 30min since this is the staging service: "+str(tobuild))
+  print("Found something to build, but wait 20min since this is the staging service: "+str(tobuild))
   sys.stdout.flush()
-  time.sleep(30*60)
+  time.sleep(20*60)
 
 print("Found something to build: "+str(tobuild))
 sys.stdout.flush()

@@ -271,13 +271,15 @@ def setStatus(statusAccessToken, commitidfull, state, timeID, target_url, buildT
     else:
       raise RuntimeError("Unknown state "+state+" provided")
     # call github api
-    if statusAccessToken=="":
-      print("Warning: Cannot create github status on repo "+repo+": No configuration file/no access token with github credential found.")
-      sys.stdout.flush()
-      return
     headers={'Authorization': 'token '+statusAccessToken,
              'Accept': 'application/vnd.github.v3+json'}
-    response=requests.post('https://api.github.com/repos/mbsim-env/'+repo+'/statuses/'+commitidfull[repo],
+    url='https://api.github.com/repos/mbsim-env/'+repo+'/statuses/'+commitidfull[repo]
+    if statusAccessToken=="":
+      print("Warning; Skipping post request to\n"+url+"\nwith data\n"+json.dumps(data, indent=2)+\
+            "\nand header\n"+json.dumps(headers, indent=2))
+      sys.stdout.flush()
+      return
+    response=requests.post(url,
                            headers=headers, data=json.dumps(data))
     if response.status_code!=201:
       print("Warning: failed to create github status on repo "+repo+":")
@@ -1236,7 +1238,7 @@ def releaseGeneration2(mainFD, distArchiveName):
   <div class="panel-heading"><span class="glyphicon glyphicon-info-sign">
     </span>&nbsp;<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;Status message</div>
   <div class="panel-body">
-    <span id="STATUSMSG">Communicating with server, please wait. (reload page if hanging)</span>
+    <pre style="border: 0; background-color: transparent;" id="STATUSMSG">Communicating with server, please wait. (reload page if hanging)</pre>
   </div>
 </div>'''%(distArchiveName, args.reportOutDir, relStr, relStr, relArchiveNamePostfix,
            relStr, tagNamePostfix), file=mainFD)
