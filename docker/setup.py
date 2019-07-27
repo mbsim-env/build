@@ -106,6 +106,7 @@ allServices=[ # must be in order
   "build",
   "buildwin64",
   "builddoc",
+  "builddocker",
   #"run",
   "proxy",
   "webserver",
@@ -281,6 +282,13 @@ def build(s, jobs=4, fd=sys.stdout, baseDir=scriptdir):
       dockerfile="docker/builddocImage/Dockerfile",
       rm=False)
 
+  elif s=="builddocker":
+    return buildImage(tag="mbsimenv/builddocker:"+getTagname(), fd=fd,
+      buildargs={"MBSIMENVTAGNAME": getTagname()},
+      path=baseDir,
+      dockerfile="builddockerImage/Dockerfile",
+      rm=False)
+
   elif s=="webserver":
     return buildImage(tag="mbsimenv/webserver:"+getTagname(), fd=fd,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
@@ -369,6 +377,7 @@ def run(s, jobs=4,
         addCommands=[],
         interactive=False,
         fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
+        builddockerBranch="master",
         networkID=None, hostname=None,
         wait=True, printLog=True, detach=False, statusAccessToken="", daemon=""):
 
@@ -425,6 +434,38 @@ def run(s, jobs=4,
       return builddoc
     else:
       ret=runWait([builddoc], printLog=printLog)
+      return ret
+
+  elif s=="builddocker":
+    builddocker=dockerClient.containers.run(image="mbsimenv/builddocker:"+getTagname(),
+      init=True,
+      entrypoint=None if not interactive else ["sleep", "infinity"],
+      environment={"MBSIMENVTAGNAME": getTagname()},
+      command=["-j", str(jobs), builddockerBranch],
+      volumes={
+        'mbsimenv_mbsim-builddocker.'+getTagname():  {"bind": "/mbsim-env",           "mode": "rw"},
+        'mbsimenv_report-builddocker.'+getTagname(): {"bind": "/mbsim-report",        "mode": "rw"},
+        '/var/run/docker.sock':                      {"bind": "/var/run/docker.sock", "mode": "rw"},
+      },
+      detach=True, stdout=True, stderr=True)
+    if interactive:
+      print(builddocker.short_id)
+      print("Use")
+      print("docker exec -ti %s bash"%(builddocker.short_id))
+      print("to attach to this container")
+    if not printLog:
+      print("Started running "+s+" as container ID "+builddocker.id)
+      sys.stdout.flush()
+    if not detach:
+      runningContainers.add(builddocker)
+    if printLog:
+      asyncLogContainer(builddocker)
+
+    # wait for running containers
+    if detach:
+      return builddocker
+    else:
+      ret=runWait([builddocker], printLog=printLog)
       return ret
 
   elif s=="service":
@@ -496,8 +537,7 @@ def run(s, jobs=4,
         'mbsimenv_report-linux64-dailydebug.'+getTagname():   {"bind": "/var/www/html/mbsim/linux64-dailydebug",   "mode": "ro"},
         'mbsimenv_report-linux64-dailyrelease.'+getTagname(): {"bind": "/var/www/html/mbsim/linux64-dailyrelease", "mode": "ro"},
         'mbsimenv_report-win64-dailyrelease.'+getTagname():   {"bind": "/var/www/html/mbsim/win64-dailyrelease",   "mode": "ro"},
-        'mbsimenv_report-docker.'+getTagname():               {"bind": "/var/www/html/mbsim/docker",               "mode": "rw"},
-        'mbsimenv_build-docker.'+getTagname():                {"bind": "/mbsim-docker",                            "mode": "rw"},
+        'mbsimenv_report-builddocker.'+getTagname():          {"bind": "/var/www/html/mbsim/docker",               "mode": "ro"},
         'mbsimenv_state.'+getTagname():                       {"bind": "/var/www/html/mbsim/buildsystemstate",     "mode": "ro"},
         'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config",                            "mode": "rw"},
         'mbsimenv_releases.'+getTagname():                    {"bind": "/var/www/html/mbsim/releases",             "mode": "rw"},

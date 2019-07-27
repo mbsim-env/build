@@ -21,7 +21,6 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && 
   python2-certbot \
   cronie \
   python36-docker \
-  git \
   && yum clean all
 
 # a webserver is running on port 80

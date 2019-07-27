@@ -79,23 +79,9 @@ if tobuild==None and bd==None:
   sys.exit(0)
 
 if bd!=None and os.environ["MBSIMENVTAGNAME"]=="staging":
-#  # mfmf move this to a docker container?!
-#  import subprocess
-#  print("Found new docker service to build: "+str(bd))
-#  sys.stdout.flush()
-#  with open("/var/www/html/mbsim/docker/buildDocker.txt", "w") as f:
-#    if not os.path.isdir("/mbsim-docker/build"):
-#      subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/build.git"], cwd="/mbsim-docker", stdout=f, stderr=f)
-#    subprocess.check_call(["git", "fetch"], cwd="/mbsim-docker/build", stdout=f, stderr=f)
-#    subprocess.check_call(["git", "checkout", bd], cwd="/mbsim-docker/build", stdout=f, stderr=f)
-#    for s in setup.allServices:
-#      ret=setup.build(s, args.jobs, fd=f, baseDir="/mbsim-docker/build/docker")
-#      if ret!=0:
-#        sys.exit(ret)
-#  print("Sucessfully build docker service. Restarting service now.")
-#  #mfmf subprocess.check_call(["systemctl", "status", "mbsimenvstaging"])
-#  print("Service restarted.")
-  sys.exit(0)
+  # run rebuild build-system
+  ret=setup.run("builddocker", args.jobs, printLog=False, builddockerBranch=bd, statusAccessToken=statusAccessToken)
+  sys.exit(ret)
 
 if os.environ["MBSIMENVTAGNAME"]=="staging":
   # the staging service delays the CI script by 30min to avoid load conflicts with the production service (on the same machine)
