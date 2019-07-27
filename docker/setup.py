@@ -178,9 +178,41 @@ def main():
 
 
 
-def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, **kwargs):
+def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfile=None, **kwargs):
+  # MISSING BEGIN: this is a workaround for docker-py bug MFMF
+  def createTarContext(path, dockerfile):
+    try:
+      import tempfile
+      dockerignore = os.path.join(path, '.dockerignore')
+      exclude = None
+      if os.path.exists(dockerignore):
+          with open(dockerignore, 'r') as f:
+              exclude = list(filter(bool, f.read().splitlines()))
+      fileobj = docker.utils.tar(
+          path, exclude=exclude, dockerfile=dockerfile, gzip=False
+      )
+      tar=tarfile.open(fileobj=fileobj)
+      fileobjNew=tempfile.NamedTemporaryFile()
+      tarNew=tarfile.open(mode='w', fileobj=fileobjNew)
+      while True:
+        ti=tar.next()
+        if not ti: break
+        memberFileObj=tar.extractfile(ti)
+        ti.uid=0
+        ti.gid=0
+        ti.uname="root"
+        ti.gname="root"
+        tarNew.addfile(ti, memberFileObj)
+      tar.close()
+      tarNew.close()
+      fileobjNew.seek(0)
+      return {"custom_context": True, "fileobj": fileobjNew}
+    except:
+      print("The workaround for docker-py bug mfmf does not work, skipping it; uid and gui are not adapted which may lead to unexpected docker build cache invalidations.")
+      return {"path": path, "dockerfile": dockerfile}
+  # MISSING END: this is a workaround for docker-py bug MFMF
   # fix permissions (the permissions are part of the docker cache)
-  for d,_,files in os.walk(kwargs["path"]):
+  for d,_,files in os.walk(path):
     st=stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
     if (stat.S_IMODE(os.lstat(d).st_mode) & stat.S_IXUSR)!=0:
       st |= stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
@@ -192,10 +224,10 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, **kwargs):
       os.chmod(d+"/"+f, st)
 
   if tagMultistageImage:
-    if "dockerfile" in kwargs:
-      dockerfile=kwargs["path"]+"/"+kwargs["dockerfile"]
+    if dockerfile:
+      dockerfile=path+"/"+dockerfile
     else:
-      dockerfile=kwargs["path"]+"/Dockerfile"
+      dockerfile=path+"/Dockerfile"
     fromRE=re.compile("^ *FROM .* AS (.*)$")
     with open(dockerfile, "r") as f:
       for line in f.readlines():
@@ -204,11 +236,11 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, **kwargs):
           multistageName=match.group(1).lower()
           multistageImage=tag.split(':')[0]+"--"+multistageName+":"+tag.split(':')[1]
           print("Building multistage image "+multistageName+" and tag it as "+multistageImage, file=fd)
-          build=dockerClientLL.build(tag=multistageImage, target=multistageName, **kwargs)
+          build=dockerClientLL.build(tag=multistageImage, target=multistageName, **createTarContext(path=path, dockerfile=dockerfile), **kwargs)
           ret=syncLogBuildImage(build, fd)
           if ret!=0:
             return ret
-  build=dockerClientLL.build(tag=tag, **kwargs)
+  build=dockerClientLL.build(tag=tag, **createTarContext(path=path, dockerfile=dockerfile), **kwargs)
   return syncLogBuildImage(build, fd)
 
 def build(s, jobs=4, fd=sys.stdout, baseDir=scriptdir):

@@ -88,12 +88,12 @@ WORKDIR /3rdparty
 
 # swig
 RUN set -o pipefail && \
-  wget -q -O - https://kent.dl.sourceforge.net/project/swig/swig/swig-$SWIGVERSION/swig-$SWIGVERSION.tar.gz | tar -xz
+  wget -q -O - https://sourceforge.net/projects/swig/files/swig/swig-$SWIGVERSION/swig-$SWIGVERSION.tar.gz | tar -xz
 RUN mkdir /3rdparty/swig-build
 
 # qwt
 RUN set -o pipefail && \
-  wget -q -O - https://kent.dl.sourceforge.net/project/qwt/qwt/$QWTVERSION/qwt-$QWTVERSION.tar.bz2 | tar -xj
+  wget -q -O - https://sourceforge.net/projects/qwt/files/qwt/$QWTVERSION/qwt-$QWTVERSION.tar.bz2 | tar -xj
 # fix the install dir (this cannot be done via options in qwt)
 RUN sed -i -re "s~^( *QWT_INSTALL_PREFIX *= *).*~\1/3rdparty/local~" qwt-$QWTVERSION/qwtconfig.pri
 RUN mkdir /3rdparty/qwt-build

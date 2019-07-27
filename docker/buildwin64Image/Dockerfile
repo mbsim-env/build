@@ -119,7 +119,7 @@ RUN ln -s /3rdparty/local/lib/hdf5.lib /3rdparty/local/lib/libhdf5.lib && \
 ARG QWTVERSION=6.1.3
 WORKDIR /3rdparty
 RUN set -o pipefail && \
-  wget -q -O - https://netcologne.dl.sourceforge.net/project/qwt/qwt/6.1.3/qwt-6.1.3.tar.bz2 | tar -xj
+  wget -q -O - https://sourceforge.net/projects/qwt/files/qwt/$QWTVERSION/qwt-$QWTVERSION.tar.bz2 | tar -xj
 RUN mkdir /3rdparty/qwt-build
 WORKDIR /3rdparty/qwt-build
 RUN sed -ire "s|^ *QWT_INSTALL_PREFIX *=.*$|QWT_INSTALL_PREFIX = /3rdparty/local|" /3rdparty/qwt-$QWTVERSION/qwtconfig.pri && \
@@ -157,7 +157,7 @@ RUN wine msiexec -i python-$PYTHONVERSION.amd64.msi -q n TARGETDIR="$(winepath -
 ARG SWIGVERSION=3.0.7
 WORKDIR /3rdparty
 RUN set -o pipefail && \
-  wget -q -O - https://kent.dl.sourceforge.net/project/swig/swig/swig-$SWIGVERSION/swig-$SWIGVERSION.tar.gz | tar -xz
+  wget -q -O - https://sourceforge.net/projects/swig/files/swig/swig-$SWIGVERSION/swig-$SWIGVERSION.tar.gz | tar -xz
 COPY docker/buildwin64Image/swig.patch /context/swig.patch
 RUN patch -d /3rdparty/swig-$SWIGVERSION -p0 < /context/swig.patch
 RUN mkdir /3rdparty/swig-build
