@@ -179,10 +179,11 @@ def main():
 
 
 def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfile=None, **kwargs):
-  # MISSING BEGIN: this is a workaround for docker-py bug MFMF
+  # MISSING BEGIN: this is a workaround for docker-py bug https://github.com/docker/docker-py/pull/2391
   def createTarContext(path, dockerfile):
     try:
       import tempfile
+      import tarfile
       dockerignore = os.path.join(path, '.dockerignore')
       exclude = None
       if os.path.exists(dockerignore):
@@ -194,9 +195,7 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfil
       tar=tarfile.open(fileobj=fileobj)
       fileobjNew=tempfile.NamedTemporaryFile()
       tarNew=tarfile.open(mode='w', fileobj=fileobjNew)
-      while True:
-        ti=tar.next()
-        if not ti: break
+      for ti in tar.getmembers():
         memberFileObj=tar.extractfile(ti)
         ti.uid=0
         ti.gid=0
@@ -206,11 +205,11 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfil
       tar.close()
       tarNew.close()
       fileobjNew.seek(0)
-      return {"custom_context": True, "fileobj": fileobjNew}
+      return {"custom_context": True, "fileobj": fileobjNew, "dockerfile": dockerfile}
     except:
-      print("The workaround for docker-py bug mfmf does not work, skipping it; uid and gui are not adapted which may lead to unexpected docker build cache invalidations.")
+      print("The workaround for docker-py bug https://github.com/docker/docker-py/pull/2391 does not work, skipping it; uid and gui are not adapted which may lead to unexpected docker build cache invalidations.")
       return {"path": path, "dockerfile": dockerfile}
-  # MISSING END: this is a workaround for docker-py bug MFMF
+  # MISSING END: this is a workaround for docker-py bug https://github.com/docker/docker-py/pull/2391
   # fix permissions (the permissions are part of the docker cache)
   for d,_,files in os.walk(path):
     st=stat.S_IRUSR | stat.S_IWUSR | stat.S_IRGRP | stat.S_IROTH
@@ -224,12 +223,8 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfil
       os.chmod(d+"/"+f, st)
 
   if tagMultistageImage:
-    if dockerfile:
-      dockerfile=path+"/"+dockerfile
-    else:
-      dockerfile=path+"/Dockerfile"
     fromRE=re.compile("^ *FROM .* AS (.*)$")
-    with open(dockerfile, "r") as f:
+    with open(path+"/"+dockerfile if dockerfile else path+"/Dockerfile", "r") as f:
       for line in f.readlines():
         match=fromRE.match(line)
         if match:
