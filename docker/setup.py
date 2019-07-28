@@ -385,7 +385,9 @@ def run(s, jobs=4,
         networkID=None, hostname=None,
         wait=True, printLog=True, detach=False, statusAccessToken="", daemon=""):
 
-  servicePidFile="/tmp/mbsimenv-"+getTagname()+".id"
+  servicePidDir="/tmp/mbsimenv-run"
+  if not os.path.isdir(servicePidDir):
+    os.mkdir(servicePidDir)
 
   if detach and interactive:
     raise RuntimeError("Cannot run detached an interactively.")
@@ -452,7 +454,7 @@ def run(s, jobs=4,
         'mbsimenv_mbsim-builddocker.'+getTagname():  {"bind": "/mbsim-env",           "mode": "rw"},
         'mbsimenv_report-builddocker.'+getTagname(): {"bind": "/mbsim-report",        "mode": "rw"},
         '/var/run/docker.sock':                      {"bind": "/var/run/docker.sock", "mode": "rw"},
-        servicePidFile:                              {"bind": servicePidFile,         "mode": "rw"},
+        servicePidDir:                               {"bind": servicePidDir,          "mode": "rw"},
       },
       detach=True, stdout=True, stderr=True)
     if interactive:
@@ -482,10 +484,10 @@ def run(s, jobs=4,
 
     if daemon=="stop":
       print("Stopping mbsim-env "+getTagname())
-      if not os.path.exists(servicePidFile):
+      if not os.path.exists(servicePidDir+"/"+getTagname()+".id"):
         print("No id file. Nothing to do")
         return 0
-      with open(servicePidFile, "r") as f:
+      with open(servicePidDir+"/"+getTagname()+".id", "r") as f:
         dockerIDs=json.load(f)
       for containerID in dockerIDs["container"]:
         container=dockerClient.containers.get(containerID)
@@ -495,16 +497,16 @@ def run(s, jobs=4,
         network=dockerClient.networks.get(networkID)
         print("Removing network "+networkID)
         network.remove()
-      os.remove(servicePidFile)
+      os.remove(servicePidDir+"/"+getTagname()+".id")
       print("All done. id file removed")
       return 0
 
     if daemon=="status":
       print("Status of mbsim-env "+getTagname())
-      if not os.path.exists(servicePidFile):
+      if not os.path.exists(servicePidDir+"/"+getTagname()+".id"):
         print("No id file. mbsim-env "+getTagname()+" is not running")
         return 1
-      with open(servicePidFile, "r") as f:
+      with open(servicePidDir+"/"+getTagname()+".id", "r") as f:
         dockerIDs=json.load(f)
       for containerID in dockerIDs["container"]:
         container=dockerClient.containers.get(containerID)
@@ -616,7 +618,7 @@ def run(s, jobs=4,
 
     if daemon=="start":
       dockerIDs={'network': [networki.id, networke.id], 'container': [webserver.id, webapp.id, proxy.id]}
-      with open(servicePidFile, "w") as f:
+      with open(servicePidDir+"/"+getTagname()+".id", "w") as f:
         json.dump(dockerIDs, f)
       print("Created id file")
       return 0
