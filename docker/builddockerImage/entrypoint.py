@@ -18,30 +18,43 @@ argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs
 
 args=argparser.parse_args()
 
-
-print("Building build system from commit ID "+args.commitID)
-sys.stdout.flush()
-
 with open("/mbsim-report/builddocker.txt", "w") as f:
-  
+  print("Building build system from commit ID "+args.commitID)
+  sys.stdout.flush()
+
   print("Start building build system from commit ID "+args.commitID+" at "+\
         datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"), file=f)
   f.flush()
 
   if not os.path.isdir("/mbsim-env/build"):
     subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/build.git"], cwd="/mbsim-env", stdout=f, stderr=f)
+    f.flush()
   subprocess.check_call(["git", "fetch"], cwd="/mbsim-env/build", stdout=f, stderr=f)
+  f.flush()
   subprocess.check_call(["git", "checkout", args.commitID], cwd="/mbsim-env/build", stdout=f, stderr=f)
+  f.flush()
   for s in setup.allServices:
     ret=setup.build(s, args.jobs, fd=f, baseDir="/mbsim-env/build/docker")
+    f.flush()
     if ret!=0:
       sys.exit(ret)
 
   print("Finished building build system from commit ID "+args.commitID+" at "+\
         datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"), file=f)
+  f.flush()
 
-print("Restarting service now.")
-sys.stdout.flush()
-#mfmf subprocess.check_call(["systemctl", "status", "mbsimenvstaging"])
+  print("Restarting service now.")
+  print("Stoping service now.", file=f)
+  sys.stdout.flush()
+  f.flush()
+  if setup.run('service', 6, daemon="stop", fd=f)!=0:
+    print("Stopping service failed.", file=f)
+    sys.exit(1)
+  print("Starting service now.", file=f)
+  f.flush()
+  if setup.run('service', 6, daemon="start", fd=f)!=0:
+    print("Starting service failed.", file=f)
+    sys.exit(1)
+  print("All done.", file=f)
 
 sys.exit(0)

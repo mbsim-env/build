@@ -12,6 +12,7 @@ import json
 import requests
 import setup
 import stat
+import docker
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -31,6 +32,20 @@ if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="
   raise RuntimeError("Envvar MBSIMENVSERVERNAME is not defined.")
 if "MBSIMENVTAGNAME" not in os.environ or os.environ["MBSIMENVTAGNAME"]=="":
   raise RuntimeError("Envvar MBSIMENVTAGNAME is not defined.")
+
+# create build status page
+with open('/proc/1/cpuset', "r") as fid:
+  containerID=fid.read().rstrip().split("/")[-1]
+dockerClient=docker.from_env()
+container=dockerClient.containers.get(containerID)
+image=container.image
+imageID=image.id
+gitCommitID=image.labels["gitCommitID"]
+with open("/var/www/html/mbsim/buildsysteminfo.txt", "w") as f:
+  print("This build system is running in:", file=f)
+  print("containerID: "+containerID, file=f)
+  print("imageID: "+imageID, file=f)
+  print("gitCommitID: "+gitCommitID, file=f)
 
 # check/create mbsim-config
 def createConfig(webhookSecret, clientID, clientSecret, statusAccessToken):

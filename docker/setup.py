@@ -12,6 +12,7 @@ import signal
 import multiprocessing
 import re
 import socket
+import subprocess
 
 
 
@@ -232,7 +233,8 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfil
           multistageName=match.group(1).lower()
           multistageImage=tag.split(':')[0]+"--"+multistageName+":"+tag.split(':')[1]
           print("Building multistage image "+multistageName+" and tag it as "+multistageImage, file=fd)
-          build=dockerClientLL.build(tag=multistageImage, target=multistageName, **createTarContext(path=path, dockerfile=dockerfile), **kwargs)
+          build=dockerClientLL.build(tag=multistageImage, target=multistageName,
+                                     **createTarContext(path=path, dockerfile=dockerfile), **kwargs)
           ret=syncLogBuildImage(build, fd)
           if ret!=0:
             return ret
@@ -290,8 +292,10 @@ def build(s, jobs=4, fd=sys.stdout, baseDir=scriptdir):
       rm=False)
 
   elif s=="webserver":
+    gitCommitID=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=scriptdir).decode("UTF-8")
     return buildImage(tag="mbsimenv/webserver:"+getTagname(), fd=fd,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
+      labels={"gitCommitID": gitCommitID},
       path=baseDir,
       dockerfile="webserverImage/Dockerfile",
       rm=False)
@@ -381,6 +385,8 @@ def run(s, jobs=4,
         networkID=None, hostname=None,
         wait=True, printLog=True, detach=False, statusAccessToken="", daemon=""):
 
+  servicePidFile="/tmp/mbsimenv-"+getTagname()+".id"
+
   if detach and interactive:
     raise RuntimeError("Cannot run detached an interactively.")
 
@@ -446,6 +452,7 @@ def run(s, jobs=4,
         'mbsimenv_mbsim-builddocker.'+getTagname():  {"bind": "/mbsim-env",           "mode": "rw"},
         'mbsimenv_report-builddocker.'+getTagname(): {"bind": "/mbsim-report",        "mode": "rw"},
         '/var/run/docker.sock':                      {"bind": "/var/run/docker.sock", "mode": "rw"},
+        servicePidFile:                              {"bind": servicePidFile,         "mode": "rw"},
       },
       detach=True, stdout=True, stderr=True)
     if interactive:
@@ -473,14 +480,12 @@ def run(s, jobs=4,
     if detach==True:
       raise RuntimeError("Cannot run service detached.")
 
-    idFile="/tmp/mbsimenv-"+getTagname()+".id"
-
     if daemon=="stop":
       print("Stopping mbsim-env "+getTagname())
-      if not os.path.exists(idFile):
+      if not os.path.exists(servicePidFile):
         print("No id file. Nothing to do")
         return 0
-      with open(idFile, "r") as f:
+      with open(servicePidFile, "r") as f:
         dockerIDs=json.load(f)
       for containerID in dockerIDs["container"]:
         container=dockerClient.containers.get(containerID)
@@ -490,16 +495,16 @@ def run(s, jobs=4,
         network=dockerClient.networks.get(networkID)
         print("Removing network "+networkID)
         network.remove()
-      os.remove(idFile)
+      os.remove(servicePidFile)
       print("All done. id file removed")
       return 0
 
     if daemon=="status":
       print("Status of mbsim-env "+getTagname())
-      if not os.path.exists(idFile):
+      if not os.path.exists(servicePidFile):
         print("No id file. mbsim-env "+getTagname()+" is not running")
         return 1
-      with open(idFile, "r") as f:
+      with open(servicePidFile, "r") as f:
         dockerIDs=json.load(f)
       for containerID in dockerIDs["container"]:
         container=dockerClient.containers.get(containerID)
@@ -611,7 +616,7 @@ def run(s, jobs=4,
 
     if daemon=="start":
       dockerIDs={'network': [networki.id, networke.id], 'container': [webserver.id, webapp.id, proxy.id]}
-      with open(idFile, "w") as f:
+      with open(servicePidFile, "w") as f:
         json.dump(dockerIDs, f)
       print("Created id file")
       return 0
