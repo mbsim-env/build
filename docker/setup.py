@@ -292,7 +292,7 @@ def build(s, jobs=4, fd=sys.stdout, baseDir=scriptdir):
       rm=False)
 
   elif s=="webserver":
-    gitCommitID=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=scriptdir).decode("UTF-8")
+    gitCommitID=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=baseDir).decode("UTF-8")
     return buildImage(tag="mbsimenv/webserver:"+getTagname(), fd=fd,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
       labels={"gitCommitID": gitCommitID},
