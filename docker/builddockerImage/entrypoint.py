@@ -47,12 +47,12 @@ with open("/mbsim-report/builddocker.txt", "w") as f:
   print("Stoping service now.", file=f)
   sys.stdout.flush()
   f.flush()
-  if setup.run('service', 6, daemon="stop", fd=f)!=0:
+  if setup.run('service', 6, daemon="stop")!=0:
     print("Stopping service failed.", file=f)
     sys.exit(1)
   print("Starting service now.", file=f)
   f.flush()
-  if setup.run('service', 6, daemon="start", fd=f)!=0:
+  if setup.run('service', 6, daemon="start")!=0:
     print("Starting service failed.", file=f)
     sys.exit(1)
   print("All done.", file=f)
