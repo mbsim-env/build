@@ -446,7 +446,7 @@ def run(s, jobs=4,
     builddocker=dockerClient.containers.run(image="mbsimenv/builddocker:"+getTagname(),
       init=True,
       entrypoint=None if not interactive else ["sleep", "infinity"],
-      environment={"MBSIMENVTAGNAME": getTagname()},
+      environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
       command=["-j", str(jobs), builddockerBranch],
       volumes={
         'mbsimenv_mbsim-builddocker.'+getTagname():  {"bind": "/mbsim-env",           "mode": "rw"},
