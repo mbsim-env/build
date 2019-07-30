@@ -36,6 +36,7 @@ def parseArgs():
   argparser.add_argument("--jobs", "-j", type=int, default=multiprocessing.cpu_count(), help="Number of jobs to run in parallel")
   argparser.add_argument("--interactive", "-i", action='store_true', help="Run container, wait and print how to attach to it")
   argparser.add_argument("--daemon", "-d", type=str, choices=["start", "status", "stop"], help="Only for 'run service'")
+  argparser.add_argument("--pushPullMultistageImage", action='store_true', help="Also push/pull multistage images")
   
   return argparser.parse_known_args()
 
@@ -155,6 +156,23 @@ def main():
       pull=dockerClientLL.pull("centos", "centos7", stream=True)
       if syncLogBuildImage(pull)!=0:
         return 1
+    if args.pushPullMultistageImage:
+      import requests
+      url='https://hub.docker.com/v2/repositories/mbsimenv'
+      while True:
+        response=requests.get(url)
+        if response.status_code!=200:
+          raise RuntimeError("Cannot get repositories on dockerhub in mbsimenv.")
+        data=response.json()
+        for image in data["results"]:
+          if '.' not in image["name"]: 
+            continue
+          pull=dockerClientLL.pull("mbsimenv/"+image["name"], getTagname(), stream=True)
+          if syncLogBuildImage(pull)!=0:
+            return 1
+        url=data["next"]
+        if url==None:
+          break
     for s in args.service:
       pull=dockerClientLL.pull("mbsimenv/"+s, getTagname(), stream=True)
       if syncLogBuildImage(pull)!=0:
@@ -164,7 +182,18 @@ def main():
   if args.command=="push":
     if len(args.service)==0:
       args.service=allServices
+    if args.pushPullMultistageImage:
+      images=dockerClient.images.list()
     for s in args.service:
+      if args.pushPullMultistageImage:
+        for i in images:
+          for t in i.tags:
+            if t.startswith("mbsimenv/"+s+".") and t.endswith(":"+getTagname()):
+              print("Pushing multistage image "+t.split(":")[0]+":"+getTagname())
+              push=dockerClient.images.push(t.split(":")[0], getTagname(), stream=True)
+              if syncLogBuildImage(push)!=0:
+                return 1
+      print("Pushing image "+"mbsimenv/"+s+":"+getTagname())
       push=dockerClient.images.push("mbsimenv/"+s, getTagname(), stream=True)
       if syncLogBuildImage(push)!=0:
         return 1
@@ -231,7 +260,7 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfil
         match=fromRE.match(line)
         if match:
           multistageName=match.group(1).lower()
-          multistageImage=tag.split(':')[0]+"--"+multistageName+":"+tag.split(':')[1]
+          multistageImage=tag.split(':')[0]+"."+multistageName+":"+tag.split(':')[1]
           print("Building multistage image "+multistageName+" and tag it as "+multistageImage, file=fd)
           build=dockerClientLL.build(tag=multistageImage, target=multistageName,
                                      **createTarContext(path=path, dockerfile=dockerfile), **kwargs)
