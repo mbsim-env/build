@@ -37,6 +37,7 @@ def parseArgs():
   argparser.add_argument("--interactive", "-i", action='store_true', help="Run container, wait and print how to attach to it")
   argparser.add_argument("--daemon", "-d", type=str, choices=["start", "status", "stop"], help="Only for 'run service'")
   argparser.add_argument("--pushPullMultistageImage", action='store_true', help="Also push/pull multistage images")
+  argparser.add_argument("--cacheFromSelf", action='store_true', help="Use existing image with same name as --cache_from")
   
   return argparser.parse_known_args()
 
@@ -137,7 +138,7 @@ def main():
     if len(args.service)==0:
       args.service=allServices
     for s in args.service:
-      ret=build(s, args.jobs)
+      ret=build(s, args.jobs, cacheFromSelf=args.cacheFromSelf)
       if ret!=0:
         break
     return ret
@@ -209,7 +210,7 @@ def main():
 
 
 
-def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfile=None, **kwargs):
+def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfile=None, cacheFromSelf=False, **kwargs):
   # MISSING BEGIN: this is a workaround for docker-py bug https://github.com/docker/docker-py/pull/2391
   def createTarContext(path, dockerfile):
     try:
@@ -221,7 +222,7 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfil
           with open(dockerignore, 'r') as f:
               exclude = list(filter(bool, f.read().splitlines()))
       fileobj = docker.utils.tar(
-          path, exclude=exclude, dockerfile=dockerfile, gzip=False
+          path, exclude=exclude, dockerfile=(dockerfile, None) if docker.version_info>=(3,0,0) else dockerfile, gzip=False
       )
       tar=tarfile.open(fileobj=fileobj)
       fileobjNew=tempfile.NamedTemporaryFile()
@@ -253,40 +254,48 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfil
         st |= stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
       os.chmod(d+"/"+f, st)
 
+  extraArgs={}
+  if cacheFromSelf:
+    extraArgs={"cache_from": [tag]}
   if tagMultistageImage:
     fromRE=re.compile("^ *FROM .* AS (.*)$")
+    multistageNameImage=[]
     with open(path+"/"+dockerfile if dockerfile else path+"/Dockerfile", "r") as f:
       for line in f.readlines():
         match=fromRE.match(line)
         if match:
           multistageName=match.group(1).lower()
           multistageImage=tag.split(':')[0]+"."+multistageName+":"+tag.split(':')[1]
-          print("Building multistage image "+multistageName+" and tag it as "+multistageImage, file=fd)
-          build=dockerClientLL.build(tag=multistageImage, target=multistageName,
-                                     **createTarContext(path=path, dockerfile=dockerfile), **kwargs)
-          ret=syncLogBuildImage(build, fd)
-          if ret!=0:
-            return ret
-  build=dockerClientLL.build(tag=tag, **createTarContext(path=path, dockerfile=dockerfile), **kwargs)
+          multistageNameImage.append((multistageName, multistageImage))
+          if cacheFromSelf:
+            extraArgs["cache_from"].append(multistageImage)
+    for mni in multistageNameImage:
+      print("Building multistage image "+mni[0]+" and tag it as "+mni[1], file=fd)
+      build=dockerClientLL.build(tag=mni[1], target=mni[0],
+                                 **createTarContext(path=path, dockerfile=dockerfile), **kwargs, **extraArgs)
+      ret=syncLogBuildImage(build, fd)
+      if ret!=0:
+        return ret
+  build=dockerClientLL.build(tag=tag, **createTarContext(path=path, dockerfile=dockerfile), **kwargs, **extraArgs)
   return syncLogBuildImage(build, fd)
 
-def build(s, jobs=4, fd=sys.stdout, baseDir=scriptdir):
+def build(s, jobs=4, fd=sys.stdout, baseDir=scriptdir, cacheFromSelf=False):
 
   if s=="base":
-    return buildImage(tag="mbsimenv/base:"+getTagname(), fd=fd,
+    return buildImage(tag="mbsimenv/base:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=baseDir+"/baseImage",
       rm=False)
 
   elif s=="build":
-    return buildImage(tag="mbsimenv/build:"+getTagname(), fd=fd,
+    return buildImage(tag="mbsimenv/build:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=baseDir+"/..",
       dockerfile="docker/buildImage/Dockerfile",
       rm=False)
 
   elif s=="run":
-    return buildImage(tag="mbsimenv/run:"+getTagname(), fd=fd,
+    return buildImage(tag="mbsimenv/run:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=baseDir+"/..",
       dockerfile="docker/runImage/Dockerfile",
@@ -294,27 +303,27 @@ def build(s, jobs=4, fd=sys.stdout, baseDir=scriptdir):
       rm=False)
 
   elif s=="proxy":
-    return buildImage(tag="mbsimenv/proxy:"+getTagname(), fd=fd,
+    return buildImage(tag="mbsimenv/proxy:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=baseDir+"/proxyImage",
       rm=False)
 
   elif s=="buildwin64":
-    return buildImage(tag="mbsimenv/buildwin64:"+getTagname(), fd=fd,
+    return buildImage(tag="mbsimenv/buildwin64:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=baseDir+"/..",
       dockerfile="docker/buildwin64Image/Dockerfile",
       rm=False)
 
   elif s=="builddoc":
-    return buildImage(tag="mbsimenv/builddoc:"+getTagname(), fd=fd,
+    return buildImage(tag="mbsimenv/builddoc:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=baseDir+"/..",
       dockerfile="docker/builddocImage/Dockerfile",
       rm=False)
 
   elif s=="builddocker":
-    return buildImage(tag="mbsimenv/builddocker:"+getTagname(), fd=fd,
+    return buildImage(tag="mbsimenv/builddocker:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=baseDir,
       dockerfile="builddockerImage/Dockerfile",
@@ -322,7 +331,7 @@ def build(s, jobs=4, fd=sys.stdout, baseDir=scriptdir):
 
   elif s=="webserver":
     gitCommitID=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=baseDir).decode("UTF-8")
-    return buildImage(tag="mbsimenv/webserver:"+getTagname(), fd=fd,
+    return buildImage(tag="mbsimenv/webserver:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
       labels={"gitCommitID": gitCommitID},
       path=baseDir,
@@ -330,14 +339,14 @@ def build(s, jobs=4, fd=sys.stdout, baseDir=scriptdir):
       rm=False)
 
   elif s=="webapp":
-    return buildImage(tag="mbsimenv/webapp:"+getTagname(), fd=fd,
+    return buildImage(tag="mbsimenv/webapp:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=baseDir,
       dockerfile="webappImage/Dockerfile",
       rm=False)
 
   elif s=="webapprun":
-    return buildImage(tag="mbsimenv/webapprun:"+getTagname(), fd=fd,
+    return buildImage(tag="mbsimenv/webapprun:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
       path=baseDir+"/webapprunImage",
       rm=False)
