@@ -44,7 +44,7 @@ with open("/mbsim-report/builddocker.txt", "w") as f:
   f.flush()
 
   print("Restarting service now.")
-  print("Stoping service now.", file=f)
+  print("Stopping service now.", file=f)
   sys.stdout.flush()
   f.flush()
   if setup.run('service', 6, daemon="stop", keepBuildDockerContainerRunning=True)!=0:

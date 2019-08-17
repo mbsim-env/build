@@ -539,7 +539,7 @@ def run(s, jobs=4,
           print("Container mbsimenv/webapprun:"+getTagname()+" "+c.name+" stopped (id="+c.id+")")
       for cn in list(map(lambda x: 'mbsimenv.build.'+x+'.', buildTypes))+['mbsimenv.builddoc.',
                  'mbsimenv.proxy.', 'mbsimenv.webapp.', 'mbsimenv.webserver.']+\
-                 (['mbsimenv.builddocker.'] if keepBuildDockerContainerRunning else []):
+                 (['mbsimenv.builddocker.'] if not keepBuildDockerContainerRunning else []):
         try:
           c=dockerClient.containers.get(cn+getTagname())
           if c.status=="created":
