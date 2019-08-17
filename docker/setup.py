@@ -13,6 +13,7 @@ import multiprocessing
 import re
 import socket
 import subprocess
+import uuid
 
 
 
@@ -44,6 +45,8 @@ def parseArgs():
 
 
 scriptdir=os.path.dirname(os.path.realpath(__file__))
+
+buildTypes=["linux64-dailydebug", "linux64-dailyrelease", "win64-dailyrelease", "linux64-ci"]
 
 dockerClient=docker.from_env()
 dockerClientLL=docker.APIClient()
@@ -366,6 +369,14 @@ def runWait(containers, printLog=True):
       sys.stdout.flush()
   return ret
 
+def renameStoppedContainer(name):
+  try:
+    c=dockerClient.containers.get(name+getTagname())
+    if c.status=="exited" or c.status=="dead":
+      c.rename(uuid.uuid4().hex)
+  except docker.errors.NotFound:
+    pass
+
 def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
                  fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
                  printLog=True, detach=False, statusAccessToken=""):
@@ -377,9 +388,10 @@ def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
       updateReferences=["--updateReferences"]+config["checkedExamples"]
 
   # build
+  renameStoppedContainer('mbsimenv.build.'+buildType+'.')
   build=dockerClient.containers.run(
     image=("mbsimenv/buildwin64" if buildType=="win64-dailyrelease" else "mbsimenv/build")+":"+getTagname(),
-    init=True,
+    init=True, name='mbsimenv.build.'+buildType+'.'+getTagname(),
     labels={"buildtype": buildType},
     entrypoint=None if not interactive else ["sleep", "infinity"],
     command=(["--buildType", buildType, "-j", str(jobs),
@@ -419,13 +431,9 @@ def run(s, jobs=4,
         addCommands=[],
         interactive=False,
         fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
-        builddockerBranch="master",
+        builddockerBranch="master", keepBuildDockerContainerRunning=False,
         networkID=None, hostname=None,
         wait=True, printLog=True, detach=False, statusAccessToken="", daemon=""):
-
-  servicePidDir="/tmp/mbsimenv-run"
-  if not os.path.isdir(servicePidDir):
-    os.mkdir(servicePidDir)
 
   if detach and interactive:
     raise RuntimeError("Cannot run detached an interactively.")
@@ -452,8 +460,9 @@ def run(s, jobs=4,
                  printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
 
   elif s=="builddoc":
+    renameStoppedContainer('mbsimenv.builddoc.')
     builddoc=dockerClient.containers.run(image="mbsimenv/builddoc:"+getTagname(),
-      init=True,
+      init=True, name='mbsimenv.builddoc.'+getTagname(),
       entrypoint=None if not interactive else ["sleep", "infinity"],
       environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
       volumes={
@@ -483,8 +492,9 @@ def run(s, jobs=4,
       return ret
 
   elif s=="builddocker":
+    renameStoppedContainer('mbsimenv.builddocker.')
     builddocker=dockerClient.containers.run(image="mbsimenv/builddocker:"+getTagname(),
-      init=True,
+      init=True, name='mbsimenv.builddocker.'+getTagname(),
       entrypoint=None if not interactive else ["sleep", "infinity"],
       environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
       command=["-j", str(jobs), builddockerBranch],
@@ -492,7 +502,6 @@ def run(s, jobs=4,
         'mbsimenv_mbsim-builddocker.'+getTagname():  {"bind": "/mbsim-env",           "mode": "rw"},
         'mbsimenv_report-builddocker.'+getTagname(): {"bind": "/mbsim-report",        "mode": "rw"},
         '/var/run/docker.sock':                      {"bind": "/var/run/docker.sock", "mode": "rw"},
-        servicePidDir:                               {"bind": servicePidDir,          "mode": "rw"},
       },
       detach=True, stdout=True, stderr=True)
     if interactive:
@@ -521,41 +530,45 @@ def run(s, jobs=4,
       raise RuntimeError("Cannot run service detached.")
 
     if daemon=="stop":
-      print("Stopping mbsim-env "+getTagname())
-      if not os.path.exists(servicePidDir+"/"+getTagname()+".id"):
-        print("No id file. Nothing to do")
-        return 0
-      with open(servicePidDir+"/"+getTagname()+".id", "r") as f:
-        dockerIDs=json.load(f)
-      for containerID in dockerIDs["container"]:
-        container=dockerClient.containers.get(containerID)
-        print("Stopping container "+containerID)
-        container.stop()
-      for networkID in dockerIDs["network"]:
-        network=dockerClient.networks.get(networkID)
-        print("Removing network "+networkID)
-        network.remove()
-      os.remove(servicePidDir+"/"+getTagname()+".id")
-      print("All done. id file removed")
+      print("Stopping of mbsim-env "+getTagname())
+      for c in dockerClient.containers.list(filters={"label": 'mbsimenv.webapprun.'+getTagname()}):
+        if c.status=="created":
+          c.remove()
+        if c.status!="exited" and c.status!="dead":
+          c.stop()
+          print("Container mbsimenv/webapprun:"+getTagname()+" "+c.name+" stopped (id="+c.id+")")
+      for cn in list(map(lambda x: 'mbsimenv.build.'+x+'.', buildTypes))+['mbsimenv.builddoc.',
+                 'mbsimenv.proxy.', 'mbsimenv.webapp.', 'mbsimenv.webserver.']+\
+                 (['mbsimenv.builddocker.'] if keepBuildDockerContainerRunning else []):
+        try:
+          c=dockerClient.containers.get(cn+getTagname())
+          if c.status=="created":
+            c.remove()
+          if c.status!="exited" and c.status!="dead":
+            c.stop()
+            print("Container "+cn+getTagname()+" stopped (id="+c.id+")")
+        except docker.errors.NotFound:
+          pass
+      for n in dockerClient.networks.list(names=["mbsimenv_service_extern:"+getTagname(), "mbsimenv_service_intern:"+getTagname()]):
+        n.remove()
+        print("Network "+n.name+" removed (id="+n.id+")")
       return 0
 
     if daemon=="status":
       print("Status of mbsim-env "+getTagname())
-      if not os.path.exists(servicePidDir+"/"+getTagname()+".id"):
-        print("No id file. mbsim-env "+getTagname()+" is not running")
-        return 1
-      with open(servicePidDir+"/"+getTagname()+".id", "r") as f:
-        dockerIDs=json.load(f)
-      for containerID in dockerIDs["container"]:
-        container=dockerClient.containers.get(containerID)
-        if container.status=="running":
-          print("Container "+containerID+" is running")
-        else:
-          print("Container "+containerID+" is not running")
-          return 1
-      for networkID in dockerIDs["network"]:
-        network=dockerClient.networks.get(networkID)
-        print("Network "+networkID+" exists")
+      for c in dockerClient.containers.list(filters={"label": 'mbsimenv.webapprun.'+getTagname()}):
+        if c.status!="exited" and c.status!="dead":
+          print("Container mbsimenv/webapprun:"+getTagname()+" "+c.name+" is "+c.status+" (id="+c.id+")")
+      for cn in list(map(lambda x: 'mbsimenv.build.'+x+'.', buildTypes))+['mbsimenv.builddoc.', 'mbsimenv.builddocker.',
+                 'mbsimenv.proxy.', 'mbsimenv.webapp.', 'mbsimenv.webserver.']:
+        try:
+          c=dockerClient.containers.get(cn+getTagname())
+          if c.status!="exited" and c.status!="dead":
+            print("Container "+cn+getTagname()+" is "+c.status+" (id="+c.id+")")
+        except docker.errors.NotFound:
+          pass
+      for n in dockerClient.networks.list(names=["mbsimenv_service_extern:"+getTagname(), "mbsimenv_service_intern"+getTagname()]):
+        print("Network "+n.name+" exists (id="+n.id+")")
       return 0
 
     # networks
@@ -572,8 +585,9 @@ def run(s, jobs=4,
         ports[p].append((ai[4][0], p))
 
     # webserver
+    renameStoppedContainer('mbsimenv.webserver.')
     webserver=dockerClient.containers.run(image="mbsimenv/webserver:"+getTagname(),
-      init=True,
+      init=True, name='mbsimenv.webserver.'+getTagname(),
       network=networki.id,
       command=["-j", str(jobs)]+addCommands,
       environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
@@ -606,8 +620,9 @@ def run(s, jobs=4,
         print("Started webserver in background")
 
     # webapp
+    renameStoppedContainer('mbsimenv.webapp.')
     webapp=dockerClient.containers.run(image="mbsimenv/webapp:"+getTagname(),
-      init=True,
+      init=True, name='mbsimenv.webapp.'+getTagname(),
       network=networki.id,
       command=[networki.id]+addCommands,
       environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
@@ -629,8 +644,9 @@ def run(s, jobs=4,
         print("Started webapp in background")
 
     # proxy
+    renameStoppedContainer('mbsimenv.proxy.')
     proxy=dockerClient.containers.run(image="mbsimenv/proxy:"+getTagname(),
-      init=True,
+      init=True, name='mbsimenv.proxy.'+getTagname(),
       network=networki.id,
       # allow access to these sites
       command=["www\\.mbsim-env\\.de\n"+
@@ -655,10 +671,7 @@ def run(s, jobs=4,
         print("Started proxy in background")
 
     if daemon=="start":
-      dockerIDs={'network': [networki.id, networke.id], 'container': [webserver.id, webapp.id, proxy.id]}
-      with open(servicePidDir+"/"+getTagname()+".id", "w") as f:
-        json.dump(dockerIDs, f)
-      print("Created id file")
+      print("mbsim-env "+getTagname()+" started")
       return 0
     else:
       # wait for running containers
@@ -683,7 +696,7 @@ def run(s, jobs=4,
       raise RuntimeError("Cannot run webapprun detached.")
     networki=dockerClient.networks.get(networkID)
     webapprun=dockerClient.containers.run(image="mbsimenv/webapprun:"+getTagname(),
-      init=True,
+      init=True, labels=['mbsimenv.webapprun.'+getTagname()],
       network=networki.id,
       command=addCommands,
       environment={"MBSIMENVTAGNAME": getTagname()},

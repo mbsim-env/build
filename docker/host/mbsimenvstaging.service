@@ -4,15 +4,14 @@
 # systemctl enable mbsimenvstaging.service
 
 [Unit]
-Description=MBSim-Env Stating Service
+Description=MBSim-Env Staging Service
 Requires=docker.service
 After=docker.service
 
 [Service]
 Environment=MBSIMENVSERVERNAME=wwwstaging.mbsim-env.de
 Environment=MBSIMENVTAGNAME=staging
-Type=forking
+Type=onshot
 RemainAfterExit=yes
-GuessMainPID=no
 ExecStart=/home/dockeruser/buildstaging/docker/setup.py run service -j 6 -d start
 ExecStop=/home/dockeruser/buildstaging/docker/setup.py run service -j 6 -d stop
