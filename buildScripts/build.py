@@ -351,6 +351,9 @@ def main():
     pj('mbsim', 'modules', 'mbsimControl'): [False, set([ # depends on
         pj('mbsim', 'kernel')
       ])],
+    pj('mbsim', 'modules', 'mbsimPhysics'): [False, set([ # depends on
+        pj('mbsim', 'kernel')
+      ])],
     pj('mbsim', 'modules', 'mbsimInterface'): [False, set([ # depends on
         pj('mbsim', 'kernel'),
         pj('mbsim', 'modules', 'mbsimControl')
@@ -364,6 +367,7 @@ def main():
         pj('mbsim', 'modules', 'mbsimFlexibleBody'),
         pj('mbsim', 'modules', 'mbsimElectronics'),
         pj('mbsim', 'modules', 'mbsimControl'),
+        pj('mbsim', 'modules', 'mbsimPhysics'),
         pj('mbsim', 'modules', 'mbsimInterface')
       ])],
     pj('mbsim', 'mbsimgui'): [False, set([ # depends on
