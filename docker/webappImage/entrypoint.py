@@ -65,7 +65,7 @@ class MBSimWebappAuth(websockify.auth_plugins.BasePlugin):
     sessionid=c['mbsimenvsessionid'].value
     # call the server to check to session ID (we can do this my checking the config file of the server directly
     # but this file is not readable for this user for security reasons)
-    response=requests.post("https://"+os.environ['MBSIMENVSERVERNAME']+"/cgi-bin/mbsimBuildServiceServer.py/checkmbsimenvsessionid",
+    response=requests.post("https://"+os.environ['MBSIMENVSERVERNAME']+"/wsgi/mbsimBuildServiceServer.py/checkmbsimenvsessionid",
       json={'mbsimenvsessionid': sessionid})
     # if the response is OK and success is true than continue
     if response.status_code!=200:

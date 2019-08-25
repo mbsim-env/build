@@ -14,10 +14,11 @@ RUN git checkout $NOVNCBRANCH
 FROM centos:centos7
 
 # install software
-RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && \
+RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release centos-release-scl && \
   yum --setopt=skip_missing_names_on_install=False -y install \
   httpd \
   mod_ssl \
+  rh-python36-mod_wsgi \
   python2-certbot \
   cronie \
   python36-docker \
@@ -28,8 +29,6 @@ EXPOSE 80/tcp 443/tcp
 
 COPY --from=temp /tmp/noVNC/include /var/www/html/noVNC/include
 
-# copy cgi script
-COPY webserverImage/cgi-bin/mbsimBuildServiceServer.py /var/www/cgi-bin/mbsimBuildServiceServer.py
 # copy html script
 COPY webserverImage/html /var/www/html/mbsim/html
 # copy entrypoint
@@ -52,6 +51,12 @@ RUN set -o pipefail && \
   sed -rn "1,$[$B-1]p;$[$B+$O+1],\$p" /etc/httpd/conf/httpd.conf > /etc/httpd/conf/httpd.conf.new && \
   cat /etc/httpd/conf/httpd.conf.new /tmp/httpd_rootdir.conf > /etc/httpd/conf/httpd.conf && \
   rm -f /etc/httpd/conf/httpd.conf.new /tmp/httpd_rootdir.conf
+
+# configure wsgi
+RUN cp /opt/rh/httpd24/root/usr/lib64/httpd/modules/mod_rh-python36-wsgi.so /lib64/httpd/modules && \
+    cp /opt/rh/httpd24/root/etc/httpd/conf.modules.d/10-rh-python36-wsgi.conf /etc/httpd/conf.modules.d
+COPY webserverImage/wsgi/mbsimBuildServiceServer.py /var/www/mbsimBuildServiceServer.py
+RUN echo "WSGIScriptAlias /wsgi/mbsimBuildServiceServer.py /var/www/mbsimBuildServiceServer.py" >> /etc/httpd/conf.modules.d/10-wsgi.conf
 
 # webserver SSL
 RUN set -o pipefail && \

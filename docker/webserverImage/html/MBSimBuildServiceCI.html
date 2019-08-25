@@ -22,7 +22,7 @@
                               hdf5serie: $('#HDF5SERIE_BRANCH').val(),
                               openmbv: $('#OPENMBV_BRANCH').val(),
                               mbsim: $('#MBSIM_BRANCH').val(), }}
-      $.ajax({url: cgiPath+"/addcibranch", xhrFields: {withCredentials: true}, dataType: "json", type: "POST",
+      $.ajax({url: serverScriptURI+"/addcibranch", xhrFields: {withCredentials: true}, dataType: "json", type: "POST",
               data: JSON.stringify(data)}).done(function(response) {
         if(!response.success)
           statusMessage(response);
@@ -37,7 +37,7 @@
     $('#CITABLE').on("click", ".DELCIBRANCH", function() {
       statusCommunicating();
       var data={delcibranch: JSON.parse($(this).attr('value').replace(/'/g, '"'))}
-      $.ajax({url: cgiPath+"/delcibranch", xhrFields: {withCredentials: true}, dataType: "json", type: "POST",
+      $.ajax({url: serverScriptURI+"/delcibranch", xhrFields: {withCredentials: true}, dataType: "json", type: "POST",
               data: JSON.stringify(data)}).done(function(response) {
         if(!response.success)
           statusMessage(response);
@@ -52,7 +52,7 @@
     function updateCurCIBranches(printStatus) {
       if(printStatus)
         statusCommunicating();
-      $.ajax({url: cgiPath+"/getcibranches", xhrFields: {withCredentials: true}, async: printStatus,
+      $.ajax({url: serverScriptURI+"/getcibranches", xhrFields: {withCredentials: true}, async: printStatus,
               dataType: "json", type: "GET"}).done(function(response) {
         if(!response.success) {
           if(printStatus)

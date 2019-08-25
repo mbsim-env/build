@@ -1178,7 +1178,7 @@ def releaseGeneration1(mainFD):
       else {
         statusCommunicating();
         // send data to server
-        $.ajax({url: cgiPath+"/releasedistribution", xhrFields: {withCredentials: true}, dataType: "json", type: "POST",
+        $.ajax({url: serverScriptURI+"/releasedistribution", xhrFields: {withCredentials: true}, dataType: "json", type: "POST",
                 data: JSON.stringify(data)}).done(function(response) {
           statusMessage(response);
         });

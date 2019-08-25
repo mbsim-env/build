@@ -1,4 +1,4 @@
-var cgiPath="https://"+window.location.hostname+"/cgi-bin/mbsimBuildServiceServer.py";
+var serverScriptURI="https://"+window.location.hostname+"/wsgi/mbsimBuildServiceServer.py";
 
 // indicate start of server commnication
 function statusCommunicating() {
@@ -53,7 +53,7 @@ $(document).ready(function() {
   $("#LOGOUTBUTTON").click(function() {
     statusCommunicating();
     // from server
-    $.ajax({url: cgiPath+"/logout", xhrFields: {withCredentials: true}, dataType: "json", type: "GET"}).done(function(response) {
+    $.ajax({url: serverScriptURI+"/logout", xhrFields: {withCredentials: true}, dataType: "json", type: "GET"}).done(function(response) {
       loginStatus();
       statusMessage(response);
       if(response.success)
@@ -63,7 +63,7 @@ $(document).ready(function() {
 
   // login status
   function loginStatus() {
-    $.ajax({url: cgiPath+"/getuser", xhrFields: {withCredentials: true}, dataType: "json", type: "GET"}).done(function(response) {
+    $.ajax({url: serverScriptURI+"/getuser", xhrFields: {withCredentials: true}, dataType: "json", type: "GET"}).done(function(response) {
       if(!response.success) {
         $('#LOGINUSER').text("Internal error: "+response.message);
         $('#LOGINAVATAR').attr("src", "data:image/gif;base64,R0lGODlhAQABAAD/ACwAAAAAAQABAAACADs=");
