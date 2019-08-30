@@ -11,7 +11,7 @@ After=docker.service
 [Service]
 Environment=MBSIMENVSERVERNAME=wwwstaging.mbsim-env.de
 Environment=MBSIMENVTAGNAME=staging
-Type=onshot
+Type=oneshot
 RemainAfterExit=yes
 ExecStart=/home/dockeruser/buildstaging/docker/setup.py run service -j 6 -d start
 ExecStop=/home/dockeruser/buildstaging/docker/setup.py run service -j 6 -d stop
