@@ -424,8 +424,8 @@ def actionWebhook(environ):
             toadd=c.copy()
             toadd['timestamp']=int(time.time())
             tobuild.append(toadd)
-      # add push to repo build on branch staging -> add to list of docker builds
-      if repo=="build" and branch=="staging":
+      # push to repo "build" -> add to list of docker builds
+      if repo=="build" and branch==("staging" if environ["MBSIMENVTAGNAME"]=="staging" else "master"):
         buildDocker.append(data["after"])
       # create response
       response_data['success']=True

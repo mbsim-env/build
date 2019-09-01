@@ -78,7 +78,7 @@ if tobuild==None and bd==None:
   # nothing to do, return with code 0
   sys.exit(0)
 
-if bd!=None and os.environ["MBSIMENVTAGNAME"]=="staging":
+if bd!=None:
   # run rebuild build-system
   ret=setup.run("builddocker", args.jobs, printLog=False, builddockerBranch=bd, statusAccessToken=statusAccessToken)
   sys.exit(ret)
