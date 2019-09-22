@@ -16,10 +16,7 @@ import hashlib
 import hmac
 import json
 import fcntl
-if sys.version_info[0]==2: # to unify python 2 and python 3
-  import urllib as myurllib
-else:
-  import urllib.request as myurllib
+import urllib.request
 
 # global variables
 toolDependencies=dict()
@@ -222,14 +219,14 @@ def mainDocPage():
   print('<div class="panel panel-success">', file=docFD)
   print('  <div class="panel-heading"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;XML Documentation</div>', file=docFD)
   print('  <ul class="list-group">', file=docFD)
-  print('    <li class="list-group-item"><a href="'+myurllib.pathname2url(pj("xmldoc", "http___www_mbsim-env_de_MBSimXML", "mbsimxml.html"))+'">MBSimXML</a></li>', file=docFD)
+  print('    <li class="list-group-item"><a href="'+urllib.request.pathname2url(pj("xmldoc", "http___www_mbsim-env_de_MBSimXML", "mbsimxml.html"))+'">MBSimXML</a></li>', file=docFD)
   print('  </ul>', file=docFD)
   print('</div>', file=docFD)
   print('<div class="panel panel-info">', file=docFD)
   print('  <div class="panel-heading"><span class="glyphicon glyphicon-question-sign"></span>&nbsp;Doxygen Documentation</div>', file=docFD)
   print('  <ul class="list-group">', file=docFD)
   for d in sorted(os.listdir(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc")))):
-    print('    <li class="list-group-item"><a href="'+myurllib.pathname2url(pj("doc", d, "index.html"))+'">'+d+'</a></li>', file=docFD)
+    print('    <li class="list-group-item"><a href="'+urllib.request.pathname2url(pj("doc", d, "index.html"))+'">'+d+'</a></li>', file=docFD)
   print('  </ul>', file=docFD)
   print('</div>', file=docFD)
   print('<hr/>', file=docFD)
@@ -878,15 +875,15 @@ def configure(tool, mainFD):
   if not args.disableConfigure:
     print('<td data-order="%d" class="%s"><span class="glyphicon glyphicon-%s"></span>&nbsp;'%(int(result!="done"), "success" if result=="done" else "danger",
       "ok-sign alert-success" if result=="done" else "exclamation-sign alert-danger"), file=mainFD)
-    print('  <a href="'+myurllib.pathname2url(pj(tool, "configure.txt"))+'">'+result+'</a>', file=mainFD)
+    print('  <a href="'+urllib.request.pathname2url(pj(tool, "configure.txt"))+'">'+result+'</a>', file=mainFD)
     if copyConfigLog:
-      print('  <a href="'+myurllib.pathname2url(pj(tool, "config.log.txt"))+'">config.log</a>', file=mainFD)
+      print('  <a href="'+urllib.request.pathname2url(pj(tool, "config.log.txt"))+'">config.log</a>', file=mainFD)
     print('</td>', file=mainFD)
   if extraLinksForMake!=None:
-    extraLinksForMake+='; <a href="'+myurllib.pathname2url(pj(tool, "configure.txt"))+'">'+result+'</a>'
+    extraLinksForMake+='; <a href="'+urllib.request.pathname2url(pj(tool, "configure.txt"))+'">'+result+'</a>'
   if copyConfigLog:
     if extraLinksForMake!=None:
-      extraLinksForMake+='; <a href="'+myurllib.pathname2url(pj(tool, "config.log.txt"))+'">config.log</a>'
+      extraLinksForMake+='; <a href="'+urllib.request.pathname2url(pj(tool, "config.log.txt"))+'">config.log</a>'
   configureFD.close()
   mainFD.flush()
   os.chdir(savedDir)
@@ -945,7 +942,7 @@ def make(tool, extraLinksForMake, mainFD):
   if not args.disableMake:
     print('<td data-order="%d" class="%s"><span class="glyphicon glyphicon-%s"></span>&nbsp;'%(int(result!="done"), "success" if result=="done" else "danger",
       "ok-sign alert-success" if result=="done" else "exclamation-sign alert-danger"), file=mainFD)
-    print('  <a href="'+myurllib.pathname2url(pj(tool, "make.txt"))+'">'+result+'</a>', file=mainFD)
+    print('  <a href="'+urllib.request.pathname2url(pj(tool, "make.txt"))+'">'+result+'</a>', file=mainFD)
     if extraLinksForMake!=None:
       print(extraLinksForMake, file=mainFD)
     print('</td>', file=mainFD)
@@ -967,7 +964,7 @@ def make(tool, extraLinksForMake, mainFD):
         print('<td data-order="%d" class="%s"><span class="glyphicon glyphicon-%s"></span>&nbsp;'%(int(numErr!=0),
           "success" if numErr==0 else "danger",
           "ok-sign alert-success" if numErr==0 else "exclamation-sign alert-danger"), file=mainFD)
-        print('  <a href="%s">%s</a>'%(myurllib.pathname2url(pj(tool, "static-code-analyze", d, "index.html")),
+        print('  <a href="%s">%s</a>'%(urllib.request.pathname2url(pj(tool, "static-code-analyze", d, "index.html")),
           "passed" if numErr==0 else 'error&nbsp;<span class="badge">%d</span>'%(numErr)), file=mainFD)
         print('</td>', file=mainFD)
       else:
@@ -1009,9 +1006,9 @@ def check(tool, mainFD):
   if not args.disableMakeCheck:
     print('<td data-order="%d" class="%s"><span class="glyphicon glyphicon-%s"></span>&nbsp;'%(int(result!="done"), "success" if result=="done" else "danger",
       "ok-sign alert-success" if result=="done" else "exclamation-sign alert-danger"), file=mainFD)
-    print('  <a href="'+myurllib.pathname2url(pj(tool, "check.txt"))+'">'+result+'</a>', file=mainFD)
+    print('  <a href="'+urllib.request.pathname2url(pj(tool, "check.txt"))+'">'+result+'</a>', file=mainFD)
     if foundTestSuiteLog:
-      print('  <a href="'+myurllib.pathname2url(pj(tool, "test-suite.log.txt"))+'">test-suite.log</a>', file=mainFD)
+      print('  <a href="'+urllib.request.pathname2url(pj(tool, "test-suite.log.txt"))+'">test-suite.log</a>', file=mainFD)
     print('</td>', file=mainFD)
   checkFD.close()
   mainFD.flush()
@@ -1061,7 +1058,7 @@ def doc(tool, mainFD, disabled, docDirName):
      docDirName=="xmldoc" and not args.disableXMLDoc:
     print('<td data-order="%d" class="%s"><span class="glyphicon glyphicon-%s"></span>&nbsp;'%(int(result!="done"), "success" if result=="done" else "danger",
       "ok-sign alert-success" if result=="done" else "exclamation-sign alert-danger"), file=mainFD)
-    print('  <a href="'+myurllib.pathname2url(pj(tool, docDirName+".txt"))+'">'+result+'</a>', file=mainFD)
+    print('  <a href="'+urllib.request.pathname2url(pj(tool, docDirName+".txt"))+'">'+result+'</a>', file=mainFD)
     print('</td>', file=mainFD)
   docFD.close()
   mainFD.flush()
@@ -1105,10 +1102,10 @@ def runexamples(mainFD):
   ret=abs(subprocess.call(command, stderr=subprocess.STDOUT))
 
   if ret==0:
-    print('<td class="success"><span class="glyphicon glyphicon-ok-sign alert-success"></span>&nbsp;<a href="'+myurllib.pathname2url(pj("runexamples_report", "result_current", "index.html"))+
+    print('<td class="success"><span class="glyphicon glyphicon-ok-sign alert-success"></span>&nbsp;<a href="'+urllib.request.pathname2url(pj("runexamples_report", "result_current", "index.html"))+
       '">all examples passed</a></td>', file=mainFD)
   else:
-    print('<td class="danger"><span class="glyphicon glyphicon-exclamation-sign alert-danger"></span>&nbsp;<a href="'+myurllib.pathname2url(pj("runexamples_report", "result_current", "index.html"))+
+    print('<td class="danger"><span class="glyphicon glyphicon-exclamation-sign alert-danger"></span>&nbsp;<a href="'+urllib.request.pathname2url(pj("runexamples_report", "result_current", "index.html"))+
       '">examples failed</a></td>', file=mainFD)
   for i in range(0, 5-sum([args.disableConfigure, args.disableMake, not args.staticCodeAnalyzis, args.disableMakeCheck, args.disableDoxygen, args.disableXMLDoc])):
     print('<td>-</td>', file=mainFD)
@@ -1135,13 +1132,13 @@ def createDistribution(mainFD):
     distArchiveName=[x[len("distArchiveName="):] for x in lines if x.startswith("distArchiveName=")][0].rstrip()
     debugArchiveName=[x[len("debugArchiveName="):] for x in lines if x.startswith("debugArchiveName=")][0].rstrip()
     print('<td class="success"><span class="glyphicon glyphicon-ok-sign alert-success"></span>&nbsp;'+
-          '<a href="'+myurllib.pathname2url(pj("distribute", "log.txt"))+'">done</a> - '+
-          '<a href="'+myurllib.pathname2url(pj("distribute", distArchiveName))+'"><b>Download</b></a> - '+
-          '<a href="'+myurllib.pathname2url(pj("distribute", debugArchiveName))+'">Debug-Info</a>'+
+          '<a href="'+urllib.request.pathname2url(pj("distribute", "log.txt"))+'">done</a> - '+
+          '<a href="'+urllib.request.pathname2url(pj("distribute", distArchiveName))+'"><b>Download</b></a> - '+
+          '<a href="'+urllib.request.pathname2url(pj("distribute", debugArchiveName))+'">Debug-Info</a>'+
           '</td>', file=mainFD)
   else:
     print('<td class="danger"><span class="glyphicon glyphicon-exclamation-sign alert-danger"></span>&nbsp;'+
-          '<a href="'+myurllib.pathname2url(pj("distribute", "log.txt"))+'">failed</a>'+
+          '<a href="'+urllib.request.pathname2url(pj("distribute", "log.txt"))+'">failed</a>'+
           '</td>', file=mainFD)
   for i in range(0, 5-sum([args.disableConfigure, args.disableMake, not args.staticCodeAnalyzis, args.disableMakeCheck, args.disableDoxygen, args.disableXMLDoc])):
     print('<td>-</td>', file=mainFD)

@@ -13,10 +13,7 @@ import re
 import shutil
 import tempfile
 import codecs
-if sys.version_info[0]==2: # to unify python 2 and python 3
-  from StringIO import StringIO as myStringIO
-else:
-  from io import BytesIO as myStringIO
+import io
 
 args=None
 platform=None
@@ -171,7 +168,7 @@ def addStrToDist(text, arcname, exeBit=False):
     tarinfo.mtime=time.time()
     if exeBit:
       tarinfo.mode=0o755
-    distArchive.addfile(tarinfo, myStringIO(text.encode('utf8')))
+    distArchive.addfile(tarinfo, io.BytesIO(text.encode('utf8')))
   if platform=="win":
     distArchive.writestr(arcname, text)
 
