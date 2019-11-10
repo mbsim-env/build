@@ -50,6 +50,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   clang-analyzer \
   graphviz \
   numpy \
+  sympy \
   && yum clean all
 RUN npm install mathjax-node
 RUN pip3 install h5py
@@ -67,7 +68,6 @@ ARG SWIGVERSION=3.0.7
 ARG QWTVERSION=6.1.3
 ARG COINBRANCH=7e191c8f6a31
 ARG SOQTBRANCH=945ec22f6219
-ARG CASADIBRANCH=470b5b3f0cc4044e3cb0eb20dfb2a85e247c62a6
 ARG NUHTMLVERSION=18.8.29
 
 # install additional packaged needed to build the tools not part of centos7
@@ -107,13 +107,6 @@ WORKDIR /3rdparty
 RUN hg clone https://bitbucket.org/Coin3D/soqt -r $SOQTBRANCH
 RUN mkdir /3rdparty/soqt-build
 
-# casadi
-WORKDIR /3rdparty
-RUN git clone https://github.com/friedrichatgc/casadi.git
-WORKDIR /3rdparty/casadi
-RUN git checkout $CASADIBRANCH
-RUN mkdir /3rdparty/casadi-build
-
 # nu-html
 WORKDIR /3rdparty/nuhtml
 RUN wget -q https://github.com/validator/validator/releases/download/$NUHTMLVERSION/vnu.jar_$NUHTMLVERSION.zip
@@ -145,14 +138,6 @@ RUN cmake3 -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=
 RUN make -j $JOBS
 RUN make install
 
-# casadi (we use the fork from friedrichatgc)
-WORKDIR /3rdparty/casadi-build
-RUN cmake3 -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DCMAKE_BUILD_TYPE=Release -DWITH_PYTHON=on \
-  -DPYTHON_PREFIX=/3rdparty/local/python2.7/site-packages \
-  -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=/3rdparty/local ../casadi
-RUN make -j $JOBS
-RUN make install
-
 
 
 
@@ -166,7 +151,7 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.description="Build all tools from MBSim-Environment." \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/buildImage" \
   org.label-schema.vendor="MBSim-Environment" \
-  org.label-schema.docker.params="JOBS=number of parallel jobs,SWIGVERSION=swig verion to use,CASADIBRANCH=CasADi branch to use,QWTVERSION=QWT version to use,COINBRANCH=Coin3D branch to use,SOQTBRANCH=SoQt version to use"
+  org.label-schema.docker.params="JOBS=number of parallel jobs,SWIGVERSION=swig verion to use,QWTVERSION=QWT version to use,COINBRANCH=Coin3D branch to use,SOQTBRANCH=SoQt version to use"
 
 # copy over the local dir from the 3rd party build stage
 COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local

@@ -404,15 +404,6 @@ $INSTDIR/bin/.%s-envvar "$@"
 
 
 def addPython():
-  print("Add python casadi files")
-  sys.stdout.flush()
-
-  if platform=="linux":
-    addFileToDist("/3rdparty/local/python2.7/site-packages/casadi",
-                  "mbsim-env/lib64/python2.7/site-packages/casadi")
-  if platform=="win":
-    addFileToDist("/3rdparty/local/python2.7/site-packages/casadi", "mbsim-env/Lib/site-packages/casadi")
-
   print("Add python files")
   sys.stdout.flush()
 
@@ -431,6 +422,8 @@ def addPython():
     addFileToDist(pysrcdir+"/"+d, "mbsim-env/"+subdir+"/"+d)
   # copy site-packages/numpy
   addFileToDist(pysrcdir+"/site-packages/numpy", "mbsim-env/"+subdir+"/site-packages/numpy")
+  # copy site-packages/sympy
+  addFileToDist(pysrcdir+"/site-packages/sympy", "mbsim-env/"+subdir+"/site-packages/sympy")
 
   # on Windows copy also the DLLs dir
   if platform=="win":

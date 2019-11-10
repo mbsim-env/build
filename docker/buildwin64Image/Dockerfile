@@ -175,18 +175,8 @@ WORKDIR /3rdparty/numpy-build
 RUN unzip ../numpy-$NUMPYVERSION-cp27-none-win_amd64.whl
 RUN cp -a numpy /3rdparty/local/python-win64/Lib/site-packages/.
 
-# casadi
-ARG CASADIBRANCH=470b5b3f0cc4044e3cb0eb20dfb2a85e247c62a6
-WORKDIR /3rdparty
-RUN git clone https://github.com/friedrichatgc/casadi.git
-WORKDIR /3rdparty/casadi
-RUN git checkout $CASADIBRANCH
-WORKDIR /3rdparty
-RUN mkdir /3rdparty/casadi-build
-WORKDIR /3rdparty/casadi-build
-RUN cmake3 -DENABLE_STATIC=OFF -DENABLE_SHARED=ON -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DWITH_DEPRECATED_FEATURES=OFF -DCMAKE_BUILD_TYPE=release -DWITH_PYTHON=ON -DPYTHON_EXECUTABLE=/3rdparty/local/python-win64/python.exe -DPYTHON_INCLUDE_DIR=/3rdparty/local/python-win64/include -DPYTHON_LIBRARY=/3rdparty/local/python-win64/libs/libpython27.a -DPYTHON_PREFIX=/3rdparty/local/python2.7/site-packages -DSWIG_EXECUTABLE=/3rdparty/local/bin/swig -DSWIG_DIR=/3rdparty/local -DNUMPY_PATH=/3rdparty/local/python-win64/Lib/site-packages/numpy -DNUMPY_INCLUDED_DIRS=/3rdparty/local/python-win64/Lib/site-packages/numpy/core/include/numpy -DCMAKE_C_FLAGS="-DMS_WIN64 -g -O2" -DCMAKE_CXX_FLAGS="-DMS_WIN64 -g -O2" ../casadi -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake
-RUN make -j $JOBS
-RUN make install
+# sympy
+# mfmf handle like sympy (also in fmuCheck.win64.exe
 
 # octave
 ARG OCTAVEVERSION=3.8.2
