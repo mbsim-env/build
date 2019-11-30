@@ -181,7 +181,8 @@ WORKDIR /3rdparty
 RUN wget https://github.com/sympy/sympy/releases/download/sympy-$SYMPYVERSION/sympy-$SYMPYVERSION.tar.gz
 RUN mkdir /3rdparty/sympy-build /3rdparty/sympy-local
 WORKDIR /3rdparty/sympy-build
-RUN tar -xzf ../sympy-$SYMPYVERSION/sympy-$SYMPYVERSION.tar.gz
+RUN tar -xzf ../sympy-$SYMPYVERSION.tar.gz
+WORKDIR /3rdparty/sympy-build/sympy-$SYMPYVERSION
 RUN ./setup build && ./setup install --prefix /3rdparty/sympy-local
 RUN cp -a /3rdparty/sympy-local/lib/python2.7/site-packages/sympy /3rdparty/local/python-win64/Lib/site-packages/.
 
