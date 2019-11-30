@@ -176,7 +176,14 @@ RUN unzip ../numpy-$NUMPYVERSION-cp27-none-win_amd64.whl
 RUN cp -a numpy /3rdparty/local/python-win64/Lib/site-packages/.
 
 # sympy
-# mfmf handle like sympy (also in fmuCheck.win64.exe
+ARG SYMPYVERSION=0.7.6.1
+WORKDIR /3rdparty
+RUN wget https://github.com/sympy/sympy/releases/download/sympy-$SYMPYVERSION/sympy-$SYMPYVERSION.tar.gz
+RUN mkdir /3rdparty/sympy-build /3rdparty/sympy-local
+WORKDIR /3rdparty/sympy-build
+RUN tar -xzf ../sympy-$SYMPYVERSION/sympy-$SYMPYVERSION.tar.gz
+RUN ./setup build && ./setup install --prefix /3rdparty/sympy-local
+RUN cp -a /3rdparty/sympy-local/lib/python2.7/site-packages/sympy /3rdparty/local/python-win64/Lib/site-packages/.
 
 # octave
 ARG OCTAVEVERSION=3.8.2
