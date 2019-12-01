@@ -409,26 +409,29 @@ def addPython():
 
   if platform=="linux":
     subdir="lib64/python2.7"
-    pysrcdir="/usr/"+subdir
+    pysrcdirs=["/usr/lib64/python2.7", "/usr/lib/python2.7"]
   if platform=="win":
     subdir="Lib"
-    pysrcdir="/3rdparty/local/python-win64/"+subdir
-  # everything in pysrcdir except some special dirs
-  for d in os.listdir(pysrcdir):
-    if d=="site-packages": # some subdirs of site-packages are added later
-      continue
-    if d=="config": # not required and contains links not supported by addFileToDist
-      continue
-    addFileToDist(pysrcdir+"/"+d, "mbsim-env/"+subdir+"/"+d)
-  # copy site-packages/numpy
-  addFileToDist(pysrcdir+"/site-packages/numpy", "mbsim-env/"+subdir+"/site-packages/numpy")
-  # copy site-packages/sympy
-  addFileToDist(pysrcdir+"/site-packages/sympy", "mbsim-env/"+subdir+"/site-packages/sympy")
+    pysrcdirs=["/3rdparty/local/python-win64/Lib"]
+  for pysrcdir in pysrcdirs:
+    # everything in pysrcdir except some special dirs
+    for d in os.listdir(pysrcdir):
+      if d=="site-packages": # some subdirs of site-packages are added later
+        continue
+      if d=="config": # not required and contains links not supported by addFileToDist
+        continue
+      addFileToDist(pysrcdir+"/"+d, "mbsim-env/"+subdir+"/"+d)
+    # copy site-packages/numpy
+    if os.path.exists(pysrcdir+"/site-packages/numpy"):
+      addFileToDist(pysrcdir+"/site-packages/numpy", "mbsim-env/"+subdir+"/site-packages/numpy")
+    # copy site-packages/sympy
+    if os.path.exists(pysrcdir+"/site-packages/sympy"):
+      addFileToDist(pysrcdir+"/site-packages/sympy", "mbsim-env/"+subdir+"/site-packages/sympy")
 
-  # on Windows copy also the DLLs dir
-  if platform=="win":
-    for f in os.listdir(pysrcdir+"/../DLLs"):
-      addFileToDist(pysrcdir+"/../DLLs/"+f, "mbsim-env/DLLs/"+f)
+    # on Windows copy also the DLLs dir
+    if platform=="win":
+      for f in os.listdir(pysrcdir+"/../DLLs"):
+        addFileToDist(pysrcdir+"/../DLLs/"+f, "mbsim-env/DLLs/"+f)
 
   # add python executable
   if platform=="linux":
