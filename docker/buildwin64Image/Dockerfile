@@ -198,6 +198,9 @@ RUN patch -d /3rdparty/octave-$OCTAVEVERSION -p0 < /context/octave.patch
 RUN ../octave-$OCTAVEVERSION/configure --enable-shared --disable-static --build=x86_64-redhat-linux --host=x86_64-w64-mingw32 --prefix=/3rdparty/local --disable-java --disable-gui --without-opengl --with-blas="-L/3rdparty/local/lib -lblas" --with-lapack="-L/3rdparty/local/lib -llapack" --disable-readline
 RUN make -j $JOBS
 RUN make install
+# fix octave 3.8.2: it is not initializing when runnig without a DISPLAY
+RUN sed -i -re "s/\<__have_fltk__ *\( *\) *&& *have_window_system *\( *\)/have_window_system () \&\& __have_fltk__ ()/" \
+  /3rdparty/local/lib/octave/3.8.2/oct/x86_64-w64-mingw32/PKG_ADD
 
 # xerces-c
 ARG XERCESCVERSION=3.1.2
