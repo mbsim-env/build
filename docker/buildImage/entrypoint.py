@@ -167,7 +167,7 @@ if args.valgrindExamples:
             "/mbsim-report/report/runexamples_valgrind_report", "--url",
             "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
             "--buildSystemRun", "--checkGUIs", "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
-            "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch --child-silent-after-fork=yes --num-callers=150 --gen-suppressions=all --suppressions="+
+            "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig --child-silent-after-fork=yes --num-callers=150 --gen-suppressions=all --suppressions="+
             "/mbsim-build/build/buildScripts/valgrind-mbsim.supp --leak-check=full", "--disableCompare", "--disableValidate",
             "--buildType", args.buildType+"-valgrind"]+RUNEXAMPLESFILTER
             , env=valgrindEnv)
