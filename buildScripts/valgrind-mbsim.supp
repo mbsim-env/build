@@ -394,21 +394,6 @@
    obj:/usr/lib64/libdbus-1.so.3.14.14
    obj:/usr/lib64/libdbus-1.so.3.14.14
    obj:/usr/lib64/libQt5DBus.so.5.9.2
-   fun:_ZN7QObject5eventEP6QEvent
-   obj:/usr/lib64/libQt5Core.so.5.9.2
-   fun:_ZN16QCoreApplication15notifyInternal2EP7QObjectP6QEvent
-   fun:_ZN23QCoreApplicationPrivate16sendPostedEventsEP7QObjectiP11QThreadData
-   obj:/usr/lib64/libQt5Core.so.5.9.2
-   fun:g_main_context_dispatch
-   obj:/usr/lib64/libglib-2.0.so.*
-   fun:g_main_context_iteration
-   fun:_ZN20QEventDispatcherGlib13processEventsE6QFlagsIN10QEventLoop17ProcessEventsFlagEE
-   fun:_ZN10QEventLoop4execE6QFlagsINS_17ProcessEventsFlagEE
-   fun:_ZN7QThread4execEv
-   obj:/usr/lib64/libQt5DBus.so.5.9.2
-   obj:/usr/lib64/libQt5Core.so.5.9.2
-   fun:start_thread
-   fun:clone
 }
 {
    UNKNOWN
@@ -423,21 +408,6 @@
    obj:/usr/lib64/libdbus-1.so.3.14.14
    obj:/usr/lib64/libdbus-1.so.3.14.14
    obj:/usr/lib64/libQt5DBus.so.5.9.2
-   fun:_ZN7QObject5eventEP6QEvent
-   obj:/usr/lib64/libQt5Core.so.5.9.2
-   fun:_ZN16QCoreApplication15notifyInternal2EP7QObjectP6QEvent
-   fun:_ZN23QCoreApplicationPrivate16sendPostedEventsEP7QObjectiP11QThreadData
-   obj:/usr/lib64/libQt5Core.so.5.9.2
-   fun:g_main_context_dispatch
-   obj:/usr/lib64/libglib-2.0.so.*
-   fun:g_main_context_iteration
-   fun:_ZN20QEventDispatcherGlib13processEventsE6QFlagsIN10QEventLoop17ProcessEventsFlagEE
-   fun:_ZN10QEventLoop4execE6QFlagsINS_17ProcessEventsFlagEE
-   fun:_ZN7QThread4execEv
-   obj:/usr/lib64/libQt5DBus.so.5.9.2
-   obj:/usr/lib64/libQt5Core.so.5.9.2
-   fun:start_thread
-   fun:clone
 }
 {
    QT
@@ -647,35 +617,6 @@
 }
 {
    <insert_a_suppression_name_here>
-   Memcheck:Leak
-   match-leak-kinds: definite
-   fun:realloc
-   obj:/usr/lib64/libdbus-1.so.3.14.14
-   fun:_dbus_read
-   obj:/usr/lib64/libdbus-1.so.3.14.14
-   obj:/usr/lib64/libdbus-1.so.3.14.14
-   obj:/usr/lib64/libdbus-1.so.3.14.14
-   obj:/usr/lib64/libdbus-1.so.3.14.14
-   obj:/usr/lib64/libdbus-1.so.3.14.14
-   obj:/usr/lib64/libQt5DBus.so.5.9.7
-   fun:_ZN7QObject5eventEP6QEvent
-   obj:/usr/lib64/libQt5Core.so.5.9.7
-   fun:_ZN16QCoreApplication15notifyInternal2EP7QObjectP6QEvent
-   fun:_ZN23QCoreApplicationPrivate16sendPostedEventsEP7QObjectiP11QThreadData
-   obj:/usr/lib64/libQt5Core.so.5.9.7
-   fun:g_main_context_dispatch
-   obj:/usr/lib64/libglib-2.0.so.0.5600.1
-   fun:g_main_context_iteration
-   fun:_ZN20QEventDispatcherGlib13processEventsE6QFlagsIN10QEventLoop17ProcessEventsFlagEE
-   fun:_ZN10QEventLoop4execE6QFlagsINS_17ProcessEventsFlagEE
-   fun:_ZN7QThread4execEv
-   obj:/usr/lib64/libQt5DBus.so.5.9.7
-   obj:/usr/lib64/libQt5Core.so.5.9.7
-   fun:start_thread
-   fun:clone
-}
-{
-   <insert_a_suppression_name_here>
    Memcheck:Addr2
    fun:getenv
    fun:_Z25qEnvironmentVariableIsSetPKc
@@ -683,4 +624,48 @@
    fun:__run_exit_handlers
    fun:exit
    fun:(below main)
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN11SoFieldData4copyEPKS_
+   fun:_ZN13SoGlobalField7setNameERK6SbName
+   fun:_ZN13SoGlobalFieldC1ERK6SbNameP7SoField
+   fun:_ZN4SoDB17createGlobalFieldERK6SbName6SoType
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:cc_memalloc_construct
+   fun:_ZN7SoField24extendStorageIfNecessaryEv
+   fun:_ZN7SoField10addAuditorEPvN8SoNotRec4TypeE
+   fun:_ZN13SoFieldSensor6attachEP7SoField
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN4SoDB17createGlobalFieldERK6SbName6SoType
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN13SoGlobalFieldC1ERK6SbNameP7SoField
+   fun:_ZN4SoDB17createGlobalFieldERK6SbName6SoType
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN7SoField24extendStorageIfNecessaryEv
+   fun:_ZN7SoField10addAuditorEPvN8SoNotRec4TypeE
+   fun:_ZN13SoFieldSensor6attachEP7SoField
 }
