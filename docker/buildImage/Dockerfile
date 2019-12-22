@@ -18,11 +18,11 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   automake \
   autoconf \
   pcre-devel \
-  python-devel \
+  python3-devel \
   qt5-qtbase-devel \
   qt5-qtsvg-devel \
   hdf5-devel \
-  python36-pip \
+  python3-pip \
   boost-devel \
   lapack-devel \
   doxygen \

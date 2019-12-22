@@ -12,7 +12,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && 
   wine \
   python36-requests \
   libtool automake autoconf \
-  python36-pip \
+  python3-pip \
   python36-numpy \
   mingw64-boost \
   doxygen \
@@ -148,9 +148,9 @@ RUN ln -s /3rdparty/local/bin/wine64 /3rdparty/local/bin/wine
 ENV PATH=$PATH:/3rdparty/local/bin
 
 # python
-ARG PYTHONVERSION=2.7.13
+ARG PYTHONVERSION=3.6.10mfmf
 WORKDIR /3rdparty
-RUN wget https://www.python.org/ftp/python/2.7.13/python-$PYTHONVERSION.amd64.msi
+RUN wget https://www.python.org/ftp/python/$PYTHONVERSION/python-$PYTHONVERSION.amd64.msi
 RUN wine msiexec -i python-$PYTHONVERSION.amd64.msi -q n TARGETDIR="$(winepath -w /3rdparty/local/python-win64)" && wineserver -w
 
 # swig3 (centos7 only provides swig2)
@@ -167,16 +167,16 @@ RUN make -j $JOBS
 RUN make install
 
 # numpy
-ARG NUMPYVERSION=1.12.0
+ARG NUMPYVERSION=1.12.0mfmf
 WORKDIR /3rdparty
-RUN wget https://files.pythonhosted.org/packages/90/e8/b5dde871d6ca99ef23dc68457bb7572e74d447fdd12f8c11f996120e8828/numpy-$NUMPYVERSION-cp27-none-win_amd64.whl
+RUN wget https://files.pythonhosted.org/packages/90/e8/b5dde871d6ca99ef23dc68457bb7572e74d447fdd12f8c11f996120e8828/numpy-$NUMPYVERSION-cp36-none-win_amd64.whl
 RUN mkdir /3rdparty/numpy-build
 WORKDIR /3rdparty/numpy-build
 RUN unzip ../numpy-$NUMPYVERSION-cp27-none-win_amd64.whl
 RUN cp -a numpy /3rdparty/local/python-win64/Lib/site-packages/.
 
 # sympy
-ARG SYMPYVERSION=0.7.6.1
+ARG SYMPYVERSION=0.7.6.1mfmf
 WORKDIR /3rdparty
 RUN wget https://github.com/sympy/sympy/releases/download/sympy-$SYMPYVERSION/sympy-$SYMPYVERSION.tar.gz
 RUN mkdir /3rdparty/sympy-build /3rdparty/sympy-local
@@ -184,7 +184,7 @@ WORKDIR /3rdparty/sympy-build
 RUN tar -xzf ../sympy-$SYMPYVERSION.tar.gz
 WORKDIR /3rdparty/sympy-build/sympy-$SYMPYVERSION
 RUN ./setup.py build && ./setup.py install --prefix /3rdparty/sympy-local
-RUN cp -a /3rdparty/sympy-local/lib/python2.7/site-packages/sympy /3rdparty/local/python-win64/Lib/site-packages/.
+RUN cp -a /3rdparty/sympy-local/lib/python3.6/site-packages/sympy /3rdparty/local/python-win64/Lib/site-packages/.
 
 # octave
 ARG OCTAVEVERSION=3.8.2

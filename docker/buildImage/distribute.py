@@ -111,7 +111,7 @@ def addFileToDist(name, arcname, addDepLibs=True):
         # strip or not
         if ((re.search('ELF [0-9]+-bit LSB', content)!=None and re.search('not stripped', content)!=None) or \
             (re.search('PE32\+? executable', content)!=None and re.search('stripped to external PDB', content)==None)) and \
-           not name.startswith("/3rdparty/local/python-win64/") and not name.startswith("/usr/lib64/python2.7/"):# do not strip python files (these are not build with mingw)
+           not name.startswith("/3rdparty/local/python-win64/") and not name.startswith("/usr/lib64/python3.6/"):# do not strip python files (these are not build with mingw)
           # not stripped binary file
           try:
             subprocess.check_call(["objcopy", "--only-keep-debug", tmpDir+"/"+basename+".rpath", tmpDir+"/"+basename+".debug"])
@@ -214,7 +214,7 @@ NOTE:
   1) Run the program <install-dir>/mbsim-env/bin/mbsim-env-test%s to check the
      installation. This will run some MBSim examples, some OpenMBVC++Interface
      SWIG examples and the programs h5plotserie, openmbv and mbsimgui.
-  2) To Enable also the OpenMBVC++Interface SWIG python 2.7 example ensure that
+  2) To Enable also the OpenMBVC++Interface SWIG python example ensure that
      "python" is in your PATH and set the envvar MBSIMENV_TEST_PYTHON=1.
      To Enable also the OpenMBVC++Interface SWIG java example ensure that
      "java" is in your PATH and set the envvar MBSIMENV_TEST_JAVA=1.
@@ -408,8 +408,8 @@ def addPython():
   sys.stdout.flush()
 
   if platform=="linux":
-    subdir="lib64/python2.7"
-    pysrcdirs=["/usr/lib64/python2.7", "/usr/lib/python2.7"]
+    subdir="lib64/python3.6"
+    pysrcdirs=["/usr/lib64/python3.6", "/usr/lib/python3.6"]
   if platform=="win":
     subdir="Lib"
     pysrcdirs=["/3rdparty/local/python-win64/Lib"]
@@ -438,7 +438,7 @@ def addPython():
 
   # add python executable
   if platform=="linux":
-    addFileToDist("/usr/bin/python2.7", "mbsim-env/bin/python")
+    addFileToDist("/usr/bin/python3.6", "mbsim-env/bin/python")
   if platform=="win":
     addFileToDist("/3rdparty/local/python-win64/python.exe", "mbsim-env/bin/python.exe")
     addFileToDist("/3rdparty/local/python-win64/pythonw.exe", "mbsim-env/bin/pythonw.exe")
