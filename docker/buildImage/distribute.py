@@ -427,6 +427,9 @@ def addPython():
     # copy site-packages/sympy
     if os.path.exists(pysrcdir+"/site-packages/sympy"):
       addFileToDist(pysrcdir+"/site-packages/sympy", "mbsim-env/"+subdir+"/site-packages/sympy")
+    # copy site-packages/mpmath
+    if os.path.exists(pysrcdir+"/site-packages/mpmath"):
+      addFileToDist(pysrcdir+"/site-packages/mpmath", "mbsim-env/"+subdir+"/site-packages/mpmath")
 
     # on Windows copy also the DLLs dir
     if platform=="win":
