@@ -80,10 +80,9 @@ mkdir -p $MBSIMENVDIR/.home
   SOQT_CFLAGS=-I/3rdparty/local/include \
   SOQT_LIBS="-L/3rdparty/local/lib -lSoQt" \
   --with-windres=x86_64-w64-mingw32-windres \
-  --with-swigpath=/3rdparty/local/bin \
   --with-mkoctfile=/3rdparty/local/bin/mkoctfile.exe \
   --with-javajniosdir=/context/java_jni \
   PYTHON_CFLAGS="-I/3rdparty/local/python-win64/include -DMS_WIN64" \
-  PYTHON_LIBS="-L/3rdparty/local/python-win64/libs -lpython36" \
+  PYTHON_LIBS="-L/3rdparty/local/python-win64 -lpython36" \
   PYTHON_BIN="/3rdparty/local/python-win64/python.exe" \
   "${CONFIGUREARGS[@]}" "${RUNEXAMPLEARGS[@]}"

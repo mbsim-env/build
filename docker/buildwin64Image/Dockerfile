@@ -23,14 +23,12 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && 
   file \
   java-1.8.0-openjdk-devel \
   graphviz \
+  swig3 \
+  && yum clean all
+RUN rpm -i --nodeps http://download-ib01.fedoraproject.org/pub/fedora/linux/releases/29/Everything/x86_64/os/Packages/m/mingw64-postgresql-10.3-2.fc29.noarch.rpm \
+  && yum --setopt=skip_missing_names_on_install=False -y install mingw64-qt5-qtsvg mingw64-qt5-qtwebkit \
   && yum clean all
 RUN pip3 install h5py
-
-# install install mingw64-qt5-qtsvg and mingw64-qt5-qtwebkit to add its dependencies and then
-# remove mingw64-qt5-qtwebkit mingw64-qt5-qtbase mingw64-qt5-qmake which is rebuild/reinstalled later
-RUN yum --setopt=skip_missing_names_on_install=False -y install mingw64-qt5-qtsvg mingw64-qt5-qtwebkit && \
-  rpm -e --nodeps mingw64-qt5-qtwebkit mingw64-qt5-qtbase mingw64-qt5-qmake && \
-  yum clean all
 
 # fix mingw
 COPY docker/buildwin64Image/mingw64.patch /context/mingw64.patch
@@ -51,38 +49,11 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   pcre-devel \
   unzip \
   mercurial \
+  flex \
+  bison \
   rpm-build
 
 RUN mkdir /3rdparty
-
-# rebuild mingw64-qt5-qtwebkit mingw64-qt5-qtbase mingw64-qt5-qmake which is buggy in EPEL repo
-
-# EPEL mingw64-qt5-qtbase is build with GLES (ANGLE) which does not work with coin. Hence this package must be rebuild
-# using the SRPM. In the spec file mingw-qt5-qtbase.spec "-opengl desktop" is set to disable ANGLE.
-
-WORKDIR /3rdparty
-RUN yumdownloader --source mingw-qt5-qtbase
-RUN rpm -ivh ./mingw-qt5-qtbase*.src.rpm
-WORKDIR /root/rpmbuild/SPECS
-RUN yum-builddep -y mingw-qt5-qtbase
-COPY docker/buildwin64Image/qt5base.patch /context/qt5base.patch
-RUN patch -d /root/rpmbuild -p0 < /context/qt5base.patch
-RUN rpmbuild -ba mingw-qt5-qtbase.spec
-RUN rpm -i /root/rpmbuild/RPMS/noarch/mingw64-qt5-qtbase-5.6.0-3.el7.noarch.rpm /root/rpmbuild/RPMS/x86_64/mingw64-qt5-qmake-5.6.0-3.el7.x86_64.rpm
-
-# EPEL mingw64-qt5-qtwebkit is build on the wrong system (which wrong headers). This leads to wrong symbol names
-# -> rebuild the SRPM. To enable this all 3D_GRAPHICS support is disabled in webkit.
-
-WORKDIR /3rdparty
-RUN yumdownloader --source mingw-qt5-qtwebkit
-RUN rpm -ivh ./mingw-qt5-qtwebkit*.src.rpm
-WORKDIR /root/rpmbuild/SPECS
-RUN yum-builddep -y mingw-qt5-qtwebkit
-COPY docker/buildwin64Image/qt5webkit.patch /context/qt5webkit.patch
-COPY docker/buildwin64Image/no-3d-graphics.patch /root/rpmbuild/SOURCES/no-3d-graphics.patch
-RUN patch -d /root/rpmbuild -p0 < /context/qt5webkit.patch
-RUN rpmbuild -ba mingw-qt5-qtwebkit.spec
-RUN rpm -i /root/rpmbuild/RPMS/noarch/mingw64-qt5-qtwebkit-5.5.1-1.el7.noarch.rpm
 
 # 3rd party
 
@@ -148,43 +119,36 @@ RUN ln -s /3rdparty/local/bin/wine64 /3rdparty/local/bin/wine
 ENV PATH=$PATH:/3rdparty/local/bin
 
 # python
-ARG PYTHONVERSION=3.6.10mfmf
+ARG PYTHONVERSION=3.4.4
 WORKDIR /3rdparty
 RUN wget https://www.python.org/ftp/python/$PYTHONVERSION/python-$PYTHONVERSION.amd64.msi
 RUN wine msiexec -i python-$PYTHONVERSION.amd64.msi -q n TARGETDIR="$(winepath -w /3rdparty/local/python-win64)" && wineserver -w
 
-# swig3 (centos7 only provides swig2)
-ARG SWIGVERSION=3.0.7
-WORKDIR /3rdparty
-RUN set -o pipefail && \
-  wget -q -O - https://sourceforge.net/projects/swig/files/swig/swig-$SWIGVERSION/swig-$SWIGVERSION.tar.gz | tar -xz
-COPY docker/buildwin64Image/swig.patch /context/swig.patch
-RUN patch -d /3rdparty/swig-$SWIGVERSION -p0 < /context/swig.patch
-RUN mkdir /3rdparty/swig-build
-WORKDIR /3rdparty/swig-build
-RUN ../swig-$SWIGVERSION/configure --disable-static --enable-shared CXXFLAGS="-O2" CFLAGS="-O2" --prefix=/3rdparty/local
-RUN make -j $JOBS
-RUN make install
-
 # numpy
-ARG NUMPYVERSION=1.12.0mfmf
+ARG NUMPYVERSION=1.15.0
 WORKDIR /3rdparty
-RUN wget https://files.pythonhosted.org/packages/90/e8/b5dde871d6ca99ef23dc68457bb7572e74d447fdd12f8c11f996120e8828/numpy-$NUMPYVERSION-cp36-none-win_amd64.whl
+RUN wget https://files.pythonhosted.org/packages/11/9f/f7550ba7d6ea7d1da16ac2069157b42d225b02b47e4c30ccc1c5b6be3b8f/numpy-$NUMPYVERSION-cp34-none-win_amd64.whl
 RUN mkdir /3rdparty/numpy-build
 WORKDIR /3rdparty/numpy-build
-RUN unzip ../numpy-$NUMPYVERSION-cp27-none-win_amd64.whl
+RUN unzip ../numpy-$NUMPYVERSION-cp34-none-win_amd64.whl
 RUN cp -a numpy /3rdparty/local/python-win64/Lib/site-packages/.
 
-# sympy
-ARG SYMPYVERSION=0.7.6.1mfmf
+# mpmath/sympy
+ARG MPMATHVERSION=1.1.0
+ARG SYMPYVERSION=1.4
 WORKDIR /3rdparty
-RUN wget https://github.com/sympy/sympy/releases/download/sympy-$SYMPYVERSION/sympy-$SYMPYVERSION.tar.gz
-RUN mkdir /3rdparty/sympy-build /3rdparty/sympy-local
+RUN wget https://files.pythonhosted.org/packages/ca/63/3384ebb3b51af9610086b23ea976e6d27d6d97bf140a76a365bd77a3eb32/mpmath-$MPMATHVERSION.tar.gz \
+  && wget https://github.com/sympy/sympy/releases/download/sympy-$SYMPYVERSION/sympy-$SYMPYVERSION.tar.gz
+RUN mkdir /3rdparty/mpmath-build /3rdparty/mpmath-local /3rdparty/sympy-build /3rdparty/sympy-local
+WORKDIR /3rdparty/mpmath-build
+RUN tar -xzf ../mpmath-$MPMATHVERSION.tar.gz
 WORKDIR /3rdparty/sympy-build
 RUN tar -xzf ../sympy-$SYMPYVERSION.tar.gz
+WORKDIR /3rdparty/mpmath-build/mpmath-$MPMATHVERSION
+RUN wine /3rdparty/local/python-win64/python.exe setup.py build && wine /3rdparty/local/python-win64/python.exe setup.py install && wineserver -w
 WORKDIR /3rdparty/sympy-build/sympy-$SYMPYVERSION
-RUN ./setup.py build && ./setup.py install --prefix /3rdparty/sympy-local
-RUN cp -a /3rdparty/sympy-local/lib/python3.6/site-packages/sympy /3rdparty/local/python-win64/Lib/site-packages/.
+RUN ls -l /3rdparty/local/python-win64/
+RUN wine /3rdparty/local/python-win64/python.exe setup.py build && wine /3rdparty/local/python-win64/python.exe setup.py install && wineserver -w
 
 # octave
 ARG OCTAVEVERSION=3.8.2
@@ -256,13 +220,6 @@ RUN make install
 FROM centosBaseImage
 
 COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local
-COPY --from=thirdpartyBuildImage /root/rpmbuild/RPMS/noarch/mingw64-qt5-qtwebkit-5.5.1-1.el7.noarch.rpm /3rdparty/mingw64-qt5-qtwebkit-5.5.1-1.el7.noarch.rpm
-COPY --from=thirdpartyBuildImage /root/rpmbuild/RPMS/noarch/mingw64-qt5-qtbase-5.6.0-3.el7.noarch.rpm /3rdparty/mingw64-qt5-qtbase-5.6.0-3.el7.noarch.rpm
-COPY --from=thirdpartyBuildImage /root/rpmbuild/RPMS/x86_64/mingw64-qt5-qmake-5.6.0-3.el7.x86_64.rpm /3rdparty/mingw64-qt5-qmake-5.6.0-3.el7.x86_64.rpm
-
-RUN rpm -i /3rdparty/mingw64-qt5-qtwebkit-5.5.1-1.el7.noarch.rpm \
-  /3rdparty/mingw64-qt5-qtbase-5.6.0-3.el7.noarch.rpm \
-  /3rdparty/mingw64-qt5-qmake-5.6.0-3.el7.x86_64.rpm
 
 # ccache
 # enable swig interface to mbsim

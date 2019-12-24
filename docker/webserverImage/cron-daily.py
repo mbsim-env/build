@@ -32,15 +32,18 @@ config=readConfigFile()
 
 # linux64-dailydebug
 contldd=setup.run("build-linux64-dailydebug", 6, printLog=False, detach=True, addCommands=["--forceBuild"],
+                  fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="python3", mbsimBranch="python3",
                   statusAccessToken=config["status_access_token"])
 
 # linux64-dailyrelease
 contldr=setup.run("build-linux64-dailyrelease", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
+                  fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="python3", mbsimBranch="python3",
                   statusAccessToken=config["status_access_token"])
 retldr=setup.waitContainer(contldr)
 
 # win64-dailyrelease
 contwdr=setup.run("build-win64-dailyrelease", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
+                  fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="python3", mbsimBranch="python3",
                   statusAccessToken=config["status_access_token"])
 retwdr=setup.waitContainer(contwdr)
 
