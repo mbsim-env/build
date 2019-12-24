@@ -79,6 +79,7 @@ ret=subprocess.call(
   "--with-windres=x86_64-w64-mingw32-windres",
   "--with-mkoctfile=/3rdparty/local/bin/mkoctfile.exe",
   "--with-javajniosdir=/context/java_jni",
+  "--with-pythonversion=3.4",
   "PYTHON_CFLAGS=-I/3rdparty/local/python-win64/include -DMS_WIN64",
   "PYTHON_LIBS=-L/3rdparty/local/python-win64 -lpython34",
   "PYTHON_BIN=/3rdparty/local/python-win64/python.exe",
