@@ -221,6 +221,10 @@ FROM centosBaseImage
 
 COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local
 
+# fix swig
+COPY docker/buildwin64Image/swig.patch /context/swig.patch
+RUN patch -d /usr/share/swig/3.0.12 -p0 < /context/swig.patch
+
 # ccache
 # enable swig interface to mbsim
 # compile flags
