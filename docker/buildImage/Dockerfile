@@ -49,11 +49,11 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   perl-Text-Glob \
   clang-analyzer \
   graphviz \
-  numpy \
-  sympy \
+  python36-numpy \
+  swig3 \
   && yum clean all
 RUN npm install mathjax-node
-RUN pip3 install h5py
+RUN pip3 install h5py sympy
 
 
 
@@ -64,7 +64,6 @@ FROM centosBaseImage AS thirdpartyBuildImage
 
 # configuration
 ARG JOBS=4
-ARG SWIGVERSION=3.0.7
 ARG QWTVERSION=6.1.3
 ARG COINBRANCH=7e191c8f6a31
 ARG SOQTBRANCH=945ec22f6219
@@ -85,11 +84,6 @@ RUN mkdir /3rdparty
 
 # get tools to build
 WORKDIR /3rdparty
-
-# swig
-RUN set -o pipefail && \
-  wget -q -O - https://sourceforge.net/projects/swig/files/swig/swig-$SWIGVERSION/swig-$SWIGVERSION.tar.gz | tar -xz
-RUN mkdir /3rdparty/swig-build
 
 # qwt
 RUN set -o pipefail && \
@@ -113,12 +107,6 @@ RUN wget -q https://github.com/validator/validator/releases/download/$NUHTMLVERS
 RUN unzip vnu.jar_$NUHTMLVERSION.zip
 
 # compile/install
-
-# swig3 (centos7 only provides swig2)
-WORKDIR /3rdparty/swig-build
-RUN ../swig-$SWIGVERSION/configure --disable-static --enable-shared CXXFLAGS="-O2" CFLAGS="-O2" --prefix=/3rdparty/local
-RUN make -j $JOBS
-RUN make install
 
 # qwt6 for Qt5 (centos only provides qwt6 for Qt4)
 WORKDIR /3rdparty/qwt-build
@@ -151,7 +139,7 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.description="Build all tools from MBSim-Environment." \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/buildImage" \
   org.label-schema.vendor="MBSim-Environment" \
-  org.label-schema.docker.params="JOBS=number of parallel jobs,SWIGVERSION=swig verion to use,QWTVERSION=QWT version to use,COINBRANCH=Coin3D branch to use,SOQTBRANCH=SoQt version to use"
+  org.label-schema.docker.params="JOBS=number of parallel jobs,QWTVERSION=QWT version to use,COINBRANCH=Coin3D branch to use,SOQTBRANCH=SoQt version to use"
 
 # copy over the local dir from the 3rd party build stage
 COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local
