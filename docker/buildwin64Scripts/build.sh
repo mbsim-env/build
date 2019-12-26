@@ -84,6 +84,6 @@ mkdir -p $MBSIMENVDIR/.home
   --with-javajniosdir=/context/java_jni \
   --with-pythonversion=3.4 \
   PYTHON_CFLAGS="-I/3rdparty/local/python-win64/include -DMS_WIN64" \
-  PYTHON_LIBS="-L/3rdparty/local/python-win64/libs -lpython34" \
+  PYTHON_LIBS="-L/3rdparty/local/python-win64/libs -L/3rdparty/local/python-win64 -lpython34" \
   PYTHON_BIN="/3rdparty/local/python-win64/python.exe" \
   "${CONFIGUREARGS[@]}" "${RUNEXAMPLEARGS[@]}"

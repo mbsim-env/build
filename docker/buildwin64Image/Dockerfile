@@ -123,6 +123,8 @@ ARG PYTHONVERSION=3.4.4
 WORKDIR /3rdparty
 RUN wget https://www.python.org/ftp/python/$PYTHONVERSION/python-$PYTHONVERSION.amd64.msi
 RUN wine msiexec -i python-$PYTHONVERSION.amd64.msi -q n TARGETDIR="$(winepath -w /3rdparty/local/python-win64)" && wineserver -w
+# fix libfile name
+RUN mv /3rdparty/local/python-win64/libs/python34.lib /3rdparty/local/python-win64/libs/libpython34.lib
 
 # numpy
 ARG NUMPYVERSION=1.15.0
