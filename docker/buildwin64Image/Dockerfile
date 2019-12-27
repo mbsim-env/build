@@ -147,10 +147,15 @@ RUN tar -xzf ../mpmath-$MPMATHVERSION.tar.gz
 WORKDIR /3rdparty/sympy-build
 RUN tar -xzf ../sympy-$SYMPYVERSION.tar.gz
 WORKDIR /3rdparty/mpmath-build/mpmath-$MPMATHVERSION
-RUN wine /3rdparty/local/python-win64/python.exe setup.py build && wine /3rdparty/local/python-win64/python.exe setup.py install && wineserver -w
+RUN wine /3rdparty/local/python-win64/python.exe setup.py build && \
+    wine /3rdparty/local/python-win64/python.exe setup.py install && wineserver -w
 WORKDIR /3rdparty/sympy-build/sympy-$SYMPYVERSION
-RUN ls -l /3rdparty/local/python-win64/
-RUN wine /3rdparty/local/python-win64/python.exe setup.py build && wine /3rdparty/local/python-win64/python.exe setup.py install && wineserver -w
+RUN mkdir -p /3rdparty/sympy-inst/Lib/site-packages
+RUN wine /3rdparty/local/python-win64/python.exe setup.py build && wineserver -w
+RUN PYTHONPATH="$(winepath -w /3rdparty/sympy-inst/Lib/site-packages)" wine /3rdparty/local/python-win64/python.exe \
+    setup.py install --prefix="$(winepath -w /3rdparty/sympy-inst)" && \
+    wineserver -w
+RUN unzip -d /3rdparty/local/python-win64/Lib/site-packages dist/sympy-$SYMPYVERSION-py3.4.egg
 
 # octave
 ARG OCTAVEVERSION=3.8.2
