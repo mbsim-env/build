@@ -257,10 +257,11 @@ RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser d
   chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state
 
 
-# if we call winepath after "USER dockeruser" then something goes wrong!!!???
+# configure wine
 COPY docker/buildwin64Image/wine.reg /context/wine.reg
 RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\\\\\+g'); \
     sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.reg > /tmp/wine.reg
+RUN wine regedit /tmp/wine.reg && wineserver -w
 
 # copy
 COPY buildScripts /mbsim-build/build/buildScripts
@@ -274,9 +275,6 @@ USER dockeruser:dockeruser
 
 # config ccache
 RUN ccache -M 10G
-
-# configure wine
-RUN wine regedit /tmp/wine.reg && wineserver -w
 
 # these are the default arguments when running the container
 CMD []
