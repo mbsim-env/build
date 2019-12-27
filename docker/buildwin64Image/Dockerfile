@@ -256,12 +256,10 @@ RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser d
   mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state && \
   chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state
 
-
 # configure wine
-COPY docker/buildwin64Image/wine.reg /context/wine.reg
-RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\\\\\+g'); \
-    sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.reg > /tmp/wine.reg
-RUN wine regedit /tmp/wine.reg && wineserver -w
+COPY docker/buildwin64Image/wine.inf /context/wine.inf
+RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\+g'); \
+    sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.inf >> /usr/share/wine/wine.inf
 
 # copy
 COPY buildScripts /mbsim-build/build/buildScripts
@@ -272,6 +270,9 @@ COPY docker/buildwin64Image/jni_md.h /context/java_jni/jni_md.h
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser
+
+# init conf
+RUN wine cmd echo && wineserver -w
 
 # config ccache
 RUN ccache -M 10G
