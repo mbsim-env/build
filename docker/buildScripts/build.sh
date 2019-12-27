@@ -54,9 +54,6 @@ fi
 # config ccache
 CCACHE_DIR=$MBSIMENVDIR/.ccache ccache -M 10G
 
-# config home
-mkdir -p $MBSIMENVDIR/.home
-
 # run using mbsbd with all required args all all user args appended
 "$SCRIPTDIR"/mbsbd "$MBSIMENVDIR"/build/buildScripts/build.py \
   --reportOutDir $MBSIMENVDIR/build_report-docker \
