@@ -172,7 +172,7 @@ USER dockeruser:dockeruser
 RUN ccache -M 10G
 
 # allow write to HOME by any user
-RUN chmod -R ugo+rwX /home/dockeruser
+RUN chmod -R ugo+w /home/dockeruser
 
 # these are the default arguments when running the container
 CMD []
