@@ -279,7 +279,7 @@ RUN ccache -M 10G
 RUN wine regedit /tmp/wine.reg && wineserver -w
 
 # allow write to HOME by any user
-RUN chmod -R ugo+w /home/dockeruser
+RUN chmod -R ugo+rwX /home/dockeruser
 
 # these are the default arguments when running the container
 CMD []
