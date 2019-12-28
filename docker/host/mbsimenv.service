@@ -15,3 +15,6 @@ Type=oneshot
 RemainAfterExit=yes
 ExecStart=/home/dockeruser/build/docker/setup.py run service -j 6 -d start
 ExecStop=/home/dockeruser/build/docker/setup.py run service -j 6 -d stop
+
+[Install]
+WantedBy=multi-user.target

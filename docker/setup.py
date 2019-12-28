@@ -372,7 +372,7 @@ def runWait(containers, printLog=True):
 def renameStoppedContainer(name):
   try:
     c=dockerClient.containers.get(name+getTagname())
-    if c.status=="exited" or c.status=="dead":
+    if c.status=="exited" or c.status=="dead" or c.status=="created" or c.status=="removing":
       c.rename(uuid.uuid4().hex)
   except docker.errors.NotFound:
     pass
@@ -572,6 +572,9 @@ def run(s, jobs=4,
       return 0
 
     # networks
+    for n in dockerClient.networks.list(names=["mbsimenv_service_extern:"+getTagname(), "mbsimenv_service_intern:"+getTagname()]):
+      n.remove()
+      print("Network "+n.name+" removed (id="+n.id+")")
     networki=dockerClient.networks.create(name="mbsimenv_service_intern:"+getTagname(), internal=True)
     networke=dockerClient.networks.create(name="mbsimenv_service_extern:"+getTagname())
 
