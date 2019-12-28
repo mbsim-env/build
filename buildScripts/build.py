@@ -573,6 +573,14 @@ def main():
   if args.enableDistribution and nrFailed==0 and runExamplesErrorCode==0:
     releaseGeneration2(mainFD, distArchiveName)
 
+  print('''<div id="STATUSPANEL" class="panel panel-info">
+  <div class="panel-heading"><span class="glyphicon glyphicon-info-sign">
+    </span>&nbsp;<span class="glyphicon glyphicon-exclamation-sign"></span>&nbsp;Status message</div>
+  <div class="panel-body">
+    <pre style="border: 0; background-color: transparent;" id="STATUSMSG">Communicating with server, please wait. (reload page if hanging)</pre>
+  </div>
+</div>''', file=mainFD)
+
   print('<hr/>', file=mainFD)
   print('<span class="pull-left small">', file=mainFD)
   print('  <a href="/mbsim/html/impressum_disclaimer_datenschutz.html#impressum">Impressum</a> /', file=mainFD)
