@@ -262,7 +262,7 @@ RUN patch -d /usr/share/swig/3.0.12 -p0 < /context/swig.patch
 ENV CCACHE_DIR=/mbsim-ccache \
     MBSIM_SWIG=1 \
     PATH=/usr/lib64/ccache:$PATH \
-    WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/usr/lib64/wine/fakedlls" \
+    WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/3rdparty/local/python-win64/Lib/site-packages/numpy/.libs;/usr/lib64/wine/fakedlls" \
     MOC=/usr/x86_64-w64-mingw32/bin/qt5/moc \
     UIC=/usr/x86_64-w64-mingw32/bin/qt5/uic \
     RCC=/usr/x86_64-w64-mingw32/bin/qt5/rcc \
