@@ -39,7 +39,6 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   qrupdate-devel \
   suitesparse-devel \
   file \
-  qt5-qtwebkit-devel \
   libarchive-devel \
   ccache \
   mesa-libGLU-devel \

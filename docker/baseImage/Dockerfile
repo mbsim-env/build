@@ -26,7 +26,6 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && 
   libarchive \
   boost-date-time \
   qt5-qtsvg \
-  qt5-qtwebkit \
   xkeyboard-config \
   xorg-x11-fonts-Type1 \
   urw-fonts \

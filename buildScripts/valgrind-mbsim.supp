@@ -240,12 +240,6 @@
    fun:_ZN16QCoreApplication4execEv
 }
 {
-   QTWEBKIT
-   Memcheck:Value8
-   ...
-   fun:_ZN3JSC17ConservativeRoots14genericAddSpanINS_13DummyMarkHookEEEvPvS3_RT_
-}
-{
    QTDBUS
    Memcheck:Addr2
    ...
@@ -364,24 +358,6 @@
    fun:_ZN8QWebPageC1EP7QObject
 }
 {
-   QT
-   Memcheck:Leak
-   match-leak-kinds: possible
-   fun:calloc
-   fun:_dl_allocate_tls
-   fun:pthread_create@@GLIBC_2.2.5
-   obj:/usr/lib64/libQt5WebKit.so.5.9.1
-   obj:/usr/lib64/libQt5WebKit.so.5.9.1
-   fun:_ZN3WTF10fastMallocEm
-   fun:_ZN3WTF10StringImpl5emptyEv
-   fun:_ZN3WTF19initializeThreadingEv
-   fun:_ZN3JSC19initializeThreadingEv
-   obj:/usr/lib64/libQt5WebKit.so.5.9.1
-   fun:_ZN7WebCore19initializeWebCoreQtEv
-   obj:/usr/lib64/libQt5WebKitWidgets.so.5.9.1
-   fun:_ZN8QWebPageC1EP7QObject
-}
-{
    UNKNOWN
    Memcheck:Leak
    match-leak-kinds: definite
@@ -438,11 +414,6 @@
    obj:/usr/lib64/libQt5Core.so.5.9.2
    fun:start_thread
    fun:clone
-}
-{
-   QT
-   Memcheck:Value8
-   obj:/usr/lib64/libQt5WebKit.so.5.9.1
 }
 {
    QT

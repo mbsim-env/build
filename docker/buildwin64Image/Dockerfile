@@ -26,7 +26,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && 
   swig3 \
   && yum clean all
 RUN rpm -i --nodeps http://download-ib01.fedoraproject.org/pub/fedora/linux/releases/29/Everything/x86_64/os/Packages/m/mingw64-postgresql-10.3-2.fc29.noarch.rpm \
-  && yum --setopt=skip_missing_names_on_install=False -y install mingw64-qt5-qtsvg mingw64-qt5-qtwebkit \
+  && yum --setopt=skip_missing_names_on_install=False -y install mingw64-qt5-qtsvg \
   && yum clean all
 RUN pip3 install h5py
 
