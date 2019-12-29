@@ -25,11 +25,14 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && 
   graphviz \
   swig3 \
   && yum clean all
-RUN rpm -i --nodeps http://download-ib01.fedoraproject.org/pub/fedora/linux/releases/29/Everything/x86_64/os/Packages/m/mingw64-postgresql-10.3-2.fc29.noarch.rpm \
-  && yum --setopt=skip_missing_names_on_install=False -y install mingw64-qt5-qtsvg \
-  && yum clean all
 RUN pip3 install h5py
 
+# install install mingw64-qt5-qtsvg to add its dependencies and then
+# remove mingw64-qt5-qtbase mingw64-qt5-qmake which is rebuild/reinstalled later
+RUN rpm -i --nodeps http://download-ib01.fedoraproject.org/pub/fedora/linux/releases/29/Everything/x86_64/os/Packages/m/mingw64-postgresql-10.3-2.fc29.noarch.rpm \
+  && yum --setopt=skip_missing_names_on_install=False -y install mingw64-qt5-qtsvg \
+  && rpm -e --nodeps mingw64-qt5-qtbase mingw64-qt5-qmake \
+  && yum clean all
 # fix mingw
 COPY docker/buildwin64Image/mingw64.patch /context/mingw64.patch
 RUN patch -d / -p0 < /context/mingw64.patch
@@ -54,6 +57,22 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   rpm-build
 
 RUN mkdir /3rdparty
+
+# rebuild mingw64-qt5-qtbase mingw64-qt5-qmake which is buggy in EPEL repo
+
+# EPEL mingw64-qt5-qtbase is build with GLES (ANGLE) which does not work with coin. Hence this package must be rebuild
+# using the SRPM. In the spec file mingw-qt5-qtbase.spec "-opengl desktop" is set to disable ANGLE.
+
+WORKDIR /3rdparty
+RUN yumdownloader --source mingw-qt5-qtbase
+RUN rpm -ivh ./mingw-qt5-qtbase*.src.rpm
+WORKDIR /root/rpmbuild/SPECS
+RUN rpm -i --nodeps http://download-ib01.fedoraproject.org/pub/fedora/linux/releases/29/Everything/x86_64/os/Packages/m/mingw32-postgresql-10.3-2.fc29.noarch.rpm
+RUN yum-builddep -y mingw-qt5-qtbase
+COPY docker/buildwin64Image/qt5base.patch /context/qt5base.patch
+RUN patch -d /root/rpmbuild -p0 < /context/qt5base.patch
+RUN rpmbuild -ba mingw-qt5-qtbase.spec
+RUN rpm -i /root/rpmbuild/RPMS/noarch/mingw64-qt5-qtbase-5.6.0-3.el7.noarch.rpm /root/rpmbuild/RPMS/x86_64/mingw64-qt5-qmake-5.6.0-3.el7.x86_64.rpm
 
 # 3rd party
 
@@ -227,6 +246,11 @@ RUN make install
 FROM centosBaseImage
 
 COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local
+COPY --from=thirdpartyBuildImage /root/rpmbuild/RPMS/noarch/mingw64-qt5-qtbase-5.6.0-3.el7.noarch.rpm /3rdparty/mingw64-qt5-qtbase-5.6.0-3.el7.noarch.rpm
+COPY --from=thirdpartyBuildImage /root/rpmbuild/RPMS/x86_64/mingw64-qt5-qmake-5.6.0-3.el7.x86_64.rpm /3rdparty/mingw64-qt5-qmake-5.6.0-3.el7.x86_64.rpm
+
+RUN rpm -i /3rdparty/mingw64-qt5-qtbase-5.6.0-3.el7.noarch.rpm \
+  /3rdparty/mingw64-qt5-qmake-5.6.0-3.el7.x86_64.rpm
 
 # fix swig
 COPY docker/buildwin64Image/swig.patch /context/swig.patch
