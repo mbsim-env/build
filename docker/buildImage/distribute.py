@@ -409,7 +409,7 @@ def addPython():
 
   if platform=="linux":
     subdir="lib64/python3.6"
-    pysrcdirs=["/usr/lib64/python3.6", "/usr/lib/python3.6"]
+    pysrcdirs=["/usr/lib64/python3.6", "/usr/local/lib/python3.6"]
   if platform=="win":
     subdir="Lib"
     pysrcdirs=["/3rdparty/local/python-win64/Lib"]
