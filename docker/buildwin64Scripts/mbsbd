@@ -90,7 +90,8 @@ if [ "$BASENAME" == "mbsbd" ]; then
     -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
     --net=host \
     mbsimenv/buildwin64:$MBSIMENVTAGNAME \
-    $exePrefix "${ARGS[@]}"
+    $exePrefix "${ARGS[@]}" \
+    1> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g") 2> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g" > /dev/stderr)
 
 else
   # run via a link
