@@ -438,7 +438,13 @@ def addPython():
 
   # add python executable
   if platform=="linux":
-    addFileToDist("/usr/bin/python3.6", "mbsim-env/bin/python")
+    pythonEnvvar='''#!/bin/bash
+INSTDIR="$(readlink -f $(dirname $0)/..)"
+export LD_LIBRARY_PATH="$INSTDIR/lib"
+$INSTDIR/bin/.python-envvar "$@"
+'''
+    addStrToDist(pythonEnvvar, "mbsim-env/bin/python", True)
+    addFileToDist("/usr/bin/python3.6", "mbsim-env/bin/.python-envvar")
   if platform=="win":
     addFileToDist("/3rdparty/local/python-win64/python.exe", "mbsim-env/bin/python.exe")
     addFileToDist("/3rdparty/local/python-win64/pythonw.exe", "mbsim-env/bin/pythonw.exe")
