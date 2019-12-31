@@ -161,6 +161,7 @@ if args.valgrindExamples:
     sys.stdout.flush()
   valgrindEnv=os.environ
   valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
+  valgrindEnv["PYTHONMALLOC"]="malloc" # required for python to work with valgrind
   # build
   coverage = ["--coverage", "/mbsim-env:-build:/mbsim-env/local:/mbsim-env/mbsim-valgrind/examples"] if "--coverage" in ARGS else []
   localRet=subprocess.call(["python3", "./runexamples.py", "--timeID", timeID.isoformat()+"Z", "--rotate", str(ROTATE), "-j", str(args.jobs)]+coverage+["--reportOutDir",
