@@ -734,20 +734,29 @@
    <insert_a_suppression_name_here>
    Memcheck:Addr4
    ...
-   fun:_Py_InitializeEx_Private
+   fun:_ZN9PythonCpp16initializePythonERKSsS1_
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr8
+   ...
    fun:_ZN9PythonCpp16initializePythonERKSsS1_
 }
 {
    <insert_a_suppression_name_here>
    Memcheck:Cond
    ...
-   fun:_Py_InitializeEx_Private
+   fun:_ZN9PythonCpp16initializePythonERKSsS1_
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value4
+   ...
    fun:_ZN9PythonCpp16initializePythonERKSsS1_
 }
 {
    <insert_a_suppression_name_here>
    Memcheck:Value8
    ...
-   fun:_Py_InitializeEx_Private
    fun:_ZN9PythonCpp16initializePythonERKSsS1_
 }
