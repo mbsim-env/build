@@ -713,34 +713,3 @@
    obj:/usr/lib64/libQt5DBus.so.5.9.7
    ...
 }
-# python initialization
-{
-   <insert_a_suppression_name_here>
-   Memcheck:Addr4
-   ...
-   fun:_ZN10MBXMLUtils6PyInitC1Ev
-}
-{
-   <insert_a_suppression_name_here>
-   Memcheck:Addr8
-   ...
-   fun:_ZN10MBXMLUtils6PyInitC1Ev
-}
-{
-   <insert_a_suppression_name_here>
-   Memcheck:Cond
-   ...
-   fun:_ZN10MBXMLUtils6PyInitC1Ev
-}
-{
-   <insert_a_suppression_name_here>
-   Memcheck:Value4
-   ...
-   fun:_ZN10MBXMLUtils6PyInitC1Ev
-}
-{
-   <insert_a_suppression_name_here>
-   Memcheck:Value8
-   ...
-   fun:_ZN10MBXMLUtils6PyInitC1Ev
-}

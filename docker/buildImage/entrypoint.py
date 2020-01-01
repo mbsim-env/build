@@ -161,15 +161,16 @@ if args.valgrindExamples:
     sys.stdout.flush()
   valgrindEnv=os.environ
   valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
-  valgrindEnv["PYTHONMALLOC"]="malloc" # required for python to work with valgrind
   # build
   coverage = ["--coverage", "/mbsim-env:-build:/mbsim-env/local:/mbsim-env/mbsim-valgrind/examples"] if "--coverage" in ARGS else []
   localRet=subprocess.call(["python3", "./runexamples.py", "--timeID", timeID.isoformat()+"Z", "--rotate", str(ROTATE), "-j", str(args.jobs)]+coverage+["--reportOutDir",
             "/mbsim-report/report/runexamples_valgrind_report", "--url",
             "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
             "--buildSystemRun", "--checkGUIs", "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
-            "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh --child-silent-after-fork=yes --num-callers=300 --gen-suppressions=all --suppressions="+
-            "/mbsim-build/build/buildScripts/valgrind-mbsim.supp --leak-check=full", "--disableCompare", "--disableValidate",
+            "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh --child-silent-after-fork=yes --num-callers=300 --gen-suppressions=all "+
+            "--suppressions=/mbsim-build/build/buildScripts/valgrind-mbsim.supp "+
+            "--suppressions=/mbsim-build/build/buildScripts/valgrind-python.supp "+
+            "--leak-check=full", "--disableCompare", "--disableValidate",
             "--buildType", args.buildType+"-valgrind"]+RUNEXAMPLESFILTER
             , env=valgrindEnv)
   if localRet!=0:
