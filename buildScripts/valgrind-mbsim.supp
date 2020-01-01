@@ -803,3 +803,18 @@
    Memcheck:Cond
    fun:PyMem_Free
 }
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   fun:PyObject_Malloc
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:malloc
+   obj:/usr/lib64/libpython3.6m.so.1.0
+   fun:PyObject_Realloc
+}
