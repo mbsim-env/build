@@ -740,7 +740,7 @@
 }
 {
    <insert_a_suppression_name_here>
-   Memcheck:Cont
+   Memcheck:Cond
    ...
    fun:_ZN9PythonCpp16initializePythonERKSs
 }
