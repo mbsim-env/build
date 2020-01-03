@@ -151,7 +151,7 @@ if os.environ["MBSIMENVTAGNAME"]=="staging":
   print("Starting linux-ci build.")
   setup.run("build-linux64-ci", args.jobs, printLog=False, detach=True, addCommands=["--forceBuild"],
             fmatvecBranch="master", hdf5serieBranch="master",
-            openmbvBranch="python3", mbsimBranch="python3",
+            openmbvBranch="master", mbsimBranch="master",
             statusAccessToken=args.statusAccessToken)
 
 # wait for the web server to finish (will never happen) and return its return code
