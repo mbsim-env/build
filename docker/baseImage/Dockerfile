@@ -18,13 +18,13 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && 
   yum --setopt=skip_missing_names_on_install=False -y install \
   hdf5 \
   python36-numpy \
-  boost-regex \
+  boost169-regex \
   xerces-c \
   lapack \
-  boost-filesystem \
-  boost-timer \
+  boost169-filesystem \
+  boost169-timer \
   libarchive \
-  boost-date-time \
+  boost169-date-time \
   qt5-qtsvg \
   xkeyboard-config \
   xorg-x11-fonts-Type1 \

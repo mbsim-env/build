@@ -23,7 +23,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   qt5-qtsvg-devel \
   hdf5-devel \
   python3-pip \
-  boost-devel \
+  boost169-devel \
   lapack-devel \
   doxygen \
   xalan-c-devel \

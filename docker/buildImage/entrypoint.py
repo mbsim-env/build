@@ -121,6 +121,7 @@ if len(args.updateReferences)>0:
 # run build
 os.environ["STATUSACCESSTOKEN"]=statusAccessToken
 ROTATE=3 if os.environ["MBSIMENVTAGNAME"]=="staging" else 20
+os.environ["LDFLAGS"]="-L/usr/lib64/boost169" # use boost 1.69 libraries (and includes, see --with-boost-inc)
 localRet=subprocess.call(
   ["/mbsim-build/build/buildScripts/build.py"]+ARGS+["--url", "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report",
   "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun",
@@ -129,6 +130,7 @@ localRet=subprocess.call(
   "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix", "--webapp",
   "--reportOutDir", "/mbsim-report/report", "--buildType", args.buildType, "--passToConfigure", "--disable-static",
   "--enable-python", "--with-qwt-inc-prefix=/3rdparty/local/include", "--with-qwt-lib-prefix=/3rdparty/local/lib",
+  "--with-boost-inc=/usr/include/boost169",
   "--with-qwt-lib-name=qwt", "--with-qmake=qmake-qt5", "COIN_CFLAGS=-I/3rdparty/local/include",
   "COIN_LIBS=-L/3rdparty/local/lib64 -lCoin", "SOQT_CFLAGS=-I/3rdparty/local/include",
   "SOQT_LIBS=-L/3rdparty/local/lib64 -lSoQt", "--passToRunexamples"]+RUNEXAMPLESARGS+RUNEXAMPLESFILTER,
