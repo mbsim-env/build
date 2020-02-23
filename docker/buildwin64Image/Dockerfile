@@ -1,7 +1,6 @@
-FROM centos:centos7 AS centosBaseImage
+FROM fedora:31 AS fedoraBaseImage
 
-RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && \
-  yum --setopt=skip_missing_names_on_install=False -y install \
+RUN yum --setopt=skip_missing_names_on_install=False -y install \
   git \
   ccache \
   patch \
@@ -10,10 +9,10 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && 
   mingw64-gcc-c++ \
   mingw64-gcc-gfortran \
   wine \
-  python36-requests \
+  python3-requests \
   libtool automake autoconf \
   python3-pip \
-  python36-numpy \
+  python3-numpy \
   mingw64-boost \
   doxygen \
   tigervnc-server \
@@ -23,56 +22,48 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && 
   file \
   java-1.8.0-openjdk-devel \
   graphviz \
-  swig3 \
+  swig \
+  mingw64-qt5-qtsvg \
+  mingw64-qt5-qtbase \
+  python3-h5py \
+  mingw64-qwt-qt5 \
+  wine \
+  mingw64-python3-numpy \
+  mingw64-xerces-c \
+  mingw64-libarchive \
+  diffutils \
   && yum clean all
-RUN pip3 install h5py
-
-# install install mingw64-qt5-qtsvg to add its dependencies and then
-# remove mingw64-qt5-qtbase mingw64-qt5-qmake which is rebuild/reinstalled later
-RUN rpm -i --nodeps http://download-ib01.fedoraproject.org/pub/fedora/linux/releases/29/Everything/x86_64/os/Packages/m/mingw64-postgresql-10.3-2.fc29.noarch.rpm \
-  && yum --setopt=skip_missing_names_on_install=False -y install mingw64-qt5-qtsvg \
-  && rpm -e --nodeps mingw64-qt5-qtbase mingw64-qt5-qmake \
-  && yum clean all
-# fix mingw
-COPY docker/buildwin64Image/mingw64.patch /context/mingw64.patch
-RUN patch -d / -p0 < /context/mingw64.patch
+# bugfix for mingw64-python3
+RUN ln -s /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/_sysconfigdata_m_win_.py \
+          /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/_sysconfigdata_m_win32_.py
+# bugfix for moc
+RUN mv /usr/x86_64-w64-mingw32/bin/qt5/moc /usr/x86_64-w64-mingw32/bin/qt5/moc.org
+COPY docker/buildwin64Image/moc /usr/x86_64-w64-mingw32/bin/qt5/moc
+# bugfix for numpy
+COPY docker/buildwin64Image/_numpyconfig.h \
+     /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/numpy/core/include/numpy/numpyconfig.h
+COPY docker/buildwin64Image/__multiarray_api.h \
+     /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/numpy/core/include/numpy/__multiarray_api.h
+# bugfix for swig
+COPY docker/buildwin64Image/swig.patch /context/swig.patch
+RUN patch -d /usr/share/swig/4.0.1 -p0 < /context/swig.patch
 
 
 ##################################################################################
 
 
-FROM centosBaseImage AS thirdpartyBuildImage
+FROM fedoraBaseImage AS thirdpartyBuildImage
 
 ARG JOBS=4
 
 RUN yum --setopt=skip_missing_names_on_install=False -y install \
   wget \
-  cmake3 \
-  gcc-c++ \
-  pcre-devel \
+  cmake \
   unzip \
-  mercurial \
-  flex \
-  bison \
-  rpm-build
+  bzip2 \
+  mercurial
 
 RUN mkdir /3rdparty
-
-# rebuild mingw64-qt5-qtbase mingw64-qt5-qmake which is buggy in EPEL repo
-
-# EPEL mingw64-qt5-qtbase is build with GLES (ANGLE) which does not work with coin. Hence this package must be rebuild
-# using the SRPM. In the spec file mingw-qt5-qtbase.spec "-opengl desktop" is set to disable ANGLE.
-
-WORKDIR /3rdparty
-RUN yumdownloader --source mingw-qt5-qtbase
-RUN rpm -ivh ./mingw-qt5-qtbase*.src.rpm
-WORKDIR /root/rpmbuild/SPECS
-RUN rpm -i --nodeps http://download-ib01.fedoraproject.org/pub/fedora/linux/releases/29/Everything/x86_64/os/Packages/m/mingw32-postgresql-10.3-2.fc29.noarch.rpm
-RUN yum-builddep -y mingw-qt5-qtbase
-COPY docker/buildwin64Image/qt5base.patch /context/qt5base.patch
-RUN patch -d /root/rpmbuild -p0 < /context/qt5base.patch
-RUN rpmbuild -ba mingw-qt5-qtbase.spec
-RUN rpm -i /root/rpmbuild/RPMS/noarch/mingw64-qt5-qtbase-5.6.0-3.el7.noarch.rpm /root/rpmbuild/RPMS/x86_64/mingw64-qt5-qmake-5.6.0-3.el7.x86_64.rpm
 
 # 3rd party
 
@@ -85,7 +76,7 @@ RUN set -o pipefail && \
   wget -q -O - http://www.netlib.org/lapack/lapack-$LAPACKVERSION.tgz | tar -xz
 RUN mkdir /3rdparty/lapack-build
 WORKDIR /3rdparty/lapack-build
-RUN cmake3 ../lapack-$LAPACKVERSION -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local
+RUN cmake ../lapack-$LAPACKVERSION -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local
 RUN make -j $JOBS
 RUN make install
 
@@ -99,60 +90,11 @@ COPY docker/buildwin64Image/hdf5.patch /context/hdf5.patch
 RUN git apply /context/hdf5.patch
 RUN mkdir /3rdparty/hdf5-build
 WORKDIR /3rdparty/hdf5-build
-RUN cmake3 ../hdf5 -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DMSVC=TRUE -DHDF5_BUILD_CPP_LIB=ON -DBUILD_SHARED_LIBS=1
+RUN cmake ../hdf5 -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DMSVC=TRUE -DHDF5_BUILD_CPP_LIB=ON -DBUILD_SHARED_LIBS=1
 RUN make -j $JOBS
 RUN make install
 RUN ln -s /3rdparty/local/lib/hdf5.lib /3rdparty/local/lib/libhdf5.lib && \
     ln -s /3rdparty/local/lib/hdf5_cpp.lib /3rdparty/local/lib/libhdf5_cpp.lib
-
-# qwt
-ARG QWTVERSION=6.1.3
-WORKDIR /3rdparty
-RUN set -o pipefail && \
-  wget -q -O - https://sourceforge.net/projects/qwt/files/qwt/$QWTVERSION/qwt-$QWTVERSION.tar.bz2 | tar -xj
-RUN mkdir /3rdparty/qwt-build
-WORKDIR /3rdparty/qwt-build
-RUN sed -ire "s|^ *QWT_INSTALL_PREFIX *=.*$|QWT_INSTALL_PREFIX = /3rdparty/local|" /3rdparty/qwt-$QWTVERSION/qwtconfig.pri && \
-  sed -ire "s|^ *QWT_CONFIG *+= *QwtDesigner *$|#|" /3rdparty/qwt-$QWTVERSION/qwtconfig.pri && \
-  sed -ire "s|^ *CONFIG *+= *debug_and_release *$|CONFIG += release|" /3rdparty/qwt-$QWTVERSION/qwtbuild.pri
-RUN sed -ire "s|^ *CONFIG *+= *debug_and_release *$|CONFIG += release|" /3rdparty/qwt-$QWTVERSION/qwtbuild.pri
-RUN mingw64-qmake-qt5 ../qwt-$QWTVERSION
-# the first make fails but the second not???
-RUN make -j $JOBS || make -j $JOBS || make -j 1
-RUN make install
-
-# wine
-RUN yum remove -y wine wine-courier-fonts wine-marlett-fonts wine-core wine-twain wine-capi wine-filesystem wine-small-fonts wine-system-fonts wine-common wine-alsa wine-cms wine-ms-sans-serif-fonts wine-symbol-fonts wine-fonts wine-desktop wine-pulseaudio wine-wingdings-fonts wine-fixedsys-fonts wine-systemd wine-ldap wine-openal wine-tahoma-fonts
-WORKDIR /3rdparty
-RUN set -o pipefail && \
-  wget -q -O - https://dl.winehq.org/wine/source/3.0/wine-3.0.5.tar.xz | tar -xJ
-RUN mkdir /3rdparty/wine-build
-WORKDIR /3rdparty/wine-build
-RUN yum install -y libX11-devel
-RUN yum install -y freetype-devel
-# zlib-devel libxcb-devel libxslt-devel libgcrypt-devel libxml2-devel gnutls-devel libpng-devel libjpeg-turbo-devel libtiff-devel gstreamer-devel dbus-devel fontconfig-devel
-RUN ../wine-3.0.5/configure --enable-win64 --prefix=/3rdparty/local
-RUN make -j $JOBS
-RUN make install
-RUN ln -s /3rdparty/local/bin/wine64 /3rdparty/local/bin/wine
-ENV PATH=$PATH:/3rdparty/local/bin
-
-# python
-ARG PYTHONVERSION=3.4.4
-WORKDIR /3rdparty
-RUN wget https://www.python.org/ftp/python/$PYTHONVERSION/python-$PYTHONVERSION.amd64.msi
-RUN wine msiexec -i python-$PYTHONVERSION.amd64.msi -q n TARGETDIR="$(winepath -w /3rdparty/local/python-win64)" && wineserver -w
-# fix libfile name
-RUN mv /3rdparty/local/python-win64/libs/python34.lib /3rdparty/local/python-win64/libs/libpython34.lib
-
-# numpy
-ARG NUMPYVERSION=1.15.0
-WORKDIR /3rdparty
-RUN wget https://files.pythonhosted.org/packages/11/9f/f7550ba7d6ea7d1da16ac2069157b42d225b02b47e4c30ccc1c5b6be3b8f/numpy-$NUMPYVERSION-cp34-none-win_amd64.whl
-RUN mkdir /3rdparty/numpy-build
-WORKDIR /3rdparty/numpy-build
-RUN unzip ../numpy-$NUMPYVERSION-cp34-none-win_amd64.whl
-RUN cp -a numpy /3rdparty/local/python-win64/Lib/site-packages/.
 
 # mpmath/sympy
 ARG MPMATHVERSION=1.1.0
@@ -166,21 +108,18 @@ RUN tar -xzf ../mpmath-$MPMATHVERSION.tar.gz
 WORKDIR /3rdparty/sympy-build
 RUN tar -xzf ../sympy-$SYMPYVERSION.tar.gz
 WORKDIR /3rdparty/mpmath-build/mpmath-$MPMATHVERSION
-RUN wine /3rdparty/local/python-win64/python.exe setup.py build && \
-    wine /3rdparty/local/python-win64/python.exe setup.py install && wineserver -w
+RUN wine /usr/x86_64-w64-mingw32/sys-root/mingw/bin/python3.exe setup.py build && \
+    wine /usr/x86_64-w64-mingw32/sys-root/mingw/bin/python3.exe setup.py install && wineserver -w
 WORKDIR /3rdparty/sympy-build/sympy-$SYMPYVERSION
 RUN mkdir -p /3rdparty/sympy-inst/Lib/site-packages
-RUN wine /3rdparty/local/python-win64/python.exe setup.py build && wineserver -w
-RUN PYTHONPATH="$(winepath -w /3rdparty/sympy-inst/Lib/site-packages)" wine /3rdparty/local/python-win64/python.exe \
-    setup.py install --prefix="$(winepath -w /3rdparty/sympy-inst)" && \
-    wineserver -w
-RUN unzip -d /3rdparty/local/python-win64/Lib/site-packages dist/sympy-$SYMPYVERSION-py3.4.egg
+RUN wine /usr/x86_64-w64-mingw32/sys-root/mingw/bin/python3.exe setup.py build && \
+    wine /usr/x86_64-w64-mingw32/sys-root/mingw/bin/python3.exe setup.py install && wineserver -w
 
 # octave
-ARG OCTAVEVERSION=3.8.2
+ARG OCTAVEVERSION=4.2.2
 WORKDIR /3rdparty
 RUN set -o pipefail && \
-  wget -q -O - https://ftp.gnu.org/gnu/octave/octave-$OCTAVEVERSION.tar.bz2 | tar -xj
+  wget -q -O - https://ftp.gnu.org/gnu/octave/octave-$OCTAVEVERSION.tar.gz | tar -xz
 RUN mkdir /3rdparty/octave-build
 WORKDIR /3rdparty/octave-build
 COPY docker/buildwin64Image/octave.patch /context/octave.patch
@@ -188,54 +127,29 @@ RUN patch -d /3rdparty/octave-$OCTAVEVERSION -p0 < /context/octave.patch
 RUN ../octave-$OCTAVEVERSION/configure --enable-shared --disable-static --build=x86_64-redhat-linux --host=x86_64-w64-mingw32 --prefix=/3rdparty/local --disable-java --disable-gui --without-opengl --with-blas="-L/3rdparty/local/lib -lblas" --with-lapack="-L/3rdparty/local/lib -llapack" --disable-readline
 RUN make -j $JOBS
 RUN make install
-# fix octave 3.8.2: it is not initializing when runnig without a DISPLAY
-RUN sed -i -re "s/\<__have_fltk__ *\( *\) *&& *have_window_system *\( *\)/have_window_system () \&\& __have_fltk__ ()/" \
-  /3rdparty/local/lib/octave/3.8.2/oct/x86_64-w64-mingw32/PKG_ADD
-
-# xerces-c
-ARG XERCESCVERSION=3.1.2
-WORKDIR /3rdparty
-RUN set -o pipefail && \
-  wget -q -O - https://archive.apache.org/dist/xerces/c/3/sources/xerces-c-$XERCESCVERSION.tar.bz2 | tar -xj
-RUN mkdir /3rdparty/xercesc-build
-COPY docker/buildwin64Image/xercesc.patch /context/xercesc.patch
-RUN patch -d /3rdparty/xerces-c-$XERCESCVERSION -p0 < /context/xercesc.patch
-WORKDIR /3rdparty/xercesc-build
-RUN ../xerces-c-$XERCESCVERSION/configure --enable-shared --disable-static --build=x86_64-redhat-linux --host=x86_64-w64-mingw32 --prefix=/3rdparty/local
-RUN make -j $JOBS
-RUN make install
+RUN cat /3rdparty/local/lib/octave/4.2.2/oct/x86_64-w64-mingw32/PKG_ADD
+# fix octave: it is not initializing when runnig without a DISPLAY
+RUN sed -i -re "s/^ *if *\((.*)&& *have_window_system *\( *\)(.*)$/if(have_window_system() \&\& \1\2/" \
+  /3rdparty/local/lib/octave/$OCTAVEVERSION/oct/x86_64-w64-mingw32/PKG_ADD
 
 # coin
-ARG COINBRANCH=3d7321d07d57
+ARG COINBRANCH=Coin-4.0.0
 WORKDIR /3rdparty
 RUN hg clone https://bitbucket.org/Coin3D/coin -r $COINBRANCH
-COPY docker/buildwin64Image/coin.patch /context/coin.patch
 WORKDIR /3rdparty/coin
-RUN hg import --no-commit /context/coin.patch
 RUN mkdir /3rdparty/coin-build
 WORKDIR /3rdparty/coin-build
-RUN cmake3 -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DCMAKE_CXX_FLAGS="-g -O2 -fpermissive" -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake ../coin
+RUN cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DCMAKE_CXX_FLAGS="-g -O2 -fpermissive" -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DBoost_INCLUDE_DIR="/usr/x86_64-w64-mingw32/sys-root/mingw/include" -DSIM_TIMEVAL_TV_SEC_T=time_t -DSIM_TIMEVAL_TV_USEC_T=time_t ../coin
 RUN make -j $JOBS
 RUN make install
 
 # soqt
-ARG SOQTBRANCH=945ec22f6219
+ARG SOQTBRANCH=SoQt-1.6.0
 WORKDIR /3rdparty
 RUN hg clone https://bitbucket.org/Coin3D/soqt -r $SOQTBRANCH
 RUN mkdir /3rdparty/soqt-build
 WORKDIR /3rdparty/soqt-build
-RUN cmake3 -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DCMAKE_CXX_FLAGS="-g -O2 -fpermissive" -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DQt5_DIR=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/cmake/Qt5 ../soqt
-RUN make -j $JOBS
-RUN make install
-
-# libarchive
-ARG LIBARCHIVEVERION=3.1.2
-WORKDIR /3rdparty
-RUN set -o pipefail && \
-  wget -q -O - https://libarchive.org/downloads/libarchive-$LIBARCHIVEVERION.tar.gz | tar -xz
-RUN mkdir /3rdparty/libarchive-build
-WORKDIR /3rdparty/libarchive-build
-RUN ../libarchive-$LIBARCHIVEVERION/configure  --enable-shared --disable-static --build=x86_64-redhat-linux --host=x86_64-w64-mingw32 --prefix=/3rdparty/local --without-xml2 --without-expat --without-openssl --without-nettle --without-lzo2 --without-lzma --without-libiconv-prefix --without-iconv --without-lzmadec --without-bz2lib
+RUN cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DCMAKE_CXX_FLAGS="-g -O2 -fpermissive" -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DQt5_DIR=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/cmake/Qt5 ../soqt
 RUN make -j $JOBS
 RUN make install
 
@@ -243,18 +157,9 @@ RUN make install
 ##################################################################################
 
 
-FROM centosBaseImage
+FROM fedoraBaseImage
 
 COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local
-COPY --from=thirdpartyBuildImage /root/rpmbuild/RPMS/noarch/mingw64-qt5-qtbase-5.6.0-3.el7.noarch.rpm /3rdparty/mingw64-qt5-qtbase-5.6.0-3.el7.noarch.rpm
-COPY --from=thirdpartyBuildImage /root/rpmbuild/RPMS/x86_64/mingw64-qt5-qmake-5.6.0-3.el7.x86_64.rpm /3rdparty/mingw64-qt5-qmake-5.6.0-3.el7.x86_64.rpm
-
-RUN rpm -i /3rdparty/mingw64-qt5-qtbase-5.6.0-3.el7.noarch.rpm \
-  /3rdparty/mingw64-qt5-qmake-5.6.0-3.el7.x86_64.rpm
-
-# fix swig
-COPY docker/buildwin64Image/swig.patch /context/swig.patch
-RUN patch -d /usr/share/swig/3.0.12 -p0 < /context/swig.patch
 
 # ccache
 # enable swig interface to mbsim
@@ -262,14 +167,14 @@ RUN patch -d /usr/share/swig/3.0.12 -p0 < /context/swig.patch
 ENV CCACHE_DIR=/mbsim-ccache \
     MBSIM_SWIG=1 \
     PATH=/usr/lib64/ccache:$PATH \
-    WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/3rdparty/local/python-win64/Lib/site-packages/numpy/.libs;/usr/lib64/wine/fakedlls" \
-    MOC=/usr/x86_64-w64-mingw32/bin/qt5/moc \
+    WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;" \
+    MOC=/usr/x86_64-w64-mingw32/bin/qt5/moc.org \
     UIC=/usr/x86_64-w64-mingw32/bin/qt5/uic \
     RCC=/usr/x86_64-w64-mingw32/bin/qt5/rcc \
     CXXFLAGS="-g -O2 -gdwarf-2 -DNDEBUG" \
     CFLAGS="-g -O2 -gdwarf-2 -DNDEBUG" \
     FFLAGS="-g -O2 -gdwarf-2 -DNDEBUG" \
-    PKG_CONFIG_PATH=/3rdparty/local/lib/pkgconfig \
+    PKG_CONFIG_PATH=/3rdparty/local/lib/pkgconfig:/usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig \
     PLATFORM=Windows \
     CXX=x86_64-w64-mingw32-g++
 
@@ -284,11 +189,6 @@ LABEL org.label-schema.schema-version="1.0" \
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
   mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state && \
   chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state
-
-# configure wine
-COPY docker/buildwin64Image/wine.inf /context/wine.inf
-RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\+g'); \
-    sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.inf >> /usr/share/wine/wine.inf
 
 # copy
 COPY buildScripts /mbsim-build/build/buildScripts
@@ -310,3 +210,32 @@ RUN ccache -M 10G
 CMD []
 # call this script when running the container
 ENTRYPOINT ["/context/entrypoint.py"]
+
+
+
+
+
+
+
+
+
+# rebuild numpy to get the missing files
+#USER root:root
+#RUN yum install -y yum-utils
+#RUN mkdir /test
+#WORKDIR /test
+#RUN yumdownloader --source mingw64-python3-numpy
+#RUN rpm -ivh ./mingw-numpy-*.src.rpm
+#WORKDIR /root/rpmbuild/SPECS
+#RUN yum-builddep -y mingw64-python3-numpy
+#RUN yum install -y rpm-build
+#RUN rpmbuild -ba mingw-numpy.spec
+#RUN cat /root/rpmbuild/BUILD/numpy-1.17.0/build_py3_mingw64/src.linux-x86_64-3.7/numpy/core/include/numpy/_numpyconfig.h
+#RUN cat /root/rpmbuild/BUILD/numpy-1.17.0/build_py3_mingw64/src.linux-x86_64-3.7/numpy/core/include/numpy/__multiarray_api.h
+#
+#WORKDIR /test
+#RUN yumdownloader --source mingw64-python3
+#RUN rpm -ivh ./mingw-python3-*.src.rpm
+#WORKDIR /root/rpmbuild/SPECS
+#RUN yum-builddep -y mingw64-python3
+#RUN rpmbuild -ba mingw-python3.spec

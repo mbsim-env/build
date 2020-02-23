@@ -870,8 +870,13 @@ def configure(tool, mainFD):
         command=[pj(args.sourceDir, tool, "configure"), "--prefix", args.prefix]
         command.extend(args.passToConfigure)
         print(" ".join(command), file=configureFD); configureFD.flush()
-        if subprocess.call(command, stderr=subprocess.STDOUT, stdout=configureFD)!=0:
-          raise RuntimeError("configure failed")
+        if args.buildType=="win64-dailyrelease":
+          # redirecting stderr does not work in some python subprcesses :-(
+          if subprocess.call(command, stdout=configureFD)!=0:
+            raise RuntimeError("configure failed")
+        else:
+          if subprocess.call(command, stderr=subprocess.STDOUT, stdout=configureFD)!=0:
+            raise RuntimeError("configure failed")
     else:
       print("configure disabled", file=configureFD); configureFD.flush()
 
