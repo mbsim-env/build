@@ -39,20 +39,55 @@ RUN ln -s /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/_sysconfigdata_m_
 # bugfix for moc
 RUN mv /usr/x86_64-w64-mingw32/bin/qt5/moc /usr/x86_64-w64-mingw32/bin/qt5/moc.org
 COPY docker/buildwin64Image/moc /usr/x86_64-w64-mingw32/bin/qt5/moc
-# bugfix for numpy
-COPY docker/buildwin64Image/_numpyconfig.h \
-     /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/numpy/core/include/numpy/numpyconfig.h
-COPY docker/buildwin64Image/__multiarray_api.h \
-     /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/numpy/core/include/numpy/__multiarray_api.h
 # bugfix for swig
 COPY docker/buildwin64Image/swig.patch /context/swig.patch
 RUN patch -d /usr/share/swig/4.0.1 -p0 < /context/swig.patch
 
 
+############################
+
+
+FROM fedoraBaseImage AS fedoraBaseImageFixes
+
+# prepare for rpm rebuilds
+RUN yum install -y yum-utils rpm-build
+RUN mkdir /test
+WORKDIR /test
+RUN yumdownloader --source mingw64-python3 mingw64-python3-numpy
+RUN rpm -ivh ./mingw-python3-*.src.rpm ./mingw-numpy-*.src.rpm
+WORKDIR /root/rpmbuild/SPECS
+
+# rebuild pyhton with some patches
+RUN yum-builddep -y mingw64-python3
+COPY docker/buildwin64Image/python-ctypes.patch /root/rpmbuild/SOURCES/python-ctypes.patch
+COPY docker/buildwin64Image/python-ctypes-specs.patch /context/python-ctypes-specs.patch
+RUN patch -d /root/rpmbuild/SPECS -p0 < /context/python-ctypes-specs.patch
+RUN rpmbuild -ba mingw-python3.spec
+
+# rebuild numpy to get some missing files
+RUN yum-builddep -y mingw64-python3-numpy
+RUN rpmbuild -ba mingw-numpy.spec
+
+
 ##################################################################################
 
 
-FROM fedoraBaseImage AS thirdpartyBuildImage
+
+FROM fedoraBaseImage AS fedoraBaseImage2
+
+COPY --from=fedoraBaseImageFixes /root/rpmbuild/RPMS/noarch/mingw64-python3-3.7.4-2.fc31.noarch.rpm \
+  /tmp/mingw64-python3-3.7.4-2.fc31.noarch.rpm
+RUN rpm -e --nodeps mingw64-python3 && rpm -i /tmp/mingw64-python3-3.7.4-2.fc31.noarch.rpm
+COPY --from=fedoraBaseImageFixes /root/rpmbuild/BUILD/numpy-1.17.0/build_py3_mingw64/src.linux-x86_64-3.7/numpy/core/include/numpy/_numpyconfig.h \
+  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/numpy/core/include/numpy/numpyconfig.h
+COPY --from=fedoraBaseImageFixes /root/rpmbuild/BUILD/numpy-1.17.0/build_py3_mingw64/src.linux-x86_64-3.7/numpy/core/include/numpy/__multiarray_api.h \
+  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/numpy/core/include/numpy/__multiarray_api.h
+
+
+##################################################################################
+
+
+FROM fedoraBaseImage2 AS thirdpartyBuildImage
 
 ARG JOBS=4
 
@@ -116,18 +151,15 @@ RUN wine /usr/x86_64-w64-mingw32/sys-root/mingw/bin/python3.exe setup.py build &
     wine /usr/x86_64-w64-mingw32/sys-root/mingw/bin/python3.exe setup.py install && wineserver -w
 
 # octave
-ARG OCTAVEVERSION=4.2.2
+ARG OCTAVEVERSION=4.4.1
 WORKDIR /3rdparty
 RUN set -o pipefail && \
   wget -q -O - https://ftp.gnu.org/gnu/octave/octave-$OCTAVEVERSION.tar.gz | tar -xz
 RUN mkdir /3rdparty/octave-build
 WORKDIR /3rdparty/octave-build
-COPY docker/buildwin64Image/octave.patch /context/octave.patch
-RUN patch -d /3rdparty/octave-$OCTAVEVERSION -p0 < /context/octave.patch
-RUN ../octave-$OCTAVEVERSION/configure --enable-shared --disable-static --build=x86_64-redhat-linux --host=x86_64-w64-mingw32 --prefix=/3rdparty/local --disable-java --disable-gui --without-opengl --with-blas="-L/3rdparty/local/lib -lblas" --with-lapack="-L/3rdparty/local/lib -llapack" --disable-readline
+RUN ax_blas_integer_size=4 ../octave-$OCTAVEVERSION/configure --enable-shared --disable-static --build=x86_64-redhat-linux --host=x86_64-w64-mingw32 --prefix=/3rdparty/local --disable-java --disable-gui --without-opengl --with-blas="-L/3rdparty/local/lib -lblas" --with-lapack="-L/3rdparty/local/lib -llapack" --disable-readline
 RUN make -j $JOBS
 RUN make install
-RUN cat /3rdparty/local/lib/octave/4.2.2/oct/x86_64-w64-mingw32/PKG_ADD
 # fix octave: it is not initializing when runnig without a DISPLAY
 RUN sed -i -re "s/^ *if *\((.*)&& *have_window_system *\( *\)(.*)$/if(have_window_system() \&\& \1\2/" \
   /3rdparty/local/lib/octave/$OCTAVEVERSION/oct/x86_64-w64-mingw32/PKG_ADD
@@ -157,9 +189,13 @@ RUN make install
 ##################################################################################
 
 
-FROM fedoraBaseImage
+FROM fedoraBaseImage2
 
 COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local
+COPY --from=thirdpartyBuildImage /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/mpmath \
+  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/mpmath
+COPY --from=thirdpartyBuildImage /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/sympy \
+  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/sympy
 
 # ccache
 # enable swig interface to mbsim
@@ -210,32 +246,3 @@ RUN ccache -M 10G
 CMD []
 # call this script when running the container
 ENTRYPOINT ["/context/entrypoint.py"]
-
-
-
-
-
-
-
-
-
-# rebuild numpy to get the missing files
-#USER root:root
-#RUN yum install -y yum-utils
-#RUN mkdir /test
-#WORKDIR /test
-#RUN yumdownloader --source mingw64-python3-numpy
-#RUN rpm -ivh ./mingw-numpy-*.src.rpm
-#WORKDIR /root/rpmbuild/SPECS
-#RUN yum-builddep -y mingw64-python3-numpy
-#RUN yum install -y rpm-build
-#RUN rpmbuild -ba mingw-numpy.spec
-#RUN cat /root/rpmbuild/BUILD/numpy-1.17.0/build_py3_mingw64/src.linux-x86_64-3.7/numpy/core/include/numpy/_numpyconfig.h
-#RUN cat /root/rpmbuild/BUILD/numpy-1.17.0/build_py3_mingw64/src.linux-x86_64-3.7/numpy/core/include/numpy/__multiarray_api.h
-#
-#WORKDIR /test
-#RUN yumdownloader --source mingw64-python3
-#RUN rpm -ivh ./mingw-python3-*.src.rpm
-#WORKDIR /root/rpmbuild/SPECS
-#RUN yum-builddep -y mingw64-python3
-#RUN rpmbuild -ba mingw-python3.spec
