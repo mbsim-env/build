@@ -112,7 +112,8 @@ def addFileToDist(name, arcname, addDepLibs=True):
             pass
         # strip or not
         if ((re.search('ELF [0-9]+-bit LSB', content)!=None and re.search('not stripped', content)!=None) or \
-            (re.search('PE32\+? executable', content)!=None and re.search('stripped to external PDB', content)==None)):
+            (re.search('PE32\+? executable', content)!=None and re.search('stripped to external PDB', content)==None)) and \
+           not name.startswith("/3rdparty/local/python-win64/"):# do not strip python files (these are not build with mingw)
           # not stripped binary file
           try:
             subprocess.check_call(["objcopy", "--only-keep-debug", tmpDir+"/"+basename+".rpath", tmpDir+"/"+basename+".debug"])
@@ -413,7 +414,7 @@ def addPython():
     pysrcdirs=["/usr/lib64/python3.6", "/usr/local/lib/python3.6"]
   if platform=="win":
     subdir="Lib"
-    pysrcdirs=["/usr/x86_64-w64-mingw32/lib/python3.7", "/usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7"]
+    pysrcdirs=["/3rdparty/local/python-win64/Lib"]
   for pysrcdir in pysrcdirs:
     # everything in pysrcdir except some special dirs
     for d in os.listdir(pysrcdir):
@@ -432,6 +433,11 @@ def addPython():
     if os.path.exists(pysrcdir+"/site-packages/mpmath"):
       addFileToDist(pysrcdir+"/site-packages/mpmath", "mbsim-env/"+subdir+"/site-packages/mpmath")
 
+    # on Windows copy also the DLLs dir
+    if platform=="win":
+      for f in os.listdir(pysrcdir+"/../DLLs"):
+        addFileToDist(pysrcdir+"/../DLLs/"+f, "mbsim-env/DLLs/"+f)
+
   # add python executable
   if platform=="linux":
     pythonEnvvar='''#!/bin/bash
@@ -442,8 +448,8 @@ $INSTDIR/bin/.python-envvar "$@"
     addStrToDist(pythonEnvvar, "mbsim-env/bin/python", True)
     addFileToDist("/usr/bin/python3.6", "mbsim-env/bin/.python-envvar")
   if platform=="win":
-    addFileToDist("/usr/x86_64-w64-mingw32/sys-root/mingw/bin/python3.exe", "mbsim-env/bin/python.exe")
-    addFileToDist("/usr/x86_64-w64-mingw32/sys-root/mingw/bin/python3w.exe", "mbsim-env/bin/pythonw.exe")
+    addFileToDist("/3rdparty/local/python-win64/python.exe", "mbsim-env/bin/python.exe")
+    addFileToDist("/3rdparty/local/python-win64/pythonw.exe", "mbsim-env/bin/pythonw.exe")
 
 
 

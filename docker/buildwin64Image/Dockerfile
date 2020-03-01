@@ -28,14 +28,10 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   python3-h5py \
   mingw64-qwt-qt5 \
   wine \
-  mingw64-python3-numpy \
   mingw64-xerces-c \
   mingw64-libarchive \
   diffutils \
   && yum clean all
-# bugfix for mingw64-python3
-RUN ln -s /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/_sysconfigdata_m_win_.py \
-          /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/_sysconfigdata_m_win32_.py
 # bugfix for moc
 RUN mv /usr/x86_64-w64-mingw32/bin/qt5/moc /usr/x86_64-w64-mingw32/bin/qt5/moc.org
 COPY docker/buildwin64Image/moc /usr/x86_64-w64-mingw32/bin/qt5/moc
@@ -44,50 +40,10 @@ COPY docker/buildwin64Image/swig.patch /context/swig.patch
 RUN patch -d /usr/share/swig/4.0.1 -p0 < /context/swig.patch
 
 
-############################
-
-
-FROM fedoraBaseImage AS fedoraBaseImageFixes
-
-# prepare for rpm rebuilds
-RUN yum install -y yum-utils rpm-build
-RUN mkdir /test
-WORKDIR /test
-RUN yumdownloader --source mingw64-python3 mingw64-python3-numpy
-RUN rpm -ivh ./mingw-python3-*.src.rpm ./mingw-numpy-*.src.rpm
-WORKDIR /root/rpmbuild/SPECS
-
-# rebuild pyhton with some patches
-RUN yum-builddep -y mingw64-python3
-COPY docker/buildwin64Image/python-ctypes.patch /root/rpmbuild/SOURCES/python-ctypes.patch
-COPY docker/buildwin64Image/python-ctypes-specs.patch /context/python-ctypes-specs.patch
-RUN patch -d /root/rpmbuild/SPECS -p0 < /context/python-ctypes-specs.patch
-RUN rpmbuild -ba mingw-python3.spec
-
-# rebuild numpy to get some missing files
-RUN yum-builddep -y mingw64-python3-numpy
-RUN rpmbuild -ba mingw-numpy.spec
-
-
 ##################################################################################
 
 
-
-FROM fedoraBaseImage AS fedoraBaseImage2
-
-COPY --from=fedoraBaseImageFixes /root/rpmbuild/RPMS/noarch/mingw64-python3-3.7.4-2.fc31.noarch.rpm \
-  /tmp/mingw64-python3-3.7.4-2.fc31.noarch.rpm
-RUN rpm -e --nodeps mingw64-python3 && rpm -i /tmp/mingw64-python3-3.7.4-2.fc31.noarch.rpm
-COPY --from=fedoraBaseImageFixes /root/rpmbuild/BUILD/numpy-1.17.0/build_py3_mingw64/src.linux-x86_64-3.7/numpy/core/include/numpy/_numpyconfig.h \
-  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/numpy/core/include/numpy/numpyconfig.h
-COPY --from=fedoraBaseImageFixes /root/rpmbuild/BUILD/numpy-1.17.0/build_py3_mingw64/src.linux-x86_64-3.7/numpy/core/include/numpy/__multiarray_api.h \
-  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/numpy/core/include/numpy/__multiarray_api.h
-
-
-##################################################################################
-
-
-FROM fedoraBaseImage2 AS thirdpartyBuildImage
+FROM fedoraBaseImage AS thirdpartyBuildImage
 
 ARG JOBS=4
 
@@ -131,6 +87,23 @@ RUN make install
 RUN ln -s /3rdparty/local/lib/hdf5.lib /3rdparty/local/lib/libhdf5.lib && \
     ln -s /3rdparty/local/lib/hdf5_cpp.lib /3rdparty/local/lib/libhdf5_cpp.lib
 
+# python (mingw64-python has several problems)
+ARG PYTHONVERSION=3.4.4
+WORKDIR /3rdparty
+RUN wget https://www.python.org/ftp/python/$PYTHONVERSION/python-$PYTHONVERSION.amd64.msi
+RUN wine msiexec -i python-$PYTHONVERSION.amd64.msi -q n TARGETDIR="$(winepath -w /3rdparty/local/python-win64)" && wineserver -w
+# fix libfile name
+RUN mv /3rdparty/local/python-win64/libs/python34.lib /3rdparty/local/python-win64/libs/libpython34.lib
+
+# numpy
+ARG NUMPYVERSION=1.15.0
+WORKDIR /3rdparty
+RUN wget https://files.pythonhosted.org/packages/11/9f/f7550ba7d6ea7d1da16ac2069157b42d225b02b47e4c30ccc1c5b6be3b8f/numpy-$NUMPYVERSION-cp34-none-win_amd64.whl
+RUN mkdir /3rdparty/numpy-build
+WORKDIR /3rdparty/numpy-build
+RUN unzip ../numpy-$NUMPYVERSION-cp34-none-win_amd64.whl
+RUN cp -a numpy /3rdparty/local/python-win64/Lib/site-packages/.
+
 # mpmath/sympy
 ARG MPMATHVERSION=1.1.0
 ARG SYMPYVERSION=1.4
@@ -143,12 +116,15 @@ RUN tar -xzf ../mpmath-$MPMATHVERSION.tar.gz
 WORKDIR /3rdparty/sympy-build
 RUN tar -xzf ../sympy-$SYMPYVERSION.tar.gz
 WORKDIR /3rdparty/mpmath-build/mpmath-$MPMATHVERSION
-RUN wine /usr/x86_64-w64-mingw32/sys-root/mingw/bin/python3.exe setup.py build && \
-    wine /usr/x86_64-w64-mingw32/sys-root/mingw/bin/python3.exe setup.py install && wineserver -w
+RUN wine /3rdparty/local/python-win64/python.exe setup.py build && \
+    wine /3rdparty/local/python-win64/python.exe setup.py install && wineserver -w
 WORKDIR /3rdparty/sympy-build/sympy-$SYMPYVERSION
 RUN mkdir -p /3rdparty/sympy-inst/Lib/site-packages
-RUN wine /usr/x86_64-w64-mingw32/sys-root/mingw/bin/python3.exe setup.py build && \
-    wine /usr/x86_64-w64-mingw32/sys-root/mingw/bin/python3.exe setup.py install && wineserver -w
+RUN wine /3rdparty/local/python-win64/python.exe setup.py build && wineserver -w
+RUN PYTHONPATH="$(winepath -w /3rdparty/sympy-inst/Lib/site-packages)" wine /3rdparty/local/python-win64/python.exe \
+    setup.py install --prefix="$(winepath -w /3rdparty/sympy-inst)" && \
+    wineserver -w
+RUN unzip -d /3rdparty/local/python-win64/Lib/site-packages dist/sympy-$SYMPYVERSION-py3.4.egg
 
 # octave
 ARG OCTAVEVERSION=4.4.1
@@ -189,13 +165,9 @@ RUN make install
 ##################################################################################
 
 
-FROM fedoraBaseImage2
+FROM fedoraBaseImage
 
 COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local
-COPY --from=thirdpartyBuildImage /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/mpmath \
-  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/mpmath
-COPY --from=thirdpartyBuildImage /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/sympy \
-  /usr/x86_64-w64-mingw32/sys-root/mingw/lib/python3.7/site-packages/sympy
 
 # ccache
 # enable swig interface to mbsim
@@ -203,7 +175,7 @@ COPY --from=thirdpartyBuildImage /usr/x86_64-w64-mingw32/sys-root/mingw/lib/pyth
 ENV CCACHE_DIR=/mbsim-ccache \
     MBSIM_SWIG=1 \
     PATH=/usr/lib64/ccache:$PATH \
-    WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;" \
+    WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/3rdparty/local/python-win64/Lib/site-packages/numpy/.libs" \
     MOC=/usr/x86_64-w64-mingw32/bin/qt5/moc.org \
     UIC=/usr/x86_64-w64-mingw32/bin/qt5/uic \
     RCC=/usr/x86_64-w64-mingw32/bin/qt5/rcc \
@@ -225,6 +197,11 @@ LABEL org.label-schema.schema-version="1.0" \
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
   mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state && \
   chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state
+
+# configure wine
+COPY docker/buildwin64Image/wine.inf /context/wine.inf
+RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\+g'); \
+    sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.inf >> /usr/share/wine/wine.inf
 
 # copy
 COPY buildScripts /mbsim-build/build/buildScripts

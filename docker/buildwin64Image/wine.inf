@@ -1,0 +1,2 @@
+[SessionMgr]
+HKLM,%Control%\Session Manager\Environment,"PYTHONHOME",,"%_PYTHONHOME_%"
