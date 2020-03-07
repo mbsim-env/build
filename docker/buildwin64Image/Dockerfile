@@ -138,6 +138,8 @@ RUN make -j $JOBS
 RUN make install
 # fix octave: it is not initializing when runnig without a DISPLAY
 RUN sed -i -re "s/^ *if *\((.*)&& *have_window_system *\( *\)(.*)$/if(have_window_system() \&\& \1\2/" \
+  /3rdparty/local/lib/octave/$OCTAVEVERSION/oct/x86_64-w64-mingw32/PKG_ADD && \
+  sed -i -re "s/^.*gnuplot.*$/% gnuplot is removed/" \
   /3rdparty/local/lib/octave/$OCTAVEVERSION/oct/x86_64-w64-mingw32/PKG_ADD
 
 # coin
