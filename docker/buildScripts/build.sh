@@ -71,8 +71,10 @@ mkdir -p $MBSIMENVDIR/.home
   --with-qwt-lib-prefix=/3rdparty/local/lib \
   --with-qwt-lib-name=qwt \
   --with-qmake=qmake-qt5 \
+  --with-boost-inc=/usr/include/boost169 \
   COIN_CFLAGS=-I/3rdparty/local/include \
   COIN_LIBS="-L/3rdparty/local/lib64 -lCoin" \
   SOQT_CFLAGS=-I/3rdparty/local/include \
   SOQT_LIBS="-L/3rdparty/local/lib64 -lSoQt" \
+  LDFLAGS="-L/usr/lib64/boost169" \
   "${CONFIGUREARGS[@]}" "${RUNEXAMPLEARGS[@]}"

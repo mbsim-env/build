@@ -75,7 +75,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
   # We need to change WINEPATH since we use a different local dir in "user" builds compared to "auto" builds
   exePrefix=""
   test ${ARGS: -4} == ".exe" && exePrefix=wine
-  docker run --init --entrypoint= --rm \
+  docker run -ti --init --entrypoint= --rm \
     --user $(id -u):$(id -g) \
     -v "$MBSIMENVDIR":/mbsim-env \
     -v "$MBSIMENVDIR/.ccache":/mbsim-ccache \
@@ -90,8 +90,8 @@ if [ "$BASENAME" == "mbsbd" ]; then
     -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
     --net=host \
     mbsimenv/buildwin64:$MBSIMENVTAGNAME \
-    $exePrefix "${ARGS[@]}" \
-    1> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g") 2> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g" > /dev/stderr)
+    $exePrefix "${ARGS[@]}" #\
+#    1> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g") 2> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g" > /dev/stderr)
 
 else
   # run via a link

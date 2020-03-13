@@ -71,9 +71,8 @@ mkdir -p $MBSIMENVDIR/.home
   --host=x86_64-w64-mingw32 \
   --with-lapack-lib-prefix=/3rdparty/local/lib \
   --with-hdf5-prefix=/3rdparty/local \
-  --with-qwt-inc-prefix=/3rdparty/local/include \
-  --with-qwt-lib-prefix=/3rdparty/local/lib \
-  --with-qwt-lib-name=qwt \
+  --with-qwt-inc-prefix=/usr/x86_64-w64-mingw32/sys-root/mingw/include/qt5/qwt \
+  --with-qwt-lib-name=qwt-qt5 \
   --with-qmake=/usr/bin/x86_64-w64-mingw32-qmake-qt5 \
   COIN_CFLAGS=-I/3rdparty/local/include \
   COIN_LIBS="-L/3rdparty/local/lib -lCoin" \
