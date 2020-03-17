@@ -91,23 +91,15 @@ def addFileToDist(name, arcname, addDepLibs=True):
         fnull=open(os.devnull, 'w')
         if re.search('ELF [0-9]+-bit LSB', content)!=None:
           try:
-            for line in subprocess.check_output(["chrpath", "-l", tmpDir+"/"+basename+".rpath"]).decode('utf-8').splitlines():
-              # delete RUNPATH
-              match=re.search(".* RUNPATH=.*", line)
-              if match!=None:
-                if subprocess.call(["chrpath", "-d", tmpDir+"/"+basename+".rpath"], stdout=fnull)!=0:
-                  raise RuntimeError("chrpath -d ... failed")
-                break
-              # remove all abs path from RPATH
-              match=re.search(".* RPATH=(.*)", line)
-              if match!=None:
-                vnewrpath=[]
-                for p in match.expand("\\1").split(':'):
-                  if p[0]!='/':
-                    vnewrpath.append(p)
-                if subprocess.call(["chrpath", "-r", ":".join(vnewrpath), tmpDir+"/"+basename+".rpath"], stdout=fnull)!=0:
-                  raise RuntimeError("chrpath -r ... failed")
-                break
+            # remove all abs path from RPATH and add relative path to prefix/lib
+            rpath=subprocess.check_output(["patchelf", "--print-rpath", tmpDir+"/"+basename+".rpath"]).decode('utf-8').rstrip()
+            vnewrpath=["$ORIGIN/"+os.path.relpath(args.prefix+"/lib", os.path.dirname(name))]
+            for p in rpath.split(':'):
+              if p[0]!='/':
+                vnewrpath.append(p)
+            if subprocess.call(["patchelf", "--force-rpath", "--set-rpath",
+                                ":".join(vnewrpath), tmpDir+"/"+basename+".rpath"], stdout=fnull)!=0:
+              raise RuntimeError("patchelf failed")
           except subprocess.CalledProcessError as ex:
             pass
         # strip or not

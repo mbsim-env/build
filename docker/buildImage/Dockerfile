@@ -5,7 +5,7 @@ FROM mbsimenv/base:$MBSIMENVTAGNAME AS centosBaseImage
 
 # install everything needed to build mbsim-env tools from centos7
 RUN yum --setopt=skip_missing_names_on_install=False -y install \
-  chrpath \
+  patchelf \
   gdb \
   valgrind \
   libxslt \
