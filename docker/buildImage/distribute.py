@@ -56,6 +56,21 @@ def addDepsFor(name):
   noDepsFor=["_OpenMBV.so", "_OpenMBV.pyd"]
   return not os.path.basename(name) in noDepsFor
 
+def adaptRPATH(name, orgName):
+  fnull=open(os.devnull, 'w')
+  try:
+    # remove all abs path from RPATH and add relative path to prefix/lib
+    rpath=subprocess.check_output(["patchelf", "--print-rpath", name]).decode('utf-8').rstrip()
+    vnewrpath=["$ORIGIN/"+os.path.relpath(args.prefix+"/lib", os.path.dirname(orgName))]
+    for p in rpath.split(':'):
+      if p[0]!='/':
+        vnewrpath.append(p)
+    if subprocess.call(["patchelf", "--force-rpath", "--set-rpath",
+                        ":".join(vnewrpath), name], stdout=fnull)!=0:
+      raise RuntimeError("patchelf failed")
+  except subprocess.CalledProcessError as ex:
+    pass
+
 def addFileToDist(name, arcname, addDepLibs=True):
   import deplibs
   # do not add a file more than once
@@ -87,31 +102,18 @@ def addFileToDist(name, arcname, addDepLibs=True):
       basename=os.path.basename(name)
       tmpDir=tempfile.mkdtemp()
       try:
-        shutil.copy(name, tmpDir+"/"+basename+".rpath")
-        fnull=open(os.devnull, 'w')
-        if re.search('ELF [0-9]+-bit LSB', content)!=None:
-          try:
-            # remove all abs path from RPATH and add relative path to prefix/lib
-            rpath=subprocess.check_output(["patchelf", "--print-rpath", tmpDir+"/"+basename+".rpath"]).decode('utf-8').rstrip()
-            vnewrpath=["$ORIGIN/"+os.path.relpath(args.prefix+"/lib", os.path.dirname(name))]
-            for p in rpath.split(':'):
-              if p[0]!='/':
-                vnewrpath.append(p)
-            if subprocess.call(["patchelf", "--force-rpath", "--set-rpath",
-                                ":".join(vnewrpath), tmpDir+"/"+basename+".rpath"], stdout=fnull)!=0:
-              raise RuntimeError("patchelf failed")
-          except subprocess.CalledProcessError as ex:
-            pass
         # strip or not
         if ((re.search('ELF [0-9]+-bit LSB', content)!=None and re.search('not stripped', content)!=None) or \
             (re.search('PE32\+? executable', content)!=None and re.search('stripped to external PDB', content)==None)) and \
            not name.startswith("/3rdparty/local/python-win64/"):# do not strip python files (these are not build with mingw)
           # not stripped binary file
           try:
-            subprocess.check_call(["objcopy", "--only-keep-debug", tmpDir+"/"+basename+".rpath", tmpDir+"/"+basename+".debug"])
-            subprocess.check_call(["objcopy", "--strip-all", tmpDir+"/"+basename+".rpath", tmpDir+"/"+basename])
+            subprocess.check_call(["objcopy", "--only-keep-debug", name, tmpDir+"/"+basename+".debug"])
+            subprocess.check_call(["objcopy", "--strip-all", name, tmpDir+"/"+basename])
             subprocess.check_call(["objcopy", "--add-gnu-debuglink="+tmpDir+"/"+basename+".debug", tmpDir+"/"+basename])
             if platform=="linux":
+              if re.search('ELF [0-9]+-bit LSB', content)!=None:
+                adaptRPATH(tmpDir+"/"+basename, name)
               distArchive.add(tmpDir+"/"+basename, arcname)
               # only add debug files of mbsim-env
               if name.startswith("/mbsim-env/"):
@@ -126,10 +128,14 @@ def addFileToDist(name, arcname, addDepLibs=True):
             if os.path.exists(tmpDir+"/"+basename+".debug"): os.remove(tmpDir+"/"+basename+".debug")
         else:
           # stripped binary file
+          # copy to tmp dir (to avoid modifying the original file)
+          shutil.copy(name, tmpDir+"/"+basename)
           if platform=="linux":
-            distArchive.add(tmpDir+"/"+basename+".rpath", arcname)
+            if re.search('ELF [0-9]+-bit LSB', content)!=None:
+              adaptRPATH(tmpDir+"/"+basename, name)
+            distArchive.add(tmpDir+"/"+basename, arcname)
           if platform=="win":
-            distArchive.write(tmpDir+"/"+basename+".rpath", arcname)
+            distArchive.write(tmpDir+"/"+basename, arcname)
       finally:
         shutil.rmtree(tmpDir)
       # add also all dependent libs to the lib/bin dir
