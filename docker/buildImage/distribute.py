@@ -62,9 +62,10 @@ def adaptRPATH(name, orgName):
     # remove all abs path from RPATH and add relative path to prefix/lib
     rpath=subprocess.check_output(["patchelf", "--print-rpath", name]).decode('utf-8').rstrip()
     vnewrpath=["$ORIGIN/"+os.path.relpath(args.prefix+"/lib", os.path.dirname(orgName))]
-    for p in rpath.split(':'):
-      if p[0]!='/':
-        vnewrpath.append(p)
+    if len(rpath)>0:
+      for p in rpath.split(':'):
+        if p[0]!='/':
+          vnewrpath.append(p)
     if subprocess.call(["patchelf", "--force-rpath", "--set-rpath",
                         ":".join(vnewrpath), name], stdout=fnull)!=0:
       raise RuntimeError("patchelf failed")
