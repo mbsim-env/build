@@ -252,18 +252,18 @@ def addMBSimEnvTestExampleWin(ex):
 cd "%%INSTDIR%%\examples\%s"
 ''' % (ex, ex)
   if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsimprj.flat.xml"):
-    text+=r'''"%%INSTDIR%%\bin\mbsimflatxml.exe" MBS.mbsimprj.flat.xml'''+'\n'+\
+    text+=r'''"%INSTDIR%\bin\mbsimflatxml.exe" MBS.mbsimprj.flat.xml'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% %s''' % (ex) + '\n'
   if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsimprj.xml"):
-    text+=r'''"%%INSTDIR%%\bin\mbsimxml.exe" MBS.mbsimprj.xml'''+'\n'+\
+    text+=r'''"%INSTDIR%\bin\mbsimxml.exe" MBS.mbsimprj.xml'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% %s''' % (ex) + '\n'
   if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsimprj.alpha_py.xml"):
-    text+=r'''"%%INSTDIR%%\bin\mbsimxml.exe" MBS.mbsimprj.alpha_py.xml'''+'\n'+\
+    text+=r'''"%INSTDIR%\bin\mbsimxml.exe" MBS.mbsimprj.alpha_py.xml'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% %s''' % (ex) + '\n'
   if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/FMI.mbsimprj.xml"):
-    text+=r'''"%%INSTDIR%%\bin\mbsimCreateFMU.exe" --nocompress FMI.mbsimprj.xml'''+'\n'+\
+    text+=r'''"%INSTDIR%\bin\mbsimCreateFMU.exe" --nocompress FMI.mbsimprj.xml'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% fmucre_%s''' % (ex) + '\n'
-    text+=r'''"%%INSTDIR%%\bin\fmuCheck.win64.exe" -f -l 5 mbsim.fmu'''+'\n'+\
+    text+=r'''"%INSTDIR%\bin\fmuCheck.win64.exe" -f -l 5 mbsim.fmu'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% fmuch_%s''' % (ex) + '\n'
   text+=r'''echo DONE
 '''
