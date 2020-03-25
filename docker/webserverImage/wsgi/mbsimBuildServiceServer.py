@@ -24,6 +24,9 @@ def application(environ, start_response):
     if action=="/login" and method=="GET":
       # start_response is called inside of actionLogin
       response_data=actionLogin(environ, start_response)
+    elif action=="/filtergithubfeed" and method=="GET":
+      # start_response is called inside of actionLogin
+      response_data=actionFiltergithubfeed(environ, start_response)
     else:
       # start_response is called now
       start_response('200 OK', [('Content-type', 'application/json'),
@@ -53,10 +56,11 @@ def application(environ, start_response):
       else:
         response_data={'success': False, 'message': "Internal error: Unknown action or request method: "+action}
 
-    if response_data:
+    if type(response_data)==dict: # json
       return [json.dumps(response_data).encode('utf-8')]
-    else:
-      return []
+    if type(response_data)==bytes: # as defined by start_response(...)
+      return [response_data]
+    return [] # everything else
   except:
     import traceback
     if not startResponseCalled:
@@ -581,3 +585,24 @@ def actionCheckmbsimenvsessionid(environ):
   if 'mbsimenvsessionid' in data:
     response_data=checkCredicals(environ, config, data['mbsimenvsessionid'])
   return response_data
+  
+def actionFiltergithubfeed(environ, start_response):
+  import xml.etree.cElementTree as ET
+  query=urllib.parse.parse_qs(environ['QUERY_STRING'])
+  url=query["url"][0]
+  username=query["username"][0]
+  response=requests.get(url)
+  if response.status_code!=200:
+    return {'success': False, 'message': "Cannot get feed"}
+  ET.register_namespace("", "http://www.w3.org/2005/Atom")
+  root=ET.fromstring(response.content)
+  for entry in root.findall("{http://www.w3.org/2005/Atom}entry"):
+    author=entry.find("{http://www.w3.org/2005/Atom}author")
+    if author==None: continue
+    name=author.find("{http://www.w3.org/2005/Atom}name")
+    if name==None: continue
+    if name.text!=username: continue
+    root.remove(entry)
+  start_response('200 OK', [('Content-type', 'text/xml'),
+                            ('Access-Control-Allow-Credentials', 'true')])
+  return b'<?xml version="1.0" encoding="UTF-8"?>\n'+ET.tostring(root)
