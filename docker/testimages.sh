@@ -1,10 +1,8 @@
 #!/bin/bash
 
 docker run --rm --entrypoint rpm centos:centos7 -qa > /tmp/rpm-centos
-docker run --rm --entrypoint rpm mbsimenv/base -qa > /tmp/rpm-base
 docker run --rm --entrypoint rpm mbsimenv/build -qa > /tmp/rpm-build
 docker run --rm --entrypoint rpm mbsimenv/buildwin64 -qa > /tmp/rpm-buildwin64
-#docker run --rm --entrypoint rpm mbsimenv/run -qa > /tmp/rpm-run
 docker run --rm --entrypoint rpm mbsimenv/webserver -qa > /tmp/rpm-webserver
 docker run --rm --entrypoint rpm mbsimenv/webapp -qa > /tmp/rpm-webapp
 docker run --rm --entrypoint rpm mbsimenv/webapprun -qa > /tmp/rpm-webapprun
@@ -14,7 +12,6 @@ cp /tmp/rpm-centos /tmp/rpm-centos_
 cat /tmp/rpm-base /tmp/rpm-centos | sort | uniq -u > /tmp/rpm-base_
 cat /tmp/rpm-build /tmp/rpm-base | sort | uniq -u > /tmp/rpm-build_
 cat /tmp/rpm-buildwin64 /tmp/rpm-centos | sort | uniq -u > /tmp/rpm-buildwin64_
-#cat /tmp/rpm-run /tmp/rpm-base | sort | uniq -u > /tmp/rpm-run_
 cat /tmp/rpm-webserver /tmp/rpm-centos | sort | uniq -u > /tmp/rpm-webserver_
 cat /tmp/rpm-webapp /tmp/rpm-centos | sort | uniq -u > /tmp/rpm-webapp_
 cat /tmp/rpm-proxy /tmp/rpm-centos | sort | uniq -u > /tmp/rpm-proxy_

@@ -391,7 +391,7 @@ def addOctave():
   sys.stdout.flush()
 
   if platform=="linux":
-    addFileToDist("/usr/share/octave", "mbsim-env/share/octave")
+    addFileToDist("/3rdparty/local/share/octave", "mbsim-env/share/octave")
   if platform=="win":
     addFileToDist("/3rdparty/local/share/octave", "mbsim-env/share/octave")
 
@@ -407,8 +407,8 @@ $INSTDIR/bin/.%s-envvar "$@"
 '''
     addStrToDist(octaveEnvvar%("octave"), "mbsim-env/bin/octave", True)
     addStrToDist(octaveEnvvar%("octave-cli"), "mbsim-env/bin/octave-cli", True)
-    addFileToDist("/usr/bin/octave", "mbsim-env/bin/.octave-envvar")
-    addFileToDist("/usr/bin/octave-cli", "mbsim-env/bin/.octave-cli-envvar")
+    addFileToDist("/3rdparty/local/bin/octave-4.4.1", "mbsim-env/bin/.octave-envvar")
+    addFileToDist("/3rdparty/local/bin/octave-cli-4.4.1", "mbsim-env/bin/.octave-cli-envvar")
   if platform=="win":
     addFileToDist("/3rdparty/local/bin/octave-4.4.1.exe", "mbsim-env/bin/octave.exe")
     addFileToDist("/3rdparty/local/bin/octave-cli-4.4.1.exe", "mbsim-env/bin/octave-cli-4.4.1.exe")

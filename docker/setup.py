@@ -108,12 +108,10 @@ def waitContainer(container, prefix=""):
 runningContainers=set()
 
 allServices=[ # must be in order
-  "base",
   "build",
   "buildwin64",
   "builddoc",
   "builddocker",
-  #"run",
   "proxy",
   "webserver",
   "webapp",
@@ -284,25 +282,11 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfil
 
 def build(s, jobs=4, fd=sys.stdout, baseDir=scriptdir, cacheFromSelf=False):
 
-  if s=="base":
-    return buildImage(tag="mbsimenv/base:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
-      buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
-      path=baseDir+"/baseImage",
-      rm=False)
-
-  elif s=="build":
+  if s=="build":
     return buildImage(tag="mbsimenv/build:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=baseDir+"/..",
       dockerfile="docker/buildImage/Dockerfile",
-      rm=False)
-
-  elif s=="run":
-    return buildImage(tag="mbsimenv/run:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
-      buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
-      path=baseDir+"/..",
-      dockerfile="docker/runImage/Dockerfile",
-      nocache=True,
       rm=False)
 
   elif s=="proxy":

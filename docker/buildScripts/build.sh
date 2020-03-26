@@ -70,6 +70,7 @@ mkdir -p $MBSIMENVDIR/.home
   --with-qwt-inc-prefix=/3rdparty/local/include \
   --with-qwt-lib-prefix=/3rdparty/local/lib \
   --with-qwt-lib-name=qwt \
+  --with-mkoctfile=/3rdparty/local/bin/mkoctfile \
   --with-qmake=qmake-qt5 \
   --with-boost-inc=/usr/include/boost169 \
   COIN_CFLAGS=-I/3rdparty/local/include \
