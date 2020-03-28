@@ -13,7 +13,7 @@ ENV LD_LIBRARY_PATH=/osupdate/local/lib:/osupdate/local/lib64:/3rdparty/local/li
     XDG_RUNTIME_DIR=/run/user/$UID
 
 # install everything needed to build mbsim-env tools from centos7
-RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && \
+RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release centos-release-scl && \
   yum --setopt=skip_missing_names_on_install=False -y install \
   xkeyboard-config \
   xorg-x11-fonts-Type1 \
@@ -26,7 +26,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && 
   tigervnc-server \
   git \
   make \
-  gcc-c++ \
+  devtoolset-7-gcc devtoolset-7-gcc-c++ devtoolset-7-gcc-gfortran \
   libtool \
   automake \
   autoconf \
@@ -62,6 +62,8 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && 
   graphviz \
   python36-numpy \
   && yum clean all
+# config gcc7 => do not use the "exec form" form now on use the "shell form"!!!!!
+SHELL ["scl", "enable", "devtoolset-7"]
 RUN npm install mathjax-node
 RUN pip3 install h5py sympy
 
@@ -211,6 +213,7 @@ ENV LIBGL_ALWAYS_INDIRECT=1
 
 # copy build repo
 COPY docker/buildImage/entrypoint.py /context/entrypoint.py
+COPY docker/buildImage/scl_wrapper_entrypoint.sh /context/scl_wrapper_entrypoint.sh
 COPY docker/buildImage/buildSystemState.py /context/buildSystemState.py
 COPY docker/buildImage/distribute.py /context/distribute.py
 COPY docker/buildImage/c++-analyzer /context/c++-analyzer
@@ -219,7 +222,9 @@ COPY buildScripts /mbsim-build/build/buildScripts
 
 # enable ccache (after all other things are done); note /mbsim-env is usually a persistent Docker volume;
 # enable nu-html -> add to CLASSPATH
-ENV PATH=/usr/lib64/ccache:/mbsim-env/mbsim/examples:/mbsim-env/build/buildScripts:$PATH \
+# CCACHE handling: /usr/lib64/ccache cannot be added here to PATH due to scl.
+#                  this is done in the entrypoint wrapper, see below
+ENV PATH=/mbsim-env/mbsim/examples:/mbsim-env/build/buildScripts:$PATH \
     CCACHE_DIR=/mbsim-ccache \
     MBSIM_SWIG=1 \
     CLASSPATH=$CLASSPATH:/3rdparty/vnu.jar
@@ -238,4 +243,6 @@ RUN ccache -M 10G
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
-ENTRYPOINT ["/context/entrypoint.py"]
+# (we need a special wrapper to call the entrypoint.py inside of scl
+#  also handling of ccache PATH handling is needed their)
+ENTRYPOINT ["/context/scl_wrapper_entrypoint.sh"]
