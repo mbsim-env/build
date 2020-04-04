@@ -225,6 +225,7 @@ COPY buildScripts /mbsim-build/build/buildScripts
 # CCACHE handling: /usr/lib64/ccache cannot be added here to PATH due to scl.
 #                  this is done in the entrypoint wrapper, see below
 ENV PATH=/mbsim-env/mbsim/examples:/mbsim-env/build/buildScripts:$PATH \
+    LD_LIBRARY_PATH=/3rdparty/local/lib/octave/4.4.1:$LD_LIBRARY_PATH \
     CCACHE_DIR=/mbsim-ccache \
     MBSIM_SWIG=1 \
     CLASSPATH=$CLASSPATH:/3rdparty/vnu.jar

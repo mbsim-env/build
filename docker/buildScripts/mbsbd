@@ -63,6 +63,13 @@ if [ "$BASENAME" == "mbsbd" ]; then
     shift
   done
   
+  # convert the array ARGS to a single string where " " (space) in each arg is quoted by "\\ "
+  # this is only needed for the scl call below which cannot consume multiple arguments
+  # if is fixed or scl is not neede instead of "$ARGS_SINGLE" "${ARGS[@]}" should be used
+  ARGS_SINGLE=""
+  for A in "${ARGS[@]}"; do
+    ARGS_SINGLE+=" ${A// /\\ }"
+  done
   # run in mbsimenv/build docker image
   docker run -ti --init --entrypoint= --rm \
     --user $(id -u):$(id -g) \
@@ -78,7 +85,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
     -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
     --net=host \
     mbsimenv/build:$MBSIMENVTAGNAME \
-    "${ARGS[@]}" #\
+    scl enable devtoolset-7 "PATH=/usr/lib64/ccache:\$PATH $ARGS_SINGLE"
 #    1> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g") 2> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g" > /dev/stderr)
 
 else
