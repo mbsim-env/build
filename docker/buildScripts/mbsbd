@@ -85,7 +85,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
     -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
     --net=host \
     mbsimenv/build:$MBSIMENVTAGNAME \
-    scl enable devtoolset-7 "$ARGS_SINGLE"
+    scl enable devtoolset-7 "PATH=/usr/lib64/ccache:\$PATH $ARGS_SINGLE"
 #    1> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g") 2> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g" > /dev/stderr)
 
 else
