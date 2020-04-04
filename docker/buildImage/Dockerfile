@@ -225,6 +225,7 @@ COPY buildScripts /mbsim-build/build/buildScripts
 # CCACHE handling: /usr/lib64/ccache cannot be added here to PATH due to scl.
 #                  this is done in the entrypoint wrapper, see below
 ENV PATH=/mbsim-env/mbsim/examples:/mbsim-env/build/buildScripts:$PATH \
+    LD_LIBRARY_PATH=/3rdparty/local/lib/octave/4.4.1:$LD_LIBRARY_PATH \
     CCACHE_DIR=/mbsim-ccache \
     MBSIM_SWIG=1 \
     CLASSPATH=$CLASSPATH:/3rdparty/vnu.jar
@@ -233,6 +234,9 @@ ENV PATH=/mbsim-env/mbsim/examples:/mbsim-env/build/buildScripts:$PATH \
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
   mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state && \
   chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state
+
+# add g++/c++ to cache dir (its not added automatically since g++ is not installed since scl is used
+RUN ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/g++ && ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/c++
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser
