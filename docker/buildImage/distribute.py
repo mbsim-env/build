@@ -399,19 +399,21 @@ def addOctave():
   sys.stdout.flush()
 
   if platform=="linux":
-    octaveEnvvar='''#!/bin/bash
-INSTDIR="$(readlink -f $(dirname $0)/..)"
-export OCTAVE_HOME="$INSTDIR"
-export LD_LIBRARY_PATH="$INSTDIR/lib"
-$INSTDIR/bin/.%s-envvar "$@"
-'''
-    addStrToDist(octaveEnvvar%("octave"), "mbsim-env/bin/octave", True)
-    addStrToDist(octaveEnvvar%("octave-cli"), "mbsim-env/bin/octave-cli", True)
-    addFileToDist("/3rdparty/local/bin/octave-4.4.1", "mbsim-env/bin/.octave-envvar")
-    addFileToDist("/3rdparty/local/bin/octave-cli-4.4.1", "mbsim-env/bin/.octave-cli-envvar")
+    addFileToDist("/3rdparty/local/bin/octave-4.4.1", "mbsim-env/bin/octave")
+    addFileToDist("/3rdparty/local/bin/octave-cli-4.4.1", "mbsim-env/bin/octave-cli")
+    subprocess.check_call(["patchelf", "--force-rpath", "--set-rpath", "$ORIGIN/../lib", "mfmf"])
+    subprocess.check_call(["patchelf", "--force-rpath", "--set-rpath", "$ORIGIN/../lib", "mfmf"])
   if platform=="win":
     addFileToDist("/3rdparty/local/bin/octave-4.4.1.exe", "mbsim-env/bin/octave.exe")
     addFileToDist("/3rdparty/local/bin/octave-cli-4.4.1.exe", "mbsim-env/bin/octave-cli-4.4.1.exe")
+
+  print("Add octave oct files")
+  sys.stdout.flush()
+
+  if platform=="linux":
+    addFileToDist("/3rdparty/local/lib/octave/4.4.1/oct/x86_64-pc-linux-gnu", "/3rdparty/local/lib/octave/4.4.1/oct/x86_64-pc-linux-gnu")
+  if platform=="win":
+    addFileToDist("/3rdparty/local/lib/octave/3.8.2/oct/x86_64-w64-mingw32", "/3rdparty/local/lib/octave/3.8.2/oct/x86_64-w64-mingw32")
 
 
 
