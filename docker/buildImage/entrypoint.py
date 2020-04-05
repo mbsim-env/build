@@ -77,8 +77,7 @@ else:
 
 # args
 if args.buildType == "linux64-ci":
-#mfmf  ARGS=["--forceBuild", "--disableConfigure", "--disableMakeClean", "--disableDoxygen", "--disableXMLDoc"]
-  ARGS=["--forceBuild", "--disableMakeClean", "--disableDoxygen", "--disableXMLDoc"]
+  ARGS=["--forceBuild", "--disableConfigure", "--disableMakeClean", "--disableDoxygen", "--disableXMLDoc"]
   RUNEXAMPLESARGS=["--disableCompare", "--disableMakeClean"]
   RUNEXAMPLESFILTER=["--filter", "'basic' in labels"]
 elif args.buildType == "linux64-dailydebug":
