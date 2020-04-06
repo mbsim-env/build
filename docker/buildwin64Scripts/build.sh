@@ -74,10 +74,6 @@ mkdir -p $MBSIMENVDIR/.home
   --with-qwt-inc-prefix=/usr/x86_64-w64-mingw32/sys-root/mingw/include/qt5/qwt \
   --with-qwt-lib-name=qwt-qt5 \
   --with-qmake=/usr/bin/x86_64-w64-mingw32-qmake-qt5 \
-  COIN_CFLAGS=-I/3rdparty/local/include \
-  COIN_LIBS="-L/3rdparty/local/lib -lCoin" \
-  SOQT_CFLAGS=-I/3rdparty/local/include \
-  SOQT_LIBS="-L/3rdparty/local/lib -lSoQt" \
   --with-windres=x86_64-w64-mingw32-windres \
   --with-mkoctfile=/3rdparty/local/bin/mkoctfile.exe \
   --with-javajniosdir=/context/java_jni \
@@ -85,4 +81,8 @@ mkdir -p $MBSIMENVDIR/.home
   PYTHON_CFLAGS="-I/3rdparty/local/python-win64/include -DMS_WIN64" \
   PYTHON_LIBS="-L/3rdparty/local/python-win64/libs -L/3rdparty/local/python-win64 -lpython34" \
   PYTHON_BIN="/3rdparty/local/python-win64/python.exe" \
+  COIN_LIBS="-L/3rdparty/local/lib -lCoin" \
+  COIN_CFLAGS=-I/3rdparty/local/include \
+  SOQT_LIBS="-L/3rdparty/local/lib -lSoQt" \
+  SOQT_CFLAGS=-I/3rdparty/local/include \
   "${CONFIGUREARGS[@]}" "${RUNEXAMPLEARGS[@]}"
