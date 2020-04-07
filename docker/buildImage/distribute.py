@@ -414,9 +414,9 @@ def addOctave():
   sys.stdout.flush()
 
   if platform=="linux":
-    addFileToDist("/3rdparty/local/lib/octave/4.4.1/oct/x86_64-pc-linux-gnu", "/3rdparty/local/lib/octave/4.4.1/oct/x86_64-pc-linux-gnu")
+    addFileToDist("/3rdparty/local/lib/octave/4.4.1/oct/x86_64-pc-linux-gnu", "mbsim-env/lib/octave/4.4.1/oct/x86_64-pc-linux-gnu")
   if platform=="win":
-    addFileToDist("/3rdparty/local/lib/octave/3.8.2/oct/x86_64-w64-mingw32", "/3rdparty/local/lib/octave/3.8.2/oct/x86_64-w64-mingw32")
+    addFileToDist("/3rdparty/local/lib/octave/4.4.1/oct/x86_64-w64-mingw32", "mbsim-env/lib/octave/4.4.1/oct/x86_64-w64-mingw32")
 
 
 
