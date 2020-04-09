@@ -285,7 +285,7 @@ export OPENMBVCPPINTERFACE_PREFIX="$INSTDIR"
 
 echo "OPENMBVCPPINTERFACE_SWIG_OCTAVE"
 cd $INSTDIR/share/openmbvcppinterface/examples/swig
-$INSTDIR/bin/octave octavetest.m || ERROR="$ERROR OPENMBVCPPINTERFACE_SWIG_OCTAVE"
+$INSTDIR/bin/octave-cli octavetest.m || ERROR="$ERROR OPENMBVCPPINTERFACE_SWIG_OCTAVE"
 echo "DONE"
 
 echo "OPENMBVCPPINTERFACE_SWIG_PYTHON"
@@ -337,7 +337,7 @@ set OPENMBVCPPINTERFACE_PREFIX=%%INSTDIR%%
 
 echo OPENMBVCPPINTERFACE_SWIG_OCTAVE
 cd "%%INSTDIR%%\share\openmbvcppinterface\examples\swig"
-"%%INSTDIR%%\bin\octave.exe" octavetest.m
+"%%INSTDIR%%\bin\octave-cli.exe" octavetest.m
 IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% OPENMBVCPPINTERFACE_SWIG_OCTAVE
 echo DONE
 
@@ -400,14 +400,10 @@ def addOctave():
 
   if platform=="linux":
     tmpDir=tempfile.mkdtemp()
-    shutil.copy("/3rdparty/local/bin/octave-4.4.1", tmpDir+"/octave")
     shutil.copy("/3rdparty/local/bin/octave-cli-4.4.1", tmpDir+"/octave-cli")
-    subprocess.check_call(["patchelf", "--force-rpath", "--set-rpath", "$ORIGIN/../lib", tmpDir+"/octave"])
     subprocess.check_call(["patchelf", "--force-rpath", "--set-rpath", "$ORIGIN/../lib", tmpDir+"/octave-cli"])
-    addFileToDist(tmpDir+"/octave", "mbsim-env/bin/octave")
     addFileToDist(tmpDir+"/octave-cli", "mbsim-env/bin/octave-cli")
   if platform=="win":
-    addFileToDist("/3rdparty/local/bin/octave-4.4.1.exe", "mbsim-env/bin/octave.exe")
     addFileToDist("/3rdparty/local/bin/octave-cli-4.4.1.exe", "mbsim-env/bin/octave-cli-4.4.1.exe")
 
   print("Add octave oct files")
