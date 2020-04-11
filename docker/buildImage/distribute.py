@@ -404,7 +404,7 @@ def addOctave():
     subprocess.check_call(["patchelf", "--force-rpath", "--set-rpath", "$ORIGIN/../lib", tmpDir+"/octave-cli"])
     addFileToDist(tmpDir+"/octave-cli", "mbsim-env/bin/octave-cli")
   if platform=="win":
-    addFileToDist("/3rdparty/local/bin/octave-cli-4.4.1.exe", "mbsim-env/bin/octave-cli-4.4.1.exe")
+    addFileToDist("/3rdparty/local/bin/octave-cli-4.4.1.exe", "mbsim-env/bin/octave-cli.exe")
 
   print("Add octave oct files")
   sys.stdout.flush()
