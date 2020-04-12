@@ -67,6 +67,20 @@
    ...
    fun:dlopen@@GLIBC_2.1
 }
+{
+   do not report leaks on octave exit
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZN6octave11interpreterD1Ev
+}
+{
+   do not report leaks from octave::feval
+   Memcheck:Leak
+   match-leak-kinds: definite
+   ...
+   fun:_ZN6octave5fevalEP15octave_functionRK17octave_value_listi
+}
 
 # FMUCHECKER
 {
