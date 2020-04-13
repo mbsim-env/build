@@ -861,3 +861,14 @@
    fun:_ZN5boost9iterators20iterator_core_access9incrementINS_10filesystem28recursive_directory_iteratorEEEvRT_
    fun:_ZN5boost9iterators6detail20iterator_facade_baseINS_10filesystem28recursive_directory_iteratorENS3_15directory_entryENS0_25single_pass_traversal_tagERS5_lLb0ELb0EEppEv
 }
+{
+   gcov exit handling
+   Memcheck:Addr2
+   fun:getenv
+   fun:gcov_do_dump
+   fun:__gcov_exit
+   ...
+   fun:_dl_fini
+   fun:__run_exit_handlers
+   fun:exit
+}
