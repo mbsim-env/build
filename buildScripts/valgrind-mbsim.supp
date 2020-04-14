@@ -81,6 +81,13 @@
    ...
    fun:_ZN6octave5fevalEP15octave_functionRK17octave_value_listi
 }
+{
+   do not report leaks from octave::feval
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZN6octave5fevalEP15octave_functionRK17octave_value_listi
+}
 
 # FMUCHECKER
 {
