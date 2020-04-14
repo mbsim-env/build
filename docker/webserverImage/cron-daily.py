@@ -30,20 +30,26 @@ def readConfigFile():
 
 config=readConfigFile()
 
+# branches to use
+fmatvecBranch="master"
+hdf5serieBranch="master"
+openmbvBranch="master"
+mbsimBranch="master"
+
 # linux64-dailydebug
 contldd=setup.run("build-linux64-dailydebug", 6, printLog=False, detach=True, addCommands=["--forceBuild"],
-                  fmatvecBranch="cpp17", hdf5serieBranch="cpp17", openmbvBranch="cpp17", mbsimBranch="cpp17",
+                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                   statusAccessToken=config["status_access_token"])
 
 # linux64-dailyrelease
 contldr=setup.run("build-linux64-dailyrelease", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
-                  fmatvecBranch="cpp17", hdf5serieBranch="cpp17", openmbvBranch="cpp17", mbsimBranch="cpp17",
+                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                   statusAccessToken=config["status_access_token"])
 retldr=setup.waitContainer(contldr)
 
 # win64-dailyrelease
 contwdr=setup.run("build-win64-dailyrelease", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
-                  fmatvecBranch="cpp17", hdf5serieBranch="cpp17", openmbvBranch="cpp17", mbsimBranch="cpp17",
+                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                   statusAccessToken=config["status_access_token"])
 retwdr=setup.waitContainer(contwdr)
 
