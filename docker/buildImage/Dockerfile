@@ -61,6 +61,8 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   clang-analyzer \
   graphviz \
   python36-numpy \
+  adwaita-qt5 \
+  qt5-qtstyleplugins \
   && yum clean all
 # config gcc7 => do not use the "exec form" form now on use the "shell form"!!!!!
 SHELL ["scl", "enable", "devtoolset-7"]
