@@ -18,7 +18,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
     echo "the name of link and all arguments are passed."
     echo "Examples:"
     echo "$ <path>/mbsbd make - runs make in the Docker directory corresponding to the current directory."
-    echo "$ <path>/mbsbd mbsimxml MBS.mbsimprj.xml - runs the MBSim XML model MBS.mbsimprj.xml in the Docker"
+    echo "$ <path>/mbsbd mbsimxml MBS.mbsx - runs the MBSim XML model MBS.mbsx in the Docker"
     echo "                                           directory corresponding to the current directory."
     echo "..."
     exit 0

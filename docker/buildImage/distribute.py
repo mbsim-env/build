@@ -237,12 +237,12 @@ cd $INSTDIR/examples/%s
 ''' % (ex, ex)
   if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsimprj.flat.xml"):
     text+=r'''$INSTDIR/bin/mbsimflatxml MBS.mbsimprj.flat.xml || ERROR="$ERROR %s"''' % (ex) + '\n'
-  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsimprj.xml"):
-    text+=r'''$INSTDIR/bin/mbsimxml MBS.mbsimprj.xml || ERROR="$ERROR %s"''' % (ex) + '\n'
+  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsx"):
+    text+=r'''$INSTDIR/bin/mbsimxml MBS.mbsx || ERROR="$ERROR %s"''' % (ex) + '\n'
   if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsimprj.alpha_py.xml"):
     text+=r'''$INSTDIR/bin/mbsimxml MBS.mbsimprj.alpha_py.xml || ERROR="$ERROR %s"''' % (ex) + '\n'
-  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/FMI.mbsimprj.xml"):
-    text+=r'''$INSTDIR/bin/mbsimCreateFMU --nocompress FMI.mbsimprj.xml || ERROR="$ERROR fmucre_%s"''' % (ex) + '\n'
+  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/FMI.mbsx"):
+    text+=r'''$INSTDIR/bin/mbsimCreateFMU --nocompress FMI.mbsx || ERROR="$ERROR fmucre_%s"''' % (ex) + '\n'
     text+=r'''$INSTDIR/bin/fmuCheck.linux64 -f -l 5 mbsim.fmu || ERROR="$ERROR fmuchk_%s"''' % (ex) + '\n'
   text+=r'''echo "DONE"
 '''
@@ -254,14 +254,14 @@ cd "%%INSTDIR%%\examples\%s"
   if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsimprj.flat.xml"):
     text+=r'''"%INSTDIR%\bin\mbsimflatxml.exe" MBS.mbsimprj.flat.xml'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% %s''' % (ex) + '\n'
-  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsimprj.xml"):
-    text+=r'''"%INSTDIR%\bin\mbsimxml.exe" MBS.mbsimprj.xml'''+'\n'+\
+  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsx"):
+    text+=r'''"%INSTDIR%\bin\mbsimxml.exe" MBS.mbsx'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% %s''' % (ex) + '\n'
   if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsimprj.alpha_py.xml"):
     text+=r'''"%INSTDIR%\bin\mbsimxml.exe" MBS.mbsimprj.alpha_py.xml'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% %s''' % (ex) + '\n'
-  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/FMI.mbsimprj.xml"):
-    text+=r'''"%INSTDIR%\bin\mbsimCreateFMU.exe" --nocompress FMI.mbsimprj.xml'''+'\n'+\
+  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/FMI.mbsx"):
+    text+=r'''"%INSTDIR%\bin\mbsimCreateFMU.exe" --nocompress FMI.mbsx'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% fmucre_%s''' % (ex) + '\n'
     text+=r'''"%INSTDIR%\bin\fmuCheck.win64.exe" -f -l 5 mbsim.fmu'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% fmuch_%s''' % (ex) + '\n'
@@ -303,12 +303,12 @@ fi
 
 echo "H5PLOTSERIE"
 cd $INSTDIR/examples/xml/hierachical_modelling
-$INSTDIR/bin/h5plotserie TS.mbsim.h5 || ERROR="$ERROR H5PLOTSERIE"
+$INSTDIR/bin/h5plotserie TS.mbsh5 || ERROR="$ERROR H5PLOTSERIE"
 echo "DONE"
 
 echo "OPENMBV"
 cd $INSTDIR/examples/xml/hierachical_modelling
-$INSTDIR/bin/openmbv TS.ombv.xml || ERROR="$ERROR OPENMBV"
+$INSTDIR/bin/openmbv TS.ombvx || ERROR="$ERROR OPENMBV"
 echo "DONE"
 
 echo "MBSIMGUI"
@@ -358,13 +358,13 @@ IF "%%MBSIMENV_TEST_JAVA%%"=="1" (
 
 echo H5PLOTSERIE
 cd "%%INSTDIR%%\examples\xml\hierachical_modelling"
-"%%INSTDIR%%\bin\h5plotserie.exe" TS.mbsim.h5
+"%%INSTDIR%%\bin\h5plotserie.exe" TS.mbsh5
 IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% H5PLOTSERIE
 echo DONE
 
 echo OPENMBV
 cd "%%INSTDIR%%\examples\xml\hierachical_modelling"
-"%%INSTDIR%%\bin\openmbv.exe" TS.ombv.xml
+"%%INSTDIR%%\bin\openmbv.exe" TS.ombvx
 IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% OPENMBV
 echo DONE
 
