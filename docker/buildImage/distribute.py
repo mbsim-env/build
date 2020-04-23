@@ -235,14 +235,15 @@ def addMBSimEnvTestExampleLinux(ex):
   text=r'''echo "%s"
 cd $INSTDIR/examples/%s
 ''' % (ex, ex)
-  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsimprj.flat.xml"):
-    text+=r'''$INSTDIR/bin/mbsimflatxml MBS.mbsimprj.flat.xml || ERROR="$ERROR %s"''' % (ex) + '\n'
-  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsx"):
+  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.flat.mbsx"):
+    text+=r'''$INSTDIR/bin/mbsimflatxml MBS.flat.mbsx || ERROR="$ERROR %s"''' % (ex) + '\n'
+  elif os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsx"):
     text+=r'''$INSTDIR/bin/mbsimxml MBS.mbsx || ERROR="$ERROR %s"''' % (ex) + '\n'
-  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsimprj.alpha_py.xml"):
-    text+=r'''$INSTDIR/bin/mbsimxml MBS.mbsimprj.alpha_py.xml || ERROR="$ERROR %s"''' % (ex) + '\n'
-  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/FMI.mbsx"):
+  elif os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/FMI.mbsx"):
     text+=r'''$INSTDIR/bin/mbsimCreateFMU --nocompress FMI.mbsx || ERROR="$ERROR fmucre_%s"''' % (ex) + '\n'
+    text+=r'''$INSTDIR/bin/fmuCheck.linux64 -f -l 5 mbsim.fmu || ERROR="$ERROR fmuchk_%s"''' % (ex) + '\n'
+  elif os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/FMI_cosim.mbsx"):
+    text+=r'''$INSTDIR/bin/mbsimCreateFMU --nocompress FMI_cosim.mbsx || ERROR="$ERROR fmucre_%s"''' % (ex) + '\n'
     text+=r'''$INSTDIR/bin/fmuCheck.linux64 -f -l 5 mbsim.fmu || ERROR="$ERROR fmuchk_%s"''' % (ex) + '\n'
   text+=r'''echo "DONE"
 '''
@@ -251,17 +252,19 @@ def addMBSimEnvTestExampleWin(ex):
   text=r'''echo %s
 cd "%%INSTDIR%%\examples\%s"
 ''' % (ex, ex)
-  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsimprj.flat.xml"):
-    text+=r'''"%INSTDIR%\bin\mbsimflatxml.exe" MBS.mbsimprj.flat.xml'''+'\n'+\
+  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.flat.mbsx"):
+    text+=r'''"%INSTDIR%\bin\mbsimflatxml.exe" MBS.MBS.flat.mbsx'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% %s''' % (ex) + '\n'
-  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsx"):
+  elif os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsx"):
     text+=r'''"%INSTDIR%\bin\mbsimxml.exe" MBS.mbsx'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% %s''' % (ex) + '\n'
-  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsimprj.alpha_py.xml"):
-    text+=r'''"%INSTDIR%\bin\mbsimxml.exe" MBS.mbsimprj.alpha_py.xml'''+'\n'+\
-          r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% %s''' % (ex) + '\n'
-  if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/FMI.mbsx"):
+  elif os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/FMI.mbsx"):
     text+=r'''"%INSTDIR%\bin\mbsimCreateFMU.exe" --nocompress FMI.mbsx'''+'\n'+\
+          r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% fmucre_%s''' % (ex) + '\n'
+    text+=r'''"%INSTDIR%\bin\fmuCheck.win64.exe" -f -l 5 mbsim.fmu'''+'\n'+\
+          r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% fmuch_%s''' % (ex) + '\n'
+  elif os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/FMI_cosim.mbsx"):
+    text+=r'''"%INSTDIR%\bin\mbsimCreateFMU.exe" --nocompress FMI_cosim.mbsx'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% fmucre_%s''' % (ex) + '\n'
     text+=r'''"%INSTDIR%\bin\fmuCheck.win64.exe" -f -l 5 mbsim.fmu'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% fmuch_%s''' % (ex) + '\n'
