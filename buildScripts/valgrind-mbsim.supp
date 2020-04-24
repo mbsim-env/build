@@ -879,3 +879,24 @@
    fun:__run_exit_handlers
    fun:exit
 }
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Value8
+   fun:_mesa_Color4ub
+   fun:_ZNK15SoGLLazyElement18sendDiffuseByIndexEi
+   fun:_ZN16SoMaterialBundle4sendEii
+   fun:_ZN12_GLOBAL__N_14SoGL7FaceSetL8GLRenderILi4ELi4ELi0EEEvPK21SoGLCoordinateElementPKiiPK7SbVec3fS7_P16SoMaterialBundleS7_PK25SoTextureCoordinateBundleS7_P23SoVertexAttributeBundleii
+   fun:_Z19sogl_render_facesetPK21SoGLCoordinateElementPKiiPK7SbVec3fS3_P16SoMaterialBundleS3_P25SoTextureCoordinateBundleS3_P23SoVertexAttributeBundleiiiii
+   fun:_ZN16SoIndexedFaceSet8GLRenderEP16SoGLRenderAction
+   fun:_ZN11SoSeparator17GLRenderBelowPathEP16SoGLRenderAction
+}
+{
+   <insert_a_suppression_name_here>
+   Memcheck:Addr4
+   fun:_ZNK15SoGLLazyElement18sendDiffuseByIndexEi
+   fun:_ZN16SoMaterialBundle4sendEii
+   fun:_ZN12_GLOBAL__N_14SoGL7FaceSetL8GLRenderILi4ELi4ELi0EEEvPK21SoGLCoordinateElementPKiiPK7SbVec3fS7_P16SoMaterialBundleS7_PK25SoTextureCoordinateBundleS7_P23SoVertexAttributeBundleii
+   fun:_Z19sogl_render_facesetPK21SoGLCoordinateElementPKiiPK7SbVec3fS3_P16SoMaterialBundleS3_P25SoTextureCoordinateBundleS3_P23SoVertexAttributeBundleiiiii
+   fun:_ZN16SoIndexedFaceSet8GLRenderEP16SoGLRenderAction
+   fun:_ZN11SoSeparator17GLRenderBelowPathEP16SoGLRenderAction
+}
