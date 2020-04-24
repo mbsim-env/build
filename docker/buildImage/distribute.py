@@ -253,7 +253,7 @@ def addMBSimEnvTestExampleWin(ex):
 cd "%%INSTDIR%%\examples\%s"
 ''' % (ex, ex)
   if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.flat.mbsx"):
-    text+=r'''"%INSTDIR%\bin\mbsimflatxml.exe" MBS.MBS.flat.mbsx'''+'\n'+\
+    text+=r'''"%INSTDIR%\bin\mbsimflatxml.exe" MBS.flat.mbsx'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% %s''' % (ex) + '\n'
   elif os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsx"):
     text+=r'''"%INSTDIR%\bin\mbsimxml.exe" MBS.mbsx'''+'\n'+\
