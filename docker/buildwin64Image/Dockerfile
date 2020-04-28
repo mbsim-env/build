@@ -91,7 +91,7 @@ RUN ln -s /3rdparty/local/lib/hdf5.lib /3rdparty/local/lib/libhdf5.lib && \
 ARG PYTHONVERSION=3.4.4
 WORKDIR /3rdparty
 RUN wget https://www.python.org/ftp/python/$PYTHONVERSION/python-$PYTHONVERSION.amd64.msi
-RUN wine msiexec -i python-$PYTHONVERSION.amd64.msi -q n TARGETDIR="$(winepath -w /3rdparty/local/python-win64)" && wineserver -w
+RUN wine msiexec -i python-$PYTHONVERSION.amd64.msi -q n TARGETDIR=/3rdparty/local/python-win64 && wineserver -w
 # fix libfile name
 RUN mv /3rdparty/local/python-win64/libs/python34.lib /3rdparty/local/python-win64/libs/libpython34.lib
 
@@ -121,8 +121,8 @@ RUN wine /3rdparty/local/python-win64/python.exe setup.py build && \
 WORKDIR /3rdparty/sympy-build/sympy-$SYMPYVERSION
 RUN mkdir -p /3rdparty/sympy-inst/Lib/site-packages
 RUN wine /3rdparty/local/python-win64/python.exe setup.py build && wineserver -w
-RUN PYTHONPATH="$(winepath -w /3rdparty/sympy-inst/Lib/site-packages)" wine /3rdparty/local/python-win64/python.exe \
-    setup.py install --prefix="$(winepath -w /3rdparty/sympy-inst)" && \
+RUN PYTHONPATH=/3rdparty/sympy-inst/Lib/site-packages wine /3rdparty/local/python-win64/python.exe \
+    setup.py install --prefix=z:\\3rdparty\\sympy-inst && \
     wineserver -w
 RUN unzip -d /3rdparty/local/python-win64/Lib/site-packages dist/sympy-$SYMPYVERSION-py3.4.egg
 
@@ -202,8 +202,7 @@ RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser d
 
 # configure wine
 COPY docker/buildwin64Image/wine.inf /context/wine.inf
-RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\+g'); \
-    sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.inf >> /usr/share/wine/wine.inf
+RUN cat /context/wine.inf >> /usr/share/wine/wine.inf
 
 # copy
 COPY buildScripts /mbsim-build/build/buildScripts
