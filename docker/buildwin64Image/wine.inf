@@ -1,2 +1,2 @@
 [SessionMgr]
-HKLM,%Control%\Session Manager\Environment,"PYTHONHOME",,"Z:\3rdparty\local\python-win64"
+HKLM,%Control%\Session Manager\Environment,"PYTHONHOME",,"%_PYTHONHOME_%"
