@@ -177,7 +177,7 @@ def rotateOutput():
 
 # create main documentation page
 def mainDocPage():
-  if args.docOutDir==None:
+  if args.docOutDir is None:
     return
 
   # copy xmldoc
@@ -406,7 +406,7 @@ def main():
   # start messsage
   print("Started build process.")
   print("See the log file "+pj(args.reportOutDir, "result_current", "index.html")+" for detailed results.")
-  if args.docOutDir!=None:
+  if args.docOutDir is not None:
     print("See also the generated documentation "+pj(args.docOutDir, "index.html")+".\n")
   sys.stdout.flush()
 
@@ -491,9 +491,9 @@ def main():
       "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/%s/report/result_%010d/index.html"%(args.buildType, currentID), args.buildType)
 
   # clean prefix dir
-  if args.enableCleanPrefix and os.path.isdir(args.prefix if args.prefix!=None else args.prefixAuto):
-    shutil.rmtree(args.prefix if args.prefix!=None else args.prefixAuto)
-    os.makedirs(args.prefix if args.prefix!=None else args.prefixAuto)
+  if args.enableCleanPrefix and os.path.isdir(args.prefix if args.prefix is not None else args.prefixAuto):
+    shutil.rmtree(args.prefix if args.prefix is not None else args.prefixAuto)
+    os.makedirs(args.prefix if args.prefix is not None else args.prefixAuto)
 
   # a sorted list of all tools te be build (in the correct order according the dependencies)
   orderedBuildTools=list()
@@ -862,7 +862,7 @@ def configure(tool, mainFD):
       os.chdir(pj(args.sourceDir, buildTool(tool)))
       copyConfigLog=True
       print("\n\nRUNNING configure\n", file=configureFD); configureFD.flush()
-      if args.prefix==None:
+      if args.prefix is None:
         print(" ".join(["./config.status", "--recheck"]), file=configureFD); configureFD.flush()
         if subprocess.call(["./config.status", "--recheck"], stderr=subprocess.STDOUT, stdout=configureFD)!=0:
           raise RuntimeError("configure failed")
@@ -878,7 +878,7 @@ def configure(tool, mainFD):
     result="done"
   except RuntimeError as ex:
     result=str(ex)
-  if (not args.disableConfigure or extraLinksForMake!=None) and copyConfigLog:
+  if (not args.disableConfigure or extraLinksForMake is not None) and copyConfigLog:
     shutil.copyfile("config.log", pj(args.reportOutDir, tool, "config.log.txt"))
   if not args.disableConfigure:
     print('<td data-order="%d" class="%s"><span class="glyphicon glyphicon-%s"></span>&nbsp;'%(int(result!="done"), "success" if result=="done" else "danger",
@@ -887,10 +887,10 @@ def configure(tool, mainFD):
     if copyConfigLog:
       print('  <a href="'+urllib.request.pathname2url(pj(tool, "config.log.txt"))+'">config.log</a>', file=mainFD)
     print('</td>', file=mainFD)
-  if extraLinksForMake!=None:
+  if extraLinksForMake is not None:
     extraLinksForMake+='; <a href="'+urllib.request.pathname2url(pj(tool, "configure.txt"))+'">'+result+'</a>'
   if copyConfigLog:
-    if extraLinksForMake!=None:
+    if extraLinksForMake is not None:
       extraLinksForMake+='; <a href="'+urllib.request.pathname2url(pj(tool, "config.log.txt"))+'">config.log</a>'
   configureFD.close()
   mainFD.flush()
@@ -951,7 +951,7 @@ def make(tool, extraLinksForMake, mainFD):
     print('<td data-order="%d" class="%s"><span class="glyphicon glyphicon-%s"></span>&nbsp;'%(int(result!="done"), "success" if result=="done" else "danger",
       "ok-sign alert-success" if result=="done" else "exclamation-sign alert-danger"), file=mainFD)
     print('  <a href="'+urllib.request.pathname2url(pj(tool, "make.txt"))+'">'+result+'</a>', file=mainFD)
-    if extraLinksForMake!=None:
+    if extraLinksForMake is not None:
       print(extraLinksForMake, file=mainFD)
     print('</td>', file=mainFD)
     if args.staticCodeAnalyzis:
@@ -964,7 +964,7 @@ def make(tool, extraLinksForMake, mainFD):
           linesRE=re.compile("^scan-build: ([0-9]+) bugs found.$")
           for line in fileinput.FileInput(pj(args.reportOutDir, tool, "make.txt")):
             m=linesRE.match(line)
-            if m!=None:
+            if m is not None:
               numErr=int(m.group(1))
               break
         except:
@@ -1087,7 +1087,7 @@ def runexamples(mainFD):
   # runexamples.py command
   currentID=int(os.path.basename(args.reportOutDir)[len("result_"):])
   command=["python3", "./runexamples.py", "-j", str(args.j)]
-  if args.url!=None:
+  if args.url is not None:
     command.extend(["--url", args.url+"/result_%010d/runexamples_report"%(currentID)])
   command.extend(["--buildType", args.buildType])
   command.extend(["--reportOutDir", pj(args.reportOutDir, "runexamples_report")])
@@ -1132,7 +1132,7 @@ def createDistribution(mainFD):
   distArchiveName="failed"
 
   distributeErrorCode=subprocess.call(["/context/distribute.py", "--outDir", pj(args.reportOutDir, "distribute"),
-                                         args.prefix if args.prefix!=None else args.prefixAuto],
+                                         args.prefix if args.prefix is not None else args.prefixAuto],
                                          stderr=subprocess.STDOUT, stdout=distLog)
   distLog.close()
   if distributeErrorCode==0:

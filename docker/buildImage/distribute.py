@@ -96,16 +96,16 @@ def addFileToDist(name, arcname, addDepLibs=True):
   elif os.path.isfile(name):
     # file type
     content=subprocess.check_output(["file", name]).decode('utf-8')
-    if (platform=="linux" and re.search('ELF [0-9]+-bit LSB', content)!=None) or \
-       (platform=="win"   and re.search('PE32\+? executable', content)!=None):
+    if (platform=="linux" and re.search('ELF [0-9]+-bit LSB', content) is not None) or \
+       (platform=="win"   and re.search('PE32\+? executable', content) is not None):
       # binary file
       # fix rpath (remove all absolute componentes from rpath; delete all RUNPATH)
       basename=os.path.basename(name)
       tmpDir=tempfile.mkdtemp()
       try:
         # strip or not
-        if ((re.search('ELF [0-9]+-bit LSB', content)!=None and re.search('not stripped', content)!=None) or \
-            (re.search('PE32\+? executable', content)!=None and re.search('stripped to external PDB', content)==None)) and \
+        if ((re.search('ELF [0-9]+-bit LSB', content) is not None and re.search('not stripped', content) is not None) or \
+            (re.search('PE32\+? executable', content) is not None and re.search('stripped to external PDB', content) is None)) and \
            not name.startswith("/3rdparty/local/python-win64/"):# do not strip python files (these are not build with mingw)
           # not stripped binary file
           try:
@@ -113,7 +113,7 @@ def addFileToDist(name, arcname, addDepLibs=True):
             subprocess.check_call(["objcopy", "--strip-all", name, tmpDir+"/"+basename])
             subprocess.check_call(["objcopy", "--add-gnu-debuglink="+tmpDir+"/"+basename+".debug", tmpDir+"/"+basename])
             if platform=="linux":
-              if re.search('ELF [0-9]+-bit LSB', content)!=None:
+              if re.search('ELF [0-9]+-bit LSB', content) is not None:
                 adaptRPATH(tmpDir+"/"+basename, name)
               distArchive.add(tmpDir+"/"+basename, arcname)
               # only add debug files of mbsim-env
@@ -132,7 +132,7 @@ def addFileToDist(name, arcname, addDepLibs=True):
           # copy to tmp dir (to avoid modifying the original file)
           shutil.copy(name, tmpDir+"/"+basename)
           if platform=="linux":
-            if re.search('ELF [0-9]+-bit LSB', content)!=None:
+            if re.search('ELF [0-9]+-bit LSB', content) is not None:
               adaptRPATH(tmpDir+"/"+basename, name)
             distArchive.add(tmpDir+"/"+basename, arcname)
           if platform=="win":

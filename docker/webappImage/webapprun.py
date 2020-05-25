@@ -12,7 +12,7 @@ import setup
 webapprun=None
 
 def terminate(a, b):
-  if webapprun==None:
+  if webapprun is None:
     return
   webapprun[0].stop()
 

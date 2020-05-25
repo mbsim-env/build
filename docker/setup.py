@@ -93,7 +93,7 @@ def waitContainer(container, prefix=""):
   if (3,0,0)<=docker.version_info:
     if ret["StatusCode"]!=0:
       print(prefix+"Exited with an error. Status code "+str(ret["StatusCode"]))
-    if ret["Error"]!=None:
+    if ret["Error"] is not None:
       print(prefix+ret["Error"])
     sys.stdout.flush()
     return ret["StatusCode"]
@@ -173,7 +173,7 @@ def main():
           if syncLogBuildImage(pull)!=0:
             return 1
         url=data["next"]
-        if url==None:
+        if url is None:
           break
     for s in args.service:
       pull=dockerClientLL.pull("mbsimenv/"+s, getTagname(), stream=True)
@@ -675,9 +675,9 @@ def run(s, jobs=4,
   elif s=="webapprun":
     if "--token" not in addCommands:
       raise RuntimeError("Option --token is required.")
-    if networkID==None:
+    if networkID is None:
       raise RuntimeError("Option --networkID is required.")
-    if hostname==None:
+    if hostname is None:
       raise RuntimeError("Option --hostname is required.")
     if detach==True:
       raise RuntimeError("Cannot run webapprun detached.")
