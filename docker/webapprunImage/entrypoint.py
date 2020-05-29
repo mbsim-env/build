@@ -58,7 +58,7 @@ for f in file:
   af='/mbsim-env-'+buildType+'/mbsim/examples/'+f
   if os.path.exists(af):
     absFile.append(af)
-    if cdir==None: # use first file as current dir for the started program
+    if cdir is None: # use first file as current dir for the started program
       cdir=os.path.dirname(af)
 p=subprocess.Popen(['/mbsim-env-'+buildType+'/local/bin/'+prog, '--fullscreen']+absFile, cwd=cdir)
 

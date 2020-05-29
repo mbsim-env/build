@@ -98,7 +98,7 @@ class ConfigFile(object):
       self.fd.close()
 
 def checkCredicals(environ, config, sessionid=None):
-  if sessionid==None and 'HTTP_COOKIE' in environ:
+  if sessionid is None and 'HTTP_COOKIE' in environ:
     cookie=environ["HTTP_COOKIE"]
     c=http.cookies.SimpleCookie(cookie)
     if 'mbsimenvsessionid' in c:
@@ -107,7 +107,7 @@ def checkCredicals(environ, config, sessionid=None):
       sessionid=None
   # check
   response_data={'success': False, 'message': 'Unknown'}
-  if sessionid==None:
+  if sessionid is None:
     response_data['success']=False
     response_data['message']="Not logged in."
   else:
@@ -240,7 +240,7 @@ def actionLogout(environ):
       sessionid=None
   else:
     sessionid=None
-  if sessionid==None:
+  if sessionid is None:
     response_data['success']=True
     response_data['message']="Nobody to log out."
   else:
@@ -289,7 +289,7 @@ def actionGetcibranches(environ):
       sessionid=c['mbsimenvsessionid'].value
     else:
       sessionid=None
-    if sessionid!=None and sessionid in config['session']:
+    if sessionid is not None and sessionid in config['session']:
       headers['Authorization']='token '+config['session'][sessionid]['access_token']
   # worker function to make github api requests in parallel
   def getBranch(repo, out):
@@ -379,7 +379,7 @@ def actionGetuser(environ):
       sessionid=None
   else:
     sessionid=None
-  if sessionid==None:
+  if sessionid is None:
     response_data['success']=True
     response_data['username']=None
     response_data['avatar_url']=''
@@ -408,32 +408,39 @@ def actionWebhook(environ):
       response_data['success']=False
       response_data['message']="Invalid signature. Only github is allowed to send hooks."
     else:
-      response_data['success']=True
-      response_data['message']="not implemented yet"
-      data=json.loads(rawdata)
-      # we can start the docker container from here but this scripts runs as user apache
-      # which does not have access to the docker socket. Hence, we store to the config file and check it with cron.
-      # get current config
-      curcibranch=config['curcibranch']
-      tobuild=config['tobuild']
-      if "buildDocker" not in config: config['buildDocker']=[]
-      buildDocker=config['buildDocker']
-      # get repo and branch from this push
-      repo=data['repository']['name']
-      branch=data['ref'][11:]
-      # update tobuild
-      if repo=="fmatvec" or repo=="hdf5serie" or repo=="openmbv" or repo=="mbsim":
-        for c in curcibranch:
-          if c[repo]==branch:
-            toadd=c.copy()
-            toadd['timestamp']=int(time.time())
-            tobuild.append(toadd)
-      # push to repo "build" -> add to list of docker builds
-      if repo=="build" and branch==("staging" if environ["MBSIMENVTAGNAME"]=="staging" else "master"):
-        buildDocker.append(data["after"])
-      # create response
-      response_data['success']=True
-      response_data['message']="OK"
+      event=environ['X-GitHub-Event']
+      if event=="push":
+        data=json.loads(rawdata)
+        # we can start the docker container from here but this scripts runs as user apache
+        # which does not have access to the docker socket. Hence, we store to the config file and check it with cron.
+        # get current config
+        curcibranch=config['curcibranch']
+        tobuild=config['tobuild']
+        if "buildDocker" not in config: config['buildDocker']=[]
+        buildDocker=config['buildDocker']
+        # get repo and branch from this push
+        repo=data['repository']['name']
+        if data['ref'][0:11]!="refs/heads/"
+          response_data['success']=True
+          response_data['message']="This webhook push event is not handled"
+          return response_data
+        branch=data['ref'][11:]
+        # update tobuild
+        if repo=="fmatvec" or repo=="hdf5serie" or repo=="openmbv" or repo=="mbsim":
+          for c in curcibranch:
+            if c[repo]==branch:
+              toadd=c.copy()
+              toadd['timestamp']=int(time.time())
+              tobuild.append(toadd)
+        # push to repo "build" -> add to list of docker builds
+        if repo=="build" and branch==("staging" if environ["MBSIMENVTAGNAME"]=="staging" else "master"):
+          buildDocker.append(data["after"])
+        # create response
+        response_data['success']=True
+        response_data['message']="OK"
+      else:
+        response_data['success']=True
+        response_data['message']="This webhook event type is not handled"
   return response_data
 
 def actionReleasedistribution(environ):
@@ -452,7 +459,7 @@ def actionReleasedistribution(environ):
       sessionid=c['mbsimenvsessionid'].value
     else:
       sessionid=None
-    if sessionid==None:
+    if sessionid is None:
       response_data['success']=False
       response_data['message']="Not logged in."
     else:
@@ -598,9 +605,9 @@ def actionFiltergithubfeed(environ, start_response):
   root=ET.fromstring(response.content)
   for entry in root.findall("{http://www.w3.org/2005/Atom}entry"):
     author=entry.find("{http://www.w3.org/2005/Atom}author")
-    if author==None: continue
+    if author is None: continue
     name=author.find("{http://www.w3.org/2005/Atom}name")
-    if name==None: continue
+    if name is None: continue
     if name.text!=username: continue
     root.remove(entry)
   start_response('200 OK', [('Content-type', 'text/xml'),

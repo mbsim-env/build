@@ -41,7 +41,7 @@ def checkToBuild(tobuild):
   config=json.load(fd)
   
   # get branch to build
-  if tobuild==None and len(config['tobuild'])>0:
+  if tobuild is None and len(config['tobuild'])>0:
     tobuild=config['tobuild'][0]
   newTobuild=[]
   for b in config['tobuild']:
@@ -60,7 +60,7 @@ def checkToBuild(tobuild):
     buildDocker=config["buildDocker"]
   else:
     buildDocker=[]
-  if tobuild==None and len(buildDocker)>0:
+  if tobuild is None and len(buildDocker)>0:
     bd=buildDocker.pop(0)
   
   # write file config file
@@ -74,11 +74,11 @@ def checkToBuild(tobuild):
 
 tobuild, bd, statusAccessToken=checkToBuild(None)
 
-if tobuild==None and bd==None:
+if tobuild is None and bd is None:
   # nothing to do, return with code 0
   sys.exit(0)
 
-if bd!=None:
+if bd is not None:
   # run rebuild build-system
   ret=setup.run("builddocker", args.jobs, printLog=False, builddockerBranch=bd, statusAccessToken=statusAccessToken)
   sys.exit(ret)
