@@ -1,0 +1,5 @@
+secrets.json
+media_root/
+db.sqlite3
+localserver.json
+**/__pycache__/

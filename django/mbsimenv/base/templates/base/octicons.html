@@ -1,0 +1,23 @@
+{% extends "base/base.html" %}
+
+{% load octicons %}
+
+{% block title %}List of all octicons{% endblock %}
+
+{% block body %}
+<h1>List of all octicons</h1>
+
+<table class="table table-hover table-bordered table-sm">
+  <thead>
+    <tr>
+      <th>Icon</th>
+      <th>Name</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for name in OCTICON_DATA %}
+      <tr><td>{% octicon name %}</td><td>{{name}}</td></tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

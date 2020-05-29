@@ -1,0 +1,47 @@
+{% extends "base/base.html" %}
+
+{% load static %}
+{% load octicons %}
+
+{% block title %}Difference Plot: {{compareResult.example.run.buildType}}{% endblock %}
+
+{% block body %}
+<script src="https://code.highcharts.com/8.1/highcharts.js"> </script>
+<script src="https://code.highcharts.com/8.1/modules/boost.js"></script>
+<script src="{% static 'runexamples/differenceplot.js' %}"> </script>
+<script>
+  "use strict";
+  $(document).ready(function() {
+    loadDifferencePlot("{% url 'runexamples:chart_differenceplot' compareResult.id %}");
+  });
+</script>
+<h1>Difference Plot: <small>{{compareResult.example.run.buildType}}</small></h1>
+<dl class="row">
+  <dt class="col-2">Example</dt><dd class="col-10">{{compareResult.example.exampleName}}</dd>
+  <dt class="col-2">File</dt><dd class="col-10">{{compareResult.h5Filename}}</dd>
+  <dt class="col-2">Dataset</dt><dd class="col-10">{{compareResult.dataset}}</dd>
+  <dt class="col-2">Label</dt><dd class="col-10">{{compareResult.label}}</dd>
+  <dt class="col-2">Start Time</dt><dd class="col-10 DATETIME">{{compareResult.example.run.startTime|date:'c'}}</dd>
+  <dt class="col-2">Navigate</dt>
+  <dd class="col-10">
+    <a class="btn btn-info btn-xs" href="?previous=1">
+      {% octicon "chevron-left" %} previous
+    </a>
+    <a class="btn btn-info btn-xs" href="?next=1">
+      {% octicon "chevron-right" %} next
+    </a>
+    <a class="btn btn-info btn-xs" href="?current=1">
+      {% octicon "chevron-right" %}{% octicon "chevron-right" %} current
+    </a>
+    <a class="btn btn-info btn-xs" href="{% url "runexamples:compareresult" compareResult.example.id %}">
+      {% octicon "chevron-up" %} compare result
+    </a>
+  </dd>
+</dl>
+<p>
+  {% octicon "info" %} A result differs if at least at one time point the absolute tolerance and the relative tolerance is larger then the requested.
+</p>
+<div id="signal"></div>
+<div id="signalAbs"></div>
+<div id="signalRel"></div>
+{% endblock %}

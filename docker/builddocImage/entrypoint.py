@@ -4,13 +4,9 @@ import os
 import glob
 import sys
 sys.path.append("/context")
-import buildSystemState
 import subprocess
 import datetime
 import shutil
-
-buildSystemState.createStateSVGFile("/mbsim-state/build-manuals.nrFailed.svg", "...", "#777")
-buildSystemState.createStateSVGFile("/mbsim-state/build-manuals.nrAll.svg", "...", "#777")
 
 outDir="/mbsim-report/manuals"
 
@@ -55,9 +51,5 @@ for texMain in mainFiles:
 
   os.chdir(curdir)
 f.close()
-
-buildSystemState.update("build-manuals", "Building Manuals Failed",
-                        str(nrDocFailed)+" of "+str(len(mainFiles))+" manuals failed to build.",
-                        "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/html/manuals/", nrDocFailed, len(mainFiles))
 
 sys.exit(nrDocFailed)

@@ -26,12 +26,15 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   mingw64-qt5-qtsvg \
   mingw64-qt5-qtbase \
   python3-h5py \
+  python3-pytz \
+  python3-sqlparse \
   mingw64-qwt-qt5 \
   wine \
   mingw64-xerces-c \
   mingw64-libarchive \
   diffutils \
   && yum clean all
+RUN pip3 install django
 # bugfix for moc
 RUN mv /usr/x86_64-w64-mingw32/bin/qt5/moc /usr/x86_64-w64-mingw32/bin/qt5/moc.org
 COPY docker/buildwin64Image/moc /usr/x86_64-w64-mingw32/bin/qt5/moc
@@ -206,11 +209,11 @@ RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\+g'); \
     sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.inf >> /usr/share/wine/wine.inf
 
 # copy
-COPY buildScripts /mbsim-build/build/buildScripts
-COPY docker/buildImage/buildSystemState.py /context/buildSystemState.py
+COPY misc /mbsim-build/build/misc
 COPY docker/buildImage/distribute.py /context/distribute.py
 COPY docker/buildwin64Image/entrypoint.py /context/entrypoint.py
 COPY docker/buildwin64Image/jni_md.h /context/java_jni/jni_md.h
+COPY django/mbsimenv /context/mbsimenv
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser

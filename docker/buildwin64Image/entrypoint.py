@@ -65,7 +65,7 @@ os.environ['WINEPATH']=((os.environ['WINEPATH']+";") if 'WINEPATH' in os.environ
 os.environ["STATUSACCESSTOKEN"]=statusAccessToken
 ROTATE=3 if os.environ["MBSIMENVTAGNAME"]=="staging" else 20
 ret=subprocess.call(
-  ["/mbsim-build/build/buildScripts/build.py"]+ARGS+["--url", "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report",
+  ["/mbsim-build/build/misc/build.py"]+ARGS+["--url", "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report",
   "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun",
   "--rotate", str(ROTATE), "--fmatvecBranch", args.fmatvecBranch,
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,

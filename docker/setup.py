@@ -108,6 +108,7 @@ def waitContainer(container, prefix=""):
 runningContainers=set()
 
 allServices=[ # must be in order
+  "database",
   "build",
   "buildwin64",
   "builddoc",
@@ -282,6 +283,13 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfil
 
 def build(s, jobs=4, fd=sys.stdout, baseDir=scriptdir, cacheFromSelf=False):
 
+  if s=="database":
+    return buildImage(tag="mbsimenv/database:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
+      buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
+      path=baseDir+"/..",
+      dockerfile="docker/databaseImage/Dockerfile",
+      rm=False)
+
   if s=="build":
     return buildImage(tag="mbsimenv/build:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
@@ -317,12 +325,12 @@ def build(s, jobs=4, fd=sys.stdout, baseDir=scriptdir, cacheFromSelf=False):
       rm=False)
 
   elif s=="webserver":
-    gitCommitID=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=baseDir).decode("UTF-8")
+    gitCommitID=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=baseDir).decode("UTF-8").rstrip()
     return buildImage(tag="mbsimenv/webserver:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
       labels={"gitCommitID": gitCommitID},
-      path=baseDir,
-      dockerfile="webserverImage/Dockerfile",
+      path=baseDir+"/..",
+      dockerfile="docker/webserverImage/Dockerfile",
       rm=False)
 
   elif s=="webapp":
@@ -363,7 +371,20 @@ def renameStoppedContainer(name):
 
 def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
                  fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
-                 printLog=True, detach=False, statusAccessToken=""):
+                 printLog=True, detach=False, statusAccessToken="", networkID=None):
+  stopDatabase=False
+  if networkID is not None:
+    networki=dockerClient.networks.get(networkID)
+    database=dockerClient.containers.get('mbsimenv.database.'+getTagname())
+  elif "mbsimenv_service_intern:"+getTagname() in dockerClient.networks.list():
+    networki=dockerClient.networks.get("mbsimenv_service_intern:"+getTagname())
+    database=dockerClient.containers.get('mbsimenv.database.'+getTagname())
+  else:
+    if detach:
+      raise RuntimeError("Cannot run with --detach")
+    networki, database=runNetworkiAndDatabase(printLog, "")
+    stopDatabase=True
+
   updateReferences=[]
   if buildType=="linux64-dailydebug" and os.path.isfile("/mbsim-config/mbsimBuildService.conf"):
     with open("/mbsim-config/mbsimBuildService.conf", "r") as f:
@@ -376,6 +397,7 @@ def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
   build=dockerClient.containers.run(
     image=("mbsimenv/buildwin64" if buildType=="win64-dailyrelease" else "mbsimenv/build")+":"+getTagname(),
     init=True, name='mbsimenv.build.'+buildType+'.'+getTagname(),
+    network=networki.id,
     labels={"buildtype": buildType},
     entrypoint=None if not interactive else ["sleep", "infinity"],
     command=(["--buildType", buildType, "-j", str(jobs),
@@ -386,11 +408,12 @@ def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
     environment={"MBSIMENVSERVERNAME": getServername(), "STATUSACCESSTOKEN": statusAccessToken, "MBSIMENVTAGNAME": getTagname()},
     volumes={
       'mbsimenv_mbsim-'+buildType+"."+getTagname():  {"bind": "/mbsim-env",    "mode": "rw"},
-      'mbsimenv_report-'+buildType+"."+getTagname(): {"bind": "/mbsim-report", "mode": "rw"},
       'mbsimenv_ccache.'+getTagname():               {"bind": "/mbsim-ccache", "mode": "rw"},
-      'mbsimenv_state.'+getTagname():                {"bind": "/mbsim-state",  "mode": "rw"},
+      'mbsimenv_config.'+getTagname():               {"bind": "/mbsim-config", "mode": "ro"},
     },
     detach=True, stdout=True, stderr=True)
+  networki.disconnect(build)
+  networki.connect(build)
   if interactive:
     print(build.short_id)
     print("Use")
@@ -409,7 +432,39 @@ def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
     return build
   else:
     ret=runWait([build], printLog=printLog)
+    if stopDatabase:
+      database.stop()
     return ret
+
+def runNetworkiAndDatabase(printLog, daemon):
+  # networks
+  for n in dockerClient.networks.list(names=["mbsimenv_service_extern:"+getTagname(), "mbsimenv_service_intern:"+getTagname()]):
+    n.remove()
+    print("Network "+n.name+" removed (id="+n.id+")")
+  networki=dockerClient.networks.create(name="mbsimenv_service_intern:"+getTagname(), internal=True)
+
+  # database
+  renameStoppedContainer('mbsimenv.database.')
+  database=dockerClient.containers.run(image="mbsimenv/database:"+getTagname(),
+    init=True, name='mbsimenv.database.'+getTagname(),
+    network=networki.id,
+    volumes={
+      'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config", "mode": "ro"},
+      'mbsimenv_database.'+getTagname():                    {"bind": "/database",     "mode": "rw"},
+    },
+    detach=True, stdout=True, stderr=True)
+  networki.disconnect(database)
+  networki.connect(database, aliases=["database"])
+  if not printLog:
+    print("Started running "+s+" as container ID "+database.id)
+    sys.stdout.flush()
+  runningContainers.add(database)
+  if printLog:
+    if daemon=="":
+      asyncLogContainer(database, "database: ")
+    else:
+      print("Started database in background")
+  return networki, database
 
 def run(s, jobs=4,
         addCommands=[],
@@ -425,23 +480,23 @@ def run(s, jobs=4,
   if s=="build-linux64-ci":
     return runAutobuild(s, "linux64-ci", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken, networkID=networkID)
 
   elif s=="build-linux64-dailydebug":
     return runAutobuild(s, "linux64-dailydebug", ["--valgrindExamples"]+addCommands,
                  jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken, networkID=networkID)
 
   elif s=="build-linux64-dailyrelease":
     return runAutobuild(s, "linux64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken, networkID=networkID)
 
   elif s=="build-win64-dailyrelease":
     return runAutobuild(s, "win64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken)
+                 printLog=printLog, detach=detach, statusAccessToken=statusAccessToken, networkID=networkID)
 
   elif s=="builddoc":
     renameStoppedContainer('mbsimenv.builddoc.')
@@ -451,8 +506,6 @@ def run(s, jobs=4,
       environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
       volumes={
         'mbsimenv_mbsim-linux64-dailydebug.'+getTagname():  {"bind": "/mbsim-env",    "mode": "rw"},
-        'mbsimenv_report-linux64-dailydebug.'+getTagname(): {"bind": "/mbsim-report", "mode": "rw"},
-        'mbsimenv_state.'+getTagname():                     {"bind": "/mbsim-state",  "mode": "rw"},
       },
       detach=True, stdout=True, stderr=True)
     if interactive:
@@ -484,7 +537,6 @@ def run(s, jobs=4,
       command=["-j", str(jobs), builddockerBranch],
       volumes={
         'mbsimenv_mbsim-builddocker.'+getTagname():  {"bind": "/mbsim-env",           "mode": "rw"},
-        'mbsimenv_report-builddocker.'+getTagname(): {"bind": "/mbsim-report",        "mode": "rw"},
         '/var/run/docker.sock':                      {"bind": "/var/run/docker.sock", "mode": "rw"},
       },
       detach=True, stdout=True, stderr=True)
@@ -522,7 +574,7 @@ def run(s, jobs=4,
           c.stop()
           print("Container mbsimenv/webapprun:"+getTagname()+" "+c.name+" stopped (id="+c.id+")")
       for cn in list(map(lambda x: 'mbsimenv.build.'+x+'.', buildTypes))+['mbsimenv.builddoc.',
-                 'mbsimenv.proxy.', 'mbsimenv.webapp.', 'mbsimenv.webserver.']+\
+                 'mbsimenv.proxy.', 'mbsimenv.webapp.', 'mbsimenv.webserver.', 'mbsimenv.database.']+\
                  (['mbsimenv.builddocker.'] if not keepBuildDockerContainerRunning else []):
         try:
           c=dockerClient.containers.get(cn+getTagname())
@@ -544,7 +596,7 @@ def run(s, jobs=4,
         if c.status!="exited" and c.status!="dead":
           print("Container mbsimenv/webapprun:"+getTagname()+" "+c.name+" is "+c.status+" (id="+c.id+")")
       for cn in list(map(lambda x: 'mbsimenv.build.'+x+'.', buildTypes))+['mbsimenv.builddoc.', 'mbsimenv.builddocker.',
-                 'mbsimenv.proxy.', 'mbsimenv.webapp.', 'mbsimenv.webserver.']:
+                 'mbsimenv.proxy.', 'mbsimenv.webapp.', 'mbsimenv.webserver.', 'mbsimenv.database.']:
         try:
           c=dockerClient.containers.get(cn+getTagname())
           if c.status!="exited" and c.status!="dead":
@@ -555,13 +607,6 @@ def run(s, jobs=4,
         print("Network "+n.name+" exists (id="+n.id+")")
       return 0
 
-    # networks
-    for n in dockerClient.networks.list(names=["mbsimenv_service_extern:"+getTagname(), "mbsimenv_service_intern:"+getTagname()]):
-      n.remove()
-      print("Network "+n.name+" removed (id="+n.id+")")
-    networki=dockerClient.networks.create(name="mbsimenv_service_intern:"+getTagname(), internal=True)
-    networke=dockerClient.networks.create(name="mbsimenv_service_extern:"+getTagname())
-
     # port binding
     addrinfo=socket.getaddrinfo(getServername(), None, 0, socket.SOCK_STREAM)
     if len(addrinfo)==0:
@@ -571,6 +616,9 @@ def run(s, jobs=4,
       for p in [80, 443]:
         ports[p].append((ai[4][0], p))
 
+    networki, database=runNetworkiAndDatabase(printLog, daemon)
+    networke=dockerClient.networks.create(name="mbsimenv_service_extern:"+getTagname())
+
     # webserver
     renameStoppedContainer('mbsimenv.webserver.')
     webserver=dockerClient.containers.run(image="mbsimenv/webserver:"+getTagname(),
@@ -579,16 +627,9 @@ def run(s, jobs=4,
       command=["-j", str(jobs)]+addCommands,
       environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
       volumes={
-        'mbsimenv_report-linux64-ci.'+getTagname():           {"bind": "/var/www/html/mbsim/linux64-ci",           "mode": "ro"},
-        'mbsimenv_report-linux64-dailydebug.'+getTagname():   {"bind": "/var/www/html/mbsim/linux64-dailydebug",   "mode": "ro"},
-        'mbsimenv_report-linux64-dailyrelease.'+getTagname(): {"bind": "/var/www/html/mbsim/linux64-dailyrelease", "mode": "ro"},
-        'mbsimenv_report-win64-dailyrelease.'+getTagname():   {"bind": "/var/www/html/mbsim/win64-dailyrelease",   "mode": "ro"},
-        'mbsimenv_report-builddocker.'+getTagname():          {"bind": "/var/www/html/mbsim/docker",               "mode": "ro"},
-        'mbsimenv_state.'+getTagname():                       {"bind": "/var/www/html/mbsim/buildsystemstate",     "mode": "ro"},
-        'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config",                            "mode": "rw"},
-        'mbsimenv_releases.'+getTagname():                    {"bind": "/var/www/html/mbsim/releases",             "mode": "rw"},
-        'mbsimenv_letsencrypt.'+getTagname():                 {"bind": "/etc/letsencrypt",                         "mode": "rw"},
-        '/var/run/docker.sock':                               {"bind": "/var/run/docker.sock",                     "mode": "rw"},
+        'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config",        "mode": "ro"},
+        'mbsimenv_letsencrypt.'+getTagname():                 {"bind": "/etc/letsencrypt",     "mode": "rw"},
+        '/var/run/docker.sock':                               {"bind": "/var/run/docker.sock", "mode": "rw"},
       },
       hostname=getServername(),
       ports=ports,
@@ -619,7 +660,7 @@ def run(s, jobs=4,
       detach=True, stdout=True, stderr=True)
     networki.disconnect(webapp)
     networki.connect(webapp, aliases=["webapp"])
-    networke.connect(webapp)
+    networke.connect(webapp)#mfmf is this needed????????????
     if not printLog:
       print("Started running "+s+" as container ID "+webapp.id)
       sys.stdout.flush()
@@ -662,7 +703,7 @@ def run(s, jobs=4,
       return 0
     else:
       # wait for running containers
-      ret=runWait([webserver, webapp, proxy], printLog=printLog)
+      ret=runWait([database, webserver, webapp, proxy], printLog=printLog)
       # stop all other containers connected to network (this may be webapprun and autbuild containers)
       networki.reload()
       for c in networki.containers:

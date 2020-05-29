@@ -1,0 +1,79 @@
+{% extends "base/base.html" %}
+
+{% load static %}
+{% load octicons %}
+
+{% block title %}User Profile{% endblock %}
+
+{% block body %}
+
+{% if view.request.user.is_authenticated %}
+  <h1>Logged in as user <strong>{{ view.request.user.username }}</strong></h1>
+
+  <div class="row">
+    <span class="col-3">
+      {% autoescape off %}{{ userLargeAvatarEle }}{% endautoescape %}<br/>
+      {{ view.request.user.first_name }} {{ view.request.user.last_name }}<br/>
+      {{ view.request.user.email }}
+    </span>
+
+    <span class="col-9">
+      <p>Several actions on this side requires you to be logged in with your GitHub account and have appropriate rights on GitHub.</p>
+
+      <p>This side stores the basic information provided by GitHub. Is also stores an access token to interact with GitHub on your behalf.</p>
+
+      <p>You can <a href="https://github.com/settings/connections/applications/{{ clientID }}">view and revoke</a> this
+      access token on GitHub at any time. Revoking this access token will revoke any access of this service on your GitHub account.
+      Your GitHub password is not known or checked by this server.</p>
+    </span>
+  </div>
+
+  {% if githubUserInMbsimenv %}
+    <div style="margin-top: 2em;" class="alert alert-success" role="alert">
+      <span class="text-success>">{% octicon "check" %}</span>
+      You are a member of the Github organization {% octicon "organization" %} mbsim-env. You can make changes using this acount.
+    </div>
+  </span>
+  {% else %}
+    <div style="margin-top: 2em;" class="alert alert-warning" role="alert">
+      <span class="text-warning>">{% octicon "alert" %}</span>
+      You have not the appropriate Github rights to make changes using this account. You are not a member of the Github organization
+      {% octicon "organization" %} mbsim-env. This account will NOT provide you with any additional feature.
+      You can/should log out again.
+    </div>
+  {% endif %}
+
+  <p style="margin-top: 2em;">In detail this site stores the following information for your account:</p>
+  <dl class="row">
+    <dt class="col-2">Username</dt><dd class="col-10">&nbsp;{{ view.request.user.username }}</dd>
+    <dt class="col-2">First name</dt><dd class="col-10">&nbsp;{{ view.request.user.first_name }}</dd>
+    <dt class="col-2">Last name</dt><dd class="col-10">&nbsp;{{ view.request.user.last_name }}</dd>
+    <dt class="col-2">e-Mail</dt><dd class="col-10">&nbsp;{{ view.request.user.email }}</dd>
+    {% if socialUser %}
+      <dt class="col-2">Provider name</dt><dd class="col-10">&nbsp;{{ socialUser.provider }}</dd>
+      <dt class="col-2">Provider UID</dt><dd class="col-10">&nbsp;{{ socialUser.uid }}</dd>
+      <dt class="col-2">Extra data</dt><dd class="col-10">&nbsp;{{ socialUser.extra_data }}</dd>
+      {% if githubAccessTokenDummy %}
+        <dt class="col-2">Access token</dt><dd class="col-10">&nbsp;{{ githubAccessTokenDummy }}</dd>
+      {% endif %}
+    {% endif %}
+  </dl>
+  
+{% else %}
+  <h1>Not logged in</h1>
+
+  <div class="row">
+    <span class="col-2">
+      {% octicon "unverified" height="100" %}
+    </span>
+
+    <span class="col-10">
+      <p>You are currently not logged in to this system.</p>
+      <p>Browse this side anonymously starting at <a href="{% url 'service:home' %}">{% octicon "home" %} home</a>,</p>
+      <p>or <a href="{% url 'account_login' %}">{% octicon "sign-in" %} login</a> using a
+            <a href="https://github.com/">{% octicon "logo-github" %}</a> account.</p>
+    </span>
+  </div>
+{% endif %}
+
+{% endblock %}

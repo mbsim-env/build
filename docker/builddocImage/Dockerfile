@@ -15,7 +15,6 @@ RUN yum --setopt=skip_missing_names_on_install=False install -y epel-release && 
 
 # copy context files
 COPY docker/builddocImage/entrypoint.py /context/entrypoint.py
-COPY docker/buildImage/buildSystemState.py /context/buildSystemState.py
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \

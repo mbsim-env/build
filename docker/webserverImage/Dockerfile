@@ -18,33 +18,39 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   yum --setopt=skip_missing_names_on_install=False -y install \
   httpd \
   mod_ssl \
-  rh-python36-mod_wsgi \
   python2-certbot \
+  rh-python36-mod_wsgi \
   cronie \
   python36-docker \
+  python36-pygithub \
+  python36-pytz \
+  python36-defusedxml \
+  python3-psycopg2 \
   && yum clean all
+RUN pip3 install django django-allauth django-octicons
 
 # a webserver is running on port 80
 EXPOSE 80/tcp 443/tcp
 
-COPY --from=temp /tmp/noVNC/include /var/www/html/noVNC/include
+#mfmfCOPY --from=temp /tmp/noVNC/include /var/www/html/noVNC/include
 
-# copy html script
-COPY webserverImage/html /var/www/html/mbsim/html
+# copy django
+COPY django/mbsimenv /context/mbsimenv
+
 # copy entrypoint
-COPY webserverImage/entrypoint.py /context/entrypoint.py
-COPY webserverImage/cron-daily.py /context/cron-daily.py
-COPY webserverImage/cron-ci.py /context/cron-ci.py
-COPY setup.py /context/setup.py
+COPY docker/webserverImage/entrypoint.py /context/entrypoint.py
+COPY docker/webserverImage/cron-daily.py /context/cron-daily.py
+#mfmfCOPY docker/webserverImage/cron-ci.py /context/cron-ci.py
+COPY docker/setup.py /context/setup.py
 
 # configure web server
 # add top level config (stored in docker/webserverImage/httpd_toplevel.conf)
-COPY webserverImage/conf/httpd_toplevel.conf /tmp/httpd_toplevel.conf
+COPY docker/webserverImage/conf/httpd_toplevel.conf /tmp/httpd_toplevel.conf
 RUN cat /tmp/httpd_toplevel.conf /etc/httpd/conf/httpd.conf > /etc/httpd/conf/httpd.conf.new && \
   mv /etc/httpd/conf/httpd.conf.new /etc/httpd/conf/httpd.conf && \
   rm -f /tmp/httpd_toplevel.conf
 # replace <Directory "/var/www/html"> with docker/webserverImage/httpd_rootdir.conf
-COPY webserverImage/conf/httpd_rootdir.conf /tmp/httpd_rootdir.conf
+COPY docker/webserverImage/conf/httpd_rootdir.conf /tmp/httpd_rootdir.conf
 RUN set -o pipefail && \
   B=$(sed -rn '/^ *< *Directory +"\/var\/www\/html" *> *(#.*)?$/=' /etc/httpd/conf/httpd.conf | head -n 1); \
   O=$(sed -rn "$[$B+1],\$p" /etc/httpd/conf/httpd.conf | sed -rn '/^ *< *\/ *Directory *> *(#.*)?/=' | head -n 1); \
@@ -55,20 +61,23 @@ RUN set -o pipefail && \
 # configure wsgi
 RUN cp /opt/rh/httpd24/root/usr/lib64/httpd/modules/mod_rh-python36-wsgi.so /lib64/httpd/modules && \
     cp /opt/rh/httpd24/root/etc/httpd/conf.modules.d/10-rh-python36-wsgi.conf /etc/httpd/conf.modules.d
-COPY webserverImage/wsgi/mbsimBuildServiceServer.py /var/www/mbsimBuildServiceServer.py
-RUN echo "WSGIScriptAlias /wsgi/mbsimBuildServiceServer.py /var/www/mbsimBuildServiceServer.py" >> /etc/httpd/conf.modules.d/10-wsgi.conf
 
 # webserver SSL
 RUN set -o pipefail && \
   sed -i -r "s|^( *< *VirtualHost +_default_ *: *443 *> *(#.*)?)$|\1\nServerName \${MBSIMENVSERVERNAME}\n|" /etc/httpd/conf.d/ssl.conf
-COPY webserverImage/conf/mpm_prefork.conf /etc/httpd/cond.d/
-COPY webserverImage/conf/le-redirect-mbsim-env.conf /etc/httpd/conf.d/
+COPY docker/webserverImage/conf/mpm_prefork.conf /etc/httpd/cond.d/
+COPY docker/webserverImage/conf/le-redirect-mbsim-env.conf /etc/httpd/conf.d/
+
+# static django files
+RUN mkdir /var/www/html/static
+RUN python3 /context/mbsimenv/manage.py collectstatic --noinput
 
 # set crontab for
 # - cert updates (once a day at arbitary time)
+RUN mkdir /var/www/html/certbot
 RUN echo -e 'SHELL=/bin/bash\n\
 1 0 * * * python3 -c "import time; import random; time.sleep(random.randint(0,24*60*60-100))"; \
-/usr/bin/certbot-2 renew --webroot -w /var/www/html --post-hook "httpd -k graceful" 2> >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/2) > >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/1)' | crontab /dev/stdin
+/usr/bin/certbot-2 renew --webroot -w /var/www/html/certbot --post-hook "httpd -k graceful" 2> >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/2) > >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/1)' | crontab /dev/stdin
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
@@ -80,14 +89,7 @@ LABEL org.label-schema.schema-version="1.0" \
 # Check apache user and group id (must be in sync with the one in buildImage)
 # Add user dockeruser, create volumes and set volume ownership and permissions
 RUN test $(id -u apache) -eq 48 && test $(id -g apache) -eq 48 && \
-  groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
-  mkdir -p /var/www/html/mbsim/linux64-ci /var/www/html/mbsim/linux64-dailydebug \
-    /var/www/html/mbsim/linux64-dailyrelease /var/www/html/mbsim/win64-dailyrelease /var/www/html/mbsim/buildsystemstate \
-    /etc/letsencrypt /var/www/html/mbsim/releases /mbsim-config && \
-  chown dockeruser:dockeruser /var/www/html/mbsim/linux64-ci /var/www/html/mbsim/linux64-dailydebug \
-    /var/www/html/mbsim/linux64-dailyrelease /var/www/html/mbsim/win64-dailyrelease /var/www/html/mbsim/buildsystemstate && \
-  chown apache:apache /var/www/html/mbsim/releases && \
-  chown dockeruser:apache /mbsim-config && chmod ug+rw /mbsim-config
+  mkdir -p /etc/letsencrypt /mbsim-config
   # chown root:root /etc/letsencrypt # not needed
 
 HEALTHCHECK --interval=60s --timeout=30s --start-period=30s --retries=3 \

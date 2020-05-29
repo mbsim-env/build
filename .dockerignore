@@ -1,3 +1,8 @@
 .git/
 .*.*
 .dockerignore
+django/mbsimenv/secrets.json
+django/mbsimenv/media_root/
+django/mbsimenv/db.sqlite3
+django/mbsimenv/localserver.json
+**/__pycache__/

@@ -1,0 +1,158 @@
+{% extends "base/base.html" %}
+
+{% load static %}
+{% load octicons %}
+
+{% block title %}Build Results of MBSim-Env: {{run.buildType}}{% endblock %}
+
+{% block body %}
+
+<script src="{% static 'builds/scripts.js' %}"> </script>
+<script>
+  "use strict";
+  $(document).ready(function() {
+    initToolTable("{% url 'builds:datatable_tool' run.id %}");
+  });
+</script>
+<h1>Build Results of MBSim-Env: <small>{{run.buildType}}</small></h1>
+<dl class="row">
+  <dt class="col-2">Called Command</dt>
+  <dd class="col-10">
+    <div class="dropdown">
+      <button class="btn btn-secondary btn-xs" type="button" data-toggle="dropdown">show {% octicon "triangle-down" %}</button>
+      <code class="dropdown-menu" style="padding-left: 0.5em; padding-right: 0.5em;">
+        {{run.command}}
+      </code>
+    </div>
+  </dd>
+  <dt class="col-2">Start time</dt><dd class="col-10 DATETIME">{{run.startTime|date:'c'}}</dd>
+  <dt class="col-2">End time</dt>
+  <dd class="col-10">
+    {% if run.endTime is None %}
+      <span class="text-danger">still running or aborted</span>
+    {% else %}
+      <span class="DATETIME">{{run.endTime|date:'c'}}</span>
+    {% endif %}
+  </dd>
+  <dt class="col-2">Navigate</dt>
+  <dd class="col-10">
+    <a class="btn btn-info btn-xs" href="?previous=1">
+      {% octicon "chevron-left" %} previous
+    </a>
+    <a class="btn btn-info btn-xs" href="?next=1">
+      {% octicon "chevron-right" %} next
+    </a>
+    <a class="btn btn-info btn-xs" href="?current=1">
+      {% octicon "chevron-right" %}{% octicon "chevron-right" %} current
+    </a>
+  </dd>
+</dl>
+<hr/>
+
+<h2>Repository State</h2>
+<table style="width:auto;" class="table table-striped table-hover table-bordered table-sm">
+  <thead>
+    <tr>
+      <th>{% octicon "repo" %}&nbsp;Repository</th>
+      <th>{% octicon "git-branch" %}&nbsp;Branch</th>
+      {% if run.fmatvecUpdateOK is not None or run.hdf5serieUpdateOK is not None or run.openmbvUpdateOK is not None or run.mbsimUpdateOK is not None %}
+        <th>{% octicon "sync" %}&nbsp;Update</th>
+      {% endif %}
+      <th>{% octicon "git-commit" %}&nbsp;Commit</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for repo in repoList %}
+      {% cycle "fmatvecUpdateOutput" "hdf5serieUpdateOutput" "openmbvUpdateOutput" "mbsimUpdateOutput" as repoUpdateOutput silent %}
+      {% cycle run.fmatvecBranch run.hdf5serieBranch run.openmbvBranch run.mbsimBranch as repoBranch silent %}
+      {% cycle run.fmatvecUpdateOK run.hdf5serieUpdateOK run.openmbvUpdateOK run.mbsimUpdateOK as repoUpdateOK silent %}
+      {% cycle run.fmatvecUpdateTooltip run.hdf5serieUpdateTooltip run.openmbvUpdateTooltip run.mbsimUpdateTooltip as repoUpdateTooltip silent %}
+      {% cycle run.fmatvecUpdateCommitID run.hdf5serieUpdateCommitID run.openmbvUpdateCommitID run.mbsimUpdateCommitID as repoUpdateCommitID silent %}
+      {% cycle run.fmatvecUpdateMsg run.hdf5serieUpdateMsg run.openmbvUpdateMsg run.mbsimUpdateMsg as repoUpdateMsg silent %}
+      <tr>
+        <td>
+          <a href="https://github.com/mbsim-env/{{ repo }}"><span class="badge badge-success">{% octicon "repo" %}&nbsp;{{ repo }}</span></a>
+        </td>
+        <td>
+          <a href="https://github.com/mbsim-env/{{ repo }}/tree/{{ repoBranch }}">
+            <span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{ repoBranch }}</span>
+          </a>
+        </td>
+        {% if run.fmatvecUpdateOK is not None or run.hdf5serieUpdateOK is not None or run.openmbvUpdateOK is not None or run.mbsimUpdateOK is not None %}
+          <td class="table-{{ repoUpdateOK|yesno:"success,danger," }}">
+            {% if repoUpdateOK is not None %}
+              <span class="text-{{ repoUpdateOK|yesno:"success,danger" }}">
+                {% if repoUpdateOK %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}
+              </span>&nbsp;
+              <a href="{% url "base:textFieldFromDB" "builds" "Run" run.id repoUpdateOutput %}">{{ repoUpdateOK|yesno:"passed,failed" }}</a>
+            {% endif %}
+          </td>
+        {% endif %}
+        <td data-toggle="tooltip" data-placement="bottom" title="{{ repoUpdateTooltip }}">
+          <a href="https://github.com/mbsim-env/{{ repo }}/commit/{{ repoUpdateCommitID }}">
+            <code>{{ repoUpdateCommitID|truncatechars:8 }}</code>
+          </a>:
+          {{ repoUpdateMsg }}
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2>Build Status</h2>
+<p>{% octicon "info" %}&nbsp;Failures in the following table should be fixed from top to bottom since a error in one tool may cause errors on dependent tools.<br/>
+{% octicon "info" %}&nbsp;A tool name in gray color is a tool which may fail and is therefore not reported as an error in the Atom feed.</p>
+
+<table id="toolTable" class="table table-striped table-hover table-bordered table-sm">
+  <thead>
+    <tr>
+      <th>{% octicon "file-directory" %}&nbsp;Tool</th>
+      <th>{% octicon "tools" %}&nbsp;Configure</th>
+      <th>{% octicon "sync" %}&nbsp;Make</th>
+      <th>{% octicon "checklist" %}&nbsp;Make Check</th>
+      <th>{% octicon "question" %}&nbsp;Doxygen Doc</th>
+      <th>{% octicon "question" %}&nbsp;XML Doc</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+
+{% if examples|length > 0 %}
+  <h2>Examples</h2>
+  <div class="alert alert-{{ examplesAllOK|yesno:"success,danger" }}" role="alert">
+    <span class="text-{{ examplesAllOK|yesno:"success,danger" }}">
+      {% if examplesAllOK %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}
+    </span>
+    {% if examplesAllOK %}
+      All related example runs have passed
+    {% else %}
+      At least one related example run has failed
+    {% endif %}
+    <ul class="list-group">
+      {% for ex in examples %}
+        <li class="list-group-item">
+          <span class="text-{{ ex.ok|yesno:"success,danger" }}">
+            {% if ex.ok %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}
+          </span>
+          <a href="{% url "runexamples:run" ex.id %}">Example run with build type '{{ ex.buildType }}'</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+
+{% if run.distributionOK %}
+  <h2>Distribution</h2>
+  <div class="alert alert-{{ run.distributionOK|yesno:"success,danger" }}" role="alert">
+    <span class="text-{{ run.distributionOK|yesno:"success,danger" }}">
+      {% if run.distributionOK %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}
+    </span>
+    {{ run.distributionOK|yesno:"Successfully,Failed to" }} create a binary distribution:<br/>
+    <a href="{% url 'base:textFieldFromDB' 'builds' 'Run' run.id 'distributionOutput' %}">log-file</a>;
+    <strong><a href="{% url "base:fileDownloadFromDB" "builds" "Run" run.id "distributionFile" %}">Download</a></strong>;
+    <a href="{% url "base:fileDownloadFromDB" "builds" "Run" run.id "distributionDebugFile" %}">debug-info</a>
+  </div>
+{% endif %}
+
+{% endblock %}

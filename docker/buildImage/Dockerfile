@@ -61,13 +61,15 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   clang-analyzer \
   graphviz \
   python36-numpy \
+  python36-pytz \
+  python3-psycopg2 \
   adwaita-qt5 \
   qt5-qtstyleplugins \
   && yum clean all
 # config gcc7 => do not use the "exec form" form now on use the "shell form"!!!!!
 SHELL ["scl", "enable", "devtoolset-7"]
 RUN npm install mathjax-node
-RUN pip3 install h5py sympy
+RUN pip3 install h5py sympy django
 
 
 
@@ -216,17 +218,17 @@ ENV LIBGL_ALWAYS_INDIRECT=1
 # copy build repo
 COPY docker/buildImage/entrypoint.py /context/entrypoint.py
 COPY docker/buildImage/scl_wrapper_entrypoint.sh /context/scl_wrapper_entrypoint.sh
-COPY docker/buildImage/buildSystemState.py /context/buildSystemState.py
 COPY docker/buildImage/distribute.py /context/distribute.py
 COPY docker/buildImage/c++-analyzer /context/c++-analyzer
 COPY docker/buildImage/ccc-analyzer /context/ccc-analyzer
-COPY buildScripts /mbsim-build/build/buildScripts
+COPY misc /mbsim-build/build/misc
+COPY django/mbsimenv /context/mbsimenv
 
 # enable ccache (after all other things are done); note /mbsim-env is usually a persistent Docker volume;
 # enable nu-html -> add to CLASSPATH
 # CCACHE handling: /usr/lib64/ccache cannot be added here to PATH due to scl.
 #                  this is done in the entrypoint wrapper, see below
-ENV PATH=/mbsim-env/mbsim/examples:/mbsim-env/build/buildScripts:$PATH \
+ENV PATH=/mbsim-env/mbsim/examples:/mbsim-env/build/misc:$PATH \
     LD_LIBRARY_PATH=/3rdparty/local/lib/octave/4.4.1:$LD_LIBRARY_PATH \
     CCACHE_DIR=/mbsim-ccache \
     MBSIM_SWIG=1 \

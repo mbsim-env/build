@@ -1,0 +1,85 @@
+{% load static %}
+{% load octicons %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>{% block title %}{% endblock %}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="https://cdn.datatables.net/v/dt/dt-1.10.20/datatables.min.css"/>
+    <link rel="stylesheet" type="text/css" href="{% static 'base/style.css' %}"/>
+    <link rel="shortcut icon" href="{% static 'base/mbsimenv.ico' %}" type="image/x-icon"/>
+    <link rel="icon" href="{% static 'base/mbsimenv.ico' %}" type="image/x-icon"/>
+    {% block head %}
+    {% endblock %}
+  </head>
+  <body>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+      integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script src="https://cdn.jsdelivr.net/npm/popper.js@1.16.0/dist/umd/popper.min.js"
+      integrity="sha384-Q6E9RHvbIyZFJoft+2mJbHaEWldlvI9IOYy5n3zV9zzTtmI3UksdQRVvoxMfooAo" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+      integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="https://cdn.datatables.net/v/dt/dt-1.10.20/datatables.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.22.2/moment.min.js"> </script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/moment-timezone/0.5.23/moment-timezone-with-data-2012-2022.min.js"> </script>
+    <script src="{% static 'base/scripts.js' %}"> </script>
+    <script>
+      "use strict";
+      $(document).ready(function() {
+        // add CSRF token for all ajax requests (this cannot go to scripts.js since it needs template substitution
+        $.ajaxSetup({
+          headers: { "X-CSRFToken": '{{csrf_token}}' }
+        });
+      });
+    </script>
+
+    <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
+      <a class="navbar-brand" href="{% url "service:home" %}" data-toggle="tooltip" data-placement="bottom" title="Home">
+        <img height="22%" src="{% static 'base/mbsimenv.svg' %}"/> MBSim-Env
+      </a>
+      <div class="collapse navbar-collapse">
+        <span class="navbar-nav mr-auto">
+          <a href="{% url "service:home" %}">
+            <span class="navbar-text" style="margin-left: 1em">The MBSim-Environment Project Page</span>
+          </a>
+        </span>
+        {% if view.request.user.is_authenticated %}
+          <span class="nav-item dropdown">
+            <a class="nav-link" data-toggle="dropdown">
+              <span class="text-light">{% autoescape off %}{{ userAvatarEle }}{% endautoescape %}{% octicon "triangle-down" %}</span>
+            </a>
+            <span class="dropdown-menu dropdown-menu-right">
+              <span class="dropdown-item">Logged in as<br/><strong>{{ view.request.user.username }}</strong></span>
+              <a class="dropdown-item" href="{% url "base_userprofile" %}">{% octicon "person" height="25" %} User profile</a>
+              <a class="dropdown-item" href="{% url "account_logout" %}">{% octicon "sign-out" height="25" %} Log out</a>
+            </span>
+          </span>
+        {% else %}
+          <a href="{% url "account_login" %}">
+            <span class="text-light" data-toggle="tooltip" data-placement="bottom" title="Login with Github account">
+              {% octicon "sign-in" height="25" %} with {% octicon "mark-github" height="25" %}
+            </span>
+          </a>
+        {% endif %}
+      </div>
+    </nav>
+
+    <div style="margin:0.5em">
+      {% block body %}{% endblock %}
+    </div>
+
+    <hr/>
+    <span class="float-left small">
+      <a href="{% url 'base:impressum' %}#impressum">Impressum</a> /
+      <a href="{% url 'base:impressum' %}#disclaimer">Disclaimer</a> /
+      <a href="{% url 'base:impressum' %}#datenschutz">Datenschutz</a>
+    </span>
+    <span class="float-right small">
+    </span>
+    <div id="TOASTS" class="fixed-top" style="margin: 1em"></div>
+  </body>
+</html>

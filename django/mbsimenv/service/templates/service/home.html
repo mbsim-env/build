@@ -1,0 +1,273 @@
+{% extends "base/base.html" %}
+
+{% load static %}
+{% load octicons %}
+
+{% block title %}Official Build System of the MBSim-Environment{% endblock %}
+
+
+{% block head %}
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
+<link rel="alternate" type="application/atom+xml" title="MBSim-Env Build-System News" href="{% url "service:feed" %}"/>
+{% endblock %}
+
+{% block body %}
+
+<h1>Official Build System of the <i>MBSim-Environment</i></h1>
+
+<h2 style="margin-top: 1em;">{% octicon "dashboard" height="38" %}&nbsp;Dashboard <small>Current Daily Build Status</small></h2>
+<table style="width:auto;" class="table table-striped table-hover table-bordered table-sm">
+  <thead>
+    <tr>
+      <th>{% octicon "kebab-vertical" %}&nbsp;Build Type</th>
+      <th>{% octicon "kebab-horizontal" %}&nbsp;Variant</th>
+      <th>{% octicon "stop" %}&nbsp;Failed</th>
+    </tr>
+  </thead>
+  <tbody>
+    <tr>
+      <td><i class="fa fa-linux"></i>&nbsp;{% octicon "sync" %}&nbsp;linux64-ci</td>
+      <td>{% octicon "gear" %}&nbsp;build</td>
+      <td class="text-nowrap">
+        <a href="{% url "builds:current_buildtype" "linux64-ci" %}">
+          <img alt="image" src="{% url "service:current_build_nrfailed" "linux64-ci" %}"/>/<img alt="image" src="{% url "service:current_build_nrall" "linux64-ci" %}"/>
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><i class="fa fa-linux"></i>&nbsp;{% octicon "sync" %}&nbsp;linux64-ci</td>
+      <td>{% octicon "beaker" %}&nbsp;examples</td>
+      <td class="text-nowrap">
+        <a href="{% url "runexamples:current_buildtype" "linux64-ci" %}">
+          <img alt="image" src="{% url "service:current_runexample_nrfailed" "linux64-ci" %}"/>/<img alt="image" src="{% url "service:current_runexample_nrall" "linux64-ci" %}"/>
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><i class="fa fa-linux"></i>&nbsp;{% octicon "bug" %}&nbsp;linux64-dailydebug</td>
+      <td>{% octicon "gear" %}&nbsp;build</td>
+      <td class="text-nowrap">
+        <a href="{% url "builds:current_buildtype" "linux64-dailydebug" %}">
+          <img alt="image" src="{% url "service:current_build_nrfailed" "linux64-dailydebug" %}"/>/<img alt="image" src="{% url "service:current_build_nrall" "linux64-dailydebug" %}"/>
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><i class="fa fa-linux"></i>&nbsp;{% octicon "bug" %}&nbsp;linux64-dailydebug</td>
+      <td>{% octicon "beaker" %}&nbsp;examples</td>
+      <td class="text-nowrap">
+        <a href="{% url "runexamples:current_buildtype" "linux64-dailydebug" %}">
+          <img alt="image" src="{% url "service:current_runexample_nrfailed" "linux64-dailydebug" %}"/>/<img alt="image" src="{% url "service:current_runexample_nrall" "linux64-dailydebug" %}"/>
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><i class="fa fa-linux"></i>&nbsp;{% octicon "bug" %}&nbsp;linux64-dailydebug</td>
+      <td><span class="fa fa-umbrella"></span>&nbsp;coverage</td>
+      <td class="text-nowrap">
+        <a href="{% url "runexamples:current_buildtype" "linux64-dailydebug" %}#coverage">
+          <img alt="image" src="{% url "service:current_runexample_coveragerate" "linux64-dailydebug" %}"/>
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><i class="fa fa-linux"></i>&nbsp;{% octicon "bug" %}&nbsp;linux64-dailydebug</td>
+      <td>{% octicon "beaker" %}&nbsp;examples-valgrind</td>
+      <td class="text-nowrap">
+        <a href="{% url "runexamples:current_buildtype" "linux64-dailydebug-valgrind" %}">
+          <img alt="image" src="{% url "service:current_runexample_nrfailed" "linux64-dailydebug-valgrind" %}"/>/<img alt="image" src="{% url "service:current_runexample_nrall" "linux64-dailydebug-valgrind" %}"/>
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><i class="fa fa-linux"></i>&nbsp;{% octicon "bug" %}&nbsp;linux64-dailydebug</td>
+      <td><span class="fa fa-umbrella"></span>&nbsp;coverage-valgrind</td>
+      <td class="text-nowrap">
+        <a href="{% url "runexamples:current_buildtype" "linux64-dailydebug-valgrind" %}#coverage">
+          <img alt="image" src="{% url "service:current_runexample_coveragerate" "linux64-dailydebug-valgrind" %}"/>
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><i class="fa fa-linux"></i>&nbsp;<i class="fa fa-hospital-o"></i>&nbsp;linux64-dailyrelease</td>
+      <td>{% octicon "gear" %}&nbsp;build</td>
+      <td class="text-nowrap">
+        <a href="{% url "builds:current_buildtype" "linux64-dailyrelease" %}">
+          <img alt="image" src="{% url "service:current_build_nrfailed" "linux64-dailyrelease" %}"/>/<img alt="image" src="{% url "service:current_build_nrall" "linux64-dailyrelease" %}"/>
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><i class="fa fa-linux"></i>&nbsp;<i class="fa fa-hospital-o"></i>&nbsp;linux64-dailyrelease</td>
+      <td>{% octicon "beaker" %}&nbsp;examples</td>
+      <td>
+        <a href="{% url "runexamples:current_buildtype" "linux64-dailyrelease" %}">
+          <img alt="image" src="{% url "service:current_runexample_nrfailed" "linux64-dailyrelease" %}"/>/<img alt="image" src="{% url "service:current_runexample_nrall" "linux64-dailyrelease" %}"/>
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><i class="fa fa-windows"></i>&nbsp;<i class="fa fa-hospital-o"></i>&nbsp;win64-dailyrelease</td>
+      <td>{% octicon "gear" %}&nbsp;build</td>
+      <td class="text-nowrap">
+        <a href="{% url "builds:current_buildtype" "win64-dailyrelease" %}">
+          <img  alt="image" src="{% url "service:current_build_nrfailed" "win64-dailyrelease" %}"/>/<img alt="image" src="{% url "service:current_build_nrall" "win64-dailyrelease" %}"/>
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><i class="fa fa-windows"></i>&nbsp;<i class="fa fa-hospital-o"></i>&nbsp;win64-dailyrelease</td>
+      <td>{% octicon "beaker" %}&nbsp;examples</td>
+      <td class="text-nowrap">
+        <a href="{% url "runexamples:current_buildtype" "win64-dailyrelease" %}">
+          <img alt="image" src="{% url "service:current_runexample_nrfailed" "win64-dailyrelease" %}"/>/<img alt="image" src="{% url "service:current_runexample_nrall" "win64-dailyrelease" %}"/>
+        </a>
+      </td>
+    </tr>
+    <tr>
+      <td><i class="fa fa-linux"></i>&nbsp;<i class="fa fa-windows"></i>&nbsp;</td>
+      <td>{% octicon "question" %}&nbsp;manuals</td>
+      <td class="text-nowrap">
+        <a href="{% url "service:home" %}#manuals">
+          <img alt="image" src="{% url "service:manuals_nrfailed" %}"/>/<img alt="image" src="{% url "service:manuals_nrall" %}"/>
+        </a>
+      </td>
+    </tr>
+  </tbody>
+</table>
+
+<h2 style="margin-top: 1em;">{% octicon "desktop-download" height="38" %}&nbsp;Release Downloads</h2>
+<div class="card border-secondary">
+  <div class="card-body">
+    <a href="{% url 'service:releases' %}">Tested releases are available here</a>
+  </div>
+</div>
+
+<h2 style="margin-top: 1em;">{% octicon "question" height="38" %}</span>&nbsp;Documentation</h2>
+
+<h3 id="manuals">Manuals</h3>
+<ul class="list-group">
+  {% for manual in manuals %}
+    <li class="list-group-item">
+      <a href="{% url "base:fileDownloadFromDB" "service" "Manual" manual.id "manualFile" %}"><span class="font-italic">{{manual.manualName}}</span></a>
+      <a href="{% url "base:textFieldFromDB" "service" "Manual" manual.id "resultOutput" %}">
+        <span class="text-{{manual.resultOK|yesno:"success,danger"}}">
+          {% if manual.resultOK %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}build
+          {{ manual.resultOK|yesno:"passed,failed" }}
+        </span>
+      </a>
+    </li>
+  {% endfor %}
+</ul>
+
+<h3>XML Reference</h3>
+<ul class="list-group">
+  <li class="list-group-item">
+    <a href="{% static "xmlReference/http___www_mbsim-env_de_MBSimXML/mbsimxml.html" %}"><span class="font-italic">MBSim-Env XML Reference Manual</span></a>
+  </li>
+</ul>
+
+<h3>C++ API Reference</h3>
+<ul class="list-group">
+  <li class="list-group-item"><a href="{% static "doxygenReference/fmatvec/index.html" %}">fmatvec</a></li>
+  <li class="list-group-item"><a href="{% static "doxygenReference/hdf5serie/index.html" %}">HDF5Serie</a></li>
+  <li class="list-group-item"><a href="{% static "doxygenReference/mbsim/index.html" %}">MBSim (kernel)</a></li>
+  <li class="list-group-item"><a href="{% static "doxygenReference/mbsimcontrol/index.html" %}">MBSim Control module</a></li>
+  <li class="list-group-item"><a href="{% static "doxygenReference/mbsimelectronics/index.html" %}">MBSim Electronics module</a></li>
+  <li class="list-group-item"><a href="{% static "doxygenReference/mbsimflexiblebody/index.html" %}">MBSim Flexible Body module</a></li>
+  <li class="list-group-item"><a href="{% static "doxygenReference/mbsimhydraulics/index.html" %}">MBSim Hydraulics module</a></li>
+  <li class="list-group-item"><a href="{% static "doxygenReference/mbsiminterface/index.html" %}">MBSim Interface module</a></li>
+  <li class="list-group-item"><a href="{% static "doxygenReference/mbsimphysics/index.html" %}">MBSim Physics module</a></li>
+  <li class="list-group-item"><a href="{% static "doxygenReference/mbxmlutils/index.html" %}">MBXMLUtils</a></li>
+  <li class="list-group-item"><a href="{% static "doxygenReference/openmbvcppinterface/index.html" %}">OpenMBV C++ Interface</a></li>
+</ul>
+
+<h3>Papers</h3>
+<ul class="list-group">
+  <li class="list-group-item">
+    <a href="{% static "papers/IMSD10Paper.pdf" %}">IMSD 2010: <span class="font-italic">Analysing Dynamical Phenomenons: Introduction to MBSim</span></a>
+  </li>
+</ul>
+
+<h2 style="margin-top: 1em;"><i class="fa fa-linux"></i>&nbsp;{% octicon "bug" height="38" %}&nbsp;Daily Linux64 Debug Build</h2>
+
+<div class="card border-info">
+  <div class="card-header bg-info">
+    {% octicon "sync" %}&nbsp;OS: Linux64; Build-Type: debug, not optimized
+  </div>
+  <div class="card-body">
+    <p><a href="{% url "builds:current_buildtype" "linux64-dailydebug" %}">Build report</a></p>
+    <p><a href="{% url "runexamples:current_buildtype" "linux64-dailydebug" %}">Examples report (including result compare)</a></p>
+    <p><a href="{% url "runexamples:current_buildtype" "linux64-dailydebug" %}#coverage">Code coverage for above examples</a></p>
+    <p><a href="{% url "runexamples:current_buildtype" "linux64-dailydebug-valgrind" %}">Valgrind examples report</a></p>
+    <p><a href="{% url "runexamples:current_buildtype" "linux64-dailydebug-valgrind" %}#coverage">Code coverage for above valgrind examples</a></p>
+  </div>
+</div>
+
+<h2 style="margin-top: 1em;"><i class="fa fa-linux"></i>&nbsp;<i class="fa fa-hospital-o"></i>&nbsp;Daily Linux64 Release Build</h2>
+<div class="card border-info">
+  <div class="card-header bg-info">
+    {% octicon "sync" %}&nbsp;OS: Linux64; Build-Type: release, optimized
+  </div>
+  <div class="card-body">
+    <p><a href="{% url "builds:current_buildtype" "linux64-dailyrelease" %}">Build report</a></p>
+    <p><a href="{% url "runexamples:current_buildtype" "linux64-dailyrelease" %}">Examples report (only some examples)</a></p>
+  </div>
+</div>
+
+<h2 style="margin-top: 1em;"><i class="fa fa-windows"></i>&nbsp;<i class="fa fa-hospital-o"></i>&nbsp;Daily Win64 Release Build</h2>
+<div class="card border-info">
+  <div class="card-header bg-info">
+    {% octicon "sync" %}&nbsp;OS: Win64; Build-Type: release, optimized
+  </div>
+  <div class="card-body">
+    <p><a href="{% url "builds:current_buildtype" "win64-dailyrelease" %}">Build report</a></p>
+    <p><a href="{% url "runexamples:current_buildtype" "win64-dailyrelease" %}">Examples report (only some examples)</a></p>
+  </div>
+</div>
+
+<h2 style="margin-top: 1em;"><i class="fa fa-linux"></i>&nbsp;{% octicon "bug" height="38" %}&nbsp;Continuous Integration (CI) <small>Linux64 Debug Build</small></h2>
+<div class="card border-info">
+  <div class="card-header bg-info">
+    {% octicon "sync" %}&nbsp;OS: Linux64; Build-Type: debug, nt optimized
+  </div>
+  <div class="card-body">
+    <p>{% octicon "pencil" %}&nbsp;<a href="{% url "service:cibranches" %}">Edit branches used for CI</a></p>
+    <p><a href="{% url "builds:current_buildtype" "linux64-ci" %}">Build report</a></p>
+    <p><a href="{% url "runexamples:current_buildtype" "linux64-ci" %}">Examples report (only some examples)</a></p>
+  </div>
+</div>
+
+<h2 style="margin-top: 1em;">{% octicon "rss" height="38" %}&nbsp;Build/Runexample Feeds</h2>
+<div class="card border-secondary">
+  <div class="card-body">
+    A news feed of all failures of the build system is available via auto discovery
+    of this page and <a href="{% url "service:feed" %}">{% octicon "rss" %}&nbsp;here at this link</a>.
+  </div>
+</div>
+
+<h2 style="margin-top: 1em;">{% octicon "file" height="38" %}&nbsp;Source Code</h2>
+<div class="card border-secondary">
+  <div class="card-body">
+    Git repos of all MBSim-Env projects are hosted on
+    <a href="https://github.com/mbsim-env/">{% octicon "logo-github" %}</a>
+  </div>
+</div>
+
+<h2 style="margin-top: 1em;">{% octicon "info" height="38" %}&nbsp;Internals</h2>
+<div class="card border-secondary">
+  <div class="card-body">
+    <small>
+      <ul class="list-group">
+        {% if info %}
+          <li class="list-group-item">Build Info:<br/><pre>{{ info.shortInfo }}</pre></li>
+          <li class="list-group-item">Build
+            <a href="{% url 'base:textFieldFromDB' 'service' 'Info' info.id 'longInfo' %}">log file</a></li>
+        {% endif %}
+        <li class="list-group-item">Django admin <a href="{% url "admin:index" %}">page</a></li>
+      </ul>
+    </small>
+  </div>
+</div>
+
+{% endblock %}

@@ -1,0 +1,101 @@
+{% extends "base/base.html" %}
+
+{% load static %}
+{% load octicons %}
+
+{% block title %}MBSim runexamples Results: {{run.buildType}}{% endblock %}
+
+{% block body %}
+<script src="{% static 'runexamples/scripts.js' %}"> </script>
+<script>
+  "use strict";
+  $(document).ready(function() {
+    initExampleTable("{% url 'runexamples:datatable_example' run.id %}");
+  });
+</script>
+<h1>MBSim runexamples Results: <small>{{run.buildType}}</small></h1>
+<dl class="row">
+  <dt class="col-2">Called Command</dt>
+  <dd class="col-10">
+    <div class="dropdown">
+      <button class="btn btn-secondary btn-xs" type="button" id="calledCommandID" data-toggle="dropdown">show {% octicon "triangle-down" %}</button>
+      <code class="dropdown-menu" style="padding-left: 0.5em; padding-right: 0.5em;">
+        {{run.command}}
+      </code>
+    </div>
+  </dd>
+  <dt class="col-2">Start time</dt><dd class="col-10 DATETIME">{{run.startTime|date:'c'}}</dd>
+  <dt class="col-2">End time</dt>
+  <dd class="col-10">
+    {% if run.endTime is None %}
+      <span class="text-danger">still running or aborted</span>
+    {% else %}
+      <span class="DATETIME">{{run.endTime|date:'c'}}</span>
+    {% endif %}
+  </dd>
+  <dt class="col-2">Navigate</dt>
+  <dd class="col-10">
+    <a class="btn btn-info btn-xs" href="?previous=1">
+      {% octicon "chevron-left" %} previous
+    </a>
+    <a class="btn btn-info btn-xs" href="?next=1">
+      {% octicon "chevron-right" %} next
+    </a>
+    <a class="btn btn-info btn-xs" href="?current">
+      {% octicon "chevron-right" %}{% octicon "chevron-right" %} current
+    </a>
+    {% if run.build_run %}
+      <a class="btn btn-info btn-xs" href="{% url "builds:run" run.build_run.id %}">
+        {% octicon "chevron-up" %} build
+      </a>
+    {% endif %}
+  </dd>
+</dl>
+<hr/>
+<h2>Examples</h2>
+<p>
+  {% octicon "info" %}A example with grey text is a example which may fail and is therefore not reported as an error in the Atom feed.
+</p>
+<table id="exampleTable" class="table table-striped table-hover table-bordered table-sm">
+  <thead>
+    <tr>
+      <th>{% octicon "file-directory" %}&nbsp;Example</th>
+      <th>{% octicon "code" %}&nbsp;Run</th>
+      <th>{% octicon "clock" %}&nbsp;Time</th>
+      <th>{% octicon "clock" %}&nbsp;Ref. Time</th>
+      <th>{% octicon "browser" %}&nbsp;GUI Test</th>
+      <th>
+        <span class="float-left">{% octicon "search" %}&nbsp;Ref.</span>
+        {% if enableUpdate %}
+          <span class="float-right">[update]</span>
+        {% endif %}
+      </th>
+      <th>{% octicon "device-desktop" %}&nbsp;Webapp</th>
+      <th>{% octicon "report" %}&nbsp;Depr.</th>
+      <th>{% octicon "note" %}&nbsp;XML out.</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+
+{% if run.coverageOK %}
+  <h2 id="coverage">Code Coverage</h2>
+  <div class="alert alert-{{ run.coverageOK|yesno:"success,danger" }}" role="alert">
+    <span class="text-{{ run.coverageOK|yesno:"success,danger" }}">
+      {% if run.coverageOK %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}
+    </span>
+    <a href="{% url "base:textFieldFromDB" "runexamples" "Run" run.id coverageOutput %}">
+      {{ run.coverageOK|yesno:"Passed,Failed" }}: <span class="badge badge-secondary">{{run.coverageRate}}% coverage</span>
+    </a>
+    <ul class="list-group">
+      {% for repo in repoList %}
+        {% cycle run.build_run.fmatvecUpdateCommitID run.build_run.hdf5serieUpdateCommitID run.build_run.openmbvUpdateCommitID run.build_run.mbsimUpdateCommitID as repoUpdateCommitID silent %}
+        <li class="list-group-item">
+          <a href="https://codecov.io/gh/mbsim-env/{{repo}}/tree/{{repoUpdateCommitID}}">{{repo}}</a>
+        </li>
+      {% endfor %}
+    </ul>
+  </div>
+{% endif %}
+{% endblock %}
