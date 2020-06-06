@@ -69,7 +69,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
 # config gcc7 => do not use the "exec form" form now on use the "shell form"!!!!!
 SHELL ["scl", "enable", "devtoolset-7"]
 RUN npm install mathjax-node
-RUN pip3 install h5py sympy django
+RUN pip3 install h5py sympy django django-octicons
 
 
 
@@ -236,8 +236,8 @@ ENV PATH=/mbsim-env/mbsim/examples:/mbsim-env/build/misc:$PATH \
 
 # Add user dockeruser, create volumes and set volume ownership and permissions
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
-  mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state && \
-  chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state
+  mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state /databasemedia && \
+  chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state /databasemedia
 
 # add g++/c++ to cache dir (its not added automatically since g++ is not installed since scl is used
 RUN ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/g++ && ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/c++

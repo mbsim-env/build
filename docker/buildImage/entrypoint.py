@@ -12,6 +12,7 @@ import re
 import time
 import django
 sys.path.append("/context/mbsimenv")
+import builds
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -25,7 +26,7 @@ argparser.add_argument("--openmbvBranch", type=str, default="master", help="open
 argparser.add_argument("--mbsimBranch", type=str, default="master", help="mbsim branch")
 argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs to run in parallel")
 argparser.add_argument('--forceBuild', action="store_true", help="Passed to buily.py if existing")
-#mfmfargparser.add_argument("--valgrindExamples", action="store_true", help="Run examples also with valgrind.")
+argparser.add_argument("--valgrindExamples", action="store_true", help="Run examples also with valgrind.")
 #mfmfargparser.add_argument("--updateReferences", nargs='*', default=[], help="Update these references.")
 
 args=argparser.parse_args()
@@ -69,9 +70,9 @@ if not os.path.isdir("/mbsim-env/openmbv"):
 if not os.path.isdir("/mbsim-env/mbsim"):
   subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/mbsim.git"], cwd="/mbsim-env",
     stdout=sys.stdout, stderr=sys.stderr)
-#mfmfif args.valgrindExamples and not os.path.isdir("/mbsim-env/mbsim-valgrind"):
-#mfmf  subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/mbsim.git", "mbsim-valgrind"], cwd="/mbsim-env",
-#mfmf    stdout=sys.stdout, stderr=sys.stderr)
+if args.valgrindExamples and not os.path.isdir("/mbsim-env/mbsim-valgrind"):
+  subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/mbsim.git", "mbsim-valgrind"], cwd="/mbsim-env",
+    stdout=sys.stdout, stderr=sys.stderr)
 
 # compile flags
 if args.buildType == "linux64-ci" or args.buildType == "linux64-dailydebug":
@@ -144,6 +145,7 @@ localRet=subprocess.call(
   "COIN_LIBS=-L/3rdparty/local/lib64 -lCoin", "SOQT_CFLAGS=-I/3rdparty/local/include",
   "SOQT_LIBS=-L/3rdparty/local/lib64 -lSoQt", "--passToRunexamples"]+RUNEXAMPLESARGS+RUNEXAMPLESFILTER,
   stdout=sys.stdout, stderr=sys.stderr)
+buildRunID=builds.models.Run.objects.getCurrent(args.buildType).id
 if localRet==255:
   sys.exit(0)
 if localRet!=0:
@@ -151,50 +153,33 @@ if localRet!=0:
   print("build.py failed.")
   sys.stdout.flush()
 
-#mfmfif args.valgrindExamples:
-#mfmf  # run examples with valgrind
-#mfmf  
-#mfmf  # set github statuses
-#mfmf  timeID=datetime.datetime.utcnow()
-#mfmf  timeID=datetime.datetime(timeID.year, timeID.month, timeID.day, timeID.hour, timeID.minute, timeID.second)
-#mfmf  with codecs.open("/mbsim-report/report/result_current/repoState.json", "r", encoding="utf-8") as f:
-#mfmf    commitidfull=json.load(f)
-#mfmf  build.setStatus(statusAccessToken, commitidfull, "pending", timeID,
-#mfmf        "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
-#mfmf        args.buildType+"-valgrind")
-#mfmf  # update
-#mfmf  CURDIR=os.getcwd()
-#mfmf  os.chdir("/mbsim-env/mbsim-valgrind/examples")
-#mfmf  if subprocess.call(["git", "pull"])!=0:
-#mfmf    ret=ret+1
-#mfmf    print("git pull of mbsim-valgrind/examples failed.")
-#mfmf    sys.stdout.flush()
-#mfmf  valgrindEnv=os.environ
-#mfmf  valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
-#mfmf  # build
-#mfmf  coverage = ["--coverage", "/mbsim-env:-build:/mbsim-env/local:/mbsim-env/mbsim-valgrind/examples"] if "--coverage" in ARGS else []
-#mfmf  localRet=subprocess.call(["python3", "./runexamples.py", "--timeID", timeID.isoformat()+"Z", "--rotate", str(ROTATE), "-j", str(args.jobs)]+coverage+["--reportOutDir",
-#mfmf            "/mbsim-report/report/runexamples_valgrind_report", "--url",
-#mfmf            "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report",
-#mfmf            "--buildSystemRun", "--checkGUIs", "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
-#mfmf            "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh --child-silent-after-fork=yes --num-callers=300 --gen-suppressions=all "+
-#mfmf            "--suppressions=/mbsim-build/build/misc/valgrind-mbsim.supp "+
-#mfmf            "--suppressions=/mbsim-build/build/misc/valgrind-python.supp "+
-#mfmf            "--leak-check=full", "--disableCompare", "--disableValidate",
-#mfmf            "--buildType", args.buildType+"-valgrind"]+RUNEXAMPLESFILTER
-#mfmf            , env=valgrindEnv)
-#mfmf  if localRet!=0:
-#mfmf    ret=ret+1
-#mfmf    print("running examples with valgrind failed.")
-#mfmf    sys.stdout.flush()
-#mfmf  os.chdir(CURDIR)
-#mfmf  # set github statuses
-#mfmf  endTime=datetime.datetime.now()
-#mfmf  endTime=datetime.datetime(endTime.year, endTime.month, endTime.day, endTime.hour, endTime.minute, endTime.second)
-#mfmf  linkName=os.readlink("/mbsim-report/report/runexamples_valgrind_report/result_current")
-#mfmf  currentID=int(re.sub(".*result_([0-9]+)$", "\\1", linkName))
-#mfmf  build.setStatus(statusAccessToken, commitidfull, "success" if ret==0 else "failure", timeID,
-#mfmf        "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report/runexamples_valgrind_report/result_%010d/index.html"%(currentID),
-#mfmf        args.buildType+"-valgrind", endTime)
+if args.valgrindExamples:
+  # run examples with valgrind
+  
+  # update
+  CURDIR=os.getcwd()
+  os.chdir("/mbsim-env/mbsim-valgrind/examples")
+  if subprocess.call(["git", "pull"])!=0:
+    ret=ret+1
+    print("git pull of mbsim-valgrind/examples failed.")
+    sys.stdout.flush()
+  valgrindEnv=os.environ.copy()
+  valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
+  # build
+  localRet=subprocess.call(["python3", "/context/mbsimenv/runexamples.py", "--checkGUIs", "--disableCompare", "--disableValidate",
+    "--buildType", args.buildType+"-valgrind", "--buildSystemRun", "-j", str(args.jobs),
+    "--buildRunID", str(buildRunID)]+\
+    (["--coverage", "/mbsim-env:-build:/mbsim-env/local:/mbsim-env/mbsim-valgrind/examples"] if "--coverage" in ARGS else [])+\
+    ["--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
+    "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh "+\
+    "--child-silent-after-fork=yes --num-callers=300 --gen-suppressions=all "+\
+    "--suppressions=/mbsim-build/build/misc/valgrind-mbsim.supp "+\
+    "--suppressions=/mbsim-build/build/misc/valgrind-python.supp --leak-check=full"]+RUNEXAMPLESFILTER
+    , env=valgrindEnv)
+  if localRet!=0:
+    ret=ret+1
+    print("running examples with valgrind failed.")
+    sys.stdout.flush()
+  os.chdir(CURDIR)
 
 sys.exit(ret)

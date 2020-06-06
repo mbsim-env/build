@@ -58,15 +58,12 @@ user.set_password(mbsimenvSecrets.getSecrets()["djangoAdminPassword"])
 user.save()
 
 # create github app
-sa=allauth.socialaccount.models.SocialApp.objects.get(provider="github")
-if sa is None:
-  sa=allauth.socialaccount.models.SocialApp()
-  sa.provider="github"
-  sa.name="MBSim-Environment Build Service"
-  sa.save()
-  sa.sites.add(django.contrib.sites.models.Site.objects.get(id=1))
+sa, _=allauth.socialaccount.models.SocialApp.objects.get_or_create(provider="github")
+sa.name="MBSim-Environment Build Service"
 sa.client_id=mbsimenvSecrets.getSecrets()["githubAppClientID"]
 sa.secret=mbsimenvSecrets.getSecrets()["githubAppSecret"]
+sa.save()
+sa.sites.add(django.contrib.sites.models.Site.objects.get(id=1))
 sa.save()
 
 # create master, master, master, master in cibranches

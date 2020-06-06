@@ -20,7 +20,10 @@ import importlib # mfmf use something different for a minimal install
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
-MEDIA_ROOT = os.path.join(BASE_DIR, "media_root")
+if "postgresPassword" not in mbsimenvSecrets.getSecrets() and not os.path.isfile("/.dockerenv"):
+  MEDIA_ROOT = os.path.join(BASE_DIR, "media_root")
+else:
+  MEDIA_ROOT = "/databasemedia"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -36,7 +39,7 @@ if DEBUG:
   l.setLevel(logging.DEBUG)
   l.addHandler(logging.StreamHandler())
 
-ALLOWED_HOSTS = ["home.mbsim-env.de", 'localhost', '127.0.0.1', '[::1]']
+ALLOWED_HOSTS = [os.environ.get("MBSIMENVSERVERNAME", ""), 'localhost', '127.0.0.1', '[::1]']
 
 
 # Application definition

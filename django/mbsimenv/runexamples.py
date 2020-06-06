@@ -142,16 +142,6 @@ if not args.buildSystemRun:
 
 # the main routine being called ones
 def main():
-  codecovToken=[]
-  if "FMATVEC_CODECOVTOKEN"   in os.environ: codecovToken["fmatvec"]=os.environ["FMATVEC_CODECOVTOKEN"];
-  if "HDF5SERIE_CODECOVTOKEN" in os.environ: codecovToken["fmatvec"]=os.environ["HDF5SERIE_CODECOVTOKEN"];
-  if "OPENMBV_CODECOVTOKEN"   in os.environ: codecovToken["fmatvec"]=os.environ["OPENMBV_CODECOVTOKEN"];
-  if "MBSIM_CODECOVTOKEN"     in os.environ: codecovToken["fmatvec"]=os.environ["MBSIM_CODECOVTOKEN"];
-  os.environ["FMATVEC_CODECOVTOKEN"]=""
-  os.environ["HDF5SERIE_CODECOVTOKEN"]=""
-  os.environ["OPENMBV_CODECOVTOKEN"]=""
-  os.environ["MBSIM_CODECOVTOKEN"]=""
-
   # check arguments
   if not (args.action=="report" or args.action=="copyToReference" or
           args.action=="updateReference" or args.action.startswith("updateReference=") or
@@ -238,6 +228,10 @@ def main():
   exRun.startTime=django.utils.timezone.now()
   exRun.save()
 
+  # update status on commitid
+  if args.buildSystemRun:
+    setGithubStatus(exRun, "pending")
+
   mainRet=0
   failedExamples=[]
 
@@ -301,6 +295,9 @@ def main():
   exRun.endTime=django.utils.timezone.now()
   exRun.save()
 
+  # update status on commitid
+  if args.buildSystemRun:
+    setGithubStatus(exRun, "success" if failedExamples==0 and coverageFailed==0 else "failure")
 
   # print result summary to console
   if len(failedExamples)>0:
@@ -316,6 +313,42 @@ def main():
 #####################################################################################
 # from now on only functions follow and at the end main is called
 #####################################################################################
+
+
+
+def setGithubStatus(run, state):
+  import requests
+  data={
+    "state": state,
+    "target_url": "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[run.id]),
+    "context": "runexamples/%s/%s/%s/%s/%s"%(run.buildType, run.build_run.fmatvecBranch, run.build_run.hdf5serieBranch,
+                                                            run.build_run.openmbvBranch, run.build_run.mbsimBranch),
+  }
+  if state=="pending":
+    data["description"]="Runexamples started at %s"%(run.startTime.isoformat()+"Z")
+  elif state=="failure":
+    data["description"]="Runexamples failed after %.1f min"%((run.endTime-run.startTime).total_seconds()/60)
+  elif state=="success":
+    data["description"]="Runexamples passed after %.1f min"%((run.endTime-run.startTime).total_seconds()/60)
+  else:
+    raise RuntimeError("Unknown state "+state+" provided")
+  for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
+    # call github api
+    url='https://api.github.com/repos/mbsim-env/'+repo+'/statuses/'+getattr(run.build_run, repo+"UpdateCommitID")
+    if "githubStatusAccessToken" not in mbsimenvSecrets.getSecrets():
+      print("Warning; Skipping post request to\n"+url+"\nwith data\n"+json.dumps(data, indent=2))
+      sys.stdout.flush()
+      return
+    headers={'Authorization': 'token '+mbsimenvSecrets.getSecrets()["githubStatusAccessToken"],
+             'Accept': 'application/vnd.github.v3+json'}
+    response=requests.post(url, headers=headers, data=json.dumps(data))
+    if response.status_code!=201:
+      print("Warning: failed to create github status on repo "+repo+":")
+      if "message" in response.json(): print(response.json()["message"])
+      if "errors" in response.json():
+        for e in response.json()['errors']:
+          if 'message' in e: print(e["message"])
+      sys.stdout.flush()
 
 
 
@@ -1182,13 +1215,13 @@ def coverage(exRun):
 
   with tempfile.TemporaryDirectory() as tempDir:
     # run lcov: init counters
-    ret=ret+abs(base.helper.subprocessCall(["lcov", "-c", "--no-external", "-i", "--ignore-errors", "graph", "-o", pj(tempDir.name, "cov.trace.base")]+dirs, lcovFD))
+    ret=ret+abs(base.helper.subprocessCall(["lcov", "-c", "--no-external", "-i", "--ignore-errors", "graph", "-o", pj(tempDir, "cov.trace.base")]+dirs, lcovFD))
     # run lcov: count
-    ret=ret+abs(base.helper.subprocessCall(["lcov", "-c", "--no-external", "-o", pj(tempDir.name, "cov.trace.test")]+dirs, lcovFD))
+    ret=ret+abs(base.helper.subprocessCall(["lcov", "-c", "--no-external", "-o", pj(tempDir, "cov.trace.test")]+dirs, lcovFD))
     # run lcov: combine counters
-    ret=ret+abs(base.helper.subprocessCall(["lcov", "-a", pj(tempDir.name, "cov.trace.base"), "-a", pj(tempDir.name, "cov.trace.test"), "-o", pj(tempDir.name, "cov.trace.total")], lcovFD))
+    ret=ret+abs(base.helper.subprocessCall(["lcov", "-a", pj(tempDir, "cov.trace.base"), "-a", pj(tempDir, "cov.trace.test"), "-o", pj(tempDir, "cov.trace.total")], lcovFD))
     # run lcov: remove counters
-    ret=ret+abs(base.helper.subprocessCall(["lcov", "-r", pj(tempDir.name, "cov.trace.total"),
+    ret=ret+abs(base.helper.subprocessCall(["lcov", "-r", pj(tempDir, "cov.trace.total"),
       "*/mbsim*/kernel/swig/*", "*/openmbv*/openmbvcppinterface/swig/java/*", # SWIG generated
       "*/openmbv*/openmbvcppinterface/swig/octave/*", "*/openmbv*/openmbvcppinterface/swig/python/*", # SWIG generated
       "*/openmbv*/mbxmlutils/mbxmlutils/*", # SWIG generated
@@ -1197,7 +1230,7 @@ def coverage(exRun):
       "*.moc.cc", # mbsim generated
       "*/hdf5serie*/h5plotserie/h5plotserie/*", "*/openmbv*/openmbv/openmbv/*", "*/mbsim*/mbsimgui/mbsimgui/*", # GUI (untested)
       "*/mbsim*/modules/mbsimInterface/mbsimInterface/*", # other untested features
-      "-o", pj(tempDir.name, "cov.trace.final")], lcovFD))
+      "-o", pj(tempDir, "cov.trace.final")], lcovFD))
 
     # collect all header files in repos and hash it
     repoHeader={}
@@ -1216,7 +1249,7 @@ def coverage(exRun):
           if h in repoHeader:
             headerMap.append((pj(root, f), repoHeader[h]))
     # replace header map in lcov trace file
-    for line in fileinput.FileInput(pj(tempDir.name, "cov.trace.final"), inplace=1):
+    for line in fileinput.FileInput(pj(tempDir, "cov.trace.final"), inplace=1):
       if line.startswith("SF:"):
         for hm in headerMap:
           line=line.replace("SF:"+hm[0], "SF:"+hm[1])
@@ -1233,20 +1266,20 @@ def coverage(exRun):
     # upload to codecov
     for repo in repos:
       # run lcov: remove all counters except one repo
-      ret=ret+abs(base.helper.subprocessCall(["lcov", "-r", pj(tempDir.name, "cov.trace.final")]+\
+      ret=ret+abs(base.helper.subprocessCall(["lcov", "-r", pj(tempDir, "cov.trace.final")]+\
         list(map(lambda x: "/"+x+"/*", filter(lambda x: x!=repo, repos)))+\
-        ["-o", pj(tempDir.name, "cov.trace.final."+repo)], lcovFD))
+        ["-o", pj(tempDir, "cov.trace.final."+repo)], lcovFD))
       # replace file names in lcov trace file
-      for line in fileinput.FileInput(pj(tempDir.name, "cov.trace.final."+repo), inplace=1):
+      for line in fileinput.FileInput(pj(tempDir, "cov.trace.final."+repo), inplace=1):
         if line.startswith("SF:/mbsim-env/"+repo+"/"):
           line=line.replace("SF:/mbsim-env/"+repo+"/", "SF:/")
         print(line, end="")
       # upload
       commitID=getattr(exRun.build_run, repo+"UpdateCommitID")
       response=requests.post("https://codecov.io/upload/v4?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
-        (commitID, codecovToken[repo], exRun.build_run.id, exRun.id,
-         urllib.parse.quote(django.urls.reverse("runexamples:run", args=[exRun.id])),
-         "valgrind" if "valgrind" in args.buildType else "normal"),
+        (commitID, mbsimenvSecrets.getSecrets()["codecovUploadToken"][repo], exRun.build_run.id, exRun.id,
+         urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
+         os.environ['MBSIMENVTAGNAME']+","+("valgrind" if "valgrind" in args.buildType else "normal")),
         headers={"Accept": "text/plain"})
       if response.status_code!=200:
         ret=ret+1
@@ -1256,7 +1289,7 @@ def coverage(exRun):
         res=response.text.splitlines()
         codecovURL=res[0]
         uploadURL=res[1]
-        with open(pj(tempDir.name, "cov.trace.final."+repo), "r") as f:
+        with open(pj(tempDir, "cov.trace.final."+repo), "r") as f:
           response=requests.put(uploadURL, headers={"Content-Type": "text/plain"}, data=f.read())
         if response.status_code!=200:
           ret=ret+1

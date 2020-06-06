@@ -40,7 +40,10 @@ RUN echo "host all all 0.0.0.0/0 md5" >> /database/pg_hba.conf
 RUN /usr/pgsql-9.6/bin/postgres -D /database -h localhost & \
     while ! PGPASSWORD=dummy psql -l -h localhost --username=mbsimenvuser &> /dev/null; do sleep 0.5; done && \
     PGPASSWORD=dummy createdb -h localhost --username=mbsimenvuser mbsimenv-service-database && \
-    kill %%
+    kill %% && rm -f /database/postmaster.pid
+
+HEALTHCHECK --interval=60s --timeout=30s --start-period=30s --retries=3 \
+  CMD /usr/pgsql-9.6/bin/pg_isready || exit 1
 
 # these are the default arguments when running the container
 CMD []

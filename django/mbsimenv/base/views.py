@@ -1,12 +1,11 @@
 import django
 import json
-import octicons
-from octicons.templatetags.octicons import octicon
-import allauth
 import functools
 import base
 import importlib
 import mimetypes
+import octicons
+from octicons.templatetags.octicons import octicon
 
 # basic view with header and footer
 class Base(django.views.generic.base.TemplateView):
@@ -16,6 +15,7 @@ class Base(django.views.generic.base.TemplateView):
       # nobody is logged in -> use dummy avatar
       userAvatarEle=octicon("person", height="21")
     else:
+      import allauth
       # someone is logged in
       try:
         # get avatar from social account (github)
@@ -61,6 +61,7 @@ class UserProfile(Base):
     # provide a cache for github access
     self.gh=base.helper.GithubCache(request)
   def get_context_data(self, **kwargs):
+    import allauth
     context=super().get_context_data(**kwargs)
     if not self.request.user.is_authenticated:
       # nobody is logged in -> use large dummy avatar; no social user available

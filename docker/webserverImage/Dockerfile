@@ -89,7 +89,7 @@ LABEL org.label-schema.schema-version="1.0" \
 # Check apache user and group id (must be in sync with the one in buildImage)
 # Add user dockeruser, create volumes and set volume ownership and permissions
 RUN test $(id -u apache) -eq 48 && test $(id -g apache) -eq 48 && \
-  mkdir -p /etc/letsencrypt /mbsim-config
+  mkdir -p /etc/letsencrypt /mbsim-config /databasemedia
   # chown root:root /etc/letsencrypt # not needed
 
 HEALTHCHECK --interval=60s --timeout=30s --start-period=30s --retries=3 \

@@ -18,6 +18,7 @@ import django.shortcuts
 import base.views
 import mbsimenv
 import django.conf.urls.static
+import importlib
 
 urlpatterns = [
   django.urls.path('', lambda _: django.shortcuts.redirect('service:home')),
@@ -29,5 +30,7 @@ urlpatterns = [
   django.urls.path('accounts/login/', lambda _: django.shortcuts.redirect('github_login')),
   django.urls.path('accounts/logout/', base.views.userLogout),
   django.urls.path('accounts/profile/', base.views.UserProfile.as_view(), name='base_userprofile'),
+]+\
+([
   django.urls.path('accounts/', django.urls.include('allauth.urls')),
-]
+] if importlib.util.find_spec("allauth") is not None else [])

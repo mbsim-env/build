@@ -1,4 +1,5 @@
 import django
+import re
 
 class RunManager(django.db.models.Manager):
   # return the current Run object for buildType (the one with the newest id)

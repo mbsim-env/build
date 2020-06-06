@@ -24,26 +24,22 @@ mbsimBranch="master"
 
 # linux64-dailydebug
 contldd=setup.run("build-linux64-dailydebug", 6, printLog=False, detach=True, addCommands=["--forceBuild"],
-                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                  statusAccessToken=mbsimenvSecrets.getSecrets()["githubStatusAccessToken"])
+                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
 
 # linux64-dailyrelease
 contldr=setup.run("build-linux64-dailyrelease", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
-                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                  statusAccessToken=mbsimenvSecrets.getSecrets()["githubStatusAccessToken"])
+                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
 retldr=setup.waitContainer(contldr)
 
 # win64-dailyrelease
 contwdr=setup.run("build-win64-dailyrelease", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
-                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                  statusAccessToken=mbsimenvSecrets.getSecrets()["githubStatusAccessToken"])
+                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
 retwdr=setup.waitContainer(contwdr)
 
 retldd=setup.waitContainer(contldd)
 
 # build doc
-contd=setup.run("builddoc", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
-                statusAccessToken=mbsimenvSecrets.getSecrets()["githubStatusAccessToken"])
+contd=setup.run("builddoc", 2, printLog=False, detach=True, addCommands=["--forceBuild"])
 retd=setup.waitContainer(contd)
 
 # return

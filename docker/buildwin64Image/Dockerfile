@@ -33,8 +33,9 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   mingw64-xerces-c \
   mingw64-libarchive \
   diffutils \
+  python3-psycopg2 \
   && yum clean all
-RUN pip3 install django
+RUN pip3 install django django-octicons
 # bugfix for moc
 RUN mv /usr/x86_64-w64-mingw32/bin/qt5/moc /usr/x86_64-w64-mingw32/bin/qt5/moc.org
 COPY docker/buildwin64Image/moc /usr/x86_64-w64-mingw32/bin/qt5/moc
@@ -200,8 +201,8 @@ LABEL org.label-schema.schema-version="1.0" \
 
 # Add user dockeruser, create volumes and set volume ownership and permissions
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
-  mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state && \
-  chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state
+  mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state /databasemedia && \
+  chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state /databasemedia
 
 # configure wine
 COPY docker/buildwin64Image/wine.inf /context/wine.inf

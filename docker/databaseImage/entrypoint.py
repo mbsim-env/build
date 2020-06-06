@@ -13,13 +13,14 @@ pg=subprocess.Popen(["/usr/pgsql-9.6/bin/postgres", "-D", "/database", "-h", "da
 # wait for server (try with dummy and real password)
 env=os.environ.copy()
 while True:
+  if pg.poll() is not None:
+    print("database failed to start.")
+    sys.exit(pg.returncode)
   env["PGPASSWORD"]="dummy"
-  print(env["PGPASSWORD"])
   if subprocess.call(["/usr/pgsql-9.6/bin/psql", "-l", "-h", "database", "--username=mbsimenvuser"],
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)==0:
     break
   env["PGPASSWORD"]=mbsimenvSecrets.getSecrets()["postgresPassword"]
-  print(env["PGPASSWORD"])
   if subprocess.call(["/usr/pgsql-9.6/bin/psql", "-l", "-h", "database", "--username=mbsimenvuser"],
                      stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL, env=env)==0:
     break

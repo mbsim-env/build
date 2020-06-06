@@ -23,6 +23,7 @@ import base.helper
 import mbsimenvSecrets
 import builds
 import mbsimenv
+import tempfile
 
 # global variables
 toolDependencies=dict()
@@ -116,30 +117,22 @@ def mainDocPage():
   if os.path.isdir(pj(args.docOutDir, "doxygenReference")): shutil.rmtree(pj(args.docOutDir, "doxygenReference"))
   shutil.copytree(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc")), pj(args.docOutDir, "doxygenReference"), symlinks=True)
 
-def setStatus(run, state):
+def setGithubStatus(run, state):
   import requests
+  data={
+    "state": state,
+    "target_url": "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("builds:run", args=[run.id]),
+    "context": "builds/%s/%s/%s/%s/%s"%(run.buildType, run.fmatvecBranch, run.hdf5serieBranch, run.openmbvBranch, run.mbsimBranch),
+  }
+  if state=="pending":
+    data["description"]="Build started at %s"%(run.startTime.isoformat()+"Z")
+  elif state=="failure":
+    data["description"]="Build failed after %.1f min"%((run.endTime-run.startTime).total_seconds()/60)
+  elif state=="success":
+    data["description"]="Build passed after %.1f min"%((run.endTime-run.startTime).total_seconds()/60)
+  else:
+    raise RuntimeError("Unknown state "+state+" provided")
   for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
-    # create github status (for linux64-ci build on all master branch)
-    data={
-      "state": state,
-      "target_url": "https://"+os.environ['MBSIMENVSERVERNAME']+"/builds/run/%d/"%(run.id),
-    }
-    if run.buildType=="linux64-dailydebug" or run.buildType=="linux64-dailyrelease" or \
-       run.buildType=="win64-dailyrelease" or run.buildType=="linux64-dailydebug-valgrind":
-      data["context"]="mbsim-env/%s"%(run.buildType)
-    elif run.buildType=="linux64-ci":
-      data["context"]="mbsim-env/linux64-ci/"+args.fmatvecBranch+"/"+args.hdf5serieBranch+"/"+args.openmbvBranch+"/"+args.mbsimBranch
-    else:
-      raise RuntimeError("Unknown buildType "+run.buildType+" provided")
-    # note description must be less than 140 characters
-    if state=="pending":
-      data["description"]="Building since %s on MBSim-Env (%s)"%(run.startTime.isoformat()+"Z", run.buildType)
-    elif state=="failure":
-      data["description"]="Failed after %.1f min on MBSim-Env (%s)"%((run.endTime-run.startTime).total_seconds()/60, run.buildType)
-    elif state=="success":
-      data["description"]="Passed after %.1f min on MBSim-Env (%s)"%((run.endTime-run.startTime).total_seconds()/60, run.buildType)
-    else:
-      raise RuntimeError("Unknown state "+state+" provided")
     # call github api
     url='https://api.github.com/repos/mbsim-env/'+repo+'/statuses/'+getattr(run, repo+"UpdateCommitID")
     if "githubStatusAccessToken" not in mbsimenvSecrets.getSecrets():
@@ -148,8 +141,7 @@ def setStatus(run, state):
       return
     headers={'Authorization': 'token '+mbsimenvSecrets.getSecrets()["githubStatusAccessToken"],
              'Accept': 'application/vnd.github.v3+json'}
-    response=requests.post(url,
-                           headers=headers, data=json.dumps(data))
+    response=requests.post(url, headers=headers, data=json.dumps(data))
     if response.status_code!=201:
       print("Warning: failed to create github status on repo "+repo+":")
       if "message" in response.json(): print(response.json()["message"])
@@ -297,7 +289,7 @@ def main():
 
   # set status on commit
   if args.buildSystemRun:
-    setStatus(run, "pending")
+    setGithubStatus(run, "pending")
 
   # clean prefix dir
   if args.enableCleanPrefix and os.path.isdir(args.prefix if args.prefix is not None else args.prefixAuto):
@@ -362,7 +354,7 @@ def main():
 
   # update status on commitid
   if args.buildSystemRun:
-    setStatus(run, "success" if nrFailed+abs(runExamplesErrorCode)==0 else "failure")
+    setGithubStatus(run, "success" if nrFailed==0 else "failure")
 
   if nrFailed>0:
     print("\nERROR: %d of %d build parts failed!!!!!"%(nrFailed, nrRun));
@@ -752,7 +744,7 @@ def createDistribution(run):
 
   with tempfile.TemporaryDirectory() as tempDir:
     distLog=io.StringIO()
-    distributeErrorCode=base.helper.subprocessCall(["/context/distribute.py", "--outDir", tempDir.name,
+    distributeErrorCode=base.helper.subprocessCall(["/context/distribute.py", "--outDir", tempDir,
                                            args.prefix if args.prefix is not None else args.prefixAuto], distLog)
     run.distributionOK=distributeErrorCode==0
     run.distributionOutput=distLog.getvalue()

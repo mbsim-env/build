@@ -11,10 +11,14 @@ RUN yum --setopt=skip_missing_names_on_install=False install -y epel-release && 
   texlive-epstopdf-bin \
   ghostscript \
   python36 \
+  python36-pytz \
+  python3-psycopg2 \
   && yum clean all
+RUN pip3 install django django-octicons
 
 # copy context files
 COPY docker/builddocImage/entrypoint.py /context/entrypoint.py
+COPY django/mbsimenv /context/mbsimenv
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
@@ -25,8 +29,8 @@ LABEL org.label-schema.schema-version="1.0" \
 
 # Add user dockeruser, create volumes and set volume ownership and permissions
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
-  mkdir /mbsim-env /mbsim-report /mbsim-state && \
-  chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-state
+  mkdir /mbsim-env /mbsim-report /mbsim-state /databasemedia && \
+  chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-state /databasemedia
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser
