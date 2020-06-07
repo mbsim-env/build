@@ -1,6 +1,7 @@
 {% extends "base/base.html" %}
 
 {% load static %}
+{% load octicons %}
 
 {% block title %}Valgrind Report: memcheck{% endblock %}
 
@@ -37,7 +38,7 @@
     <a class="btn btn-info btn-xs" href="?current=1">
       {% octicon "chevron-right" %}{% octicon "chevron-right" %} current
     </a>
-    <a class="btn btn-info btn-xs" href="{% url "runexamples:run" example.run.id %}">
+    <a class="btn btn-info btn-xs" href="{% url 'runexamples:run' valgrind.example.run.id %}">
       {% octicon "chevron-up" %} example
     </a>
   </dd>

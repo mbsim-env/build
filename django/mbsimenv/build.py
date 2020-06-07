@@ -75,8 +75,6 @@ def parseArguments():
   cfgOpts.add_argument("--buildFailedExit", default=None, type=int, help='Define the exit code when the build fails - e.g. use --buildFailedExit 125 to skip a failed build when running as "git bisect run".')
   
   outOpts=argparser.add_argument_group('Output Options')
-  outOpts.add_argument("--docOutDir", type=str,
-    help="Copy the documention to this directory. If not given do not copy")
   outOpts.add_argument("--buildType", default="local", type=str, help="A description of the build type (e.g: linux64-dailydebug)")
   
   passOpts=argparser.add_argument_group('Options beeing passed to other commands')
@@ -106,16 +104,18 @@ def parseArguments():
 
 # create main documentation page
 def mainDocPage():
-  if args.docOutDir is None:
+  if not args.buildSystemRun:
     return
 
+  staticRuntimeDir="/webserverstatic"
+
   # copy xmldoc
-  if os.path.isdir(pj(args.docOutDir, "xmlReference")): shutil.rmtree(pj(args.docOutDir, "xmlReference"))
-  shutil.copytree(os.path.normpath(docDir), pj(args.docOutDir, "xmlReference"), symlinks=True)
+  if os.path.isdir(pj(staticRuntimeDir, "xmlReference")): shutil.rmtree(pj(staticRuntimeDir, "xmlReference"))
+  shutil.copytree(os.path.normpath(docDir), pj(staticRuntimeDir, "xmlReference"), symlinks=True)
 
   # copy doc
-  if os.path.isdir(pj(args.docOutDir, "doxygenReference")): shutil.rmtree(pj(args.docOutDir, "doxygenReference"))
-  shutil.copytree(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc")), pj(args.docOutDir, "doxygenReference"), symlinks=True)
+  if os.path.isdir(pj(staticRuntimeDir, "doxygenReference")): shutil.rmtree(pj(staticRuntimeDir, "doxygenReference"))
+  shutil.copytree(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc")), pj(staticRuntimeDir, "doxygenReference"), symlinks=True)
 
 def setGithubStatus(run, state):
   import requests
@@ -726,6 +726,7 @@ def runexamples(run):
   if args.localServerPort:
     command.extend(["--localServerPort", str(args.localServerPort)])
   command.extend(["--buildRunID", str(run.id)])
+  command.extend(["--buildType", args.buildType])
   command.extend(args.passToRunexamples)
 
   print("")
@@ -755,10 +756,10 @@ def createDistribution(run):
       run.distributionDebugFileName=[x[len("debugArchiveName="):] for x in lines if x.startswith("debugArchiveName=")][0].rstrip()
       run.save()
       with run.distributionFile.open("wb") as fo:
-        with open(run.distributionFileName, "rb") as fi:
+        with open(tempDir+"/"+run.distributionFileName, "rb") as fi:
           fo.write(fi.read())
       with run.distributionDebugFile.open("wb") as fo:
-        with open(run.distributionDebugFileName, "rb") as fi:
+        with open(tempDir+"/"+run.distributionDebugFileName, "rb") as fi:
           fo.write(fi.read())
     return distributeErrorCode
 

@@ -81,15 +81,15 @@ class Run(django.db.models.Model):
 
   def nrAll(self):
     # 4 from the run (git update) and all the tools
-    return 4+(1 if self.distributionOK else 0)+self.tools.count()
+    return 4+(1 if self.distributionOK is not None else 0)+self.tools.count()
 
   def nrFailed(self):
     nr=self.tools.filterFailed().count()
-    if not self.fmatvecUpdateOK: nr+=1
-    if not self.hdf5serieUpdateOK: nr+=1
-    if not self.openmbvUpdateOK: nr+=1
-    if not self.mbsimUpdateOK: nr+=1
-    if self.distributionOK and not self.mbsimUpdateOK: nr+=1
+    if self.fmatvecUpdateOK   is not None and not self.fmatvecUpdateOK:   nr+=1
+    if self.hdf5serieUpdateOK is not None and not self.hdf5serieUpdateOK: nr+=1
+    if self.openmbvUpdateOK   is not None and not self.openmbvUpdateOK:   nr+=1
+    if self.mbsimUpdateOK     is not None and not self.mbsimUpdateOK:     nr+=1
+    if self.distributionOK    is not None and not self.distributionOK:    nr+=1
     return nr
 
 # delete all files referenced in Run when a Run object is deleted
@@ -106,10 +106,10 @@ class ToolManager(django.db.models.Manager):
   def filterFailed(self):
     return self.filter(django.db.models.Q(willFail=False) & (
       (django.db.models.Q(configureOK__isnull=False) & django.db.models.Q(configureOK=False)) |
-      (django.db.models.Q(makeOK__isnull=False) & django.db.models.Q(makeOK=False)) |
+      (django.db.models.Q(makeOK__isnull=False)      & django.db.models.Q(makeOK=False)) |
       (django.db.models.Q(makeCheckOK__isnull=False) & django.db.models.Q(makeCheckOK=False)) |
-      (django.db.models.Q(docOK__isnull=False) & django.db.models.Q(docOK=False)) |
-      (django.db.models.Q(xmldocOK__isnull=False) & django.db.models.Q(xmldocOK=False))
+      (django.db.models.Q(docOK__isnull=False)       & django.db.models.Q(docOK=False)) |
+      (django.db.models.Q(xmldocOK__isnull=False)    & django.db.models.Q(xmldocOK=False))
     ))
 
 class Tool(django.db.models.Model):

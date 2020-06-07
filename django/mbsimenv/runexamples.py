@@ -1222,14 +1222,14 @@ def coverage(exRun):
     ret=ret+abs(base.helper.subprocessCall(["lcov", "-a", pj(tempDir, "cov.trace.base"), "-a", pj(tempDir, "cov.trace.test"), "-o", pj(tempDir, "cov.trace.total")], lcovFD))
     # run lcov: remove counters
     ret=ret+abs(base.helper.subprocessCall(["lcov", "-r", pj(tempDir, "cov.trace.total"),
-      "*/mbsim*/kernel/swig/*", "*/openmbv*/openmbvcppinterface/swig/java/*", # SWIG generated
-      "*/openmbv*/openmbvcppinterface/swig/octave/*", "*/openmbv*/openmbvcppinterface/swig/python/*", # SWIG generated
-      "*/openmbv*/mbxmlutils/mbxmlutils/*", # SWIG generated
-      "*/mbsim*/thirdparty/nurbs++/*/*", "*/include/nurbs++/*", "*/mbsim*/kernel/mbsim/numerics/csparse.*", # 3rd party
-      "*/mbsim*/examples/*", # mbsim examples
+      "/mbsim-env/mbsim*/kernel/swig/*", "/mbsim-env/openmbv*/openmbvcppinterface/swig/java/*", # SWIG generated
+      "/mbsim-env/openmbv*/openmbvcppinterface/swig/octave/*", "/mbsim-env/openmbv*/openmbvcppinterface/swig/python/*", # SWIG generated
+      "/mbsim-env/openmbv*/mbxmlutils/mbxmlutils/*", # SWIG generated
+      "/mbsim-env/mbsim*/thirdparty/nurbs++/*/*", "*/include/nurbs++/*", "/mbsim-env/mbsim*/kernel/mbsim/numerics/csparse.*", # 3rd party
+      "/mbsim-env/mbsim*/examples/*", # mbsim examples
       "*.moc.cc", # mbsim generated
-      "*/hdf5serie*/h5plotserie/h5plotserie/*", "*/openmbv*/openmbv/openmbv/*", "*/mbsim*/mbsimgui/mbsimgui/*", # GUI (untested)
-      "*/mbsim*/modules/mbsimInterface/mbsimInterface/*", # other untested features
+      "/mbsim-env/hdf5serie*/h5plotserie/h5plotserie/*", "/mbsim-env/openmbv*/openmbv/openmbv/*", "/mbsim-env/mbsim*/mbsimgui/mbsimgui/*", # GUI (untested)
+      "/mbsim-env/mbsim*/modules/mbsimInterface/mbsimInterface/*", # other untested features
       "-o", pj(tempDir, "cov.trace.final")], lcovFD))
 
     # collect all header files in repos and hash it
@@ -1267,7 +1267,7 @@ def coverage(exRun):
     for repo in repos:
       # run lcov: remove all counters except one repo
       ret=ret+abs(base.helper.subprocessCall(["lcov", "-r", pj(tempDir, "cov.trace.final")]+\
-        list(map(lambda x: "/"+x+"/*", filter(lambda x: x!=repo, repos)))+\
+        list(map(lambda x: "/mbsim-env/"+x+"/*", filter(lambda x: x!=repo, repos)))+\
         ["-o", pj(tempDir, "cov.trace.final."+repo)], lcovFD))
       # replace file names in lcov trace file
       for line in fileinput.FileInput(pj(tempDir, "cov.trace.final."+repo), inplace=1):
@@ -1279,12 +1279,12 @@ def coverage(exRun):
       response=requests.post("https://codecov.io/upload/v4?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
         (commitID, mbsimenvSecrets.getSecrets()["codecovUploadToken"][repo], exRun.build_run.id, exRun.id,
          urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
-         os.environ['MBSIMENVTAGNAME']+","+("valgrind" if "valgrind" in args.buildType else "normal")),
+         os.environ['MBSIMENVTAGNAME']+"_"+("valgrind" if "valgrind" in args.buildType else "normal")),
         headers={"Accept": "text/plain"})
       if response.status_code!=200:
         ret=ret+1
         print("codecov status code "+str(response.status_code), file=lcovFD)
-        lcovFD.write(response.content)
+        lcovFD.write(response.content.decode("utf-8"))
       else:
         res=response.text.splitlines()
         codecovURL=res[0]
@@ -1294,7 +1294,7 @@ def coverage(exRun):
         if response.status_code!=200:
           ret=ret+1
           print("S3 status code "+str(response.status_code), file=lcovFD)
-          lcovFD.write(response.content)
+          lcovFD.write(response.content.decode("utf-8"))
 
     # set coverage info on exRun
     lcovFD.close()

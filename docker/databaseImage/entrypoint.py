@@ -7,6 +7,7 @@ import time
 import mbsimenvSecrets
 
 # start db server
+time.sleep(5)#mfmf
 if os.path.exists("/database/postmaster.pid"): os.remove("/database/postmaster.pid")
 pg=subprocess.Popen(["/usr/pgsql-9.6/bin/postgres", "-D", "/database", "-h", "database"])
 

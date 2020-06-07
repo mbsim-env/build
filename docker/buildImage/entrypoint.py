@@ -92,7 +92,7 @@ if args.buildType == "linux64-ci":
   RUNEXAMPLESARGS=["--disableCompare", "--disableMakeClean"]
   RUNEXAMPLESFILTER=["--filter", "'basic' in labels"]
 elif args.buildType == "linux64-dailydebug":
-  ARGS=["--docOutDir", "/mbsim-report/doc", "--coverage",]
+  ARGS=["--coverage",]
   RUNEXAMPLESARGS=["--checkGUIs"]
   RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] if os.environ["MBSIMENVTAGNAME"]=="staging" else [])
 elif args.buildType == "linux64-dailyrelease":
@@ -143,7 +143,8 @@ localRet=subprocess.call(
   "--with-mkoctfile=/3rdparty/local/bin/mkoctfile",
   "--with-qwt-lib-name=qwt", "--with-qmake=qmake-qt5", "COIN_CFLAGS=-I/3rdparty/local/include",
   "COIN_LIBS=-L/3rdparty/local/lib64 -lCoin", "SOQT_CFLAGS=-I/3rdparty/local/include",
-  "SOQT_LIBS=-L/3rdparty/local/lib64 -lSoQt", "--passToRunexamples"]+RUNEXAMPLESARGS+RUNEXAMPLESFILTER,
+  "SOQT_LIBS=-L/3rdparty/local/lib64 -lSoQt", "--passToRunexamples", "--buildType", args.buildType]+\
+  RUNEXAMPLESARGS+RUNEXAMPLESFILTER,
   stdout=sys.stdout, stderr=sys.stderr)
 buildRunID=builds.models.Run.objects.getCurrent(args.buildType).id
 if localRet==255:

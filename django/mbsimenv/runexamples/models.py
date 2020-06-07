@@ -52,14 +52,14 @@ class ExampleManager(django.db.models.Manager):
   # return a queryset with all failed examples of the current queryset
   def filterFailed(self):
     return self.filter(django.db.models.Q(willFail=False) & (
-      (django.db.models.Q(runResult__in=[Example.RunResult.FAILED, Example.RunResult.TIMEDOUT])) |
+      (django.db.models.Q(runResult__isnull=False)          & django.db.models.Q(runResult__in=[Example.RunResult.FAILED, Example.RunResult.TIMEDOUT])) |
       (django.db.models.Q(guiTestHdf5serieOK__isnull=False) & django.db.models.Q(guiTestHdf5serieOK=False)) |
-      (django.db.models.Q(guiTestOpenmbvOK__isnull=False) & django.db.models.Q(guiTestOpenmbvOK=False)) |
-      (django.db.models.Q(guiTestMbsimguiOK__isnull=False) & django.db.models.Q(guiTestMbsimguiOK=False)) |
-      django.db.models.Q(deprecatedNr__gt=0) |
+      (django.db.models.Q(guiTestOpenmbvOK__isnull=False)   & django.db.models.Q(guiTestOpenmbvOK=False)) |
+      (django.db.models.Q(guiTestMbsimguiOK__isnull=False)  & django.db.models.Q(guiTestMbsimguiOK=False)) |
+      (django.db.models.Q(deprecatedNr__isnull=False)       & django.db.models.Q(deprecatedNr__gt=0)) |
       django.db.models.Q(results__in=CompareResult.objects.filterFailed()) |
       django.db.models.Q(xmlOutputs__in=XMLOutput.objects.filterFailed())
-    ))
+    )).distinct()
 
 class Example(django.db.models.Model):
   class RunResult(django.db.models.IntegerChoices):

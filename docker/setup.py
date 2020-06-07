@@ -405,10 +405,11 @@ def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
               "--mbsimBranch", mbsimBranch]+updateReferences+addCommand) if not interactive else [],
     environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
     volumes={
-      'mbsimenv_mbsim-'+buildType+"."+getTagname():  {"bind": "/mbsim-env",     "mode": "rw"},
-      'mbsimenv_ccache.'+getTagname():               {"bind": "/mbsim-ccache",  "mode": "rw"},
-      'mbsimenv_databasemedia.'+getTagname():        {"bind": "/databasemedia", "mode": "rw"},
-      'mbsimenv_config.'+getTagname():               {"bind": "/mbsim-config",  "mode": "ro"},
+      'mbsimenv_mbsim-'+buildType+"."+getTagname():  {"bind": "/mbsim-env",       "mode": "rw"},
+      'mbsimenv_ccache.'+getTagname():               {"bind": "/mbsim-ccache",    "mode": "rw"},
+      'mbsimenv_databasemedia.'+getTagname():        {"bind": "/databasemedia",   "mode": "rw"},
+      'mbsimenv_webserverstatic.'+getTagname():      {"bind": "/webserverstatic", "mode": "rw"},
+      'mbsimenv_config.'+getTagname():               {"bind": "/mbsim-config",    "mode": "ro"},
     },
     detach=True, stdout=True, stderr=True)
   networki.disconnect(build)
@@ -519,9 +520,8 @@ def run(s, jobs=4,
       entrypoint=None if not interactive else ["sleep", "infinity"],
       environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
       volumes={
-        'mbsimenv_mbsim-linux64-dailydebug.'+getTagname():  {"bind": "/mbsim-env",     "mode": "rw"},
-        'mbsimenv_databasemedia.'+getTagname():             {"bind": "/databasemedia", "mode": "rw"},
-        'mbsimenv_config.'+getTagname():                    {"bind": "/mbsim-config",  "mode": "ro"},
+        'mbsimenv_mbsim-linux64-dailydebug.'+getTagname():  {"bind": "/mbsim-env",       "mode": "rw"},
+        'mbsimenv_config.'+getTagname():                    {"bind": "/mbsim-config",    "mode": "ro"},
       },
       detach=True, stdout=True, stderr=True)
     networki.disconnect(builddoc)
@@ -647,7 +647,8 @@ def run(s, jobs=4,
       volumes={
         'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config",        "mode": "ro"},
         'mbsimenv_letsencrypt.'+getTagname():                 {"bind": "/etc/letsencrypt",     "mode": "rw"},
-        'mbsimenv_databasemedia.'+getTagname():               {"bind": "/databasemedia",       "mode": "rw"},
+        'mbsimenv_databasemedia.'+getTagname():               {"bind": "/databasemedia",       "mode": "ro"},
+        'mbsimenv_webserverstatic.'+getTagname():             {"bind": "/webserverstatic",     "mode": "ro"},
         '/var/run/docker.sock':                               {"bind": "/var/run/docker.sock", "mode": "rw"},
       },
       hostname=getServername(),

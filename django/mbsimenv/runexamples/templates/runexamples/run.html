@@ -85,7 +85,7 @@
     <span class="text-{{ run.coverageOK|yesno:"success,danger" }}">
       {% if run.coverageOK %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}
     </span>
-    <a href="{% url "base:textFieldFromDB" "runexamples" "Run" run.id coverageOutput %}">
+    <a href="{% url "base:textFieldFromDB" "runexamples" "Run" run.id "coverageOutput" %}">
       {{ run.coverageOK|yesno:"Passed,Failed" }}: <span class="badge badge-secondary">{{run.coverageRate}}% coverage</span>
     </a>
     <ul class="list-group">

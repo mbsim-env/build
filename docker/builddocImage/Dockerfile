@@ -29,8 +29,8 @@ LABEL org.label-schema.schema-version="1.0" \
 
 # Add user dockeruser, create volumes and set volume ownership and permissions
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
-  mkdir /mbsim-env /mbsim-report /mbsim-state /databasemedia && \
-  chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-state /databasemedia
+  mkdir /mbsim-env /databasemedia && \
+  chown dockeruser:dockeruser /mbsim-env /databasemedia
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser

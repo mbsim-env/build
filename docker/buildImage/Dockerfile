@@ -236,8 +236,8 @@ ENV PATH=/mbsim-env/mbsim/examples:/mbsim-env/build/misc:$PATH \
 
 # Add user dockeruser, create volumes and set volume ownership and permissions
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
-  mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state /databasemedia && \
-  chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state /databasemedia
+  mkdir /mbsim-env /mbsim-ccache /databasemedia /webserverstatic && \
+  chown dockeruser:dockeruser /mbsim-env /mbsim-ccache /databasemedia /webserverstatic
 
 # add g++/c++ to cache dir (its not added automatically since g++ is not installed since scl is used
 RUN ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/g++ && ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/c++
