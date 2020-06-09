@@ -10,9 +10,11 @@ import codecs
 import json
 import re
 import time
+import glob
 import django
 sys.path.append("/context/mbsimenv")
 import builds
+import runexamples
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -27,7 +29,6 @@ argparser.add_argument("--mbsimBranch", type=str, default="master", help="mbsim 
 argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs to run in parallel")
 argparser.add_argument('--forceBuild', action="store_true", help="Passed to buily.py if existing")
 argparser.add_argument("--valgrindExamples", action="store_true", help="Run examples also with valgrind.")
-#mfmfargparser.add_argument("--updateReferences", nargs='*', default=[], help="Update these references.")
 
 args=argparser.parse_args()
 
@@ -108,26 +109,34 @@ if args.forceBuild:
 os.environ['PKG_CONFIG_PATH']=((os.environ['PKG_CONFIG_PATH']+":") if 'PKG_CONFIG_PATH' in os.environ else "")+\
                               "/mbsim-env/local/lib/pkgconfig:/mbsim-env/local/lib64/pkgconfig"
 
-#mfmf# update references of examples
-#mfmfif len(args.updateReferences)>0:
-#mfmf  CURDIR=os.getcwd()
-#mfmf  os.chdir("/mbsim-env/mbsim/examples")
-#mfmf  if subprocess.call(["python3", "./runexamples.py", "--action", "copyToReference"]+args.updateReferences)!=0:
-#mfmf    ret=ret+1
-#mfmf    print("runexamples.py --action copyToReference ... failed.")
-#mfmf    sys.stdout.flush()
-#mfmf  os.chdir(CURDIR)
-#mfmf
-#mfmf  # update references for download
-#mfmf  os.chdir("/mbsim-env/mbsim/examples")
-#mfmf  if subprocess.call(["python3", "./runexamples.py", "--action", "pushReference=/mbsim-report/references"]+RUNEXAMPLESFILTER)!=0:
-#mfmf    ret=ret+1
-#mfmf    print("pushing references to download dir failed.")
-#mfmf    sys.stdout.flush()
-#mfmf  os.chdir(CURDIR)
-#mfmf
-#mfmf  if "--forceBuild" not in ARGS:
-#mfmf    ARGS.append('--forceBuild')
+# update references of examples
+if args.buildType=="linux64-dailydebug":
+  exsCur=runexamples.models.Run.objects.getCurrent(args.buildType).examples
+  for exStatic in runexamples.models.ExampleStatic.objects.filter(update=True):
+    exCur=exsCur.get(exampleName=exStatic.exampleName)
+    # delete all old references
+    exStatic.references.all().delete()
+    # add new references
+    curFiles=[]
+    curFiles.extend(glob.glob("/mbsim-env/mbsim/examples/"+exStatic.exampleName+"/*.h5"))
+    curFiles.extend(glob.glob("/mbsim-env/mbsim/examples/"+exStatic.exampleName+"/*.mbsh5"))
+    curFiles.extend(glob.glob("/mbsim-env/mbsim/examples/"+exStatic.exampleName+"/*.ombvh5"))
+    for curFile in curFiles:
+      ref=runexamples.models.ExampleStaticReference()
+      ref.exampleStatic=exStatic
+      ref.h5FileName=os.path.basename(curFile)
+      ref.save()
+      with ref.h5File.open("wb") as fo:
+        with open(curFile, "rb") as fi:
+          fo.write(fi.read())
+    # set ref time
+    exStatic.refTime=exCur.time
+    # clear update flag
+    exStatic.update=False
+    exStatic.save()
+    # force a new build if an example has been updated
+    if "--forceBuild" not in ARGS:
+      ARGS.append('--forceBuild')
 
 # run build
 os.environ["LDFLAGS"]="-L/usr/lib64/boost169" # use boost 1.69 libraries (and includes, see --with-boost-inc)

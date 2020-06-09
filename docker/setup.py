@@ -383,13 +383,6 @@ def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
     networki, networke, database=runNetworkAndDatabase(printLog, "")
     stopDatabase=True
 
-  updateReferences=[]
-  if buildType=="linux64-dailydebug" and os.path.isfile("/mbsim-config/mbsimBuildService.conf"):
-    with open("/mbsim-config/mbsimBuildService.conf", "r") as f:
-      config=json.load(f)
-    if len(config["checkedExamples"])>0:
-      updateReferences=["--updateReferences"]+config["checkedExamples"]
-
   # build
   renameStoppedContainer('mbsimenv.build.'+buildType+'.')
   build=dockerClient.containers.run(
@@ -402,7 +395,7 @@ def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
               "--fmatvecBranch", fmatvecBranch,
               "--hdf5serieBranch", hdf5serieBranch,
               "--openmbvBranch", openmbvBranch,
-              "--mbsimBranch", mbsimBranch]+updateReferences+addCommand) if not interactive else [],
+              "--mbsimBranch", mbsimBranch]+addCommand) if not interactive else [],
     environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
     volumes={
       'mbsimenv_mbsim-'+buildType+"."+getTagname():  {"bind": "/mbsim-env",       "mode": "rw"},

@@ -257,6 +257,7 @@ def main():
 
     if not args.debugDisableMultiprocessing:
       # init mulitprocessing handling and run in parallel
+      django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
       poolResult=multiprocessing.Pool(args.j).map_async(functools.partial(runExample, exRun), directories, 1)
     else: # debugging
       import queue

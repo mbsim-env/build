@@ -184,19 +184,19 @@ class DataTableExample(base.views.DataTable):
   def colData_guiTest(self, ds):
     ret=""
     url=django.urls.reverse('base:textFieldFromDB', args=["runexamples", "Example", ds.id, "guiTestOpenmbvOutput"])
-    vis="visible" if ds.guiTestOpenmbvOK else "hidden"
+    vis="visible" if ds.guiTestOpenmbvOK is not None else "hidden"
     ok="success" if ds.guiTestOpenmbvOK else ("warning" if ds.willFail else "danger")
     img=django.templatetags.static.static("base/openmbv.svg")
     ret+='<a href="%s"><button type="button" style="visibility:%s;" class="btn btn-%s btn-xs">'%(url, vis, ok)+\
            '<img src="%s" alt="ombv"/></button></a>&nbsp;'%(img)
     url=django.urls.reverse('base:textFieldFromDB', args=["runexamples", "Example", ds.id, "guiTestHdf5serieOutput"])
-    vis="visible" if ds.guiTestHdf5serieOK else "hidden"
+    vis="visible" if ds.guiTestHdf5serieOK is not None else "hidden"
     ok="success" if ds.guiTestHdf5serieOK else ("warning" if ds.willFail else "danger")
     img=django.templatetags.static.static("base/h5plotserie.svg")
     ret+='<a href="%s"><button type="button" style="visibility:%s;" class="btn btn-%s btn-xs">'%(url, vis, ok)+\
            '<img src="%s" alt="h5p"/></button></a>&nbsp;'%(img)
     url=django.urls.reverse('base:textFieldFromDB', args=["runexamples", "Example", ds.id, "guiTestMbsimguiOutput"])
-    vis="visible" if ds.guiTestMbsimguiOK else "hidden"
+    vis="visible" if ds.guiTestMbsimguiOK is not None else "hidden"
     ok="success" if ds.guiTestMbsimguiOK else ("warning" if ds.willFail else "danger")
     img=django.templatetags.static.static("base/mbsimgui.svg")
     ret+='<a href="%s"><button type="button" style="visibility:%s;" class="btn btn-%s btn-xs">'%(url, vis, ok)+\
@@ -383,7 +383,10 @@ class DataTableValgrindError(base.views.DataTable):
 class DataTableValgrindStack(base.views.DataTable):
   def setup(self, request, *args, **kwargs):
     super().setup(request, *args, **kwargs)
-    self.stacks=runexamples.models.ValgrindWhatAndStack.objects.get(id=self.kwargs["id"]).stacks.order_by("nr")
+    self.stacks=runexamples.models.ValgrindWhatAndStack.objects.get(id=self.kwargs["id"]).stacks
+
+  def defaultOrderingColName(self):
+    return "nr"
 
   # return the queryset to display [required]
   def queryset(self):

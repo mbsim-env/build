@@ -14,7 +14,8 @@ function initExampleTable(url) {
     "xmlOut",
   ], {
     'lengthMenu': [ [10, 25, 50, 100, -1], [10, 25, 50, 100, 'All'] ],
-    'pageLength': 25, 'stateSave': true
+    'pageLength': 25,
+    "order": [],
   });
 }
 
@@ -42,7 +43,8 @@ function initValgrindErrorTable(url) {
     "detail",
   ], {
     'lengthMenu': [ [10, 25, 50, 100, 250, -1], [10, 25, 50, 100, 250, 'All'] ],
-    'pageLength': 25, 'stateSave': true,
+    'pageLength': 25,
+    'order': [],
     'drawCallback': function() {
       $("#valgrindErrorTable").children("tbody").first().children("tr").each(function() {
         var id=$(this).children("td").first().next().children("table").attr("id");
@@ -63,7 +65,7 @@ function initValgrindStackTable(id, url) {
     "library",
   ], {
     'lengthMenu': [ [1, 2, 5, 10, 20, -1], [1, 2, 5, 10, 20, 'All'] ],
-    'pageLength': 5, 'stateSave': true,
+    'pageLength': 5,
     'ordering': false,
     'searching': false,
   });
@@ -76,7 +78,8 @@ function initXMLOutputTable(url) {
     "result",
   ], {
     'lengthMenu': [ [10, 25, 50, 100, -1], [10, 25, 50, 100, 'All'] ],
-    'pageLength': 25, 'stateSave': true
+    'pageLength': 25,
+    'order': [],
   });
 }
 
@@ -89,6 +92,7 @@ function initCompareResultTable(url) {
     "result",
   ], {
     'lengthMenu': [ [10, 25, 50, 100, -1], [10, 25, 50, 100, 'All'] ],
-    'pageLength': 25, 'stateSave': true
+    'pageLength': 25,
+    'order': [],
   });
 }

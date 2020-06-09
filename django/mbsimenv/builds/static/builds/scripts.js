@@ -10,7 +10,7 @@ function initToolTable(url) {
     "doc",
     "xmldoc",
   ], {
-    'lengthMenu': [ [1, 5, 10, -1], [1, 5, 10, 'All'] ],
-    'pageLength': -1, 'stateSave': true
+    "paging": false,
+    "order": [],
   });
 }

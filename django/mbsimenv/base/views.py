@@ -98,6 +98,9 @@ class DataTable(django.views.View):
   # default class attribute for a table row -> empty class
   def rowClass(self, ds):
     return ""
+  # default database col name to be used for ordering (if no user defined ordering is requested by Datatables)
+  def defaultOrderingColName(self):
+    return "pk"
   # return json response to a ajax request of datatable
   def post(self, request, *args, **kwargs):
     # return the visibility state of the columns if the http query contains "columnsVisible"
@@ -122,13 +125,14 @@ class DataTable(django.views.View):
         sortDir=req["order"][0]["dir"]
         if hasattr(self, "colSortKey_"+sortCol):
           # if colSortKey_<colName>() is defined sort using these values as key
-          sortedData=sorted(filteredData, key=self.__getattribute__("colSortKey_"+sortCol), reverse=sortDir=="desc")
+          sortColName="colSortKey_"+sortCol
         else:
           # if colSortKey_<colName>() is not defined sort using the data (colData_<colName>()) as key
-          sortedData=sorted(filteredData, key=self.__getattribute__("colData_"+sortCol), reverse=sortDir=="desc")
+          sortColName="colData_"+sortCol
+        sortedData=sorted(filteredData, key=self.__getattribute__(sortColName), reverse=sortDir=="desc")
       else:
-        # no sotring requested
-        sortedData=filteredData
+        # no sorting requested
+        sortedData=filteredData.order_by(self.defaultOrderingColName())
       # prepare the response as json
       res={}
       res["draw"]=int(req["draw"]) # the datatable request ID needs just to be passed back

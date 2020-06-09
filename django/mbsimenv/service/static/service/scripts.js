@@ -12,6 +12,7 @@ function initCIBranchesTable(url) {
     "paging": false,
     "searching": false,
     "info": false,
+    "order": [],
   });
 }
 
