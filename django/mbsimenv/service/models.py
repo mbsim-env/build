@@ -14,6 +14,19 @@ class CIBranches(django.db.models.Model):
                                         name="unique_banches"),
     ]
 
+class CIQueue(django.db.models.Model):
+  id=django.db.models.AutoField(primary_key=True)
+  recTime=django.db.models.DateTimeField()
+  fmatvecBranch=django.db.models.CharField(max_length=50)
+  hdf5serieBranch=django.db.models.CharField(max_length=50)
+  openmbvBranch=django.db.models.CharField(max_length=50)
+  mbsimBranch=django.db.models.CharField(max_length=50)
+  class Meta:
+    constraints=[
+      django.db.models.UniqueConstraint(fields=['fmatvecBranch', 'hdf5serieBranch', 'openmbvBranch', 'mbsimBranch'],
+                                        name="unique_banches"),
+    ]
+
 class Release(django.db.models.Model):
   id=django.db.models.AutoField(primary_key=True)
   platform=django.db.models.CharField(max_length=50)

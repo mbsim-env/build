@@ -7,6 +7,9 @@ import service
 import json
 import threading
 import itertools
+import hmac
+import hashlib
+import mbsimenvSecrets
 import concurrent.futures
 from octicons.templatetags.octicons import octicon
 
@@ -276,3 +279,38 @@ def manualsNrFailed(request):
     "color": getColor("success" if nr==0 else "danger"),
   }
   return django.shortcuts.render(request, 'service/nrbadge.svg', context, content_type="image/svg+xml")
+
+# response to a GitHub webhook
+# disable CSRF for this URL, we check the github webhook signature to keep it secure
+@django.views.decorators.csrf.csrf_exempt
+def webhook(request):
+  rawdata=request.body
+  sig=request.headers['X_HUB_SIGNATURE'][5:]
+  if not hmac.compare_digest(sig, hmac.new(mbsimenvSecrets.getSecrets()["githubWebhookSecret"].encode('utf-8'), rawdata, hashlib.sha1).hexdigest()):
+    return django.http.HttpResponseForbidden()
+  event=request.headers['X-GitHub-Event']
+  res={"event": event}
+  if event=="push":
+    # get repo, branch and commit from this push
+    data=json.loads(rawdata)
+    res["repo"]=data['repository']['name']
+    if data['ref'][0:11]!="refs/heads/":
+      return django.http.HttpResponseBadRequest()
+    res["branch"]=data['ref'][11:]
+    res["commitID"]=data["after"]
+    res["addedBranchCombinations"]=[]
+    # get all branch combinations to build as save in queue
+    for bc in service.models.CIBranches.objects.filter(**{res["repo"]+"Branch": res["branch"]}):
+      branchCombination={
+        "fmatvecBranch": bc.fmatvecBranch,
+        "hdf5serieBranch": bc.hdf5serieBranch,
+        "openmbvBranch": bc.openmbvBranch,
+        "mbsimBranch": bc.mbsimBranch,
+      }
+      ciq, _=service.models.CIQueue.objects.get_or_create(**branchCombination, defaults={"recTime": django.utils.timezone.now()})
+      ciq.recTime=django.utils.timezone.now()
+      ciq.save()
+      res["addedBranchCombinations"].append(branchCombination)
+    return django.http.JsonResponse(res)
+  else:
+    return django.http.HttpResponseNotFound()
