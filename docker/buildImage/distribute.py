@@ -4,7 +4,7 @@
 import argparse
 import os
 import sys
-import glob
+import fnmatch
 import tarfile
 import zipfile
 import subprocess
@@ -53,8 +53,21 @@ def parseArguments():
 
 
 def addDepsFor(name):
-  noDepsFor=["_OpenMBV.so", "_OpenMBV.pyd"]
-  return not os.path.basename(name) in noDepsFor
+  noDepsFor=[ # do not add deplibs for SWIG python libs
+    "*/_OpenMBV.so",
+    "*/_OpenMBV.pyd",
+    "*/_fmatvec.so",
+    "*/_fmatvec.pyd",
+    "*/_mbsim.so",
+    "*/_mbsim.pyd",
+    "*/_OpenMBV.so",
+    "*/_OpenMBV.pyd",
+    "*/__mbsim_part*.so",
+    "*/__mbsim_part*.pyd",
+  ]
+  if name.startswith("/usr/lib64/qt5/plugins/"): return False # do not add deplibs for qt plugins
+  if any(map(lambda g: fnmatch.fnmatch(name, g), noDepsFor)): return False
+  return True
 
 def adaptRPATH(name, orgName):
   fnull=open(os.devnull, 'w')
