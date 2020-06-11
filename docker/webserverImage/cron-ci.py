@@ -1,20 +1,23 @@
 #!/usr/bin/python3
 
-import fcntl
-import json
 import sys
-import time
 import os
 import socket
 import argparse
+import django
+import datetime
 sys.path.append("/context")
 import setup
+sys.path.append("/context/mbsimenv")
+import service
 
 # run only one instance of this program at the same time
 processLock=socket.socket(socket.AF_UNIX, socket.SOCK_DGRAM)
 try:
   processLock.bind('\0'+os.path.basename(__file__))
 except socket.error:
+  print("Another cront-ci instance is still running. exiting.")
+  sys.stdout.flush()
   sys.exit(0)
 
 # arguments
@@ -29,90 +32,29 @@ args=argparser.parse_args()
 if "MBSIMENVTAGNAME" not in os.environ or os.environ["MBSIMENVTAGNAME"]=="":
   raise RuntimeError("Envvar MBSIMENVTAGNAME is not defined.")
 
-# config files
-configFilename="/mbsim-config/mbsimBuildService.conf"
+os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings"
+django.setup()
 
-def checkToBuild(tobuild):
-  if not os.path.exists(configFilename):
-    return None, ""
-  # read file config file
-  fd=open(configFilename, 'r+')
-  fcntl.lockf(fd, fcntl.LOCK_EX)
-  config=json.load(fd)
-  
-  # get branch to build
-  if tobuild is None and len(config['tobuild'])>0:
-    tobuild=config['tobuild'][0]
-  newTobuild=[]
-  for b in config['tobuild']:
-    if tobuild['fmatvec']==b['fmatvec'] and \
-       tobuild['hdf5serie']==b['hdf5serie'] and \
-       tobuild['openmbv']==b['openmbv'] and \
-       tobuild['mbsim']==b['mbsim']:
-      tobuild=b
-    else:
-      newTobuild.append(b)
-  config['tobuild']=newTobuild
+# (the staging service delays the CI script by 20min to avoid load conflicts with the production service (on the same machine))
+# a CI build is delayed by 1min to give the user the change to push something else to another branch
+waitTime=datetime.timedelta(minutes=1) if os.environ["MBSIMENVTAGNAME"]!="staging" else datetime.timedelta(minutes=20)
 
-  # if no build is waiting check for docker builds
-  bd=None
-  if "buildDocker" in config:
-    buildDocker=config["buildDocker"]
-  else:
-    buildDocker=[]
-  if tobuild is None and len(buildDocker)>0:
-    bd=buildDocker.pop(0)
-  
-  # write file config file
-  fd.seek(0);
-  json.dump(config, fd, indent=2)
-  fd.truncate();
-  fcntl.lockf(fd, fcntl.LOCK_UN)
-  fd.close()
-
-  return tobuild, bd, config["status_access_token"]
-
-tobuild, bd, statusAccessToken=checkToBuild(None)
-
-if tobuild is None and bd is None:
-  # nothing to do, return with code 0
-  sys.exit(0)
-
-if bd is not None:
-  # run rebuild build-system
-  ret=setup.run("builddocker", args.jobs, printLog=False, builddockerBranch=bd, statusAccessToken=statusAccessToken)
-  sys.exit(ret)
-
-if os.environ["MBSIMENVTAGNAME"]=="staging":
-  # the staging service delays the CI script by 30min to avoid load conflicts with the production service (on the same machine)
-  print("Found something to build, but wait 20min since this is the staging service: "+str(tobuild))
+ciq=service.models.CIQueue.objects.all().order_by("recTime").first()
+if ciq is not None:
+  print("Found something to build: "+ciq.fmatvecBranch+", "+ciq.hdf5serieBranch+", "+\
+        ciq.openmbvBranch+", "+ciq.mbsimBranch+" starting in, at most, "+str(waitTime))
   sys.stdout.flush()
-  time.sleep(20*60)
+  if django.utils.timezone.now()-ciq.recTime>waitTime:
+    print("Start build: "+ciq.fmatvecBranch+", "+ciq.hdf5serieBranch+", "+\
+          ciq.openmbvBranch+", "+ciq.mbsimBranch)
+    sys.stdout.flush()
+    # run linux64-ci
+    ret=setup.run("build-linux64-ci", args.jobs, printLog=False,
+                  fmatvecBranch=ciq.fmatvecBranch, hdf5serieBranch=ciq.hdf5serieBranch,
+                  openmbvBranch=ciq.openmbvBranch, mbsimBranch=ciq.mbsimBranch)
+    ciq.delete()
+    sys.exit(ret)
 
-print("Found something to build: "+str(tobuild))
-sys.stdout.flush()
-
-# wait at least 2 minutes after the timestamp to give the user the chance to update also other repos
-while True:
-  delta=tobuild['timestamp']+1*60 - time.time()
-  if delta>0:
-    time.sleep(delta)
-    tobuild, bd, _=checkToBuild(tobuild)
-  else:
-    break
-
-print("Starting build: "+str(tobuild))
-sys.stdout.flush()
-
-# set branches
-fmatvecBranch=tobuild['fmatvec']
-hdf5serieBranch=tobuild['hdf5serie']
-openmbvBranch=tobuild['openmbv']
-mbsimBranch=tobuild['mbsim']
-
-# run linux64-ci
-ret=setup.run("build-linux64-ci", args.jobs, printLog=False,
-              fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch,
-              openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-              statusAccessToken=statusAccessToken)
-sys.exit(ret)
+#mfmf# run rebuild build-system
+#mfmfret=setup.run("builddocker", args.jobs, printLog=False, builddockerBranch=bd, statusAccessToken=statusAccessToken)
+#mfmfsys.exit(ret)

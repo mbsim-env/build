@@ -40,7 +40,7 @@ COPY django/mbsimenv /context/mbsimenv
 # copy entrypoint
 COPY docker/webserverImage/entrypoint.py /context/entrypoint.py
 COPY docker/webserverImage/cron-daily.py /context/cron-daily.py
-#mfmfCOPY docker/webserverImage/cron-ci.py /context/cron-ci.py
+COPY docker/webserverImage/cron-ci.py /context/cron-ci.py
 COPY docker/setup.py /context/setup.py
 
 # configure web server

@@ -11,8 +11,9 @@ import django.core.management
 import allauth
 import argparse
 import requests
-#mfmfimport setup
 import docker
+sys.path.append("/context")
+import setup
 sys.path.append("/context/mbsimenv")
 import mbsimenvSecrets
 import service
@@ -92,8 +93,8 @@ crontab=\
   "MBSIMENVSERVERNAME=%s\n"%(os.environ["MBSIMENVSERVERNAME"])+\
   "MBSIMENVTAGNAME=%s\n"%(os.environ["MBSIMENVTAGNAME"])+\
   subprocess.check_output(["crontab", "-l"]).decode("UTF-8")+\
-  "0 %d * * * /context/cron-daily.py -j %d 2> >(sed -re 's/^/DAILY: /' > /proc/1/fd/2) > >(sed -re 's/^/DAILY: /' > /proc/1/fd/1)\n"%(23 if os.environ["MBSIMENVTAGNAME"]!="staging" else 11, args.jobs)#mfmf+\
-#mfmf  "* * * * * /context/cron-ci.py -j %d 2> >(sed -re 's/^/CI: /' > /proc/1/fd/2) > >(sed -re 's/^/CI: /' > /proc/1/fd/1)\n"%(args.jobs)
+  "0 %d * * * /context/cron-daily.py -j %d 2> >(sed -re 's/^/DAILY: /' > /proc/1/fd/2) > >(sed -re 's/^/DAILY: /' > /proc/1/fd/1)\n"%(23 if os.environ["MBSIMENVTAGNAME"]!="staging" else 11, args.jobs)+\
+  "* * * * * /context/cron-ci.py -j %d 2> >(sed -re 's/^/CI: /' > /proc/1/fd/2) > >(sed -re 's/^/CI: /' > /proc/1/fd/1)\n"%(args.jobs)
 subprocess.check_call(["crontab", "/dev/stdin"], )
 p=subprocess.Popen(['crontab', '/dev/stdin'], stdin=subprocess.PIPE)    
 p.communicate(input=crontab.encode("UTF-8"))
@@ -133,13 +134,12 @@ for line in fileinput.FileInput("/etc/httpd/conf.d/ssl.conf", inplace=1):
 # reload web server config
 subprocess.check_call(["httpd", "-k", "graceful"])
 
-#mfmfif os.environ["MBSIMENVTAGNAME"]=="staging":
-#mfmf  # for staging service run the CI at service startup
-#mfmf  print("Starting linux-ci build.")
-#mfmf  setup.run("build-linux64-ci", args.jobs, printLog=False, detach=True, addCommands=["--forceBuild"],
-#mfmf            fmatvecBranch="master", hdf5serieBranch="master",
-#mfmf            openmbvBranch="master", mbsimBranch="master",
-#mfmf            statusAccessToken=args.statusAccessToken)
+if os.environ["MBSIMENVTAGNAME"]=="staging":
+  # for staging service run the CI at service startup (just for testing a build)
+  print("Starting linux-ci build.")
+  setup.run("build-linux64-ci", args.jobs, printLog=False, detach=True, addCommands=["--forceBuild"],
+            fmatvecBranch="master", hdf5serieBranch="master",
+            openmbvBranch="master", mbsimBranch="master")
 
 # wait for the web server to finish (will never happen) and return its return code
 print("Service up and running.")
