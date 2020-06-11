@@ -104,7 +104,7 @@ def parseArguments():
 
 # create main documentation page
 def mainDocPage():
-  if not args.buildSystemRun:
+  if not args.buildSystemRun or args.buildType!="linux64-dailydebug":
     return
 
   staticRuntimeDir="/webserverstatic"
@@ -626,7 +626,14 @@ def make(tool):
     result=str(ex)
   if not args.disableMake:
     tool.makeOK=result=="done"
-  tool.makeOutput=makeFD.getvalue()
+  # configure was disable but needs to be run then ...
+  if tool.configureOK is None and tool.configureOutput!="":
+    # ... copy the output from configureOutput to makeOutput and append the output of make
+    tool.makeOutput=tool.configureOutput+"\n\n\n\n\n"+makeFD.getvalue()
+    tool.configureOutput=""
+  else:
+    # ... else just use the output of make
+    tool.makeOutput=makeFD.getvalue()
   tool.save()
   makeFD.close()
   ret=0
