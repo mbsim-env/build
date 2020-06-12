@@ -640,7 +640,7 @@ def run(s, jobs=4,
       volumes={
         'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config",        "mode": "ro"},
         'mbsimenv_letsencrypt.'+getTagname():                 {"bind": "/etc/letsencrypt",     "mode": "rw"},
-        'mbsimenv_databasemedia.'+getTagname():               {"bind": "/databasemedia",       "mode": "ro"},
+        'mbsimenv_databasemedia.'+getTagname():               {"bind": "/databasemedia",       "mode": "rw"},
         'mbsimenv_webserverstatic.'+getTagname():             {"bind": "/webserverstatic",     "mode": "ro"},
         '/var/run/docker.sock':                               {"bind": "/var/run/docker.sock", "mode": "rw"},
       },

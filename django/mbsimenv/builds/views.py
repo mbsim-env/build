@@ -1,9 +1,15 @@
 import django
 import django.shortcuts
 import builds
+import base.helper
 import base.views
 import functools
-import runexamples
+import service
+import json
+import re
+import threading
+import os
+import datetime
 from octicons.templatetags.octicons import octicon
 
 # maps the current url to the proper run id url (without forwarding to keep the URL in the browser)
@@ -35,17 +41,18 @@ class Run(base.views.Base):
     # and check if all these examples have passed or not
     examples=[]
     examplesAllOK=True
-    if hasattr(self.run, "examples") and self.run.examples:
-      for er in self.run.examples.all():
-        ok=er.examples.filterFailed().count()==0
-        examples.append({"id": er.id, "ok": ok, "buildType": er.buildType})
-        if not ok: examplesAllOK=False
+    for er in self.run.examples.all():
+      ok=er.examples.filterFailed().count()==0
+      examples.append({"id": er.id, "ok": ok, "buildType": er.buildType})
+      if not ok: examplesAllOK=False
 
     context['run']=self.run
     # just a list which can be used to loop over in the template
     context['repoList']=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
     context['examples']=examples
     context['examplesAllOK']=examplesAllOK
+    context['releaseFileSuffix']="linux64.tar.bz2" if self.run.buildType=="linux64-dailyrelease" else "win64.zip"
+    context['releaseTagSuffix']="linux64" if self.run.buildType=="linux64-dailyrelease" else "win64"
     return context
 
 # response to ajax requests of the build tool datatable
@@ -157,3 +164,100 @@ class DataTableTool(base.views.DataTable):
     if ds.xmldocOK is None:
       return ""
     return "table-success" if ds.xmldocOK else "table-danger"
+
+# release a distribution
+def releaseDistribution(request, run_id):
+  import github
+  # prepare the cache for github access
+  gh=base.helper.GithubCache(request)
+  # if not logged in or not the appropriate right then return a http error
+  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout):
+    return django.http.HttpResponseForbidden()
+  # get data
+  run=builds.models.Run.objects.get(id=run_id)
+  releaseVersion=json.loads(request.body)["releaseVersion"]
+  platform="win64" if run.buildType=="win64-dailyrelease" else "linux64"
+  tagName="release/"+releaseVersion+"-"+platform
+  relArchiveName="mbsim-env-release-"+releaseVersion+"-"+platform+(".zip" if run.buildType=="win64-dailyrelease" else ".tar.bz2")
+  relArchiveDebugName="mbsim-env-release-"+releaseVersion+"-"+platform+"-debug"+(".zip" if run.buildType=="win64-dailyrelease" else ".tar.bz2")
+  # check data
+  if run.buildType!="win64-dailyrelease" and run.buildType!="linux64-dailyrelease":
+    return django.http.HttpResponseBadRequest("Illegal build type for release.")
+  if re.fullmatch("[0-9]+\.[0-9]+", releaseVersion) is None:
+    return django.http.HttpResponseBadRequest("The version does not match x.y, where x and y are numbers.")
+  if service.models.Release.objects.filter(versionMajor=releaseVersion.split(".")[0], versionMinor=releaseVersion.split(".")[1],
+                                           platform=platform).count()>0:
+    return django.http.HttpResponseBadRequest("A release for this platform with this version already exists.")
+
+  org="mbsim-env"
+  repos=['fmatvec', 'hdf5serie', 'openmbv', 'mbsim']
+  # create tag object, create git reference and create a github release for all repositories
+  # worker function to make github api requests in parallel
+  def tagRefRelease(repo, out):
+    try:
+      if os.environ["MBSIMENVTAGNAME"]=="latest":
+        ghrepo=gh.getMbsimenvRepo(repo)
+        commitid=getattr(run, repo+"UpdateCommitID")
+        repoTagName=tagName
+      else:
+        import time
+        ghrepo=gh.gh.get_repo("friedrichatgc/mbsimenvtest") # use a dummy repo
+        commitid="d29408745f33634a712c941c693b667479232fc3" # use a dummy commit
+        repoTagName=tagName+"."+int(time.time()) # append a unique dummy string to the tagName
+      message="Release "+releaseVersion+" of MBSim-Env for "+platform+"\n"+\
+              "\n"+\
+              "The binary "+platform+" release can be downloaded from\n"+\
+              "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("service:releases")+"\n"+\
+              "Please note that this binary release includes a full build of MBSim-Env not only of this repository."
+      # create github tag
+      gittag=ghrepo.create_git_tag(repoTagName, message, commitid, "commit",
+        tagger=github.InputGitAuthor(request.user.username, request.user.email,
+                                     datetime.date.today().strftime("%Y-%m-%dT%H:%M:%SZ")))
+      # create git tag
+      ghrepo.create_git_ref("refs/tags/"+repoTagName, gittag.sha)
+      # create release
+      ghrepo.create_git_release(repoTagName, "Release "+releaseVersion+" of MBSim-Env for "+platform, message)
+    except github.GithubException as ex:
+      out.clear()
+      out['success']=False
+      out['message']=ex.data["message"] if "message" in ex.data else str(ex.data)
+    except:
+      import traceback
+      out.clear()
+      out['success']=False
+      out['message']="Internal error: Please report the following error to the maintainer:\n"+traceback.format_exc()
+  # start worker threads
+  thread={}
+  out={}
+  for repo in repos:
+    out[repo]={'success': True, 'message': ''}
+    thread[repo]=threading.Thread(target=tagRefRelease, args=(repo, out[repo]))
+    thread[repo].start()
+  # wait for all threads
+  for repo in repos:
+    thread[repo].join()
+  # combine output of all threads
+  error=False
+  errorMsg=""
+  for repo in repos:
+    if not out[repo]['success']:
+      error=True
+    errorMsg=errorMsg+("\n" if len(out[repo]['message'])>0 else "")+out[repo]['message']
+  if error:
+    return django.http.HttpResponseBadRequest("Releasing failed:\n"+errorMsg)
+  # create database release object
+  r=service.models.Release()
+  r.platform=platform
+  r.createDate=datetime.date.today()
+  r.versionMajor=releaseVersion.split(".")[0]
+  r.versionMinor=releaseVersion.split(".")[1]
+  r.releaseFileName=relArchiveName
+  r.releaseDebugFileName=relArchiveDebugName
+  r.save()
+  with r.releaseFile.open("wb") as fo:
+    with run.distributionFile.open("rb") as fi:
+      fo.write(fi.read())
+  with r.releaseDebugFile.open("wb") as fo:
+    with run.distributionDebugFile.open("rb") as fi:
+      fo.write(fi.read())
+  return django.http.HttpResponse()

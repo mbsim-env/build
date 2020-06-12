@@ -118,37 +118,24 @@ def mainDocPage():
   shutil.copytree(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc")), pj(staticRuntimeDir, "doxygenReference"), symlinks=True)
 
 def setGithubStatus(run, state):
-  import requests
-  data={
-    "state": state,
-    "target_url": "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("builds:run", args=[run.id]),
-    "context": "builds/%s/%s/%s/%s/%s"%(run.buildType, run.fmatvecBranch, run.hdf5serieBranch, run.openmbvBranch, run.mbsimBranch),
-  }
   if state=="pending":
-    data["description"]="Build started at %s"%(run.startTime.isoformat()+"Z")
+    description="Build started at %s"%(run.startTime.isoformat()+"Z")
   elif state=="failure":
-    data["description"]="Build failed after %.1f min"%((run.endTime-run.startTime).total_seconds()/60)
+    description="Build failed after %.1f min"%((run.endTime-run.startTime).total_seconds()/60)
   elif state=="success":
-    data["description"]="Build passed after %.1f min"%((run.endTime-run.startTime).total_seconds()/60)
+    description="Build passed after %.1f min"%((run.endTime-run.startTime).total_seconds()/60)
   else:
     raise RuntimeError("Unknown state "+state+" provided")
+  gh=github.Github(mbsimenvSecrets.getSecrets()["githubStatusAccessToken"])
   for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
-    # call github api
-    url='https://api.github.com/repos/mbsim-env/'+repo+'/statuses/'+getattr(run, repo+"UpdateCommitID")
-    if "githubStatusAccessToken" not in mbsimenvSecrets.getSecrets():
-      print("Warning; Skipping post request to\n"+url+"\nwith data\n"+json.dumps(data, indent=2))
-      sys.stdout.flush()
-      return
-    headers={'Authorization': 'token '+mbsimenvSecrets.getSecrets()["githubStatusAccessToken"],
-             'Accept': 'application/vnd.github.v3+json'}
-    response=requests.post(url, headers=headers, data=json.dumps(data))
-    if response.status_code!=201:
-      print("Warning: failed to create github status on repo "+repo+":")
-      if "message" in response.json(): print(response.json()["message"])
-      if "errors" in response.json():
-        for e in response.json()['errors']:
-          if 'message' in e: print(e["message"])
-      sys.stdout.flush()
+    if os.environ["MBSIMENVTAGNAME"]=="latest":
+      repo=gh.get_repo("mbsim-env/"+repo)
+      commit=repo.get_commit(getattr(run, repo+"UpdateCommitID"))
+    else:
+      repo=gh.get_repo("friedrichatgc/mbsimenvtest") # use a dummy repo
+      commit=repo.get_commit("d29408745f33634a712c941c693b667479232fc3")
+    commit.create_status(state, "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("builds:run", args=[run.id]),
+      description, "builds/%s/%s/%s/%s/%s"%(run.buildType, run.fmatvecBranch, run.hdf5serieBranch, run.openmbvBranch, run.mbsimBranch))
 
 # the main routine being called ones
 def main():

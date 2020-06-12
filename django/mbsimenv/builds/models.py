@@ -50,6 +50,7 @@ class Run(django.db.models.Model):
   distributionFile=django.db.models.FileField(null=True, max_length=100)
   @property
   def distributionFileName(self):
+    if self.distributionFile is None: return None
     return re.sub("^builds_Run_[0-9]+_", "", self.distributionFile.name)
   @distributionFileName.setter
   def distributionFileName(self, filename):
@@ -59,6 +60,7 @@ class Run(django.db.models.Model):
   distributionDebugFile=django.db.models.FileField(null=True, max_length=100)
   @property
   def distributionDebugFileName(self):
+    if self.distributionDebugFile is None: return None
     return re.sub("^builds_Run_[0-9]+_", "", self.distributionDebugFile.name)
   @distributionDebugFileName.setter
   def distributionDebugFileName(self, filename):

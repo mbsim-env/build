@@ -134,6 +134,7 @@ class ExampleStaticReference(django.db.models.Model):
   h5File=django.db.models.FileField(null=True, max_length=200)
   @property
   def h5FileName(self):
+    if self.h5File is None: return None
     return re.sub("^runexamples_ExampleStaticReference_[0-9]+_", "", self.h5File.name)
   @h5FileName.setter
   def h5FileName(self, filename):
@@ -220,6 +221,7 @@ class CompareResult(django.db.models.Model):
   h5File=django.db.models.FileField(null=True, max_length=200) # do not use h5File.open, use h5File_open
   @property
   def h5FileName(self):
+    if self.h5File is None: return None
     fn=re.sub("^runexamples_CompareResult_[0-9]+_", "", self.h5File.name)
     if fn!="" and fn!=self.h5Filename:
       raise RuntimeError("Internal filename ID error.")

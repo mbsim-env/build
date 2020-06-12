@@ -12,6 +12,7 @@
   "use strict";
   $(document).ready(function() {
     initToolTable("{% url 'builds:datatable_tool' run.id %}");
+    releaseDistribution("{% url 'builds:releaseDistribution' run.id %}");
   });
 </script>
 <h1>Build Results of MBSim-Env: <small>{{run.buildType}}</small></h1>
@@ -142,7 +143,7 @@
   </div>
 {% endif %}
 
-{% if run.distributionOK %}
+{% if run.distributionOK is not None %}
   <h2>Distribution</h2>
   <div class="alert alert-{{ run.distributionOK|yesno:"success,danger" }}" role="alert">
     <span class="text-{{ run.distributionOK|yesno:"success,danger" }}">
@@ -152,6 +153,53 @@
     <a href="{% url 'base:textFieldFromDB' 'builds' 'Run' run.id 'distributionOutput' %}">log-file</a>;
     <strong><a href="{% url "base:fileDownloadFromDB" "builds" "Run" run.id "distributionFile" %}">Download</a></strong>;
     <a href="{% url "base:fileDownloadFromDB" "builds" "Run" run.id "distributionDebugFile" %}">debug-info</a>
+    {% if run.distributionFile is not None %}
+      <div class="card border-light">
+        <div class="card-header bg-light">
+          {% octicon "cloud-upload" %}{% octicon "tag" %}&nbsp;<a href="#releaseDistribution" data-toggle="collapse">
+            Release this distribution</a>&nbsp;{% octicon "triangle-down" %}
+        </div>
+        <div class="card-body collapse" id="releaseDistribution">
+          <p>Releasing this distribution will</p>
+          <ul>
+            <li>tag the commits of the repositories, shown at the top, on GitHub.</li>
+            <li>copy the above distribution (<b>Download</b> - debug-info) to <a href="{% url 'service:releases' %}">releases</a>.</li>
+          </ul>
+          <p>When releasing a distribution you have</p>
+          <form>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input RELEASECHECK" id="releaseCheck1"/>
+              <label class="form-check-label" for="releaseCheck1">first to check that the corresponding debug build works including all examples.</label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input RELEASECHECK" id="releaseCheck2"/>
+              <label class="form-check-label" for="releaseCheck2">first to check that the corresponging valgrind-examples of the debug build works.</label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input RELEASECHECK" id="releaseCheck3"/>
+              <label class="form-check-label" for="releaseCheck3">first to download the distribution and check it manually on a native OS (at least using the test script .../mbsim-env/bin/mbsim-env-test[.bat]).</label>
+            </div>
+            <div class="form-check">
+              <input type="checkbox" class="form-check-input RELEASECHECK" id="releaseCheck4"/>
+              <label class="form-check-label" for="releaseCheck4">to release the Windows and Linux release builds at the same commit state using the same "release version" string!</label>
+            </div>
+            <div class="form-group">
+              <label for="releaseVersion">Release version</label>
+              <input class="form-control" id="releaseVersion" placeholder="x.y">
+            </div>
+            <button type="button" class="btn btn-primary" id="releaseButton">
+              {% octicon "cloud-upload" %}&nbsp;Release as
+              <b>mbsim-env-release-<span class="RELSTR">x.y</span>-{{releaseFileSuffix}}</b>
+              and {% octicon "tag" %}&nbsp;tag as
+              <b>release/<span class="RELSTR">x.y</span>-{{releaseTagSuffix}}</b>
+            </button>
+            <p><small>
+              (NOTE! This will create an annotated git tag with your username and email on the public MBSim-Env repositories on GitHub!)
+            </small></p>
+          </form>
+        </div>
+      </div>
+    {% endif %}
   </div>
 {% endif %}
 

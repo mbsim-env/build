@@ -18,11 +18,12 @@
 <table style="width:auto;" class="table table-striped table-hover table-bordered table-sm">
   <thead>
     <tr>
-      <th>{% octicon "kebab-vertical" %}&nbsp;Build Type</th>
+      <th>{% octicon "kebab-vertical" %}&nbsp;Platform</th>
       <th>{% octicon "kebab-horizontal" %}&nbsp;Version</th>
       <th>{% octicon "clock" %}&nbsp;Created at</th>
       <th>{% octicon "desktop-download" %}&nbsp;Download</th>
       <th>{% octicon "text-size" %}&nbsp;Size</th>
+      <th><small>DebugInfo</small></th>
     </tr>
   </thead>
   <tbody>
@@ -34,8 +35,15 @@
         </td>
         <td>{{ r.versionMajor }}.{{ r.versionMinor }}</td>
         <td>{{ r.createDate }}</td>
-        <td><a href="{% url "base:fileDownloadFromDB" "service" "Release" r.id "releaseFile" %}">{{ r.releaseFileName }}</a></td>
+        <td><a class="font-weight-bold" href="{% url "base:fileDownloadFromDB" "service" "Release" r.id "releaseFile" %}">{{ r.releaseFileName }}</a></td>
         <td>{{ r.releaseFile.size|filesizeformat }}</td>
+        <td><small>
+          {% if r.releaseDebugFile %}
+            <a href="{% url "base:fileDownloadFromDB" "service" "Release" r.id "releaseDebugFile" %}">{{ r.releaseDebugFileName }}</a>
+          {% else %}
+            -
+          {% endif %}
+        </small></td>
       </tr>
     {% endfor %}
   </tbody>
@@ -46,11 +54,12 @@
 <table style="width:auto;" class="table table-striped table-hover table-bordered table-sm">
   <thead>
     <tr>
-      <th>{% octicon "kebab-vertical" %}&nbsp;Build Type</th>
+      <th>{% octicon "kebab-vertical" %}&nbsp;Platform</th>
       <th>{% octicon "kebab-horizontal" %}&nbsp;Version</th>
       <th>{% octicon "clock" %}&nbsp;Created at</th>
       <th>{% octicon "desktop-download" %}&nbsp;Download</th>
       <th>{% octicon "text-size" %}&nbsp;Size</th>
+      <th><small>DebugInfo</small></th>
     </tr>
   </thead>
   <tbody>
@@ -64,6 +73,13 @@
         <td>{{ r.createDate }}</td>
         <td><a href="{% url "base:fileDownloadFromDB" "service" "Release" r.id "releaseFile" %}">{{ r.releaseFileName }}</a></td>
         <td>{{ r.releaseFile.size|filesizeformat }}</td>
+        <td><small>
+          {% if r.releaseDebugFile %}
+            <a href="{% url "base:fileDownloadFromDB" "service" "Release" r.id "releaseDebugFile" %}">{{ r.releaseDebugFileName }}</a>
+          {% else %}
+            -
+          {% endif %}
+        </small></td>
       </tr>
     {% endfor %}
   </tbody>

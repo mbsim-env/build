@@ -41,20 +41,24 @@ waitTime=datetime.timedelta(minutes=1) if os.environ["MBSIMENVTAGNAME"]!="stagin
 
 ciq=service.models.CIQueue.objects.all().order_by("recTime").first()
 if ciq is not None:
-  print("Found something to build: "+ciq.fmatvecBranch+", "+ciq.hdf5serieBranch+", "+\
-        ciq.openmbvBranch+", "+ciq.mbsimBranch+" starting in, at most, "+str(waitTime))
-  sys.stdout.flush()
-  if django.utils.timezone.now()-ciq.recTime>waitTime:
-    print("Start build: "+ciq.fmatvecBranch+", "+ciq.hdf5serieBranch+", "+\
-          ciq.openmbvBranch+", "+ciq.mbsimBranch)
+  if ciq.fmatvecBranch is not None and ciq.hdf5serieBranch is not None and ciq.openmbvBranch is not None and ciq.mbsimBranch is not None:
+    print("Found something to build: "+ciq.fmatvecBranch+", "+ciq.hdf5serieBranch+", "+\
+          ciq.openmbvBranch+", "+ciq.mbsimBranch+" starting in, at most, "+str(waitTime))
     sys.stdout.flush()
-    # run linux64-ci
-    ret=setup.run("build-linux64-ci", args.jobs, printLog=False,
-                  fmatvecBranch=ciq.fmatvecBranch, hdf5serieBranch=ciq.hdf5serieBranch,
-                  openmbvBranch=ciq.openmbvBranch, mbsimBranch=ciq.mbsimBranch)
-    ciq.delete()
-    sys.exit(ret)
-
-#mfmf# run rebuild build-system
-#mfmfret=setup.run("builddocker", args.jobs, printLog=False, builddockerBranch=bd, statusAccessToken=statusAccessToken)
-#mfmfsys.exit(ret)
+    if django.utils.timezone.now()-ciq.recTime>waitTime:
+      print("Start build: "+ciq.fmatvecBranch+", "+ciq.hdf5serieBranch+", "+\
+            ciq.openmbvBranch+", "+ciq.mbsimBranch)
+      sys.stdout.flush()
+      # run linux64-ci
+      ret=setup.run("build-linux64-ci", args.jobs, printLog=False,
+                    fmatvecBranch=ciq.fmatvecBranch, hdf5serieBranch=ciq.hdf5serieBranch,
+                    openmbvBranch=ciq.openmbvBranch, mbsimBranch=ciq.mbsimBranch)
+      ciq.delete()
+      sys.exit(ret)
+  if ciq.buildCommitID is not None:
+    print("Start build of build-system: "+ciq.buildCommitID)
+    sys.stdout.flush()
+    #mfmf# run rebuild build-system
+    #mfmfret=setup.run("builddocker", args.jobs, printLog=False, builddockerBranch=ciq.buildCommitID)
+    #mfmfciq.delete()
+    #mfmfsys.exit(ret)

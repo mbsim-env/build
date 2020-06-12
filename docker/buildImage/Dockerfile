@@ -234,10 +234,16 @@ ENV PATH=/mbsim-env/mbsim/examples:/mbsim-env/build/misc:$PATH \
     MBSIM_SWIG=1 \
     CLASSPATH=$CLASSPATH:/3rdparty/vnu.jar
 
-# Add user dockeruser, create volumes and set volume ownership and permissions
+# user/group handling
+# - add group dockeruser and user dockeruser with group dockeruser
+# - add group apache with id 48
+# - create volume mount dirs
+# - set permissions of volume mount dirs
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
+  groupadd -g 48 apache && \
   mkdir /mbsim-env /mbsim-ccache /databasemedia /webserverstatic && \
-  chown dockeruser:dockeruser /mbsim-env /mbsim-ccache /databasemedia /webserverstatic
+  chown dockeruser:dockeruser /mbsim-env /mbsim-ccache /webserverstatic && \
+  chown dockeruser:apache /databasemedia && chmod ug+rwx /databasemedia
 
 # add g++/c++ to cache dir (its not added automatically since g++ is not installed since scl is used
 RUN ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/g++ && ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/c++

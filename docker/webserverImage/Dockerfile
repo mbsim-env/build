@@ -86,11 +86,16 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/webserverImage" \
   org.label-schema.vendor="MBSim-Environment"
 
-# Check apache user and group id (must be in sync with the one in buildImage)
-# Add user dockeruser, create volumes and set volume ownership and permissions
+# user/group handling
+# - check apache user/group id
+# - create dockeruser
+# - create volume mount dirs
+# - set permissions of volume mount dirs
 RUN test $(id -u apache) -eq 48 && test $(id -g apache) -eq 48 && \
-  mkdir -p /etc/letsencrypt /mbsim-config /databasemedia /webserverstatic
-  # chown root:root /etc/letsencrypt # not needed
+  useradd --no-log-init -u 1065 dockeruser && \
+  mkdir /etc/letsencrypt /databasemedia /webserverstatic && \
+  chown apache:apache /etc/letsencrypt && \
+  chown dockeruser:apache /databasemedia && chmod ug+rwx /databasemedia
 
 HEALTHCHECK --interval=60s --timeout=30s --start-period=30s --retries=3 \
   CMD curl -f https://${MBSIMENVSERVERNAME} || exit 1

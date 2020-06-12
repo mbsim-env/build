@@ -295,22 +295,31 @@ def webhook(request):
     data=json.loads(rawdata)
     res["repo"]=data['repository']['name']
     if data['ref'][0:11]!="refs/heads/":
-      return django.http.HttpResponseBadRequest()
+      return django.http.HttpResponseBadRequest("Illegal data in 'ref'.")
     res["branch"]=data['ref'][11:]
     res["commitID"]=data["after"]
     res["addedBranchCombinations"]=[]
-    # get all branch combinations to build as save in queue
-    for bc in service.models.CIBranches.objects.filter(**{res["repo"]+"Branch": res["branch"]}):
-      branchCombination={
-        "fmatvecBranch": bc.fmatvecBranch,
-        "hdf5serieBranch": bc.hdf5serieBranch,
-        "openmbvBranch": bc.openmbvBranch,
-        "mbsimBranch": bc.mbsimBranch,
-      }
-      ciq, _=service.models.CIQueue.objects.get_or_create(**branchCombination, defaults={"recTime": django.utils.timezone.now()})
+    if res["repo"]=="fmatvec" or res["repo"]=="hdf5serie" or res["repo"]=="openmbv" or res["repo"]=="mbsim":
+      # get all branch combinations to build as save in queue
+      for bc in service.models.CIBranches.objects.filter(**{res["repo"]+"Branch": res["branch"]}):
+        branchCombination={
+          "fmatvecBranch": bc.fmatvecBranch,
+          "hdf5serieBranch": bc.hdf5serieBranch,
+          "openmbvBranch": bc.openmbvBranch,
+          "mbsimBranch": bc.mbsimBranch,
+        }
+        ciq, _=service.models.CIQueue.objects.get_or_create(**branchCombination, defaults={"recTime": django.utils.timezone.now()})
+        ciq.recTime=django.utils.timezone.now()
+        ciq.save()
+        res["addedBranchCombinations"].append(branchCombination)
+    elif res["repo"]=="build":
+      ciq=service.models.CIQueue()
+      ciq.buildCommitID=res["commitID"]
       ciq.recTime=django.utils.timezone.now()
       ciq.save()
       res["addedBranchCombinations"].append(branchCombination)
+    else:
+      return django.http.HttpResponseBadRequest("Unknown repo.")
     return django.http.JsonResponse(res)
   else:
-    return django.http.HttpResponseNotFound()
+    return django.http.HttpResponseBadRequest("Unhandled webhook event.")
