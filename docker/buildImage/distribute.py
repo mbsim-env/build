@@ -53,7 +53,7 @@ def parseArguments():
 
 
 def addDepsFor(name):
-  noDepsFor=[ # do not add deplibs for SWIG python libs
+  noDepsForFile=[ # do not add deplibs for SWIG python libs
     "*/_OpenMBV.so",
     "*/_OpenMBV.pyd",
     "*/_fmatvec.so",
@@ -65,8 +65,15 @@ def addDepsFor(name):
     "*/__mbsim_part*.so",
     "*/__mbsim_part*.pyd",
   ]
-  if name.startswith("/usr/lib64/qt5/plugins/"): return False # do not add deplibs for qt plugins
-  if any(map(lambda g: fnmatch.fnmatch(name, g), noDepsFor)): return False
+  noDepsForDir=[
+    args.prefix+"/bin/platformthemes/",
+    args.prefix+"/bin/iconengines/",
+    args.prefix+"/bin/platforms/",
+    args.prefix+"/bin/styles/",
+    args.prefix+"/bin/xcbglintegrations/",
+  ]
+  if any(map(lambda d: name.startswith(d), noDepsForDir)): return False
+  if any(map(lambda g: fnmatch.fnmatch(name, g), noDepsForFile)): return False
   return True
 
 def adaptRPATH(name, orgName):
