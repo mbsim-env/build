@@ -11,6 +11,7 @@ import hmac
 import hashlib
 import mbsimenvSecrets
 import concurrent.futures
+import urllib.parse
 from octicons.templatetags.octicons import octicon
 
 # the user profile page
@@ -330,3 +331,24 @@ def webhook(request):
     return django.http.JsonResponse(res)
   else:
     return django.http.HttpResponseBadRequest("Unhandled webhook event.")
+
+class Webapp(base.views.Base):
+  template_name='service/webapp.html'
+  def get_context_data(self, **kwargs):
+    context=super().get_context_data(**kwargs)
+    context["prog"]=kwargs["prog"]
+    context["buildType"]=kwargs["buildType"]
+    context["exampleName"]=kwargs["exampleName"]
+    # we can only pass additonal information to websockify via a token query. we use a url quoted json string as token
+    context["token"]=urllib.parse.quote_plus(json.dumps({
+      "prog": kwargs["prog"], "buildType": kwargs["buildType"], "exampleName": kwargs["exampleName"]
+    }))
+    return context
+
+def checkValidUser(request):
+  # prepare the cache for github access
+  gh=base.helper.GithubCache(request)
+  # if not logged in or not the appropriate right then return a http error
+  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout):
+    return django.http.HttpResponseForbidden()
+  return django.http.HttpResponse()

@@ -581,47 +581,6 @@ def mainFiles(fl, example, suffix):
   ret=list(map(lambda x: example+'/'+x, ret))
   ret.sort(key=lambda a: os.path.basename(a))
   return ret
-def webapp(example):
-  ombv={}
-  fl=glob.glob("*.ombvx")
-  if len(fl)>0:
-    ombv['buildType']=args.buildType
-    ombv['prog']='openmbv'
-    ombv['file']=mainFiles(fl, example, ".ombvx")
-  h5p={}
-  for prefix in ['', 'reference/']:
-    fl=glob.glob(prefix+"*.mbsh5")
-    if len(fl)>0:
-      h5p['buildType']=args.buildType
-      h5p['prog']='h5plotserie'
-      if 'file' not in h5p: h5p['file']=[]
-      h5p['file'].extend(mainFiles(fl, example, ".mbsh5"))
-  gui={}
-  if os.path.exists("MBS.mbsx") or os.path.exists("MBS.flat.mbsx") or os.path.exists("FMI.mbsx") or os.path.exists("FMI_cosim.mbsx"):
-    gui={'buildType': args.buildType, 'prog': 'mbsimgui'}
-    if os.path.exists("MBS.mbsx"):
-      gui['file']=[example+'/MBS.mbsx']
-    elif os.path.exists("MBS.flat.mbsx"):
-      gui['file']=[example+'/MBS.flat.mbsx']
-    elif os.path.exists("FMI.mbsx"):
-      gui['file']=[example+'/FMI.mbsx']
-    else:
-      gui['file']=[example+'/FMI_cosim.mbsx']
-#mfmf
-  return '<td data-order="%03d%03d%03d">'%(len(ombv), len(h5p), len(gui))+\
-      ('<a href="/mbsim/html/noVNC/mbsimwebapp.html?'+urllib.parse.urlencode(ombv, doseq=True)+'"><button disabled="disabled" '+\
-       'type="button" class="_WEBAPP btn btn-default btn-xs" style="visibility:'+\
-       ('visible' if len(ombv)>0 else 'hidden')+';">'+\
-       '<img src="/mbsim/html/openmbv.svg" alt="ombv"/></button></a>&nbsp;')+\
-      ('<a href="/mbsim/html/noVNC/mbsimwebapp.html?'+urllib.parse.urlencode(h5p, doseq=True)+'"><button disabled="disabled" '+\
-       'type="button" class="_WEBAPP btn btn-default btn-xs" style="visibility:'+\
-       ('visible' if len(h5p)>0 else 'hidden')+';">'+\
-       '<img src="/mbsim/html/h5plotserie.svg" alt="h5p"/></button></a>&nbsp;')+\
-      ('<a href="/mbsim/html/noVNC/mbsimwebapp.html?'+urllib.parse.urlencode(gui, doseq=True)+'"><button disabled="disabled" '+\
-       'type="button" class="_WEBAPP btn btn-default btn-xs" style="visibility:'+\
-       ('visible' if len(gui)>0 else 'hidden')+';">'+\
-       '<img src="/mbsim/html/mbsimgui.svg" alt="gui"/></button></a>&nbsp;')+\
-    '</td>'
 
 # if args.exeEXt is set we must prefix every command with wine
 def exePrefix():

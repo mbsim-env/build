@@ -255,21 +255,25 @@ class DataTableExample(base.views.DataTable):
   def colData_webApp(self, ds):
     ret=""
     enabled="" if self.isCurrent else 'disabled="disabled"'
-    url="mfmf"#"/mbsim/html/noVNC/mbsimwebapp.html?"+urllib.parse.urlencode(ombv, doseq=True)
+
+    url=django.urls.reverse('service:webapp', args=["openmbv", self.run.buildType, ds.exampleName])
     vis="visible" if ds.webappOpenmbv else "hidden"
     img=django.templatetags.static.static("base/openmbv.svg")
     ret+='<a href="%s"><button %s type="button" class="btn btn-outline-primary btn-xs" style="visibility:%s;">'\
          '<img src="%s" alt="ombv"/></button></a>&nbsp;'%(url, enabled, vis, img)
-    url="mfmf"
+
+    url=django.urls.reverse('service:webapp', args=["h5plotserie", self.run.buildType, ds.exampleName])
     vis="visible" if ds.webappHdf5serie else "hidden"
     img=django.templatetags.static.static("base/h5plotserie.svg")
     ret+='<a href="%s"><button %s type="button" class="btn btn-outline-primary btn-xs" style="visibility:%s;">'\
          '<img src="%s" alt="h5p"/></button></a>&nbsp;'%(url, enabled, vis, img)
-    url="mfmf"
+
+    url=django.urls.reverse('service:webapp', args=["mbsimgui", self.run.buildType, ds.exampleName])
     vis="visible" if ds.webappMbsimgui else "hidden"
     img=django.templatetags.static.static("base/mbsimgui.svg")
     ret+='<a href="%s"><button %s type="button" class="btn btn-outline-primary btn-xs" style="visibility:%s;">'\
          '<img src="%s" alt="gui"/></button></a>'%(url, enabled, vis, img)
+
     return ret
   def colSortKey_webApp(self, ds):
     return "%d%d%d"%(ds.webappOpenmbv, ds.webappHdf5serie, ds.webappMbsimgui)

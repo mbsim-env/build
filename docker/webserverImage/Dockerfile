@@ -32,7 +32,7 @@ RUN pip3 install django django-allauth django-octicons
 # a webserver is running on port 80
 EXPOSE 80/tcp 443/tcp
 
-#mfmfCOPY --from=temp /tmp/noVNC/include /var/www/html/noVNC/include
+COPY --from=temp /tmp/noVNC/include /var/www/html/noVNC/include
 
 # copy django
 COPY django/mbsimenv /context/mbsimenv

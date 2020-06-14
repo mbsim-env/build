@@ -1,0 +1,155 @@
+{% load octicons %}
+{% load static %}
+
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <META http-equiv="Content-Type" content="text/html; charset=UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+    <title>Webapp of {{prog}} for {{exampleName}}</title>
+    <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/css/bootstrap.min.css"
+      integrity="sha384-Vkoo8x4CGsO3+Hhxv8T/Q5PaXtkKtu6ug5TOeNV6gBiFeWPGFN9MuhOf23Q9Ifjh" crossorigin="anonymous">
+    <link rel="stylesheet" type="text/css" href="{% static 'base/style.css' %}"/>
+    <link rel="shortcut icon" href="{% static 'base/mbsimenv.ico' %}" type="image/x-icon"/>
+    <link rel="icon" href="{% static 'base/mbsimenv.ico' %}" type="image/x-icon"/>
+
+    <!-- Always force latest IE rendering engine (even in intranet) & Chrome Frame
+                Remove this if you use the .htaccess -->
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <!-- Apple iOS Safari settings -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <!-- App Start Icon  -->
+    <link rel="apple-touch-startup-image" href="images/screen_320x460.png" />
+    <!-- For iOS devices set the icon to use if user bookmarks app on their homescreen -->
+    <link rel="apple-touch-icon" href="images/screen_57x57.png"/>
+  </head>
+  <body>
+    <script src="https://code.jquery.com/jquery-3.4.1.min.js"
+      integrity="sha256-CSXorXvZcTkaix6Yvo6HppcZGetbYMGWSFlBw8HfCJo=" crossorigin="anonymous"></script>
+    <script src="https://stackpath.bootstrapcdn.com/bootstrap/4.4.1/js/bootstrap.min.js"
+      integrity="sha384-wfSDF2E50Y2D1uUdj0O3uMBJnjuUD4Ih7YwaYd1iqfktj0Uod8GCExl3Og8ifwB6" crossorigin="anonymous"></script>
+    <script src="/noVNC/include/util.js"> </script>
+    <script>
+      "use strict";
+    
+      // Load supporting scripts
+      var INCLUDE_URI="/noVNC/include/";
+      Util.load_scripts(["webutil.js", "base64.js", "websock.js", "des.js",
+                         "keysymdef.js", "keyboard.js", "input.js", "display.js",
+                         "inflator.js", "rfb.js", "keysym.js"]);
+    
+      var rfb;
+      var resizeTimeout;
+      var running=false;
+    
+      function UIresize() {
+        var innerW=window.innerWidth;
+        var innerH=window.innerHeight;
+        if (innerW!==undefined && innerH!==undefined)
+          rfb.requestDesktopSize(innerW, innerH-7);
+      }
+      function FBUComplete(rfb, fbu) {
+        UIresize();
+        rfb.set_onFBUComplete(function() {});
+      }
+      function clipboard(rfb, text) {
+        // copy text to clipboard: not working in a browser to to security restrictions
+      }
+      function updateState(rfb, state, oldstate, msg) {
+        switch(state) {
+          case 'normal':
+            // hide the status panel
+            $("#STATUSPANEL").addClass("d-none");
+            running=true;
+            break;
+          case 'failed':
+          case 'fatal':
+            // change the status panel text
+            $("#STATUSMSG").children().remove();
+            $("#STATUSMSG").append("<p>"+msg+"</p>");
+            // switch to danger message box
+            $("#STATUSPANEL").removeClass("bg-info");
+            $("#STATUSPANEL").addClass("bg-danger");
+            // show status panel
+            $("#STATUSPANEL").removeClass("d-none");
+            break;
+          case 'disconnected':
+            if(running)
+              // go to previous page
+              window.history.back();
+            break;
+          default:
+            break;
+        }
+      }
+    
+      window.onresize=function () {
+        // When the window has been resized, wait until the size remains
+        // the same for 0.5 seconds before sending the request for changing
+        // the resolution of the session
+        clearTimeout(resizeTimeout);
+        resizeTimeout = setTimeout(function() {
+          UIresize();
+        }, 500);
+      };
+    
+      window.onscriptsload=function () {
+        try {
+          rfb=new RFB({
+            'target': $D('noVNC_canvas'),
+            'encrypt': true,
+            'local_cursor': true,
+            'shared': false,
+            'onUpdateState': updateState,
+            'onFBUComplete': FBUComplete,
+            'onClipboard': clipboard,
+          });
+        } catch (exc) {
+          updateState(null, 'fatal', null, 'Unable to create RFB client -- ' + exc);
+          return;
+        }
+    
+        // Authorization is done using the cookie send with the websocket request.
+        // The noVNC token is used to pass additonal information to the server: here we pass the url query as token.
+        var port=location.port;
+        if(!port) {
+          if(location.protocol=="https:")
+            port=443;
+          else if(location.protocol=="http:")
+            port=80;
+          else {
+            updateState(null, 'fatal', null, 'Cannot detect port');
+            return;
+          }
+        }
+        // we can only pass additonal information to websockify via a token query. we use a url quoted json string as token
+        rfb.connect(location.hostname, port, "", "websockify?token={{token}}");
+      };
+    </script>
+    <canvas id="noVNC_canvas" width="1" height="1">
+      <div class="card bg-danger">
+        <div class="card-header">{% octicon "stop" %}&nbsp;Error message</div>
+          Your browser does not support Canvas.
+        <div class="card-body">
+        </div>
+      </div>
+    </canvas>
+    <div id="STATUSPANEL" class="card bg-info" style="margin: 1em;">
+      <div class="card-header">{% octicon "info" %}&nbsp;Status message</div>
+      <div class="card-body text-center">
+        <div id="STATUSMSG">
+          <p>Connecting to {{prog}} for {{exampleName}} using last build of {{buildType}}.</p>
+          <p>Please wait.</p>
+          <p><object data="{% static 'service/loading.svg' %}" type="image/svg+xml"></object></p>
+        </div>
+      </div>
+    </div>
+  </body>
+</html>
+
+
+
+
+
+

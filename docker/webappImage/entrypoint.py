@@ -55,26 +55,18 @@ class MBSimWebappToken(websockify.token_plugins.BasePlugin):
 class MBSimWebappAuth(websockify.auth_plugins.BasePlugin):
   def authenticate(self, headers, target_host, target_port):
     # check authentification
+
+    # for for cookie
     if 'Cookie' not in headers: # error if not Cookie is defined
       raise websockify.auth_plugins.AuthenticationError(log_msg="No cookie provided.")
-    # get cookie and get the mbsimenvsessionid form the cookie
-    cookie=headers['Cookie']
-    c=http.cookies.SimpleCookie(cookie)
-    if 'mbsimenvsessionid' not in c:
-      raise websockify.auth_plugins.AuthenticationError(log_msg="No mbsimenvsessionid provided in cookie.")
-    sessionid=c['mbsimenvsessionid'].value
-    # call the server to check to session ID (we can do this my checking the config file of the server directly
-    # but this file is not readable for this user for security reasons)
-    response=requests.post("https://"+os.environ['MBSIMENVSERVERNAME']+"/wsgi/mbsimBuildServiceServer.py/checkmbsimenvsessionid",
-      json={'mbsimenvsessionid': sessionid})
-    # if the response is OK and success is true than continue
+    # get cookie (as CookieJar)
+    cj=requests.cookies.RequestsCookieJar()
+    cj.update(http.cookies.SimpleCookie(headers['Cookie']))
+    # call the server to check for valid user
+    response=requests.get("https://"+os.environ['MBSIMENVSERVERNAME']+"/service/checkvaliduser/", cookies=cj)
+    # if the response is not OK than the user is not allowed
     if response.status_code!=200:
-      raise websockify.auth_plugins.AuthenticationError(log_msg="Checking session ID failed.")
-    d=response.json()
-    if 'success' not in d:
-      raise websockify.auth_plugins.AuthenticationError(log_msg="Invalid response from mbsim server.")
-    if not d['success']:
-      raise websockify.auth_plugins.AuthenticationError(log_msg=d['message'])
+      raise websockify.auth_plugins.AuthenticationError(log_msg="User not authorized.")
 
     token=globalVar["token"]
     hostname=globalVar["hostname"]
