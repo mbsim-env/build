@@ -64,13 +64,9 @@ def addDepsFor(name):
     "*/_OpenMBV.pyd",
     "*/__mbsim_part*.so",
     "*/__mbsim_part*.pyd",
+    "*/libqgtk3.so",
   ]
   noDepsForDir=[
-    args.prefix+"/bin/platformthemes/",
-    args.prefix+"/bin/iconengines/",
-    args.prefix+"/bin/platforms/",
-    args.prefix+"/bin/styles/",
-    args.prefix+"/bin/xcbglintegrations/",
   ]
   if any(map(lambda d: name.startswith(d), noDepsForDir)): return False
   if any(map(lambda g: fnmatch.fnmatch(name, g), noDepsForFile)): return False
