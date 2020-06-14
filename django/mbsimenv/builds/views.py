@@ -188,6 +188,8 @@ def releaseDistribution(request, run_id):
   if service.models.Release.objects.filter(versionMajor=releaseVersion.split(".")[0], versionMinor=releaseVersion.split(".")[1],
                                            platform=platform).count()>0:
     return django.http.HttpResponseBadRequest("A release for this platform with this version already exists.")
+  if not run.distributionFile or not run.distributionDebugFile:
+    return django.http.HttpResponseBadRequest("Release file (or debug file) not propably build.")
 
   org="mbsim-env"
   repos=['fmatvec', 'hdf5serie', 'openmbv', 'mbsim']
@@ -203,7 +205,7 @@ def releaseDistribution(request, run_id):
         import time
         ghrepo=gh.gh.get_repo("friedrichatgc/mbsimenvtest") # use a dummy repo
         commitid="d29408745f33634a712c941c693b667479232fc3" # use a dummy commit
-        repoTagName=tagName+"."+int(time.time()) # append a unique dummy string to the tagName
+        repoTagName=tagName+"."+repo+"."+str(int(time.time())) # append a unique dummy string to the tagName
       message="Release "+releaseVersion+" of MBSim-Env for "+platform+"\n"+\
               "\n"+\
               "The binary "+platform+" release can be downloaded from\n"+\

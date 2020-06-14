@@ -60,5 +60,5 @@ if ciq is not None:
     sys.stdout.flush()
     #mfmf# run rebuild build-system
     #mfmfret=setup.run("builddocker", args.jobs, printLog=False, builddockerBranch=ciq.buildCommitID)
-    #mfmfciq.delete()
+    ciq.delete()
     #mfmfsys.exit(ret)

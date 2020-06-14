@@ -13,6 +13,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   libtool automake autoconf \
   python3-pip \
   python3-numpy \
+  python3-pygithub \
   mingw64-boost \
   doxygen \
   tigervnc-server \

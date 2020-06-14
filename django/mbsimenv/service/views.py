@@ -37,51 +37,58 @@ def getColor(text):
 # a svg badge with the number of all examples
 def currentBuildNrAll(request, buildtype):
   run=builds.models.Run.objects.getCurrent(buildtype)
-  nr=run.nrAll() if run else 0
-  context={
-    "nr": nr,
-    "color": getColor("secondary"),
-  }
+  if run is None:
+    context={"nr": "n/a", "color": getColor("secondary")}
+  elif run.endTime is None:
+    context={"nr": "...", "color": getColor("secondary")}
+  else:
+    context={"nr": run.nrAll(), "color": getColor("secondary")}
   return django.shortcuts.render(request, 'service/nrbadge.svg', context, content_type="image/svg+xml")
 
 # a svg badge with the number of failed examples
 def currentBuildNrFailed(request, buildtype):
   run=builds.models.Run.objects.getCurrent(buildtype)
-  nr=run.nrFailed() if run else 0
-  context={
-    "nr": nr,
-    "color": getColor("success" if nr==0 else "danger"),
-  }
+  if run is None:
+    context={"nr": "n/a", "color": getColor("secondary")}
+  elif run.endTime is None:
+    context={"nr": "...", "color": getColor("secondary")}
+  else:
+    nr=run.nrFailed()
+    context={"nr": nr, "color": getColor("success" if nr==0 else "danger")}
   return django.shortcuts.render(request, 'service/nrbadge.svg', context, content_type="image/svg+xml")
 
 # a svg badge with the number of all examples
 def currentRunexampleNrAll(request, buildtype):
   run=runexamples.models.Run.objects.getCurrent(buildtype)
-  nr=run.nrAll() if run else 0
-  context={
-    "nr": nr,
-    "color": getColor("secondary"),
-  }
+  if run is None:
+    context={"nr": "n/a", "color": getColor("secondary")}
+  elif run.endTime is None:
+    context={"nr": "...", "color": getColor("secondary")}
+  else:
+    context={"nr": run.nrAll(), "color": getColor("secondary")}
   return django.shortcuts.render(request, 'service/nrbadge.svg', context, content_type="image/svg+xml")
 
 # a svg badge with the number of failed examples
 def currentRunexampleNrFailed(request, buildtype):
   run=runexamples.models.Run.objects.getCurrent(buildtype)
-  nr=run.nrFailed() if run else 0
-  context={
-    "nr": nr,
-    "color": getColor("success" if nr==0 else "danger"),
-  }
+  if run is None:
+    context={"nr": "n/a", "color": getColor("secondary")}
+  elif run.endTime is None:
+    context={"nr": "...", "color": getColor("secondary")}
+  else:
+    nr=run.nrFailed()
+    context={"nr": nr, "color": getColor("success" if nr==0 else "danger")}
   return django.shortcuts.render(request, 'service/nrbadge.svg', context, content_type="image/svg+xml")
 
 # a svg badge with the coverage rate
 def currentCoverageRate(request, buildtype):
   run=runexamples.models.Run.objects.getCurrent(buildtype)
-  if run is None or run.coverageOK==False:
-    context={
-      "nr": "ERR",
-      "color": getColor("danger"),
-    }
+  if run is None:
+    context={"nr": "n/a", "color": getColor("secondary")}
+  elif run.endTime is None:
+    context={"nr": "...", "color": getColor("secondary")}
+  elif run.coverageOK==False:
+    context={"nr": "ERR", "color": getColor("danger")}
   else:
     context={
       "nr": str(int(round(run.coverageRate)))+"%",

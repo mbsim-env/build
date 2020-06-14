@@ -118,6 +118,7 @@ def mainDocPage():
   shutil.copytree(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc")), pj(staticRuntimeDir, "doxygenReference"), symlinks=True)
 
 def setGithubStatus(run, state):
+  import github
   if state=="pending":
     description="Build started at %s"%(run.startTime.isoformat()+"Z")
   elif state=="failure":

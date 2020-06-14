@@ -318,6 +318,7 @@ def main():
 
 
 def setGithubStatus(run, state):
+  import github
   if state=="pending":
     description="Runexamples started at %s"%(run.startTime.isoformat()+"Z")
   elif state=="failure":

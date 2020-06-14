@@ -62,6 +62,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   graphviz \
   python36-numpy \
   python36-pytz \
+  python36-pygithub \
   python3-psycopg2 \
   adwaita-qt5 \
   qt5-qtstyleplugins \
