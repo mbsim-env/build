@@ -1222,25 +1222,32 @@ def coverage(exRun):
         print(line, end="")
       # upload
       commitID=getattr(exRun.build_run, repo+"UpdateCommitID")
-      response=requests.post("https://codecov.io/upload/v4?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
-        (commitID, mbsimenvSecrets.getSecrets()["codecovUploadToken"][repo], exRun.build_run.id, exRun.id,
-         urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
-         os.environ['MBSIMENVTAGNAME']+"_"+("valgrind" if "valgrind" in args.buildType else "normal")),
-        headers={"Accept": "text/plain"})
-      if response.status_code!=200:
-        ret=ret+1
-        print("codecov status code "+str(response.status_code), file=lcovFD)
-        lcovFD.write(response.content.decode("utf-8"))
-      else:
-        res=response.text.splitlines()
-        codecovURL=res[0]
-        uploadURL=res[1]
-        with open(pj(tempDir, "cov.trace.final."+repo), "r") as f:
-          response=requests.put(uploadURL, headers={"Content-Type": "text/plain"}, data=f.read())
+      if os.environ["MBSIMENVTAGNAME"]=="latest":
+        response=requests.post("https://codecov.io/upload/v4?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
+          (commitID, mbsimenvSecrets.getSecrets()["codecovUploadToken"][repo], exRun.build_run.id, exRun.id,
+           urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
+           "valgrind" if "valgrind" in args.buildType else "normal"),
+          headers={"Accept": "text/plain"})
         if response.status_code!=200:
           ret=ret+1
-          print("S3 status code "+str(response.status_code), file=lcovFD)
+          print("codecov status code "+str(response.status_code), file=lcovFD)
           lcovFD.write(response.content.decode("utf-8"))
+        else:
+          res=response.text.splitlines()
+          codecovURL=res[0]
+          uploadURL=res[1]
+          with open(pj(tempDir, "cov.trace.final."+repo), "r") as f:
+            response=requests.put(uploadURL, headers={"Content-Type": "text/plain"}, data=f.read())
+          if response.status_code!=200:
+            ret=ret+1
+            print("S3 status code "+str(response.status_code), file=lcovFD)
+            lcovFD.write(response.content.decode("utf-8"))
+      else:
+        print("Skipping upload to codecov, this is the staging system!", file=lcovFD)
+        print("https://codecov.io/upload/v4?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
+          (commitID, "<secret for %s>"%(repo), exRun.build_run.id, exRun.id,
+           urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
+           "valgrind" if "valgrind" in args.buildType else "normal"), file=lcovFD)
 
     # set coverage info on exRun
     lcovFD.close()

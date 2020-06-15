@@ -66,13 +66,13 @@ def releaseDeleteHandler(sender, **kwargs):
     rel.releaseDebugFile.delete(False)
 django.db.models.signals.pre_delete.connect(releaseDeleteHandler, sender=Release)
 
-class ModelManager(django.db.models.Manager):
+class ManualManager(django.db.models.Manager):
   # return a queryset with all failed manuals
   def filterFailed(self):
     return self.filter(resultOK=False)
 
 class Manual(django.db.models.Model):
-  objects=ModelManager()
+  objects=ManualManager()
 
   id=django.db.models.CharField(primary_key=True, max_length=50)
   manualName=django.db.models.CharField(max_length=100)
