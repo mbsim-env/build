@@ -58,6 +58,12 @@ user=django.contrib.auth.models.User.objects.get(username='admin')
 user.set_password(mbsimenvSecrets.getSecrets()["djangoAdminPassword"])
 user.save()
 
+# set site-name
+site=django.contrib.sites.models.Site.objects.get(id=1)
+site.domain=os.environ["MBSIMENVSERVERNAME"]
+site.name=os.environ["MBSIMENVSERVERNAME"]
+site.save()
+
 # create github app
 sa, _=allauth.socialaccount.models.SocialApp.objects.get_or_create(provider="github")
 sa.name="MBSim-Environment Build Service"

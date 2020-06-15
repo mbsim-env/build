@@ -15,6 +15,13 @@ class RunManager(django.db.models.Manager):
     else:
       return None
 
+  # return a queryset with all failed runs
+  def filterFailed(self):
+    return self.filter(
+      (django.db.models.Q(coverageOK__isnull=False)   & django.db.models.Q(coverageOK=False)) |
+      django.db.models.Q(examples__in=Example.objects.filterFailed())
+    ).distinct()
+
 class Run(django.db.models.Model):
   objects=RunManager()
 
@@ -43,10 +50,14 @@ class Run(django.db.models.Model):
     return self if id is None else Run.objects.get(id=id)
 
   def nrAll(self):
-    return self.examples.count()
+    nr=self.examples.count()
+    if self.coverageOK is not None: nr=nr+1
+    return nr
 
   def nrFailed(self):
-    return self.examples.filterFailed().count()
+    nr=self.examples.filterFailed().count()
+    if self.coverageOK is not None and not self.coverageOK: nr=nr+1
+    return nr
 
 class ExampleManager(django.db.models.Manager):
   # return a queryset with all failed examples of the current queryset

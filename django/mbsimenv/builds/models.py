@@ -11,6 +11,17 @@ class RunManager(django.db.models.Manager):
     else:
       return None
 
+  # return a queryset with all failed runs
+  def filterFailed(self):
+    return self.filter(
+      (django.db.models.Q(fmatvecUpdateOK__isnull=False)   & django.db.models.Q(fmatvecUpdateOK=False)) |
+      (django.db.models.Q(hdf5serieUpdateOK__isnull=False) & django.db.models.Q(hdf5serieUpdateOK=False)) |
+      (django.db.models.Q(openmbvUpdateOK__isnull=False)   & django.db.models.Q(openmbvUpdateOK=False)) |
+      (django.db.models.Q(mbsimUpdateOK__isnull=False)     & django.db.models.Q(mbsimUpdateOK=False)) |
+      (django.db.models.Q(distributionOK__isnull=False)    & django.db.models.Q(distributionOK=False)) |
+      django.db.models.Q(tools__in=Tool.objects.filterFailed())
+    ).distinct()
+
 class Run(django.db.models.Model):
   objects=RunManager()
 

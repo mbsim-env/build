@@ -204,53 +204,26 @@ def deleteBranchCombination(request, id):
 class Feed(django.contrib.syndication.views.Feed):
   title="MBSim-Env Build System Feeds"
   description="Fail builds and examples of the MBSim-Environment build system."
-  def link(self):
-    # cannot be a attribute of this class because django.urls.reverse is not possible their
-    return django.urls.reverse("service:home")
+  link=django.urls.reverse_lazy("service:home")
 
   # return a iterator for all items of the feed
   def items(self):
-    now=django.utils.timezone.now()
-    # show only build builds/examples from the last 30days
-    delta=django.utils.timezone.timedelta(days=30)
-    # generator function for builds
-    def buildGen(runs):
-      for run in runs:
-        if run.startTime<now-delta: continue
-        nrFailed=run.nrFailed()
-        if nrFailed==0: continue
-        yield {
-          "title": "Build Failed: "+run.buildType,
-          "desc": "{} of {} build parts failed.".format(nrFailed, run.nrAll()),
-          "link": django.urls.reverse("builds:run", args=[run.id]),
-          "pubdate": run.startTime,
-        }
-    genBuilds=buildGen(builds.models.Run.objects.all())
-    # generator function for runexamples
-    def exampleRunGen(runs):
-      for run in runs:
-        if run.startTime<now-delta: continue
-        nrFailed=run.nrFailed()
-        if nrFailed==0: continue
-        yield {
-          "title": "Examples Failed: "+run.buildType,
-          "desc": "{} of {} examples failed.".format(nrFailed, run.nrAll()),
-          "link": django.urls.reverse("runexamples:run", args=[run.id]),
-          "pubdate": run.startTime,
-        }
-    genRunexamples=exampleRunGen(runexamples.models.Run.objects.all())
-    # merge both iterators
-    return itertools.chain(genBuilds, genRunexamples)
+    date=django.utils.timezone.now()-django.utils.timezone.timedelta(days=30)
+    # get builds and examples newer than 30days
+    buildRun=builds.models.Run.objects.filterFailed().filter(startTime__gt=date)
+    exampleRun=runexamples.models.Run.objects.filterFailed().filter(startTime__gt=date)
+    # merge both lists and sort by startTime
+    return sorted(itertools.chain(buildRun, exampleRun), key=lambda x: x.startTime, reverse=True)
   
   # reutrn feed entry title, description, link and pubdate
-  def item_title(self, item):
-    return item["title"]
-  def item_description(self, item):
-    return item["desc"]
-  def item_link(self, item):
-    return item["link"]
-  def item_pubdate(self, item):
-    return item["pubdate"]
+  def item_title(self, run):
+    return ("Build" if type(run) is builds.models.Run else "Examples")+" failed: "+run.buildType
+  def item_description(self, run):
+    return "{} of {} {} failed.".format(run.nrFailed(), run.nrAll(), "build parts" if type(run) is builds.models.Run else "examples")
+  def item_link(self, run):
+    return django.urls.reverse("builds:run" if type(run) is builds.models.Run else "runexamples:run", args=[run.id])
+  def item_pubdate(self, run):
+    return run.startTime
 
 # site for release download
 class Releases(base.views.Base):
