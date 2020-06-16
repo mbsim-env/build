@@ -194,9 +194,9 @@ class ValgrindFrame(django.db.models.Model):
   id=django.db.models.AutoField(primary_key=True)
   whatAndStack=django.db.models.ForeignKey(ValgrindWhatAndStack, on_delete=django.db.models.CASCADE, related_name="stacks", to_field="uuid")
   nr=django.db.models.PositiveSmallIntegerField() # defines the order of the stack frame entries
-  obj=django.db.models.CharField(max_length=200)
-  fn=django.db.models.CharField(max_length=200)
-  dir=django.db.models.CharField(max_length=200)
+  obj=django.db.models.CharField(max_length=250)
+  fn=django.db.models.TextField() # a function name can be very long (templates)
+  dir=django.db.models.CharField(max_length=250)
   file=django.db.models.CharField(max_length=100)
   line=django.db.models.PositiveIntegerField(null=True)
   class Meta:
