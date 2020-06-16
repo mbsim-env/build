@@ -541,12 +541,7 @@ def runExample(exRun, example):
 
     # check for deprecated features
     if not args.disableRun:
-      nrDeprecated=0
-      for line in executeFD.getData().split():
-        match=re.search("Deprecated feature called:", line)
-        if match is not None:
-          nrDeprecated=nrDeprecated+1
-      ex.deprecatedNr=nrDeprecated
+      ex.deprecatedNr=len(re.findall("Deprecated feature called:", executeFD.getData()))
       ex.save()
 
     # validate XML

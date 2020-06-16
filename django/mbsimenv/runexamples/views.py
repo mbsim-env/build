@@ -282,7 +282,7 @@ class DataTableExample(base.views.DataTable):
     if ds.deprecatedNr is not None and ds.deprecatedNr>0:
       url=django.urls.reverse('base:textFieldFromDB', args=["runexamples", "Example", ds.id, "runOutput"])
       return octicon("alert")+'&nbsp;<a href="%s"><span class="badge badge-secondary">%d</span> found</a></td>'%\
-        (url, nrDeprecated)
+        (url, ds.deprecatedNr)
     else:
       return '<span class="text-success">'+octicon("check")+'</span>&nbsp;none'
   def colClass_dep(self, ds):
@@ -294,16 +294,20 @@ class DataTableExample(base.views.DataTable):
     return ds.deprecatedNr
 
   def colData_xmlOut(self, ds):
-    if ds.xmlOutputs.count()==0:
+    nrAll=ds.xmlOutputs.count()
+    if nrAll==0:
       return ""
-    if ds.xmlOutputs.filterFailed().count()==0:
+    nrFailed=ds.xmlOutputs.filterFailed().count()
+    if nrFailed==0:
       icon='<span class="text-success">'+octicon("check")+'</span>'
       text="valid"
+      nr=nrAll
     else:
       icon='<span class="text-danger">'+octicon("stop")+'</span>'
       text="failed"
+      nr=nrFailed
     url=django.urls.reverse('runexamples:xmloutput', args=[ds.id])
-    return '%s&nbsp;<a href="%s">%s<span class="badge badge-secondary">%d</span></a>'%(icon, url, text, ds.xmlOutputs.count())
+    return '%s&nbsp;<a href="%s">%s<span class="badge badge-secondary">%d</span></a>'%(icon, url, text, nr)
   def colClass_xmlOut(self, ds):
     if ds.xmlOutputs.count()==0:
       return ""
