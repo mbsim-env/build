@@ -713,7 +713,8 @@ def runexamples(run):
   # run example command
   command=["python3", os.path.dirname(os.path.realpath(__file__))+"/runexamples.py", "-j", str(args.j)]
   if args.coverage:
-    command.extend(["--coverage", args.sourceDir+":"+args.binSuffix+":"+args.prefix+":"+pj(args.sourceDir, "mbsim", "examples")])
+    command.extend(["--coverage", "--sourceDir", args.sourceDir]+(["--binSuffix="+args.binSuffix] if args.binSuffix!="" else [])+\
+                   ["--prefix", args.prefix, "--baseExampleDir", pj(args.sourceDir, "mbsim", "examples")])
   if args.webapp:
     command.extend(["--webapp"])
   if args.buildSystemRun:

@@ -89,7 +89,7 @@
             {% endif %}
           </td>
         {% endif %}
-        <td data-toggle="tooltip" data-placement="bottom" title="{{ repoUpdateTooltip }}">
+        <td class="text-break" data-toggle="tooltip" data-placement="bottom" title="{{ repoUpdateTooltip }}">
           <a href="https://github.com/mbsim-env/{{ repo }}/commit/{{ repoUpdateCommitID }}">
             <code>{{ repoUpdateCommitID|truncatechars:8 }}</code>
           </a>:

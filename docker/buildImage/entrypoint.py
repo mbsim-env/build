@@ -172,14 +172,15 @@ if args.valgrindExamples:
   if subprocess.call(["git", "pull"])!=0:
     ret=ret+1
     print("git pull of mbsim-valgrind/examples failed.")
-    sys.stdout.flush()
+  sys.stdout.flush()
   valgrindEnv=os.environ.copy()
   valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
   # build
   localRet=subprocess.call(["python3", "/context/mbsimenv/runexamples.py", "--checkGUIs", "--disableCompare", "--disableValidate",
     "--buildType", args.buildType+"-valgrind", "--buildSystemRun", "-j", str(args.jobs),
     "--buildRunID", str(buildRunID)]+\
-    (["--coverage", "/mbsim-env:-build:/mbsim-env/local:/mbsim-env/mbsim-valgrind/examples"] if "--coverage" in ARGS else [])+\
+    (["--coverage", "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local",
+      "--baseExampleDir", "/mbsim-env/mbsim-valgrind/examples"] if "--coverage" in ARGS else [])+\
     ["--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
     "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh "+\
     "--child-silent-after-fork=yes --num-callers=300 --gen-suppressions=all "+\

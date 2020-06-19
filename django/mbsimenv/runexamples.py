@@ -113,7 +113,11 @@ cfgOpts.add_argument("--prefixSimulationKeyword", default=None, type=str,
   help="VALGRIND: add special arguments and handling for valgrind")
 cfgOpts.add_argument("--exeExt", default="", type=str, help="File extension of cross compiled executables (wine is used if set)")
 cfgOpts.add_argument("--maxExecutionTime", default=30, type=float, help="The time in minutes after started program timed out [default: %(default)s]")
-cfgOpts.add_argument("--coverage", default=None, type=str, help='Enable coverage analyzis using gcov/lcov; The arg must be: <sourceDir>:<binSuffix>:<prefix>:<baseExamplesDir>')
+cfgOpts.add_argument("--coverage", action="store_true", help='Enable coverage analyzis using gcov/lcov')
+cfgOpts.add_argument("--sourceDir", default=None, type=str, help='[needed by coverage and valgrind]')
+cfgOpts.add_argument("--binSuffix", default="", type=str, help='[needed by coverage]')
+cfgOpts.add_argument("--prefix", default=None, type=str, help='[needed by coverage and valgrind]')
+cfgOpts.add_argument("--baseExampleDir", default=None, type=str, help='[needed by coverage]')
 cfgOpts.add_argument("--buildSystemRun", action="store_true", help='Run in build system mode.')
 cfgOpts.add_argument("--localServerPort", type=int, default=27583, help='Port for local server, if started automatically.')
 
@@ -235,11 +239,11 @@ def main():
   mainRet=0
   failedExamples=[]
 
-  if args.coverage is not None:
+  if args.coverage:
     # backup the coverage files in the build directories
     coverageBackupRestore('backup')
     # remove all "*.gcno", "*.gcda" files in ALL the examples
-    for d,_,files in os.walk(args.coverage.split(":")[3]):
+    for d,_,files in os.walk(args.baseExampleDir):
       for f in files:
         if os.path.splitext(f)[1]==".gcno": os.remove(pj(d, f))
         if os.path.splitext(f)[1]==".gcda": os.remove(pj(d, f))
@@ -285,7 +289,7 @@ def main():
   # coverage analyzis (postpare)
   coverageAll=0
   coverageFailed=0
-  if args.coverage is not None:
+  if args.coverage:
     coverageAll=1
     print("Create coverage analyzis"); sys.stdout.flush()
     coverageFailed=coverage(exRun)
@@ -523,7 +527,8 @@ def runExample(exRun, example):
           if t+1<tries: time.sleep(60) # wait some time, a direct next test will likely also fail (see above)
         if ret!=0 and not allTimedOut: ret=1 # if at least one example failed return with error (not with base.helper.subprocessCall.timedOutErrorCode)
         if exePrefix()!=["wine"] and allTimedOut: ret=1 # on none wine treat allTimedOut as error (allTimedOut is just a hack for Windows)
-        retl=[ret]; valgrindOutputAndAdaptRet(retl, "guitest_"+tool, ex); ret=retl[0]
+        retv=valgrindOutputAndAdaptRet("guitest_"+tool, ex)
+        if retv!=0: ret=1
         # treat timedOutErrorCode not as error: note that on Linux timedOutErrorCode can neven happen here, see above
         if ret!=0 and ret!=base.helper.subprocessCall.timedOutErrorCode:
           runExampleRet=1
@@ -599,11 +604,13 @@ def prefixSimulation(id):
 # get additional output files of simulations.
 # these are all dependent on the keyword of args.prefixSimulationKeyword.
 # additional output files must be placed in the args.reportOutDir and here only the basename must be returned.
-def valgrindOutputAndAdaptRet(ret, programType, ex):
+def valgrindOutputAndAdaptRet(programType, ex):
   # handle VALGRIND
+  ret=0
   if args.prefixSimulationKeyword=='VALGRIND':
     import xml.etree.cElementTree as ET
 
+    headerMap=getHeaderMap()
     # get out files
     # and adapt the return value if errors in valgrind outputs are detected
     xmlFiles=glob.glob("valgrind.*.xml")
@@ -637,6 +644,7 @@ def valgrindOutputAndAdaptRet(ret, programType, ex):
       # errors
       wsNr=0
       for error in valgrindoutput.findall("error"):
+        ret=1
         wsNr=wsNr+1
 
         er=runexamples.models.ValgrindError()
@@ -667,12 +675,18 @@ def valgrindOutputAndAdaptRet(ret, programType, ex):
           if frame.find("dir") is not None: fr.dir=frame.find("dir").text
           if frame.find("file") is not None: fr.file=frame.find("file").text
           if frame.find("line") is not None: fr.line=int(frame.find("line").text)
+          # adapt file path of a header in args.prefix to the corresponding header in the repo source dir
+          newPath=headerMap.get(fr.dir+"/"+fr.file, None)
+          if newPath is not None:
+            fr.dir=os.path.dirname(newPath)
+            fr.file=os.path.basename(newPath)
       os.remove(xmlFile)
     # now save all new datasets at once
     runexamples.models.Valgrind.objects.bulk_create(vgs)
     runexamples.models.ValgrindError.objects.bulk_create(ers)
     runexamples.models.ValgrindWhatAndStack.objects.bulk_create(wss)
     runexamples.models.ValgrindFrame.objects.bulk_create(frs)
+  return ret
 
 
 # execute the source code example in the current directory (write everything to fd executeFD)
@@ -699,13 +713,14 @@ def executeSrcExample(ex, executeFD):
     mainEnv[NAME]=libDir
   # run main
   t0=datetime.datetime.now()
-  ret=[abs(base.helper.subprocessCall(prefixSimulation('source')+exePrefix()+[pj(os.curdir, "main"+args.exeExt)], executeFD,
-                          env=mainEnv, maxExecutionTime=args.maxExecutionTime))]
+  ret=abs(base.helper.subprocessCall(prefixSimulation('source')+exePrefix()+[pj(os.curdir, "main"+args.exeExt)], executeFD,
+                         env=mainEnv, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
-  valgrindOutputAndAdaptRet(ret, "example_src", ex)
+  retv=valgrindOutputAndAdaptRet("example_src", ex)
+  if retv!=0: ret=1
 
-  return ret[0], dt
+  return ret, dt
 
 
 
@@ -723,13 +738,14 @@ def executeXMLExample(ex, executeFD, env=os.environ):
   print("\n", file=executeFD)
   executeFD.flush()
   t0=datetime.datetime.now()
-  ret=[abs(base.helper.subprocessCall(prefixSimulation('mbsimxml')+exePrefix()+[pj(mbsimBinDir, "mbsimxml"+args.exeExt)]+
-                          [prjFile], executeFD, env=env, maxExecutionTime=args.maxExecutionTime))]
+  ret=abs(base.helper.subprocessCall(prefixSimulation('mbsimxml')+exePrefix()+[pj(mbsimBinDir, "mbsimxml"+args.exeExt)]+
+                         [prjFile], executeFD, env=env, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
-  valgrindOutputAndAdaptRet(ret, "example_xml", ex)
+  retv=valgrindOutputAndAdaptRet("example_xml", ex)
+  if retv!=0: ret=1
 
-  return ret[0], dt
+  return ret, dt
 
 
 
@@ -746,17 +762,18 @@ def executeFlatXMLExample(ex, executeFD):
   print("\n", file=executeFD)
   executeFD.flush()
   t0=datetime.datetime.now()
-  ret2=[abs(base.helper.subprocessCall(prefixSimulation('mbsimflatxml')+exePrefix()+[pj(mbsimBinDir, "mbsimflatxml"+args.exeExt),
-        "MBS.flat.mbsx"], executeFD, maxExecutionTime=args.maxExecutionTime))]
+  ret2=abs(base.helper.subprocessCall(prefixSimulation('mbsimflatxml')+exePrefix()+[pj(mbsimBinDir, "mbsimflatxml"+args.exeExt),
+       "MBS.flat.mbsx"], executeFD, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
-  valgrindOutputAndAdaptRet(ret2, "example_flatxml", ex)
+  retv=valgrindOutputAndAdaptRet("example_flatxml", ex)
+  if retv!=0: ret2=1
 
   # return
-  if ret1==base.helper.subprocessCall.timedOutErrorCode or ret2[0]==base.helper.subprocessCall.timedOutErrorCode:
+  if ret1==base.helper.subprocessCall.timedOutErrorCode or ret2==base.helper.subprocessCall.timedOutErrorCode:
     ret=base.helper.subprocessCall.timedOutErrorCode
   else:
-    ret=abs(ret1)+abs(ret2[0])
+    ret=abs(ret1)+abs(ret2)
   return ret, dt
 
 
@@ -777,8 +794,9 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   list(map(lambda x: print(x, end=" ", file=executeFD), comm))
   print("\n", file=executeFD)
   executeFD.flush()
-  ret1=[abs(base.helper.subprocessCall(prefixSimulation('mbsimCreateFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime/2))]
-  valgrindOutputAndAdaptRet(ret1, "example_fmi_create", ex)
+  ret1=abs(base.helper.subprocessCall(prefixSimulation('mbsimCreateFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime/2))
+  retv=valgrindOutputAndAdaptRet("example_fmi_create", ex)
+  if retv!=0: ret1=1
 
   ### run using fmuChecker
   # get fmuChecker executable
@@ -799,10 +817,11 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   list(map(lambda x: print(x, end=" ", file=executeFD), comm))
   print("\n", file=executeFD)
   t0=datetime.datetime.now()
-  ret2=[abs(base.helper.subprocessCall(prefixSimulation('fmuCheck')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))]
+  ret2=abs(base.helper.subprocessCall(prefixSimulation('fmuCheck')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
-  valgrindOutputAndAdaptRet(ret2, "example_fmi_fmuCheck", ex)
+  retv=valgrindOutputAndAdaptRet("example_fmi_fmuCheck", ex)
+  if retv!=0: ret2=1
   # convert fmuCheck result csv file to h5 format (this is then checked as usual by compareExample)
   if canCompare:
     try:
@@ -843,16 +862,17 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   comm=exePrefix()+[pj(mbsimBinDir, "mbsimTestFMU"+args.exeExt)]+cosimArg+["tmp_mbsimTestFMU"]
   list(map(lambda x: print(x, end=" ", file=executeFD), comm))
   print("\n", file=executeFD)
-  ret3=[abs(base.helper.subprocessCall(prefixSimulation('mbsimTestFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime/3))]
-  valgrindOutputAndAdaptRet(ret3, "example_fmi_mbsimTestFMU", ex)
+  ret3=abs(base.helper.subprocessCall(prefixSimulation('mbsimTestFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime/3))
+  retv=valgrindOutputAndAdaptRet("example_fmi_mbsimTestFMU", ex)
+  if retv!=0: ret3=1
   # remove unpacked fmu
   if os.path.isdir("tmp_mbsimTestFMU"): shutil.rmtree("tmp_mbsimTestFMU")
 
   # return
-  if ret1[0]==base.helper.subprocessCall.timedOutErrorCode or ret2[0]==base.helper.subprocessCall.timedOutErrorCode or ret3[0]==base.helper.subprocessCall.timedOutErrorCode:
+  if ret1==base.helper.subprocessCall.timedOutErrorCode or ret2==base.helper.subprocessCall.timedOutErrorCode or ret3==base.helper.subprocessCall.timedOutErrorCode:
     ret=base.helper.subprocessCall.timedOutErrorCode
   else:
-    ret=abs(ret1[0])+abs(ret2[0])+abs(ret3[0])
+    ret=abs(ret1)+abs(ret2)+abs(ret3)
 
   return ret, dt
 
@@ -1127,12 +1147,30 @@ def validateXML(ex):
         xmlOut.save()
   return nrFailed
 
-
+@functools.lru_cache(maxsize=1)
+def getHeaderMap():
+  # collect all header files in repos and hash it
+  repoHeader={}
+  repos=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
+  for repo in repos:
+    for root, _, files in os.walk(pj(args.sourceDir, repo)):
+      for f in files:
+        if f.endswith(".h"):
+          repoHeader[hashlib.sha1(codecs.open(pj(root, f), "r", encoding="utf-8").read().encode("utf-8")).hexdigest()]=pj(root, f)
+  # loop over all header files in local and create mapping (using the hash)
+  headerMap={}
+  for root, _, files in os.walk(pj(args.prefix, "include")):
+    for f in files:
+      if f.endswith(".h"):
+        h=hashlib.sha1(codecs.open(pj(root, f), "r", encoding="utf-8").read().encode("utf-8")).hexdigest()
+        if h in repoHeader:
+          headerMap[pj(root, f)]=repoHeader[h]
+  return headerMap
 
 # restore or backup the coverage files in the build directories
 def coverageBackupRestore(variant):
   for t in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
-    d=pj(args.coverage.split(":")[0], t+args.coverage.split(":")[1])
+    d=pj(args.sourceDir, t+args.binSuffix)
     for root, _, files in os.walk(d):
       for f in sorted(files):
         if variant=="backup":
@@ -1149,10 +1187,10 @@ def coverage(exRun):
   ret=0
   lcovFD=base.helper.MultiFile(args.printToConsole)
   # lcov "-d" arguments
-  dirs=map(lambda x: ["-d", pj(args.coverage.split(":")[0], x),
-                      "-d", pj(args.coverage.split(":")[0], x+args.coverage.split(":")[1])],
+  dirs=map(lambda x: ["-d", pj(args.sourceDir, x),
+                      "-d", pj(args.sourceDir, x+args.binSuffix)],
                      ["fmatvec", "hdf5serie", "openmbv", "mbsim"])
-  dirs=["-d", args.coverage.split(":")[2]]+[v for il in dirs for v in il]
+  dirs=["-d", args.prefix]+[v for il in dirs for v in il]
 
   with tempfile.TemporaryDirectory() as tempDir:
     # run lcov: init counters
@@ -1173,27 +1211,14 @@ def coverage(exRun):
       "/mbsim-env/mbsim*/modules/mbsimInterface/mbsimInterface/*", # other untested features
       "-o", pj(tempDir, "cov.trace.final")], lcovFD))
 
-    # collect all header files in repos and hash it
-    repoHeader={}
-    repos=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
-    for repo in repos:
-      for root, _, files in os.walk(pj(args.coverage.split(":")[0], repo)):
-        for f in files:
-          if f.endswith(".h"):
-            repoHeader[hashlib.sha1(codecs.open(pj(root, f), "r", encoding="utf-8").read().encode("utf-8")).hexdigest()]=pj(root, f)
-    # loop over all header files in local and create mapping (using the hash)
-    headerMap=[]
-    for root, _, files in os.walk(pj(args.coverage.split(":")[2], "include")):
-      for f in files:
-        if f.endswith(".h"):
-          h=hashlib.sha1(codecs.open(pj(root, f), "r", encoding="utf-8").read().encode("utf-8")).hexdigest()
-          if h in repoHeader:
-            headerMap.append((pj(root, f), repoHeader[h]))
+    headerMap=getHeaderMap()
+
     # replace header map in lcov trace file
     for line in fileinput.FileInput(pj(tempDir, "cov.trace.final"), inplace=1):
       if line.startswith("SF:"):
-        for hm in headerMap:
-          line=line.replace("SF:"+hm[0], "SF:"+hm[1])
+        oldFilename=line[len("SF:"):]
+        newFilename=headerMap.get(oldFilename, oldFilename)
+        line="SF:"+newFilename
       print(line, end="")
 
     # get coverage rate
@@ -1205,6 +1230,7 @@ def coverage(exRun):
         covRate=float(m.group(1))
 
     # upload to codecov
+    repos=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
     for repo in repos:
       # run lcov: remove all counters except one repo
       ret=ret+abs(base.helper.subprocessCall(["lcov", "-r", pj(tempDir, "cov.trace.final")]+\

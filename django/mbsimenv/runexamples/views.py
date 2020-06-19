@@ -7,6 +7,7 @@ import json
 import urllib
 import math
 import os
+import datetime
 from octicons.templatetags.octicons import octicon
 
 # maps the current url to the proper run id url (without forwarding to keep the URL in the browser)
@@ -72,6 +73,7 @@ class DataTableExample(base.views.DataTable):
     super().setup(request, *args, **kwargs)
     self.run=runexamples.models.Run.objects.get(id=self.kwargs["run_id"])
     self.isCurrent=self.run.getCurrent().id==self.run.id
+    self.allowedUser=self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout)
 
   # return the queryset to display [required]
   @functools.lru_cache(maxsize=1)
@@ -135,9 +137,9 @@ class DataTableExample(base.views.DataTable):
   # return the "data", "sort key" and "class" for columns ["data":required; "sort key" and "class":optional]
 
   def colData_example(self, ds):
-    return ds.exampleName.replace("/", "/\u200b")
-  def colSortKey_example(self, ds):
     return ds.exampleName
+  def colClass_example(self, ds):
+    return "text-break"
 
   def colData_run(self, ds):
     if ds.runResult==runexamples.models.Example.RunResult.PASSED:
@@ -160,8 +162,12 @@ class DataTableExample(base.views.DataTable):
                 <button class="btn btn-secondary btn-xs" type="button" data-toggle="dropdown">valgrind {}</button>
                 <div class="dropdown-menu">'''.format(octicon("triangle-down"))
       for vg in ds.valgrinds.filter(programType__startswith="example_"):
-        ret+='<a class="dropdown-item" href="{}">{}</a>'.\
-          format(django.urls.reverse('runexamples:valgrind', args=[vg.id]), vg.programType[len("example_"):])
+        valgrindNrErrors=runexamples.models.Valgrind.objects.get(id=vg.id).errors.all().count()
+        ret+='<a class="dropdown-item text-{}" href="{}">{}{}</a>'.\
+          format("success" if valgrindNrErrors==0 else "danger",
+                 django.urls.reverse('runexamples:valgrind', args=[vg.id]),
+                 vg.programType[len("example_"):],
+                 '&nbsp;<span class="badge badge-danger">%d</span>&nbsp;errors'%(valgrindNrErrors) if valgrindNrErrors>0 else "")
       ret+='</div></div>'
     return ret
   def colSortKey_run(self, ds):
@@ -171,7 +177,9 @@ class DataTableExample(base.views.DataTable):
                               ds.runResult!=runexamples.models.Example.RunResult.PASSED and ds.willFail else "table-danger"
 
   def colData_time(self, ds):
-    return str(ds.time) if ds.time is not None else ""
+    return str(datetime.timedelta(seconds=round(ds.time.total_seconds()))) if ds.time is not None else ""
+  def colSortKey_time(self, ds):
+    return ds.time.total_seconds()
   def colClass_time(self, ds):
     if self.getRefTime(ds) is None or ds.time is None or ds.time <= self.getRefTime(ds)*1.1:
       return "table-success"
@@ -179,7 +187,9 @@ class DataTableExample(base.views.DataTable):
       return "table-warning"
 
   def colData_refTime(self, ds):
-    return str(self.getRefTime(ds)) if self.getRefTime(ds) is not None else ""
+    return str(datetime.timedelta(seconds=round(self.getRefTime(ds).total_seconds()))) if self.getRefTime(ds) is not None else ""
+  def colSortKey_refTime(self, ds):
+    return self.getRefTime(ds).total_seconds() if self.getRefTime(ds) is not None else 0
 
   def colData_guiTest(self, ds):
     ret=""
@@ -207,8 +217,12 @@ class DataTableExample(base.views.DataTable):
                 <button class="btn btn-secondary btn-xs" type="button" data-toggle="dropdown">valgrind {}</button>
                 <div class="dropdown-menu">'''.format(octicon("triangle-down"))
       for vg in ds.valgrinds.filter(programType__startswith="guitest_"):
-        ret+='<a class="dropdown-item" href="{}">{}</a>'.\
-          format(django.urls.reverse('runexamples:valgrind', args=[vg.id]), vg.programType[len("guitest_"):])
+        valgrindNrErrors=runexamples.models.Valgrind.objects.get(id=vg.id).errors.all().count()
+        ret+='<a class="dropdown-item text-{}" href="{}">{}{}</a>'.\
+          format("success" if valgrindNrErrors==0 else "danger",
+                 django.urls.reverse('runexamples:valgrind', args=[vg.id]),
+                 vg.programType[len("guitest_"):],
+                 '&nbsp;<span class="badge badge-danger">%d</span>&nbsp;errors'%(valgrindNrErrors) if valgrindNrErrors>0 else "")
       ret+='</div></div>'
     return ret
   def colSortKey_guiTest(self, ds):
@@ -219,13 +233,12 @@ class DataTableExample(base.views.DataTable):
     return ret
 
   def colData_ref(self, ds):
-    allowedUser=self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout)
     refUrl=django.urls.reverse('runexamples:compareresult', args=[ds.id])
     updateUrl=django.urls.reverse('runexamples:ref_update', args=[urllib.parse.quote(ds.exampleName, safe="")])
     dsStatic=self.getStaticDS(ds)
     checked='checked="checked"' if dsStatic is not None and dsStatic.update else ""
     refCheckbox='<span class="float-right">[<input type="checkbox" onClick="changeRefUpdate($(this), \'%s\', \'%s\');" %s/>]</span>'%\
-                (updateUrl, ds.exampleName, checked) if self.isCurrent and allowedUser else ""
+                (updateUrl, ds.exampleName, checked) if self.isCurrent and self.allowedUser else ""
     if ds.results.count()==0:
       ret='<span class="float-left"><span class="text-warning">%s</span>&nbsp;no reference</span>%s'%\
           (octicon("alert"), refCheckbox)
@@ -254,7 +267,7 @@ class DataTableExample(base.views.DataTable):
 
   def colData_webApp(self, ds):
     ret=""
-    enabled="" if self.isCurrent else 'disabled="disabled"'
+    enabled="" if self.isCurrent and self.allowedUser else 'disabled="disabled"'
 
     url=django.urls.reverse('service:webapp', args=["openmbv", self.run.buildType, ds.exampleName])
     vis="visible" if ds.webappOpenmbv else "hidden"
@@ -352,16 +365,23 @@ class DataTableValgrindError(base.views.DataTable):
   def isLeak(self, ds):
     return ds.kind.startswith("Leak_")
 
+  @staticmethod
+  def vertText(text, bold=False, size=16):
+    return '''<svg width="%d" height="%d">
+      <text style="font-weight:%s;font-size:%dpx;font-family:sans-serif;text-anchor:middle;" x="-%d" y="%d" transform="rotate(-90)">%s</text>
+    </svg>'''%(size, size*len(text), "bold" if bold else "normal", size, round(size*len(text)/2), round(0.8*size), text)
+
   # return the "data", "sort key" and "class" for columns ["data":required; "sort key" and "class":optional]
 
   def colData_kind(self, ds):
-    return "<h5>"+ds.kind+"</h5>"+'''
-      <div class="dropdown">
-        <button class="btn btn-secondary btn-xs" type="button" id="calledCommandID" data-toggle="dropdown">
-          Show suppression {}
+    return '''
+      <span class="dropdown">
+        <button class="btn btn-secondary btn-xs" type="button" data-toggle="dropdown">
+          supp&nbsp;{}
         </button>
         <pre class="dropdown-menu" style="padding-left: 0.5em; padding-right: 0.5em;">{}</pre>
-      </div>'''.format(octicon("triangle-down"), ds.suppressionRawText)
+      </span><br/>'''.format(octicon("triangle-down"), ds.suppressionRawText)+\
+      self.vertText(ds.kind, True, 24)
   def colSort_kind(self, ds):
     return str(self.isLeak(ds))+"_"+ds.kind
   def colClass_kind(self, ds):
@@ -372,7 +392,7 @@ class DataTableValgrindError(base.views.DataTable):
     for ws in ds.whatsAndStacks.order_by("nr"):
       ret+='<h5 class="text-danger">'+ws.what+'</h5>'
       ret+='''
-        <table id="{}" data-url="{}" class="table table-striped table-hover table-bordered table-sm">
+        <table id="{}" data-url="{}" class="table table-striped table-hover table-bordered table-sm w-100">
           <thead>
             <tr>
               <th>File:Line</th>
@@ -407,17 +427,32 @@ class DataTableValgrindStack(base.views.DataTable):
   # return the "data", "sort key" and "class" for columns ["data":required; "sort key" and "class":optional]
 
   def colData_fileLine(self, ds):
-    ret=""
-    if ds.dir!="": ret+=ds.dir+"/"
-    if ds.file!="": ret+=ds.file
-    if ds.line is not None: ret+=":"+str(ds.line)
-    return ret
+    path=""
+    if ds.dir!="": path+=ds.dir+"/"
+    if ds.file!="": path+=ds.file
+    text=(path+":"+str(ds.line)) if ds.line is not None else path
+    repo=next(filter(lambda r: path.startswith("/mbsim-env/%s/"%(r)), ["fmatvec", "hdf5serie", "openmbv", "mbsim"]), None)
+    if repo is not None:
+      buildRun=ds.whatAndStack.valgrindError.valgrind.example.run.build_run
+      if buildRun is None:
+        return text
+      commitID=getattr(buildRun, repo+"UpdateCommitID")
+      return '<a href="https://github.com/mbsim-env/%s/blob/%s/%s#L%d">%s</a>'%\
+        (repo, commitID, path[len("/mbsim-env/"+repo+"/"):], ds.line if ds.line is not None else 0, text)
+    else:
+      return text
+  def colClass_fileLine(self, ds):
+    return "text-break"
 
   def colData_function(self, ds):
     return ds.fn
+  def colClass_function(self, ds):
+    return "text-break"
 
   def colData_library(self, ds):
     return ds.obj
+  def colClass_library(self, ds):
+    return "text-break"
 
 # xml output page
 class XMLOutput(base.views.Base):
@@ -457,6 +492,8 @@ class DataTableXMLOutput(base.views.DataTable):
 
   def colData_file(self, ds):
     return ds.filename
+  def colClass_file(self, ds):
+    return "text-break"
 
   def colData_result(self, ds):
     url=django.urls.reverse('base:textFieldFromDB', args=["runexamples", "XMLOutput", ds.id, "resultOutput"])
@@ -509,6 +546,8 @@ class DataTableCompareResult(base.views.DataTable):
 
   def colData_h5file(self, ds):
     return ds.h5Filename
+  def colClass_h5file(self, ds):
+    return "text-break"
 
   def colData_dataset(self, ds):
     if ds.result==runexamples.models.CompareResult.Result.FILENOTINCUR:
@@ -518,8 +557,8 @@ class DataTableCompareResult(base.views.DataTable):
     return ds.dataset
   def colClass_dataset(self, ds):
     if ds.result==runexamples.models.CompareResult.Result.FILENOTINCUR or ds.result==runexamples.models.CompareResult.Result.FILENOTINREF:
-      return 'table-danger'
-    return ''
+      return 'table-danger text-break'
+    return 'text-break'
 
   def colData_label(self, ds):
     if ds.result==runexamples.models.CompareResult.Result.FILENOTINCUR or ds.result==runexamples.models.CompareResult.Result.FILENOTINREF:
@@ -531,10 +570,10 @@ class DataTableCompareResult(base.views.DataTable):
     return ds.label
   def colClass_label(self, ds):
     if ds.result==runexamples.models.CompareResult.Result.FILENOTINCUR or ds.result==runexamples.models.CompareResult.Result.FILENOTINREF:
-      return ''
+      return 'text-break'
     if ds.result==runexamples.models.CompareResult.Result.DATASETNOTINCUR or ds.result==runexamples.models.CompareResult.Result.DATASETNOTINREF:
-      return 'table-danger'
-    return ''
+      return 'table-danger text-break'
+    return 'text-break'
 
   def colData_result(self, ds):
     if ds.result==runexamples.models.CompareResult.Result.FILENOTINCUR or ds.result==runexamples.models.CompareResult.Result.FILENOTINREF or \
