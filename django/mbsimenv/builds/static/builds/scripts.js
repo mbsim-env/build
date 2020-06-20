@@ -45,6 +45,9 @@ function releaseDistribution(url) {
 
 $(document).ready(function() {
 
+  // reset the form
+  $("#releaseForm").trigger("reset");
+
   // if the releaseVersion input is edited then update RELSTR in the document
   $("#releaseVersion").keyup(function() {
     var curRelStr=$("#releaseVersion").val();
