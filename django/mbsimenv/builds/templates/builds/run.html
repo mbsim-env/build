@@ -26,7 +26,8 @@
       </code>
     </div>
   </dd>
-  <dt class="col-2">Start time</dt><dd class="col-10 DATETIME">{{run.startTime|date:'c'}}</dd>
+  <dt class="col-2" data-toggle="tooltip" data-placement="bottom" title="builds/Run: id={{run.id}}">Start time</dt>
+  <dd class="col-10 DATETIME">{{run.startTime|date:'c'}}</dd>
   <dt class="col-2">End time</dt>
   <dd class="col-10">
     {% if run.endTime is None %}

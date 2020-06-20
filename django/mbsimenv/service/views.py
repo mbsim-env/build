@@ -119,10 +119,12 @@ class DataTableCIBranches(base.views.DataTable):
     return "fmatvecBranch"
 
   def colData_remove(self, ds):
+    tooltip="service/CIBranches: id=%d"%(ds.id)
     if ds.fmatvecBranch=="master" and ds.hdf5serieBranch=="master" and ds.openmbvBranch=="master" and ds.mbsimBranch=="master":
-      return ""
-    return '<button class="btn btn-secondary btn-xs" onclick="deleteBranchCombination($(this), \'{}\');" type="button">{}</button>'.\
-           format(django.urls.reverse('service:db_deletebranchcombi', args=[ds.id]), octicon("diff-removed"))
+      return base.helper.tooltip("not removeable", tooltip)
+    return base.helper.tooltip(\
+      '<button class="btn btn-secondary btn-xs" onclick="deleteBranchCombination($(this), \'{}\');" type="button">{}</button>'.\
+      format(django.urls.reverse('service:db_deletebranchcombi', args=[ds.id]), octicon("diff-removed")), tooltip)
 
   def colData_fmatvecBranch(self, ds):
     return '<a href="https://github.com/mbsim-env/fmatvec/tree/'+ds.fmatvecBranch+'">'\

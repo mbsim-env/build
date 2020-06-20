@@ -137,6 +137,8 @@ class DataTableExample(base.views.DataTable):
   # return the "data", "sort key" and "class" for columns ["data":required; "sort key" and "class":optional]
 
   def colData_example(self, ds):
+    return base.helper.tooltip(ds.exampleName, "runexamples/Example: id=%d"%(ds.id))
+  def colSortKey_example(self, ds):
     return ds.exampleName
   def colClass_example(self, ds):
     return "text-break"
@@ -374,14 +376,14 @@ class DataTableValgrindError(base.views.DataTable):
   # return the "data", "sort key" and "class" for columns ["data":required; "sort key" and "class":optional]
 
   def colData_kind(self, ds):
-    return '''
-      <span class="dropdown">
+    return base.helper.tooltip(
+   '''<span class="dropdown">
         <button class="btn btn-secondary btn-xs" type="button" data-toggle="dropdown">
           supp&nbsp;{}
         </button>
         <pre class="dropdown-menu" style="padding-left: 0.5em; padding-right: 0.5em;">{}</pre>
       </span><br/>'''.format(octicon("triangle-down"), ds.suppressionRawText)+\
-      self.vertText(ds.kind, True, 24)
+      self.vertText(ds.kind, True, 24), "runexamples/ValgrindError: id=%s"%(ds.id))
   def colSort_kind(self, ds):
     return str(self.isLeak(ds))+"_"+ds.kind
   def colClass_kind(self, ds):
@@ -431,16 +433,18 @@ class DataTableValgrindStack(base.views.DataTable):
     if ds.dir!="": path+=ds.dir+"/"
     if ds.file!="": path+=ds.file
     text=(path+":"+str(ds.line)) if ds.line is not None else path
+    if text=="": text="-"
     repo=next(filter(lambda r: path.startswith("/mbsim-env/%s/"%(r)), ["fmatvec", "hdf5serie", "openmbv", "mbsim"]), None)
     if repo is not None:
       buildRun=ds.whatAndStack.valgrindError.valgrind.example.run.build_run
       if buildRun is None:
-        return text
+        return base.helper.tooltip(text, "runexamples/ValgrindWhatAndStack: id=%d"%(ds.id))
       commitID=getattr(buildRun, repo+"UpdateCommitID")
-      return '<a href="https://github.com/mbsim-env/%s/blob/%s/%s#L%d">%s</a>'%\
-        (repo, commitID, path[len("/mbsim-env/"+repo+"/"):], ds.line if ds.line is not None else 0, text)
+      return base.helper.tooltip('<a href="https://github.com/mbsim-env/%s/blob/%s/%s#L%d">%s</a>'%\
+        (repo, commitID, path[len("/mbsim-env/"+repo+"/"):], ds.line if ds.line is not None else 0, text),
+        "runexamples/ValgrindWhatAndStack: id=%d"%(ds.id))
     else:
-      return text
+      return base.helper.tooltip(text, "runexamples/ValgrindWhatAndStack: id=%d"%(ds.id))
   def colClass_fileLine(self, ds):
     return "text-break"
 
@@ -491,6 +495,8 @@ class DataTableXMLOutput(base.views.DataTable):
   # return the "data", "sort key" and "class" for columns ["data":required; "sort key" and "class":optional]
 
   def colData_file(self, ds):
+    return base.helper.tooltip(ds.filename, "runexamples/XMLOutput: id=%d"%(ds.id))
+  def colSortKey_file(self, ds):
     return ds.filename
   def colClass_file(self, ds):
     return "text-break"
@@ -545,6 +551,8 @@ class DataTableCompareResult(base.views.DataTable):
   # return the "data", "sort key" and "class" for columns ["data":required; "sort key" and "class":optional]
 
   def colData_h5file(self, ds):
+    return base.helper.tooltip(ds.h5Filename, "runexamples/CompreResult: id=%d"%(ds.id))
+  def colSortKey_h5file(self, ds):
     return ds.h5Filename
   def colClass_h5file(self, ds):
     return "text-break"

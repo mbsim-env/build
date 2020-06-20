@@ -280,3 +280,6 @@ def startLocalServer(port):
     with open(os.path.dirname(os.path.realpath(__file__))+"/../localserver.json", "w") as f:
       json.dump({"hostname": "localhost", "port": port}, f)
   sock.close()
+
+def tooltip(text, tooltip):
+  return '<span data-toggle="tooltip" data-placement="bottom" title="%s">%s</span>'%(tooltip, text)

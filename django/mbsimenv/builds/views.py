@@ -86,6 +86,8 @@ class DataTableTool(base.views.DataTable):
   # return the "data", "sort key" and "class" for columns ["data":required; "sort key" and "class":optional]
 
   def colData_tool(self, ds):
+    return base.helper.tooltip(ds.toolName, "builds/Tool: id=%d"%(ds.id))
+  def colSortKey_tool(self, ds):
     return ds.toolName
   def colClass_tool(self, ds):
     return "text-break"
