@@ -289,7 +289,7 @@ def compareResultDeleteHandler(sender, **kwargs):
   compareResult=kwargs["instance"]
   if compareResult.h5File is None:
     return
-  if compareResult.example.results.filter(h5Filename=compareResult.h5Filename).count()>1:
+  if compareResult.example.results.filter(h5Filename=compareResult.h5Filename).count()>0:
     return
   compareResult.h5File.delete(False)
-django.db.models.signals.pre_delete.connect(compareResultDeleteHandler, sender=CompareResult)
+django.db.models.signals.post_delete.connect(compareResultDeleteHandler, sender=CompareResult)

@@ -29,7 +29,7 @@
   <tbody>
     {% for r in currentReleases %}
       <tr>
-        <td>
+        <td data-toggle="tooltip" data-placement="bottom" title="service/Release: id={{r.id}}">
           {% if r.platform == "linux64" %}<i class="fa fa-linux"></i>{% else %}<i class="fa fa-windows"></i>{% endif %}
           &nbsp;{{ r.platform }}
         </td>
@@ -65,7 +65,7 @@
   <tbody>
     {% for r in olderReleases %}
       <tr>
-        <td>
+        <td data-toggle="tooltip" data-placement="bottom" title="service/Release: id={{r.id}}">
           {% if r.platform == "linux64" %}<i class="fa fa-linux"></i>{% else %}<i class="fa fa-windows"></i>{% endif %}
           &nbsp;{{ r.platform }}
         </td>

@@ -89,6 +89,13 @@ class Manual(django.db.models.Model):
       self.save()
     self.manualFile.name="service_manual_"+str(self.id)+"__"+filename
 
+# delete all files referenced in Manual when a Manual object is deleted
+def manualDeleteHandler(sender, **kwargs):
+  man=kwargs["instance"]
+  if man.manualFile is not None:
+    man.manualFile.delete(False)
+django.db.models.signals.pre_delete.connect(manualDeleteHandler, sender=Manual)
+
 class Info(django.db.models.Model):
   id=django.db.models.CharField(primary_key=True, max_length=50) # the git commit ID
   shortInfo=django.db.models.TextField()
