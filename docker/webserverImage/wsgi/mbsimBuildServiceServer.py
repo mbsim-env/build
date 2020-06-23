@@ -420,7 +420,7 @@ def actionWebhook(environ):
         buildDocker=config['buildDocker']
         # get repo and branch from this push
         repo=data['repository']['name']
-        if data['ref'][0:11]!="refs/heads/"
+        if data['ref'][0:11]!="refs/heads/":
           response_data['success']=True
           response_data['message']="This webhook push event is not handled"
           return response_data
