@@ -199,28 +199,27 @@ def releaseDistribution(request, run_id):
   # worker function to make github api requests in parallel
   def tagRefRelease(repo, out):
     try:
-      if os.environ["MBSIMENVTAGNAME"]=="latest":
-        ghrepo=gh.getMbsimenvRepo(repo)
-        commitid=getattr(run, repo+"UpdateCommitID")
-        repoTagName=tagName
-      else:
-        import time
-        ghrepo=gh.gh.get_repo("friedrichatgc/mbsimenvtest") # use a dummy repo
-        commitid="d29408745f33634a712c941c693b667479232fc3" # use a dummy commit
-        repoTagName=tagName+"."+repo+"."+str(int(time.time())) # append a unique dummy string to the tagName
+      if os.environ["MBSIMENVTAGNAME"]!="latest":
+        print("Skipping setting rlease tags on github, this is the staging system!")
+        out.clear()
+        out['success']=True
+        out['message']="Skipping setting rlease tags on github, this is the staging system!"
+        return
+      ghrepo=gh.getMbsimenvRepo(repo)
+      commitid=getattr(run, repo+"UpdateCommitID")
       message="Release "+releaseVersion+" of MBSim-Env for "+platform+"\n"+\
               "\n"+\
               "The binary "+platform+" release can be downloaded from\n"+\
               "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("service:releases")+"\n"+\
               "Please note that this binary release includes a full build of MBSim-Env not only of this repository."
       # create github tag
-      gittag=ghrepo.create_git_tag(repoTagName, message, commitid, "commit",
+      gittag=ghrepo.create_git_tag(tagName, message, commitid, "commit",
         tagger=github.InputGitAuthor(request.user.username, request.user.email,
                                      datetime.date.today().strftime("%Y-%m-%dT%H:%M:%SZ")))
       # create git tag
-      ghrepo.create_git_ref("refs/tags/"+repoTagName, gittag.sha)
+      ghrepo.create_git_ref("refs/tags/"+tagName, gittag.sha)
       # create release
-      ghrepo.create_git_release(repoTagName, "Release "+releaseVersion+" of MBSim-Env for "+platform, message)
+      ghrepo.create_git_release(tagName, "Release "+releaseVersion+" of MBSim-Env for "+platform, message)
     except github.GithubException as ex:
       out.clear()
       out['success']=False

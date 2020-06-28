@@ -197,19 +197,19 @@ class DataTableExample(base.views.DataTable):
     ret=""
     url=django.urls.reverse('base:textFieldFromDB', args=["runexamples", "Example", ds.id, "guiTestOpenmbvOutput"])
     vis="visible" if ds.guiTestOpenmbvOK is not None else "hidden"
-    ok="success" if ds.guiTestOpenmbvOK else ("warning" if ds.willFail else "danger")
+    ok="success" if ds.guiTestOpenmbvOK==runexamples.models.Example.GUITestResult.PASSED else ("warning" if ds.guiTestOpenmbvOK==runexamples.models.Example.GUITestResult.TIMEDOUT or ds.willFail else "danger")
     img=django.templatetags.static.static("base/openmbv.svg")
     ret+='<a href="%s"><button type="button" style="visibility:%s;" class="btn btn-%s btn-xs">'%(url, vis, ok)+\
            '<img src="%s" alt="ombv"/></button></a>&nbsp;'%(img)
     url=django.urls.reverse('base:textFieldFromDB', args=["runexamples", "Example", ds.id, "guiTestHdf5serieOutput"])
     vis="visible" if ds.guiTestHdf5serieOK is not None else "hidden"
-    ok="success" if ds.guiTestHdf5serieOK else ("warning" if ds.willFail else "danger")
+    ok="success" if ds.guiTestHdf5serieOK==runexamples.models.Example.GUITestResult.PASSED else ("warning" if ds.guiTestHdf5serieOK==runexamples.models.Example.GUITestResult.TIMEDOUT or ds.willFail else "danger")
     img=django.templatetags.static.static("base/h5plotserie.svg")
     ret+='<a href="%s"><button type="button" style="visibility:%s;" class="btn btn-%s btn-xs">'%(url, vis, ok)+\
            '<img src="%s" alt="h5p"/></button></a>&nbsp;'%(img)
     url=django.urls.reverse('base:textFieldFromDB', args=["runexamples", "Example", ds.id, "guiTestMbsimguiOutput"])
     vis="visible" if ds.guiTestMbsimguiOK is not None else "hidden"
-    ok="success" if ds.guiTestMbsimguiOK else ("warning" if ds.willFail else "danger")
+    ok="success" if ds.guiTestMbsimguiOK==runexamples.models.Example.GUITestResult.PASSED else ("warning" if ds.guiTestMbsimguiOK==runexamples.models.Example.GUITestResult.TIMEDOUT or ds.willFail else "danger")
     img=django.templatetags.static.static("base/mbsimgui.svg")
     ret+='<a href="%s"><button type="button" style="visibility:%s;" class="btn btn-%s btn-xs">'%(url, vis, ok)+\
            '<img src="%s" alt="gui"/></button></a>'%(img)
@@ -228,11 +228,11 @@ class DataTableExample(base.views.DataTable):
       ret+='</div></div>'
     return ret
   def colSortKey_guiTest(self, ds):
-    ret=""
-    ret+="0" if ds.guiTestOpenmbvOK   is None or ds.guiTestOpenmbvOK   else "1"
-    ret+="0" if ds.guiTestHdf5serieOK is None or ds.guiTestHdf5serieOK else "1"
-    ret+="0" if ds.guiTestMbsimguiOK  is None or ds.guiTestMbsimguiOK  else "1"
-    return ret
+    m={None:                                          "0",
+       runexamples.models.Example.RunResult.PASSED:   "1",
+       runexamples.models.Example.RunResult.TIMEDOUT: "2",
+       runexamples.models.Example.RunResult.FAILED:   "3"}
+    return m[ds.guiTestOpenmbvOK]+m[ds.guiTestHdf5serieOK]+m[ds.guiTestMbsimguiOK]
 
   def colData_ref(self, ds):
     refUrl=django.urls.reverse('runexamples:compareresult', args=[ds.id])

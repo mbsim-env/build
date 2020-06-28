@@ -64,9 +64,9 @@ class ExampleManager(django.db.models.Manager):
   def filterFailed(self):
     return self.filter(django.db.models.Q(willFail=False) & (
       (django.db.models.Q(runResult__isnull=False)          & django.db.models.Q(runResult__in=[Example.RunResult.FAILED, Example.RunResult.TIMEDOUT])) |
-      (django.db.models.Q(guiTestHdf5serieOK__isnull=False) & django.db.models.Q(guiTestHdf5serieOK=False)) |
-      (django.db.models.Q(guiTestOpenmbvOK__isnull=False)   & django.db.models.Q(guiTestOpenmbvOK=False)) |
-      (django.db.models.Q(guiTestMbsimguiOK__isnull=False)  & django.db.models.Q(guiTestMbsimguiOK=False)) |
+      (django.db.models.Q(guiTestHdf5serieOK__isnull=False) & django.db.models.Q(guiTestHdf5serieOK=Example.GUITestResult.FAILED)) |
+      (django.db.models.Q(guiTestOpenmbvOK__isnull=False)   & django.db.models.Q(guiTestOpenmbvOK=Example.GUITestResult.FAILED)) |
+      (django.db.models.Q(guiTestMbsimguiOK__isnull=False)  & django.db.models.Q(guiTestMbsimguiOK=Example.GUITestResult.FAILED)) |
       (django.db.models.Q(deprecatedNr__isnull=False)       & django.db.models.Q(deprecatedNr__gt=0)) |
       django.db.models.Q(results__in=CompareResult.objects.filterFailed()) |
       django.db.models.Q(xmlOutputs__in=XMLOutput.objects.filterFailed())
@@ -74,6 +74,10 @@ class ExampleManager(django.db.models.Manager):
 
 class Example(django.db.models.Model):
   class RunResult(django.db.models.IntegerChoices):
+    PASSED = 0
+    FAILED = 1
+    TIMEDOUT = 2
+  class GUITestResult(django.db.models.IntegerChoices):
     PASSED = 0
     FAILED = 1
     TIMEDOUT = 2
@@ -88,11 +92,11 @@ class Example(django.db.models.Model):
   runOutput=django.db.models.TextField(null=True)
   # valgrinds = related ForeignKey
   time=django.db.models.DurationField(null=True)
-  guiTestHdf5serieOK=django.db.models.BooleanField(null=True)
+  guiTestHdf5serieOK=django.db.models.IntegerField(null=True, choices=GUITestResult.choices)
   guiTestHdf5serieOutput=django.db.models.TextField(null=True)
-  guiTestOpenmbvOK=django.db.models.BooleanField(null=True)
+  guiTestOpenmbvOK=django.db.models.IntegerField(null=True, choices=GUITestResult.choices)
   guiTestOpenmbvOutput=django.db.models.TextField(null=True)
-  guiTestMbsimguiOK=django.db.models.BooleanField(null=True)
+  guiTestMbsimguiOK=django.db.models.IntegerField(null=True, choices=GUITestResult.choices)
   guiTestMbsimguiOutput=django.db.models.TextField(null=True)
   # results = related ForeignKey
   webappHdf5serie=django.db.models.BooleanField()

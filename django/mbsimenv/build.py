@@ -130,13 +130,11 @@ def setGithubStatus(run, state):
   gh=github.Github(mbsimenvSecrets.getSecrets()["githubStatusAccessToken"])
   for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
     if os.environ["MBSIMENVTAGNAME"]=="latest":
-      repo=gh.get_repo("mbsim-env/"+repo)
-      commit=repo.get_commit(getattr(run, repo+"UpdateCommitID"))
+      commit=gh.get_repo("mbsim-env/"+repo).get_commit(getattr(run, repo+"UpdateCommitID"))
+      commit.create_status(state, "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("builds:run", args=[run.id]),
+        description, "builds/%s/%s/%s/%s/%s"%(run.buildType, run.fmatvecBranch, run.hdf5serieBranch, run.openmbvBranch, run.mbsimBranch))
     else:
-      repo=gh.get_repo("friedrichatgc/mbsimenvtest") # use a dummy repo
-      commit=repo.get_commit("d29408745f33634a712c941c693b667479232fc3")
-    commit.create_status(state, "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("builds:run", args=[run.id]),
-      description, "builds/%s/%s/%s/%s/%s"%(run.buildType, run.fmatvecBranch, run.hdf5serieBranch, run.openmbvBranch, run.mbsimBranch))
+      print("Skipping setting github status, this is the staging system!")
 
 # the main routine being called ones
 def main():
@@ -584,8 +582,6 @@ def configure(tool):
 
 
 def make(tool):
-  staging=True if 'MBSIMENVTAGNAME' in os.environ and os.environ['MBSIMENVTAGNAME']=="staging" else False
-
   makeFD=io.StringIO()
   run=0
   try:

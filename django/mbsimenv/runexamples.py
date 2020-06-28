@@ -334,14 +334,12 @@ def setGithubStatus(run, state):
   gh=github.Github(mbsimenvSecrets.getSecrets()["githubStatusAccessToken"])
   for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
     if os.environ["MBSIMENVTAGNAME"]=="latest":
-      repo=gh.get_repo("mbsim-env/"+repo)
-      commit=repo.get_commit(getattr(run.build_run, repo+"UpdateCommitID"))
+      commit=gh.get_repo("mbsim-env/"+repo).get_commit(getattr(run.build_run, repo+"UpdateCommitID"))
+      commit.create_status(state, "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[run.id]),
+        description, "runexamples/%s/%s/%s/%s/%s"%(run.buildType, run.build_run.fmatvecBranch, run.build_run.hdf5serieBranch,
+                                                                  run.build_run.openmbvBranch, run.build_run.mbsimBranch))
     else:
-      repo=gh.get_repo("friedrichatgc/mbsimenvtest") # use a dummy repo
-      commit=repo.get_commit("d29408745f33634a712c941c693b667479232fc3")
-    commit.create_status(state, "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[run.id]),
-      description, "runexamples/%s/%s/%s/%s/%s"%(run.buildType, run.build_run.fmatvecBranch, run.build_run.hdf5serieBranch,
-                                                                run.build_run.openmbvBranch, run.build_run.mbsimBranch))
+      print("Skipping setting github status, this is the staging system!")
 
 def pkgconfig(module, options):
   comm=["pkg-config", module]
@@ -533,7 +531,10 @@ def runExample(exRun, example):
         if ret!=0 and ret!=base.helper.subprocessCall.timedOutErrorCode:
           runExampleRet=1
         outFD.close()
-        setattr(ex, exOK, True if ret==0 else False)
+        if allTimedOut and exePrefix()==["wine"]:
+          setattr(ex, exOK, runexamples.models.Example.GUITestResult.TIMEDOUT)
+        else:
+          setattr(ex, exOK, runexamples.models.Example.GUITestResult.PASSED if ret==0 else runexamples.models.Example.GUITestResult.FAILED)
         setattr(ex, exOutput, outFD.getData())
         ex.save()
       runGUI(ombvFiles, "openmbv", ex, "guiTestOpenmbvOK", "guiTestOpenmbvOutput")
