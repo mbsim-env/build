@@ -12,7 +12,6 @@ import datetime
 import fileinput
 import shutil
 import codecs
-import hashlib
 import hmac
 import json
 import fcntl

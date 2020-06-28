@@ -156,6 +156,7 @@ class ExampleStaticReference(django.db.models.Model):
     if self.id is None:
       self.save()
     self.h5File.name="runexamples_ExampleStaticReference_"+str(self.id)+"_"+filename
+  h5FileSHA1=django.db.models.CharField(max_length=50)
 
 # delete all files referenced in ExampleStaticReference when a ExampleStaticReference object is deleted
 def exampleStaticReferenceDeleteHandler(sender, **kwargs):

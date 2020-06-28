@@ -1116,10 +1116,12 @@ def copyToReference():
         ref=runexamples.models.ExampleStaticReference()
         ref.exampleStatic=exSt
         ref.h5FileName=os.path.basename(fn)
+        with open(fn, "rb") as l:
+          data=l.read()
+        ref.h5FileSHA1=hashlib.sha1(data).hexdigest()
         ref.save()
         with ref.h5File.open("wb") as f:
-          with open(fn, "rb") as l:
-            f.write(l.read())
+          f.write(data)
 
 def updateReference():
   print("not implemented")

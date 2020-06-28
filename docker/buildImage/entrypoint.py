@@ -12,6 +12,7 @@ import re
 import time
 import glob
 import django
+import hashlib
 sys.path.append("/context/mbsimenv")
 import builds
 import runexamples
@@ -125,10 +126,12 @@ if args.buildType=="linux64-dailydebug":
       ref=runexamples.models.ExampleStaticReference()
       ref.exampleStatic=exStatic
       ref.h5FileName=os.path.basename(curFile)
+      with open(curFile, "rb") as fi:
+        data=fi.read()
+      ref.h5FileSHA1=hashlib.sha1(data).hexdigest()
       ref.save()
       with ref.h5File.open("wb") as fo:
-        with open(curFile, "rb") as fi:
-          fo.write(fi.read())
+        fo.write(data)
     # set ref time
     exStatic.refTime=exCur.time
     # clear update flag
