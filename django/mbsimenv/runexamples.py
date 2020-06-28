@@ -122,6 +122,7 @@ cfgOpts.add_argument("--buildSystemRun", action="store_true", help='Run in build
 cfgOpts.add_argument("--localServerPort", type=int, default=27583, help='Port for local server, if started automatically.')
 
 outOpts=argparser.add_argument_group('Output Options')
+outOpts.add_argument("--removeOlderThan", default=5, type=int, help="Remove all examples reports older than X days.")
 
 debugOpts=argparser.add_argument_group('Debugging and other Options')
 debugOpts.add_argument("--debugDisableMultiprocessing", action="store_true",
@@ -144,6 +145,14 @@ if not args.buildSystemRun:
         django.urls.reverse("runexamples:current_buildtype", args=[args.buildType])))
   print("")
 
+def removeOldBuilds():
+  olderThan=django.utils.timezone.now()-datetime.timedelta(days=args.removeOlderThan)
+  toDelete=runexamples.models.Run.objects.filter(startTime__lt=olderThan)
+  count=toDelete.count()
+  if count>0:
+    print("Deleting %d build runs being older than %d days!"%(count, args.removeOlderThan))
+    toDelete.delete()
+
 # the main routine being called ones
 def main():
   # check arguments
@@ -153,6 +162,8 @@ def main():
     argparser.print_usage()
     print("error: unknown argument --action "+args.action+" (see -h)")
     return 1
+
+  removeOldBuilds()
 
   # fix arguments
   if args.prefixSimulation is not None:

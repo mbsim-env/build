@@ -76,6 +76,7 @@ def parseArguments():
   
   outOpts=argparser.add_argument_group('Output Options')
   outOpts.add_argument("--buildType", default="local", type=str, help="A description of the build type (e.g: linux64-dailydebug)")
+  outOpts.add_argument("--removeOlderThan", default=5, type=int, help="Remove all build reports older than X days.")
   
   passOpts=argparser.add_argument_group('Options beeing passed to other commands')
   passOpts.add_argument("--passToRunexamples", default=list(), nargs=argparse.REMAINDER,
@@ -136,6 +137,14 @@ def setGithubStatus(run, state):
     else:
       print("Skipping setting github status, this is the staging system!")
 
+def removeOldBuilds():
+  olderThan=django.utils.timezone.now()-datetime.timedelta(days=args.removeOlderThan)
+  toDelete=builds.models.Run.objects.filter(startTime__lt=olderThan)
+  count=toDelete.count()
+  if count>0:
+    print("Deleting %d build runs being older than %d days!"%(count, args.removeOlderThan))
+    toDelete.delete()
+
 # the main routine being called ones
 def main():
   parseArguments()
@@ -152,6 +161,8 @@ def main():
     print("Running build. See results at: http://%s:%d%s"%(localserver["hostname"], localserver["port"],
           django.urls.reverse("builds:current_buildtype", args=[args.buildType])))
     print("")
+
+  removeOldBuilds()
 
   # all tools to be build including the tool dependencies
   global toolDependencies
