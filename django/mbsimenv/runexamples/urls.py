@@ -17,4 +17,5 @@ urlpatterns = [
   django.urls.path('datatable/compareresult/<int:id>/', runexamples.views.DataTableCompareResult.as_view(), name='datatable_compareresult'),
   django.urls.path('db/refUpdate/<str:exampleName>/', runexamples.views.refUpdate, name='ref_update'),
   django.urls.path('chart/differenceplot/<int:id>/', runexamples.views.chartDifferencePlot, name='chart_differenceplot'),
+  django.urls.path('allExampleStatic/', runexamples.views.allExampleStatic, name='allExampleStatic'),
 ]

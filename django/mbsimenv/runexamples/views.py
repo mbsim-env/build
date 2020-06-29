@@ -692,3 +692,15 @@ def chartDifferencePlot(request, id):
       "abs": None,
       "rel": None,
     })
+
+def allExampleStatic(request):
+  allEx={}
+  for ex in runexamples.models.ExampleStatic.objects.all():
+    references=[]
+    for ref in ex.references.all():
+      references.append({"id": ref.id, "h5FileName": ref.h5FileName, "h5FileSHA1": ref.h5FileSHA1})
+    allEx[ex.exampleName]={
+      "refTime": ex.refTime.total_seconds(),
+      "references": references,
+    }
+  return django.http.JsonResponse(allEx)
