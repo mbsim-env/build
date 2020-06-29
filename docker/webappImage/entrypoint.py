@@ -12,6 +12,8 @@ import sys
 import contextlib
 import socket
 import subprocess
+import logging
+logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 # configuration
 DEBUG=False

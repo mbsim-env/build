@@ -161,9 +161,12 @@ def main():
         return 1
     if args.pushPullMultistageImage:
       import requests
+      import logging
+      logging.getLogger("urllib3").setLevel(logging.WARNING)
       url='https://hub.docker.com/v2/repositories/mbsimenv'
+      rs=requests.Session()
       while True:
-        response=requests.get(url)
+        response=rs.get(url)
         if response.status_code!=200:
           raise RuntimeError("Cannot get repositories on dockerhub in mbsimenv.")
         data=response.json()

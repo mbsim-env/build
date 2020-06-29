@@ -120,6 +120,7 @@ cfgOpts.add_argument("--prefix", default=None, type=str, help='[needed by covera
 cfgOpts.add_argument("--baseExampleDir", default=None, type=str, help='[needed by coverage]')
 cfgOpts.add_argument("--buildSystemRun", action="store_true", help='Run in build system mode.')
 cfgOpts.add_argument("--localServerPort", type=int, default=27583, help='Port for local server, if started automatically.')
+cfgOpts.add_argument("--updateURL", type=str, default="https://www.mbsim-env.de", help='Base url of server used to pull references.')
 
 outOpts=argparser.add_argument_group('Output Options')
 outOpts.add_argument("--removeOlderThan", default=5, type=int, help="Remove all examples reports older than X days.")
@@ -373,7 +374,7 @@ def sortDirectories(directoriesSet, dirs):
     try:
       ex=runexamples.models.ExampleStatic.objects.get(exampleName=example)
       refTime=ex.refTime.total_seconds()
-    except runexamples.models.ExampleStatic.DoesNotExist:
+    except (runexamples.models.ExampleStatic.DoesNotExist, AttributeError):
       refTime=float("inf") # use very long time if unknown to force it to run early
     unsortedDir.append([example, refTime])
   dirs.extend(map(lambda x: x[0], sorted(unsortedDir, key=lambda x: x[1], reverse=True)))
@@ -1124,8 +1125,61 @@ def copyToReference():
           f.write(data)
 
 def updateReference():
-  print("not implemented")
-  args.updateURL="https://www.mbsim-env.de/mbsim/linux64-dailydebug/references" # default value
+  import requests
+  import logging
+  logging.getLogger("urllib3").setLevel(logging.WARNING)
+  rs=requests.Session()
+
+  print('Downloading metadata for all references from %s\n'%(args.updateURL))
+
+  # get metadata of all static examples (does not get any reference file)
+  response=rs.get(args.updateURL+django.urls.reverse("runexamples:allExampleStatic"))
+  if response.status_code!=200:
+    raise RuntimeError("Cannot get allExampleStatic")
+  serverAllExampleStatic=response.json()
+
+  # loop over all examples
+  for example in directories:
+    # skip examples not on server
+    if example not in serverAllExampleStatic:
+      print('%s: SKIPPING, does not exist on server'%(example))
+      continue
+    # get server and local example
+    serverExampleStatic=serverAllExampleStatic[example]
+    localExampleStatic, _=runexamples.models.ExampleStatic.objects.get_or_create(exampleName=example)
+    # set refTime from server
+    localExampleStatic.refTime=datetime.timedelta(seconds=serverExampleStatic["refTime"])
+    # loop over all reference files
+    for serverReference in serverExampleStatic["references"]:
+      # get/create local reference (skip if already up to date)
+      localReference=next((l for l in localExampleStatic.references.all() if l.h5FileName==serverReference["h5FileName"]), None)
+      if localReference is None:
+        localReference=runexamples.models.ExampleStaticReference()
+        localReference.exampleStatic=localExampleStatic
+      elif serverReference["h5FileSHA1"]==localReference.h5FileSHA1:
+        print(example+": "+serverReference["h5FileName"]+": SKIPPING, already up to date")
+        continue
+      # newer reference exists -> download
+      print(example+": "+serverReference["h5FileName"]+": DOWNLOADING new reference file ...")
+      # set new SHA1 and delete old file
+      localReference.h5FileSHA1=serverReference["h5FileSHA1"]
+      localReference.h5File.delete(False)
+      # set, download and save new file
+      localReference.h5FileName=serverReference["h5FileName"]
+      localReference.save()
+      response=rs.get(args.updateURL+django.urls.reverse("base:fileDownloadFromDB",
+                      args=["runexamples", "ExampleStaticReference", serverReference["id"], "h5File"]))
+      if response.status_code!=200:
+        raise RuntimeError("Download of reference file failed.")
+      with localReference.h5File.open("wb") as f:
+        f.write(response.content);
+    # save local example
+    localExampleStatic.save()
+    # search for local reference files not on server -> delete these
+    for localReference in localExampleStatic.references.all():
+      if next((x for x in serverExampleStatic["references"] if x["h5FileName"]==localReference.h5FileName), None) is None:
+        print(example+": "+localReference.h5FileName+": REMOVED, does not exist on server")
+        localReference.delete()
 
 
 
@@ -1197,6 +1251,8 @@ def coverageBackupRestore(variant):
             shutil.move(pj(root, f), pj(root, os.path.splitext(f)[0]))
 def coverage(exRun):
   import requests
+  import logging
+  logging.getLogger("urllib3").setLevel(logging.WARNING)
 
   ret=0
   lcovFD=base.helper.MultiFile(args.printToConsole)
