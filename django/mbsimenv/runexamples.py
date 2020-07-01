@@ -72,10 +72,10 @@ mainOpts.add_argument("directories", nargs="*", default=os.curdir,
   help="A directory to run (recursively). If prefixed with '^' remove the directory form the current list [default: %(default)s]")
 mainOpts.add_argument("--action", default="report", type=str,
   help='''The action of this script: [default: %(default)s]
-- 'report'                Run examples and report results
-- 'copyToReference'       Copy current results to reference directory
-- 'updateReference[=URL]' Update references from URL, use the build system if not given
-- 'list'                  List directories to be run''')
+- 'report'          Run examples and report results
+- 'copyToReference' Copy current results to reference directory
+- 'updateReference' Update references from URL, use the build system if not given
+- 'list'            List directories to be run''')
 mainOpts.add_argument("-j", default=1, type=int,
   help="Number of jobs to run in parallel (applies only to the action 'report') [default: %(default)s]")
 mainOpts.add_argument("--filter", default="'nightly' in labels", type=str,
@@ -158,7 +158,7 @@ def removeOldBuilds():
 def main():
   # check arguments
   if not (args.action=="report" or args.action=="copyToReference" or
-          args.action=="updateReference" or args.action.startswith("updateReference=") or
+          args.action=="updateReference" or
           args.action=="list"):
     argparser.print_usage()
     print("error: unknown argument --action "+args.action+" (see -h)")
