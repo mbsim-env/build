@@ -112,7 +112,8 @@ os.environ['PKG_CONFIG_PATH']=((os.environ['PKG_CONFIG_PATH']+":") if 'PKG_CONFI
 
 # update references of examples
 if args.buildType=="linux64-dailydebug":
-  exsCur=runexamples.models.Run.objects.getCurrent(args.buildType).examples
+  runCur=runexamples.models.Run.objects.getCurrent(args.buildType)
+  exsCur=runCur.examples if runCur is not None else None
   for exStatic in runexamples.models.ExampleStatic.objects.filter(update=True):
     exCur=exsCur.get(exampleName=exStatic.exampleName)
     # delete all old references

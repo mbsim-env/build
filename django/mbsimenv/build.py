@@ -277,11 +277,11 @@ def main():
   localRet, commitidfull=repoUpdate(run)
   if localRet!=0: nrFailed+=1
 
-  # check if last build was the same as this build
-  if not args.forceBuild and args.buildSystemRun and lastcommitidfull==commitidfull:
-    print('Skipping this build: the last build was exactly the same.')
-    sys.stdout.flush()
-    return 255 # build skipped, same as last build
+#  # check if last build was the same as this build
+#  if not args.forceBuild and args.buildSystemRun and lastcommitidfull==commitidfull:
+#    print('Skipping this build: the last build was exactly the same.')
+#    sys.stdout.flush()
+#    return 255 # build skipped, same as last build
 
   # set status on commit
   if args.buildSystemRun:

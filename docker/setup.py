@@ -376,7 +376,10 @@ def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
                  fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
                  printLog=True, detach=False):
   stopDatabase=False
-  if len(dockerClient.networks.list(names="mbsimenv_service_intern:"+getTagname()))==1:
+  if len(dockerClient.networks.list(names="mbsimenv_service_intern:"+getTagname()))==1 and \
+     len(dockerClient.networks.list(names="mbsimenv_service_intern:"+getTagname()))==1 and \
+     dockerClient.containers.get('mbsimenv.database.'+getTagname()) is not None and \
+     dockerClient.containers.get('mbsimenv.database.'+getTagname()).status=="running":
     networki=dockerClient.networks.get("mbsimenv_service_intern:"+getTagname())
     networke=dockerClient.networks.get("mbsimenv_service_extern:"+getTagname())
     database=dockerClient.containers.get('mbsimenv.database.'+getTagname())
