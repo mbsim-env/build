@@ -17,6 +17,8 @@ import base.helper
 import mbsimenvSecrets
 import importlib # mfmf use something different for a minimal install
 
+DEBUG = False
+
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -31,8 +33,6 @@ else:
 # SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY=mbsimenvSecrets.getSecrets()["djangoSecretKey"]
 
-# SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
 # if debugging enabled python requests (urllib3) logging
 if DEBUG:
   l=logging.getLogger("urllib3")
@@ -109,6 +109,7 @@ if "postgresPassword" not in mbsimenvSecrets.getSecrets() and not os.path.isfile
       },
     }
   }
+  SECURE_SSL_REDIRECT = False
 else:
   DATABASES={
     'default': {
@@ -121,6 +122,7 @@ else:
       'CONN_MAX_AGE': 30,
     }
   }
+  SECURE_SSL_REDIRECT = True
 
 
 # Password validation
@@ -188,3 +190,21 @@ STATIC_ROOT = '/var/www/html/static'
 STATICFILES_DIRS = [
   os.path.join(BASE_DIR, "static"),
 ]
+
+CSRF_COOKIE_SECURE = True
+SESSION_COOKIE_SECURE = True
+SECURE_REFERRER_POLICY = "origin"
+
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'handlers': {
+        'console': {
+            'class': 'logging.StreamHandler',
+        },
+    },
+    'root': {
+        'handlers': ['console'],
+        'level': 'WARNING',
+    },
+}

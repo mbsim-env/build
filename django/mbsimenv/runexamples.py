@@ -1126,8 +1126,6 @@ def copyToReference():
 
 def updateReference():
   import requests
-  import logging
-  logging.getLogger("urllib3").setLevel(logging.WARNING)
   rs=requests.Session()
 
   print('Downloading metadata for all references from %s\n'%(args.updateURL))
@@ -1251,8 +1249,6 @@ def coverageBackupRestore(variant):
             shutil.move(pj(root, f), pj(root, os.path.splitext(f)[0]))
 def coverage(exRun):
   import requests
-  import logging
-  logging.getLogger("urllib3").setLevel(logging.WARNING)
 
   ret=0
   lcovFD=base.helper.MultiFile(args.printToConsole)

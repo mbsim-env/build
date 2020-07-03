@@ -17,8 +17,6 @@ import setup
 sys.path.append("/context/mbsimenv")
 import mbsimenvSecrets
 import service
-import logging
-logging.getLogger("urllib3").setLevel(logging.WARNING)
 
 # arguments
 argparser=argparse.ArgumentParser(

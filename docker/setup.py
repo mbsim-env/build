@@ -161,8 +161,6 @@ def main():
         return 1
     if args.pushPullMultistageImage:
       import requests
-      import logging
-      logging.getLogger("urllib3").setLevel(logging.WARNING)
       url='https://hub.docker.com/v2/repositories/mbsimenv'
       rs=requests.Session()
       while True:
