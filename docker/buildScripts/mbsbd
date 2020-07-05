@@ -78,7 +78,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
     -v "$MBSIMENVDIR/.home":/tmp/home \
     -e GIT_COMMITTER_NAME=dummy -e GIT_COMMITTER_EMAIL=dummy \
     -e HOME=/tmp/home \
-    -e PATH="/mbsim-env/mbsim/examples:/mbsim-env/build/buildScripts:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/3rdparty/local/bin:/mbsim-env/local-docker/bin" \
+    -e PATH="/mbsim-env/mbsim/examples:/mbsim-env/build/misc:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/3rdparty/local/bin:/mbsim-env/local-docker/bin" \
     -e PKG_CONFIG_PATH="/osupdate/local/lib/pkgconfig:/osupdate/local/lib64/pkgconfig:/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfig:/mbsim-env/local-docker/lib/pkgconfig:/mbsim-env/local-docker/lib64/pkgconfig" \
     -w "$CURDIR" \
     -e DISPLAY \

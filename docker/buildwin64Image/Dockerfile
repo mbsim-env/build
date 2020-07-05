@@ -13,6 +13,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   libtool automake autoconf \
   python3-pip \
   python3-numpy \
+  python3-pygithub \
   mingw64-boost \
   doxygen \
   tigervnc-server \
@@ -26,12 +27,16 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   mingw64-qt5-qtsvg \
   mingw64-qt5-qtbase \
   python3-h5py \
+  python3-pytz \
+  python3-sqlparse \
   mingw64-qwt-qt5 \
   wine \
   mingw64-xerces-c \
   mingw64-libarchive \
   diffutils \
+  python3-psycopg2 \
   && yum clean all
+RUN pip3 install django django-octicons
 # bugfix for moc
 RUN mv /usr/x86_64-w64-mingw32/bin/qt5/moc /usr/x86_64-w64-mingw32/bin/qt5/moc.org
 COPY docker/buildwin64Image/moc /usr/x86_64-w64-mingw32/bin/qt5/moc
@@ -197,8 +202,8 @@ LABEL org.label-schema.schema-version="1.0" \
 
 # Add user dockeruser, create volumes and set volume ownership and permissions
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
-  mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state && \
-  chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state
+  mkdir /mbsim-env /mbsim-ccache /databasemedia && \
+  chown dockeruser:dockeruser /mbsim-env /mbsim-ccache /databasemedia
 
 # configure wine
 COPY docker/buildwin64Image/wine.inf /context/wine.inf
@@ -206,11 +211,11 @@ RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\+g'); \
     sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.inf >> /usr/share/wine/wine.inf
 
 # copy
-COPY buildScripts /mbsim-build/build/buildScripts
-COPY docker/buildImage/buildSystemState.py /context/buildSystemState.py
+COPY misc /mbsim-build/build/misc
 COPY docker/buildImage/distribute.py /context/distribute.py
 COPY docker/buildwin64Image/entrypoint.py /context/entrypoint.py
 COPY docker/buildwin64Image/jni_md.h /context/java_jni/jni_md.h
+COPY django/mbsimenv /context/mbsimenv
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser

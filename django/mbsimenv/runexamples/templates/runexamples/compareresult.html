@@ -1,0 +1,51 @@
+{% extends "base/base.html" %}
+
+{% load static %}
+{% load octicons %}
+
+{% block title %}Compare Results: {{example.run.buildType}}{% endblock %}
+
+{% block body %}
+<script src="{% static 'runexamples/scripts.js' %}"> </script>
+<script>
+  "use strict";
+  $(document).ready(function() {
+    initCompareResultTable("{% url 'runexamples:datatable_compareresult' example.id %}");
+  });
+</script>
+<h1>Compare Results: <small>{{example.run.buildType}}</small></h1>
+<dl style="margin-right:0em;" class="row">
+  <dt class="col-2">Example</dt>
+  <dd class="col-10">
+    {{example.exampleName}}
+  </dd>
+  <dt class="col-2">Start Time</dt><dd class="col-10 DATETIME">{{example.run.startTime|date:'c'}}</dd>
+  <dt class="col-2">Navigate</dt>
+  <dd class="col-10">
+    <a class="btn btn-info btn-xs" href="?previous=1">
+      {% octicon "chevron-left" %} previous
+    </a>
+    <a class="btn btn-info btn-xs" href="?next=1">
+      {% octicon "chevron-right" %} next
+    </a>
+    <a class="btn btn-info btn-xs" href="?current=1">
+      {% octicon "chevron-right" %}{% octicon "chevron-right" %} current
+    </a>
+    <a class="btn btn-info btn-xs" href="{% url "runexamples:run" example.run.id %}">
+      {% octicon "chevron-up" %} example
+    </a>
+  </dd>
+</dl>
+<table id="compareresultTable" class="table table-striped table-hover table-bordered table-sm w-100">
+  <thead>
+    <tr>
+      <th>{% octicon "file-directory" %}&nbsp;H5 File</th>
+      <th>{% octicon "list-ordered" %}&nbsp;Dataset</th>
+      <th>{% octicon "list-unordered" %}&nbsp;Label</th>
+      <th>{% octicon "info" %}&nbsp;Result</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+{% endblock %}

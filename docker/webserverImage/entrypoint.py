@@ -4,15 +4,19 @@
 import subprocess
 import sys
 import os
-import shutil
 import fileinput
 import time
+import django
+import django.core.management
+import allauth
 import argparse
-import json
 import requests
-import setup
-import stat
 import docker
+sys.path.append("/context")
+import setup
+sys.path.append("/context/mbsimenv")
+import mbsimenvSecrets
+import service
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -20,10 +24,6 @@ argparser=argparse.ArgumentParser(
   description="Entrypoint for container mbsimenv/webserver.")
   
 argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs to run in parallel")
-argparser.add_argument("--webhookSecret", type=str, default="", help="Define webhook secret (required if no mbsimBuildService.conf exists)")
-argparser.add_argument("--clientID", type=str, default="", help="Define client ID (required if no mbsimBuildService.conf exists)")
-argparser.add_argument("--clientSecret", type=str, default="", help="Define client secret (required if no mbsimBuildService.conf exists)")
-argparser.add_argument("--statusAccessToken", type=str, default="", help="Define status access token (optional; no GitHub status update if not given)")
 
 args=argparser.parse_args()
 
@@ -33,72 +33,66 @@ if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="
 if "MBSIMENVTAGNAME" not in os.environ or os.environ["MBSIMENVTAGNAME"]=="":
   raise RuntimeError("Envvar MBSIMENVTAGNAME is not defined.")
 
-# create build status page
+os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings"
+django.setup()
+
+# wait for database server
+while True:
+  try:
+    django.db.connections['default'].cursor()
+    break
+  except django.db.utils.OperationalError:
+    print("Waiting for database to startup. Retry in 0.5s")
+    time.sleep(0.5)
+
+# database migrations
+django.core.management.call_command("migrate", interactive=False, traceback=True, no_color=True)
+
+# create superuser (may fail if already exists)
+try:
+  django.core.management.call_command("createsuperuser", interactive=False, username="admin", email="dummy@dummy.org")
+except django.core.management.base.CommandError:
+  pass
+# set superuser password
+user=django.contrib.auth.models.User.objects.get(username='admin')
+user.set_password(mbsimenvSecrets.getSecrets()["djangoAdminPassword"])
+user.save()
+
+# set site-name
+site=django.contrib.sites.models.Site.objects.get(id=1)
+site.domain=os.environ["MBSIMENVSERVERNAME"]
+site.name=os.environ["MBSIMENVSERVERNAME"]
+site.save()
+
+# create github app
+sa, _=allauth.socialaccount.models.SocialApp.objects.get_or_create(provider="github")
+sa.name="MBSim-Environment Build Service"
+sa.client_id=mbsimenvSecrets.getSecrets()["githubAppClientID"]
+sa.secret=mbsimenvSecrets.getSecrets()["githubAppSecret"]
+sa.save()
+sa.sites.add(django.contrib.sites.models.Site.objects.get(id=1))
+sa.save()
+
+# create master, master, master, master in cibranches
+if service.models.CIBranches.objects.filter(fmatvecBranch="master", hdf5serieBranch="master",
+                                            openmbvBranch="master", mbsimBranch="master").count()==0:
+  ci=service.models.CIBranches()
+  ci.fmatvecBranch="master"
+  ci.hdf5serieBranch="master"
+  ci.openmbvBranch="master"
+  ci.mbsimBranch="master"
+  ci.save()
+
+# service Info
 with open('/proc/1/cpuset', "r") as fid:
   containerID=fid.read().rstrip().split("/")[-1]
 dockerClient=docker.from_env()
-container=dockerClient.containers.get(containerID)
-image=container.image
-imageID=image.id
+image=dockerClient.containers.get(containerID).image
 gitCommitID=image.labels["gitCommitID"]
-with open("/var/www/html/mbsim/buildsysteminfo.txt", "w") as f:
-  print("This build system is running in:", file=f)
-  print("containerID: "+containerID, file=f)
-  print("imageID: "+imageID, file=f)
-  print("gitCommitID: "+gitCommitID, file=f)
-
-# check/create mbsim-config
-def createConfig(webhookSecret, clientID, clientSecret, statusAccessToken):
-  config={
-    "checkedExamples": [], 
-    "curcibranch": [
-      {
-        "fmatvec": "master", 
-        "hdf5serie": "master", 
-        "openmbv": "master", 
-        "mbsim": "master"
-      }
-    ], 
-    "tobuild": [], 
-    "buildDocker": [], 
-    "session": {}, 
-    "webhook_secret": webhookSecret, 
-    "client_id": clientID, 
-    "client_secret": clientSecret, 
-    "status_access_token": statusAccessToken
-  }
-  fd=open(configFilename, 'w')
-  json.dump(config, fd, indent=2)
-  fd.close()
-  os.chown(configFilename, 1065, 48)
-  os.chmod(configFilename, stat.S_IWUSR | stat.S_IWGRP | stat.S_IWGRP | stat.S_IRGRP)
-  return config
-configFilename="/mbsim-config/mbsimBuildService.conf"
-if not os.path.isfile(configFilename):
-  # no config file: either error or create it
-  if args.webhookSecret=="" or args.clientID=="" or args.clientSecret=="":
-    raise RuntimeError("No mbsimBuildService.conf file found! Need at least the arguments --webhookSecret, --clientID and --clientSecret.")
-  config=createConfig(args.webhookSecret, args.clientID, args.clientSecret, args.statusAccessToken)
-else:
-  # config file available: read it
-  fd=open(configFilename, 'r')
-  config=json.load(fd)
-  fd.close()
-  # if secrets are provided but differ from config file update config file
-  if (args.webhookSecret     !="" and config["webhook_secret"     ]!=args.webhookSecret    ) or \
-     (args.clientID          !="" and config["client_id"          ]!=args.clientID         ) or \
-     (args.clientSecret      !="" and config["client_secret"      ]!=args.clientSecret     ) or \
-     (args.statusAccessToken !="" and config["status_access_token"]!=args.statusAccessToken):
-    config=createConfig(args.webhookSecret     if args.webhookSecret    !="" else config["webhook_secret"     ],
-                        args.clientID          if args.clientID         !="" else config["client_id"          ],
-                        args.clientSecret      if args.clientSecret     !="" else config["client_secret"      ],
-                        args.statusAccessToken if args.statusAccessToken!="" else config["status_access_token"])
-
-# adapt static html content (MBSIMENVCLIENTID)
-for filename in ["/var/www/html/mbsim/html/index.html", "/var/www/html/mbsim/html/mbsimBuildServiceClient.js"]:
-  for line in fileinput.FileInput(filename, inplace=1):
-    line=line.replace("@MBSIMENVCLIENTID@", config["client_id"])
-    print(line, end="")
+info, _=service.models.Info.objects.get_or_create(id=gitCommitID)
+info.shortInfo="Container ID: %s\nImage ID: %s\ngit Commit ID: %s"%(containerID, image.id, gitCommitID)
+info.save()
+service.models.Info.objects.exclude(id=gitCommitID).delete() # remove everything except the current runnig Info object
 
 # add daily build to crontab (starting at 01:00)
 crontab=\
@@ -132,7 +126,7 @@ waitForWWW(10)
 
 # create cert if not existing or renew if already existing
 subprocess.check_call(["/usr/bin/certbot-2",
-  "--agree-tos", "--email", "friedrich.at.gc@gmail.com", "certonly", "-n", "--webroot", "-w", "/var/www/html",
+  "--agree-tos", "--email", "friedrich.at.gc@gmail.com", "certonly", "-n", "--webroot", "-w", "/var/www/html/certbot",
   "--cert-name", "mbsim-env", "-d", os.environ["MBSIMENVSERVERNAME"]])
 
 # adapt web server config to use the letsencrypt certs
@@ -147,12 +141,11 @@ for line in fileinput.FileInput("/etc/httpd/conf.d/ssl.conf", inplace=1):
 subprocess.check_call(["httpd", "-k", "graceful"])
 
 if os.environ["MBSIMENVTAGNAME"]=="staging":
-  # for staging service run the CI at service startup
+  # for staging service run the CI at service startup (just for testing a build)
   print("Starting linux-ci build.")
   setup.run("build-linux64-ci", args.jobs, printLog=False, detach=True, addCommands=["--forceBuild"],
             fmatvecBranch="master", hdf5serieBranch="master",
-            openmbvBranch="master", mbsimBranch="master",
-            statusAccessToken=args.statusAccessToken)
+            openmbvBranch="master", mbsimBranch="master")
 
 # wait for the web server to finish (will never happen) and return its return code
 print("Service up and running.")

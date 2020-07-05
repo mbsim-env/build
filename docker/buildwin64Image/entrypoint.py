@@ -5,6 +5,8 @@ import argparse
 import os
 import subprocess
 import sys
+import django
+sys.path.append("/context/mbsimenv")
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -21,9 +23,6 @@ argparser.add_argument('--forceBuild', action="store_true", help="Passed to buil
 
 args=argparser.parse_args()
 
-statusAccessToken=os.environ["STATUSACCESSTOKEN"]
-os.environ["STATUSACCESSTOKEN"]=""
-
 # check environment
 if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="":
   raise RuntimeError("Envvar MBSIMENVSERVERNAME is not defined.")
@@ -31,6 +30,18 @@ if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="
 # check buildtype
 if args.buildType != "win64-dailyrelease":
   raise RuntimeError("Unknown build type "+args.buildType+".")
+
+os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings"
+django.setup()
+
+# wait for database server
+while True:
+  try:
+    django.db.connections['default'].cursor()
+    break
+  except django.db.utils.OperationalError:
+    print("Waiting for database to startup. Retry in 0.5s")
+    time.sleep(0.5)
 
 # run
 
@@ -62,15 +73,13 @@ if args.forceBuild:
 os.environ['WINEPATH']=((os.environ['WINEPATH']+";") if 'WINEPATH' in os.environ else "")+"/mbsim-env/local/bin"
 
 # run build
-os.environ["STATUSACCESSTOKEN"]=statusAccessToken
-ROTATE=3 if os.environ["MBSIMENVTAGNAME"]=="staging" else 20
 ret=subprocess.call(
-  ["/mbsim-build/build/buildScripts/build.py"]+ARGS+["--url", "https://"+os.environ['MBSIMENVSERVERNAME']+"/mbsim/"+args.buildType+"/report",
+  ["/context/mbsimenv/build.py"]+ARGS+[
   "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun",
-  "--rotate", str(ROTATE), "--fmatvecBranch", args.fmatvecBranch,
+  "--fmatvecBranch", args.fmatvecBranch,
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
   "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix",
-  "--reportOutDir", "/mbsim-report/report", "--buildType", args.buildType,
+  "--buildType", args.buildType,
   "--passToConfigure", "--enable-shared", "--disable-static", "--enable-python",
   "--build=x86_64-redhat-linux", "--host=x86_64-w64-mingw32",
   "--with-lapack-lib-prefix=/3rdparty/local/lib", "--with-hdf5-prefix=/3rdparty/local", 
@@ -95,7 +104,6 @@ ret=subprocess.call(
   "SOQT_CFLAGS=-I/3rdparty/local/include",
   "--passToRunexamples"]+RUNEXAMPLES,
   stdout=sys.stdout, stderr=sys.stderr)
-os.environ["STATUSACCESSTOKEN"]=""
 if ret!=255:
   sys.exit(0)
 if ret!=0:

@@ -1,0 +1,59 @@
+{% extends "base/base.html" %}
+
+{% load static %}
+{% load octicons %}
+
+{% block title %}Valgrind Report: memcheck{% endblock %}
+
+{% block body %}
+
+<script src="{% static 'runexamples/scripts.js' %}"> </script>
+<script>
+  "use strict";
+  $(document).ready(function() {
+    initValgrindErrorTable("{% url 'runexamples:datatable_valgrinderror' valgrind.id %}");
+  });
+</script>
+
+<h1>Valgrind Report: memcheck</h1>
+
+<h2>Call Information</h2>
+<dl style="margin-right:0em;" class="row">
+  <dt class="col-2">Analysed Program</dt>
+  <dd class="col-10">
+    <code>{{ valgrind.programCmd }}</code>
+  </dd>
+  <dt class="col-2">Valgrind</dt>
+  <dd class="col-10">
+    <code>{{ valgrind.valgrindCmd }}</code>
+  </dd>
+  <dt class="col-2">Navigate</dt>
+  <dd class="col-10">
+    <a class="btn btn-info btn-xs" href="?previous=1">
+      {% octicon "chevron-left" %} previous
+    </a>
+    <a class="btn btn-info btn-xs" href="?next=1">
+      {% octicon "chevron-right" %} next
+    </a>
+    <a class="btn btn-info btn-xs" href="?current=1">
+      {% octicon "chevron-right" %}{% octicon "chevron-right" %} current
+    </a>
+    <a class="btn btn-info btn-xs" href="{% url 'runexamples:run' valgrind.example.run.id %}">
+      {% octicon "chevron-up" %} example
+    </a>
+  </dd>
+</dl>
+
+<h2>Errors</h2>
+<table id="valgrindErrorTable" class="table table-striped table-hover table-bordered table-sm w-100">
+  <thead>
+    <tr>
+      <th>Kind</th>
+      <th>Error Details</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+
+{% endblock %}

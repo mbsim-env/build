@@ -1,0 +1,88 @@
+{% extends "base/base.html" %}
+
+{% load static %}
+{% load octicons %}
+
+{% block head %}
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
+{% endblock %}
+
+{% block title %}MBSim-Env Official Releases{% endblock %}
+
+{% block body %}
+
+<h1>MBSim-Env Official Releases</h1>
+
+<h2>Current Release</h2>
+<p>The following table lists the current release for each platform</p>
+<table style="width:auto;" class="table table-striped table-hover table-bordered table-sm">
+  <thead>
+    <tr>
+      <th>{% octicon "kebab-vertical" %}&nbsp;Platform</th>
+      <th>{% octicon "kebab-horizontal" %}&nbsp;Version</th>
+      <th>{% octicon "clock" %}&nbsp;Created at</th>
+      <th>{% octicon "desktop-download" %}&nbsp;Download</th>
+      <th>{% octicon "text-size" %}&nbsp;Size</th>
+      <th><small>DebugInfo</small></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in currentReleases %}
+      <tr>
+        <td data-toggle="tooltip" data-placement="bottom" title="service/Release: id={{r.id}}">
+          {% if r.platform == "linux64" %}<i class="fa fa-linux"></i>{% else %}<i class="fa fa-windows"></i>{% endif %}
+          &nbsp;{{ r.platform }}
+        </td>
+        <td>{{ r.versionMajor }}.{{ r.versionMinor }}</td>
+        <td>{{ r.createDate }}</td>
+        <td><a class="font-weight-bold" href="{% url "base:fileDownloadFromDB" "service" "Release" r.id "releaseFile" %}">{{ r.releaseFileName }}</a></td>
+        <td>{{ r.releaseFile.size|filesizeformat }}</td>
+        <td><small>
+          {% if r.releaseDebugFile %}
+            <a href="{% url "base:fileDownloadFromDB" "service" "Release" r.id "releaseDebugFile" %}">{{ r.releaseDebugFileName }}</a>
+          {% else %}
+            -
+          {% endif %}
+        </small></td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+<h2 style="margin-top: 5ex">Older Releases</h2>
+<p>The following table lists older releases</p>
+<table style="width:auto;" class="table table-striped table-hover table-bordered table-sm">
+  <thead>
+    <tr>
+      <th>{% octicon "kebab-vertical" %}&nbsp;Platform</th>
+      <th>{% octicon "kebab-horizontal" %}&nbsp;Version</th>
+      <th>{% octicon "clock" %}&nbsp;Created at</th>
+      <th>{% octicon "desktop-download" %}&nbsp;Download</th>
+      <th>{% octicon "text-size" %}&nbsp;Size</th>
+      <th><small>DebugInfo</small></th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for r in olderReleases %}
+      <tr>
+        <td data-toggle="tooltip" data-placement="bottom" title="service/Release: id={{r.id}}">
+          {% if r.platform == "linux64" %}<i class="fa fa-linux"></i>{% else %}<i class="fa fa-windows"></i>{% endif %}
+          &nbsp;{{ r.platform }}
+        </td>
+        <td>{{ r.versionMajor }}.{{ r.versionMinor }}</td>
+        <td>{{ r.createDate }}</td>
+        <td><a href="{% url "base:fileDownloadFromDB" "service" "Release" r.id "releaseFile" %}">{{ r.releaseFileName }}</a></td>
+        <td>{{ r.releaseFile.size|filesizeformat }}</td>
+        <td><small>
+          {% if r.releaseDebugFile %}
+            <a href="{% url "base:fileDownloadFromDB" "service" "Release" r.id "releaseDebugFile" %}">{{ r.releaseDebugFileName }}</a>
+          {% else %}
+            -
+          {% endif %}
+        </small></td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}

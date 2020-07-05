@@ -1,0 +1,49 @@
+{% extends "base/base.html" %}
+
+{% load static %}
+{% load octicons %}
+
+{% block title %}Validate XML Files: {{example.run.buildType}}{% endblock %}
+
+{% block body %}
+<script src="{% static 'runexamples/scripts.js' %}"> </script>
+<script>
+  "use strict";
+  $(document).ready(function() {
+    initXMLOutputTable("{% url 'runexamples:datatable_xmloutput' example.id %}");
+  });
+</script>
+<h1>Validate XML Files: <small>{{example.run.buildType}}</small></h1>
+<dl style="margin-right:0em;" class="row">
+  <dt class="col-2">Example</dt>
+  <dd class="col-10">
+    {{example.exampleName}}
+  </dd>
+  <dt class="col-2">Start Time</dt><dd class="col-10 DATETIME">{{example.run.startTime|date:'c'}}</dd>
+  <dt class="col-2">Navigate</dt>
+  <dd class="col-10">
+    <a class="btn btn-info btn-xs" href="?previous=1">
+      {% octicon "chevron-left" %} previous
+    </a>
+    <a class="btn btn-info btn-xs" href="?next=1">
+      {% octicon "chevron-right" %} next
+    </a>
+    <a class="btn btn-info btn-xs" href="?current=1">
+      {% octicon "chevron-right" %}{% octicon "chevron-right" %} current
+    </a>
+    <a class="btn btn-info btn-xs" href="{% url "runexamples:run" example.run.id %}">
+      {% octicon "chevron-up" %} example
+    </a>
+  </dd>
+</dl>
+<table id="xmloutputTable" class="table table-striped table-hover table-bordered table-sm w-100">
+  <thead>
+    <tr>
+      <th>{% octicon "file-directory" %}&nbsp;XML File</th>
+      <th>{% octicon "note" %}&nbsp;Result</th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+{% endblock %}

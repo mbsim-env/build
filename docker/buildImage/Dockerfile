@@ -61,13 +61,16 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   clang-analyzer \
   graphviz \
   python36-numpy \
+  python36-pytz \
+  python36-pygithub \
+  python3-psycopg2 \
   adwaita-qt5 \
   qt5-qtstyleplugins \
   && yum clean all
 # config gcc7 => do not use the "exec form" form now on use the "shell form"!!!!!
 SHELL ["scl", "enable", "devtoolset-7"]
 RUN npm install mathjax-node
-RUN pip3 install h5py sympy
+RUN pip3 install h5py sympy django django-octicons
 
 
 
@@ -216,26 +219,32 @@ ENV LIBGL_ALWAYS_INDIRECT=1
 # copy build repo
 COPY docker/buildImage/entrypoint.py /context/entrypoint.py
 COPY docker/buildImage/scl_wrapper_entrypoint.sh /context/scl_wrapper_entrypoint.sh
-COPY docker/buildImage/buildSystemState.py /context/buildSystemState.py
 COPY docker/buildImage/distribute.py /context/distribute.py
 COPY docker/buildImage/c++-analyzer /context/c++-analyzer
 COPY docker/buildImage/ccc-analyzer /context/ccc-analyzer
-COPY buildScripts /mbsim-build/build/buildScripts
+COPY misc /mbsim-build/build/misc
+COPY django/mbsimenv /context/mbsimenv
 
 # enable ccache (after all other things are done); note /mbsim-env is usually a persistent Docker volume;
 # enable nu-html -> add to CLASSPATH
 # CCACHE handling: /usr/lib64/ccache cannot be added here to PATH due to scl.
 #                  this is done in the entrypoint wrapper, see below
-ENV PATH=/mbsim-env/mbsim/examples:/mbsim-env/build/buildScripts:$PATH \
+ENV PATH=/mbsim-env/mbsim/examples:/mbsim-env/build/misc:$PATH \
     LD_LIBRARY_PATH=/3rdparty/local/lib/octave/4.4.1:$LD_LIBRARY_PATH \
     CCACHE_DIR=/mbsim-ccache \
     MBSIM_SWIG=1 \
     CLASSPATH=$CLASSPATH:/3rdparty/vnu.jar
 
-# Add user dockeruser, create volumes and set volume ownership and permissions
+# user/group handling
+# - add group dockeruser and user dockeruser with group dockeruser
+# - add group apache with id 48
+# - create volume mount dirs
+# - set permissions of volume mount dirs
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
-  mkdir /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state && \
-  chown dockeruser:dockeruser /mbsim-env /mbsim-report /mbsim-ccache /mbsim-state
+  groupadd -g 48 apache && \
+  mkdir /mbsim-env /mbsim-ccache /databasemedia /webserverstatic && \
+  chown dockeruser:dockeruser /mbsim-env /mbsim-ccache /webserverstatic && \
+  chown dockeruser:apache /databasemedia && chmod ug+rwx /databasemedia
 
 # add g++/c++ to cache dir (its not added automatically since g++ is not installed since scl is used
 RUN ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/g++ && ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/c++
