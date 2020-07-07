@@ -29,15 +29,15 @@ class Run(django.db.models.Model):
   buildType=django.db.models.CharField(max_length=50)
   command=django.db.models.TextField()
   startTime=django.db.models.DateTimeField()
-  endTime=django.db.models.DateTimeField(null=True)
+  endTime=django.db.models.DateTimeField(null=True, blank=True)
   fmatvecBranch=django.db.models.CharField(max_length=50)
   hdf5serieBranch=django.db.models.CharField(max_length=50)
   openmbvBranch=django.db.models.CharField(max_length=50)
   mbsimBranch=django.db.models.CharField(max_length=50)
-  fmatvecUpdateOK=django.db.models.BooleanField(null=True)
-  hdf5serieUpdateOK=django.db.models.BooleanField(null=True)
-  openmbvUpdateOK=django.db.models.BooleanField(null=True)
-  mbsimUpdateOK=django.db.models.BooleanField(null=True)
+  fmatvecUpdateOK=django.db.models.BooleanField(null=True, blank=True)
+  hdf5serieUpdateOK=django.db.models.BooleanField(null=True, blank=True)
+  openmbvUpdateOK=django.db.models.BooleanField(null=True, blank=True)
+  mbsimUpdateOK=django.db.models.BooleanField(null=True, blank=True)
   fmatvecUpdateOutput=django.db.models.TextField()
   hdf5serieUpdateOutput=django.db.models.TextField()
   openmbvUpdateOutput=django.db.models.TextField()
@@ -56,9 +56,9 @@ class Run(django.db.models.Model):
   mbsimUpdateMsg=django.db.models.CharField(max_length=100)
   # tools = related ForeignKey
   # examples = related ForeignKey
-  distributionOK=django.db.models.BooleanField(null=True)
+  distributionOK=django.db.models.BooleanField(null=True, blank=True)
   distributionOutput=django.db.models.TextField()
-  distributionFile=django.db.models.FileField(null=True, max_length=100)
+  distributionFile=django.db.models.FileField(null=True, blank=True, max_length=100)
   @property
   def distributionFileName(self):
     if self.distributionFile is None: return None
@@ -68,7 +68,7 @@ class Run(django.db.models.Model):
     if self.id is None:
       self.save()
     self.distributionFile.name="builds_Run_"+str(self.id)+"_"+filename
-  distributionDebugFile=django.db.models.FileField(null=True, max_length=100)
+  distributionDebugFile=django.db.models.FileField(null=True, blank=True, max_length=100)
   @property
   def distributionDebugFileName(self):
     if self.distributionDebugFile is None: return None
@@ -132,13 +132,13 @@ class Tool(django.db.models.Model):
   run=django.db.models.ForeignKey(Run, on_delete=django.db.models.CASCADE, related_name='tools')
   toolName=django.db.models.CharField(max_length=200)
   willFail=django.db.models.BooleanField()
-  configureOK=django.db.models.BooleanField(null=True)
-  configureOutput=django.db.models.TextField(null=True)
-  makeOK=django.db.models.BooleanField(null=True)
-  makeOutput=django.db.models.TextField(null=True)
-  makeCheckOK=django.db.models.BooleanField(null=True)
-  makeCheckOutput=django.db.models.TextField(null=True)
-  docOK=django.db.models.BooleanField(null=True)
-  docOutput=django.db.models.TextField(null=True)
-  xmldocOK=django.db.models.BooleanField(null=True)
-  xmldocOutput=django.db.models.TextField(null=True)
+  configureOK=django.db.models.BooleanField(null=True, blank=True)
+  configureOutput=django.db.models.TextField(blank=True)
+  makeOK=django.db.models.BooleanField(null=True, blank=True)
+  makeOutput=django.db.models.TextField(blank=True)
+  makeCheckOK=django.db.models.BooleanField(null=True, blank=True)
+  makeCheckOutput=django.db.models.TextField(blank=True)
+  docOK=django.db.models.BooleanField(null=True, blank=True)
+  docOutput=django.db.models.TextField(blank=True)
+  xmldocOK=django.db.models.BooleanField(null=True, blank=True)
+  xmldocOutput=django.db.models.TextField(blank=True)

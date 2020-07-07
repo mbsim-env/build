@@ -518,6 +518,7 @@ def run(s, jobs=4,
       environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
       volumes={
         'mbsimenv_mbsim-linux64-dailydebug.'+getTagname():  {"bind": "/mbsim-env",       "mode": "rw"},
+        'mbsimenv_databasemedia.'+getTagname():             {"bind": "/databasemedia",   "mode": "rw"},
         'mbsimenv_config.'+getTagname():                    {"bind": "/mbsim-config",    "mode": "ro"},
       },
       detach=True, stdout=True, stderr=True)

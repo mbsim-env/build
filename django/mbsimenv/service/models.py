@@ -17,11 +17,11 @@ class CIBranches(django.db.models.Model):
 class CIQueue(django.db.models.Model):
   id=django.db.models.AutoField(primary_key=True)
   recTime=django.db.models.DateTimeField()
-  fmatvecBranch=django.db.models.CharField(null=True, max_length=50)
-  hdf5serieBranch=django.db.models.CharField(null=True, max_length=50)
-  openmbvBranch=django.db.models.CharField(null=True, max_length=50)
-  mbsimBranch=django.db.models.CharField(null=True, max_length=50)
-  buildCommitID=django.db.models.CharField(null=True, max_length=50)
+  fmatvecBranch=django.db.models.CharField(blank=True, max_length=50)
+  hdf5serieBranch=django.db.models.CharField(blank=True, max_length=50)
+  openmbvBranch=django.db.models.CharField(blank=True, max_length=50)
+  mbsimBranch=django.db.models.CharField(blank=True, max_length=50)
+  buildCommitID=django.db.models.CharField(blank=True, max_length=50)
 
 class Release(django.db.models.Model):
   id=django.db.models.AutoField(primary_key=True)
@@ -30,7 +30,7 @@ class Release(django.db.models.Model):
   versionMajor=django.db.models.PositiveSmallIntegerField()
   versionMinor=django.db.models.PositiveSmallIntegerField()
 
-  releaseFile=django.db.models.FileField(null=True, max_length=100)
+  releaseFile=django.db.models.FileField(null=True, blank=True, max_length=100)
   @property
   def releaseFileName(self):
     if self.releaseFile is None: return None
@@ -41,7 +41,7 @@ class Release(django.db.models.Model):
       self.save()
     self.releaseFile.name="service_release_"+str(self.id)+"_"+filename
 
-  releaseDebugFile=django.db.models.FileField(null=True, max_length=100)
+  releaseDebugFile=django.db.models.FileField(null=True, blank=True, max_length=100)
   @property
   def releaseDebugFileName(self):
     if self.releaseDebugFile is None: return None

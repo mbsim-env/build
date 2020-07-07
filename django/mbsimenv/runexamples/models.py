@@ -26,15 +26,15 @@ class Run(django.db.models.Model):
   objects=RunManager()
 
   id=django.db.models.AutoField(primary_key=True)
-  build_run=django.db.models.ForeignKey(builds.models.Run, null=True, on_delete=django.db.models.SET_NULL, related_name="examples")
+  build_run=django.db.models.ForeignKey(builds.models.Run, null=True, blank=True, on_delete=django.db.models.SET_NULL, related_name="examples")
   buildType=django.db.models.CharField(max_length=50)
   command=django.db.models.TextField()
   startTime=django.db.models.DateTimeField()
-  endTime=django.db.models.DateTimeField(null=True)
+  endTime=django.db.models.DateTimeField(null=True, blank=True)
   # examples = related ForeignKey
-  coverageOK=django.db.models.BooleanField(null=True)
-  coverageRate=django.db.models.FloatField(null=True)
-  coverageOutput=django.db.models.TextField(null=True)
+  coverageOK=django.db.models.BooleanField(null=True, blank=True)
+  coverageRate=django.db.models.FloatField(null=True, blank=True)
+  coverageOutput=django.db.models.TextField(blank=True)
 
   def getCurrent(self):
     return Run.objects.getCurrent(self.buildType)
@@ -88,21 +88,21 @@ class Example(django.db.models.Model):
   run=django.db.models.ForeignKey(Run, on_delete=django.db.models.CASCADE, related_name='examples')
   exampleName=django.db.models.CharField(max_length=200)
   willFail=django.db.models.BooleanField()
-  runResult=django.db.models.IntegerField(null=True, choices=RunResult.choices)
-  runOutput=django.db.models.TextField(null=True)
+  runResult=django.db.models.IntegerField(null=True, blank=True, choices=RunResult.choices)
+  runOutput=django.db.models.TextField(blank=True)
   # valgrinds = related ForeignKey
-  time=django.db.models.DurationField(null=True)
-  guiTestHdf5serieOK=django.db.models.IntegerField(null=True, choices=GUITestResult.choices)
-  guiTestHdf5serieOutput=django.db.models.TextField(null=True)
-  guiTestOpenmbvOK=django.db.models.IntegerField(null=True, choices=GUITestResult.choices)
-  guiTestOpenmbvOutput=django.db.models.TextField(null=True)
-  guiTestMbsimguiOK=django.db.models.IntegerField(null=True, choices=GUITestResult.choices)
-  guiTestMbsimguiOutput=django.db.models.TextField(null=True)
+  time=django.db.models.DurationField(null=True, blank=True)
+  guiTestHdf5serieOK=django.db.models.IntegerField(null=True, blank=True, choices=GUITestResult.choices)
+  guiTestHdf5serieOutput=django.db.models.TextField(blank=True)
+  guiTestOpenmbvOK=django.db.models.IntegerField(null=True, blank=True, choices=GUITestResult.choices)
+  guiTestOpenmbvOutput=django.db.models.TextField(blank=True)
+  guiTestMbsimguiOK=django.db.models.IntegerField(null=True, blank=True, choices=GUITestResult.choices)
+  guiTestMbsimguiOutput=django.db.models.TextField(blank=True)
   # results = related ForeignKey
   webappHdf5serie=django.db.models.BooleanField()
   webappOpenmbv=django.db.models.BooleanField()
   webappMbsimgui=django.db.models.BooleanField()
-  deprecatedNr=django.db.models.PositiveIntegerField(null=True)
+  deprecatedNr=django.db.models.PositiveIntegerField(null=True, blank=True)
   # xmlOutputs = related ForeignKey
 
   def getCurrent(self):
@@ -139,14 +139,14 @@ class XMLOutput(django.db.models.Model):
 
 class ExampleStatic(django.db.models.Model):
   exampleName=django.db.models.CharField(max_length=200, primary_key=True)
-  refTime=django.db.models.DurationField(null=True)
+  refTime=django.db.models.DurationField(null=True, blank=True)
   update=django.db.models.BooleanField(default=False)
   # references = related ForeignKey
 
 class ExampleStaticReference(django.db.models.Model):
   id=django.db.models.AutoField(primary_key=True)
   exampleStatic=django.db.models.ForeignKey(ExampleStatic, on_delete=django.db.models.CASCADE, related_name='references')
-  h5File=django.db.models.FileField(null=True, max_length=200)
+  h5File=django.db.models.FileField(null=True, blank=True, max_length=200)
   @property
   def h5FileName(self):
     if self.h5File is None: return None
@@ -203,7 +203,7 @@ class ValgrindFrame(django.db.models.Model):
   fn=django.db.models.TextField() # a function name can be very long (templates)
   dir=django.db.models.CharField(max_length=250)
   file=django.db.models.CharField(max_length=100)
-  line=django.db.models.PositiveIntegerField(null=True)
+  line=django.db.models.PositiveIntegerField(null=True, blank=True)
   class Meta:
     constraints=[
       django.db.models.UniqueConstraint(fields=['whatAndStack', 'nr'], name="unique_orderPerStack"),
@@ -234,7 +234,7 @@ class CompareResult(django.db.models.Model):
   dataset=django.db.models.CharField(max_length=200)
   label=django.db.models.CharField(max_length=100)
   result=django.db.models.IntegerField(choices=Result.choices)
-  h5File=django.db.models.FileField(null=True, max_length=200) # do not use h5File.open, use h5File_open
+  h5File=django.db.models.FileField(null=True, blank=True, max_length=200) # do not use h5File.open, use h5File_open
   @property
   def h5FileName(self):
     if self.h5File is None: return None

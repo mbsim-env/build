@@ -452,6 +452,8 @@ def runExample(exRun, example):
   print("Started example "+example)
   savedDir=os.getcwd()
   try:
+    os.chdir(example)
+
     willFail=False
     if os.path.isfile("labels"):
       willFail='willfail' in codecs.open("labels", "r", encoding="utf-8").read().rstrip().split(' ')
@@ -465,8 +467,6 @@ def runExample(exRun, example):
     ex.webappOpenmbv=args.webapp
     ex.webappMbsimgui=args.webapp
     ex.save()
-
-    os.chdir(example)
 
     runExampleRet=0 # run ok
     # execute the example
@@ -524,17 +524,17 @@ def runExample(exRun, example):
         if len(files)==0:
           return []
         # at least on Windows (wine) the DISPLAY is not found sometimes (unknown why). Hence, try this number of times before reporting an error
-        tries=5 if exePrefix()==["wine"] else 1
+        tries=3 if exePrefix()==["wine"] else 1
         outFD=base.helper.MultiFile(args.printToConsole)
         comm=[pj(mbsimBinDir, tool+args.exeExt), "--autoExit"]+files
         allTimedOut=True
         for t in range(0, tries):
           print("Starting (try %d/%d):\n"%(t+1, tries)+str(comm)+"\n\n", file=outFD)
-          ret=base.helper.subprocessCall(prefixSimulation(tool)+exePrefix()+comm, outFD, env=denv, maxExecutionTime=(10 if args.prefixSimulationKeyword=='VALGRIND' else 5))
+          ret=base.helper.subprocessCall(prefixSimulation(tool)+exePrefix()+comm, outFD, env=denv, maxExecutionTime=(10 if args.prefixSimulationKeyword=='VALGRIND' else 3))
           print("\n\nReturned with "+str(ret), file=outFD)
           if ret!=base.helper.subprocessCall.timedOutErrorCode: allTimedOut=False
           if ret==0: break
-          if t+1<tries: time.sleep(60) # wait some time, a direct next test will likely also fail (see above)
+          if t+1<tries: time.sleep(10) # wait some time, a direct next test will likely also fail (see above)
         if ret!=0 and not allTimedOut: ret=1 # if at least one example failed return with error (not with base.helper.subprocessCall.timedOutErrorCode)
         if exePrefix()!=["wine"] and allTimedOut: ret=1 # on none wine treat allTimedOut as error (allTimedOut is just a hack for Windows)
         retv=valgrindOutputAndAdaptRet("guitest_"+tool, ex)
