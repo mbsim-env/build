@@ -314,7 +314,7 @@ def main():
 
   # update status on commitid
   if args.buildSystemRun:
-    setGithubStatus(exRun, "success" if failedExamples==0 and coverageFailed==0 else "failure")
+    setGithubStatus(exRun, "success" if len(failedExamples)==0 and coverageFailed==0 else "failure")
 
   # print result summary to console
   if len(failedExamples)>0:
@@ -473,7 +473,7 @@ def runExample(exRun, example):
     executeRet=0
     if not args.disableRun:
       # clean output of previous run
-      list(map(os.remove, glob.glob("*.h5")))
+      list(map(os.remove, glob.glob("*.fmuh5")))
       list(map(os.remove, glob.glob("*.mbsh5")))
       list(map(os.remove, glob.glob("*.ombvh5")))
 
@@ -844,7 +844,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
       data=numpy.genfromtxt("fmuCheck.result.csv", dtype=float, delimiter=",", skip_header=1) # get data from csv
       header=open("fmuCheck.result.csv", "r").readline().rstrip().split(',') # get header from csv
       header=list(map(lambda x: x[1:-1], header)) # remove leading/trailing " form each header
-      f=h5py.File("fmuCheck.result.h5", "w") # create h5 file
+      f=h5py.File("fmuCheck.result.fmuh5", "w") # create h5 file
       d=f.create_dataset("fmuCheckResult", dtype='d', data=data) # create dataset with data
       d.attrs.create("Column Label", dtype=h5py.special_dtype(vlen=bytes), data=header) # create Column Label attr with header
       f.close() # close h5 file
@@ -1085,7 +1085,7 @@ def compareExample(ex):
         os.unlink(tempF.name)
   # files in current but not in reference
   curFiles=[]
-  curFiles.extend(glob.glob("*.h5"))
+  curFiles.extend(glob.glob("*.fmuh5"))
   curFiles.extend(glob.glob("*.mbsh5"))
   curFiles.extend(glob.glob("*.ombvh5"))
   for curFile in curFiles:
@@ -1112,7 +1112,7 @@ def copyToReference():
     exSt.references.all().delete()
     exSt.refTime=ex.time
     exSt.save()
-    for fnglob in ["*.h5", "*.mbsh5", "*.ombvh5"]:
+    for fnglob in ["*.fmuh5", "*.mbsh5", "*.ombvh5"]:
       for fn in glob.glob(pj(example, fnglob)):
         ref=runexamples.models.ExampleStaticReference()
         ref.exampleStatic=exSt
