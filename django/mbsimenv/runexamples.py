@@ -282,6 +282,8 @@ def main():
 
     # wait for pool to finish and get result
     retAll=poolResult.get()
+    exRun.examplesFailed=exRun.examples.filterFailed().count()
+    exRun.save()
 
   finally:
     if args.checkGUIs:
@@ -1097,6 +1099,8 @@ def compareExample(ex):
       cmpRes.result=runexamples.models.CompareResult.Result.FILENOTINREF
       nrFailed[0]+=1
   runexamples.models.CompareResult.objects.bulk_create(cmpRess)
+  ex.resultsFailed=ex.results.filterFailed().count()
+  ex.save()
 
   return 1 if nrFailed[0]>0 else 0
 
@@ -1211,6 +1215,8 @@ def validateXML(ex):
         outputFD.close()
         xmlOut.resultOutput=outputFD.getData()
         xmlOut.save()
+  ex.xmlOutputsFailed=ex.xmlOutputs.filterFailed().count()
+  ex.save()
   return nrFailed
 
 @functools.lru_cache(maxsize=1)

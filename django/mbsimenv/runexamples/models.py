@@ -19,7 +19,7 @@ class RunManager(django.db.models.Manager):
   def filterFailed(self):
     return self.filter(
       (django.db.models.Q(coverageOK__isnull=False)   & django.db.models.Q(coverageOK=False)) |
-      django.db.models.Q(examples__in=Example.objects.filterFailed())
+      django.db.models.Q(examplesFailed__gt=0)
     ).distinct()
 
 class Run(django.db.models.Model):
@@ -32,6 +32,7 @@ class Run(django.db.models.Model):
   startTime=django.db.models.DateTimeField()
   endTime=django.db.models.DateTimeField(null=True, blank=True)
   # examples = related ForeignKey
+  examplesFailed=django.db.models.PositiveIntegerField(default=0) # just a cached value for performance of filterFailed
   coverageOK=django.db.models.BooleanField(null=True, blank=True)
   coverageRate=django.db.models.FloatField(null=True, blank=True)
   coverageOutput=django.db.models.TextField(blank=True)
@@ -68,8 +69,8 @@ class ExampleManager(django.db.models.Manager):
       (django.db.models.Q(guiTestOpenmbvOK__isnull=False)   & django.db.models.Q(guiTestOpenmbvOK=Example.GUITestResult.FAILED)) |
       (django.db.models.Q(guiTestMbsimguiOK__isnull=False)  & django.db.models.Q(guiTestMbsimguiOK=Example.GUITestResult.FAILED)) |
       (django.db.models.Q(deprecatedNr__isnull=False)       & django.db.models.Q(deprecatedNr__gt=0)) |
-      django.db.models.Q(results__in=CompareResult.objects.filterFailed()) |
-      django.db.models.Q(xmlOutputs__in=XMLOutput.objects.filterFailed())
+      django.db.models.Q(resultsFailed__gt=0) |
+      django.db.models.Q(xmlOutputsFailed__gt=0)
     )).distinct()
 
 class Example(django.db.models.Model):
@@ -99,11 +100,13 @@ class Example(django.db.models.Model):
   guiTestMbsimguiOK=django.db.models.IntegerField(null=True, blank=True, choices=GUITestResult.choices)
   guiTestMbsimguiOutput=django.db.models.TextField(blank=True)
   # results = related ForeignKey
+  resultsFailed=django.db.models.PositiveIntegerField(default=0) # just a cached value for performance of filterFailed
   webappHdf5serie=django.db.models.BooleanField()
   webappOpenmbv=django.db.models.BooleanField()
   webappMbsimgui=django.db.models.BooleanField()
   deprecatedNr=django.db.models.PositiveIntegerField(null=True, blank=True)
   # xmlOutputs = related ForeignKey
+  xmlOutputsFailed=django.db.models.PositiveIntegerField(default=0) # just a cached value for performance of filterFailed
 
   def getCurrent(self):
     id=Example.objects.filter(run__buildType=self.run.buildType,

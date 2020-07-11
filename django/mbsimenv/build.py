@@ -322,6 +322,8 @@ def main():
       nrFailed+=nrFailedLocal
       nrRun+=nrRunLocal
     nr+=1
+  run.toolsFailed=run.tools.filterFailed().count()
+  run.save()
 
   # write main doc file
   mainDocPage()

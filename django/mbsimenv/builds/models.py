@@ -19,7 +19,7 @@ class RunManager(django.db.models.Manager):
       (django.db.models.Q(openmbvUpdateOK__isnull=False)   & django.db.models.Q(openmbvUpdateOK=False)) |
       (django.db.models.Q(mbsimUpdateOK__isnull=False)     & django.db.models.Q(mbsimUpdateOK=False)) |
       (django.db.models.Q(distributionOK__isnull=False)    & django.db.models.Q(distributionOK=False)) |
-      django.db.models.Q(tools__in=Tool.objects.filterFailed())
+      django.db.models.Q(toolsFailed__gt=0)
     ).distinct()
 
 class Run(django.db.models.Model):
@@ -55,6 +55,7 @@ class Run(django.db.models.Model):
   openmbvUpdateMsg=django.db.models.CharField(max_length=100)
   mbsimUpdateMsg=django.db.models.CharField(max_length=100)
   # tools = related ForeignKey
+  toolsFailed=django.db.models.PositiveIntegerField(default=0) # just a cached value for performance of filterFailed
   # examples = related ForeignKey
   distributionOK=django.db.models.BooleanField(null=True, blank=True)
   distributionOutput=django.db.models.TextField()
