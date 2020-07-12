@@ -75,7 +75,7 @@ def parseArguments():
   
   outOpts=argparser.add_argument_group('Output Options')
   outOpts.add_argument("--buildType", default="local", type=str, help="A description of the build type (e.g: linux64-dailydebug)")
-  outOpts.add_argument("--removeOlderThan", default=5, type=int, help="Remove all build reports older than X days.")
+  outOpts.add_argument("--removeOlderThan", default=30, type=int, help="Remove all build reports older than X days.")
   
   passOpts=argparser.add_argument_group('Options beeing passed to other commands')
   passOpts.add_argument("--passToRunexamples", default=list(), nargs=argparse.REMAINDER,
@@ -138,11 +138,9 @@ def setGithubStatus(run, state):
 
 def removeOldBuilds():
   olderThan=django.utils.timezone.now()-datetime.timedelta(days=args.removeOlderThan)
-  toDelete=builds.models.Run.objects.filter(startTime__lt=olderThan)
-  count=toDelete.count()
-  if count>0:
-    print("Deleting %d build runs being older than %d days!"%(count, args.removeOlderThan))
-    toDelete.delete()
+  nrDeleted=builds.models.Run.objects.filter(buildType=args.buildType, startTime__lt=olderThan).delete()[0]
+  if nrDeleted>0:
+    print("Deleted %d build runs being older than %d days!"%(nrDeleted, args.removeOlderThan))
 
 # the main routine being called ones
 def main():

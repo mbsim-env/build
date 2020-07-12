@@ -37,9 +37,7 @@ def fileDownloadFromDB(request, app, model, id, field):
   obj=importlib.import_module(app).models.__getattribute__(model).objects.get(id=id)
   f=obj.__getattribute__(field).open("rb")
   name=getattr(obj, field+"Name")
-  response=django.http.HttpResponse(f, content_type=mimetypes.guess_type(name))
-  response["Content-Disposition"]='attachment; filename="%s"'%(name)
-  return response
+  return django.http.FileResponse(f, as_attachment=True, filename=name)
 
 # the impresusm page
 class Impressum(Base):

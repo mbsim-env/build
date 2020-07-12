@@ -27,4 +27,5 @@ urlpatterns = [
   django.urls.path('manuals/nrFailed.svg', service.views.manualsNrFailed, name='manuals_nrfailed'),
   django.urls.path("webapp/<str:prog>/<str:buildType>/<path:exampleName>/", service.views.Webapp.as_view(), name="webapp"),
   django.urls.path("checkvaliduser/", service.views.checkValidUser),
+  django.urls.path("filtergithubfeed/", service.views.filterGithubFeed),
 ]

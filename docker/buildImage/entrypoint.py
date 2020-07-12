@@ -120,7 +120,7 @@ if args.buildType=="linux64-dailydebug":
     exStatic.references.all().delete()
     # add new references
     curFiles=[]
-    curFiles.extend(glob.glob("/mbsim-env/mbsim/examples/"+exStatic.exampleName+"/*.h5"))
+    curFiles.extend(glob.glob("/mbsim-env/mbsim/examples/"+exStatic.exampleName+"/*.fmuh5"))
     curFiles.extend(glob.glob("/mbsim-env/mbsim/examples/"+exStatic.exampleName+"/*.mbsh5"))
     curFiles.extend(glob.glob("/mbsim-env/mbsim/examples/"+exStatic.exampleName+"/*.ombvh5"))
     for curFile in curFiles:

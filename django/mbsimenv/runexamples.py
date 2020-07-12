@@ -123,7 +123,7 @@ cfgOpts.add_argument("--localServerPort", type=int, default=27583, help='Port fo
 cfgOpts.add_argument("--updateURL", type=str, default="https://www.mbsim-env.de", help='Base url of server used to pull references.')
 
 outOpts=argparser.add_argument_group('Output Options')
-outOpts.add_argument("--removeOlderThan", default=5, type=int, help="Remove all examples reports older than X days.")
+outOpts.add_argument("--removeOlderThan", default=30, type=int, help="Remove all examples reports older than X days.")
 
 debugOpts=argparser.add_argument_group('Debugging and other Options')
 debugOpts.add_argument("--debugDisableMultiprocessing", action="store_true",
@@ -148,11 +148,9 @@ if not args.buildSystemRun:
 
 def removeOldBuilds():
   olderThan=django.utils.timezone.now()-datetime.timedelta(days=args.removeOlderThan)
-  toDelete=runexamples.models.Run.objects.filter(startTime__lt=olderThan)
-  count=toDelete.count()
-  if count>0:
-    print("Deleting %d build runs being older than %d days!"%(count, args.removeOlderThan))
-    toDelete.delete()
+  nrDeleted=runexamples.models.Run.objects.filter(buildType=args.buildType, startTime__lt=olderThan).delete()[0]
+  if nrDeleted>0:
+    print("Deleted %d example runs being older than %d days!"%(nrDeleted, args.removeOlderThan))
 
 # the main routine being called ones
 def main():
@@ -1264,11 +1262,24 @@ def coverage(exRun):
                      ["fmatvec", "hdf5serie", "openmbv", "mbsim"])
   dirs=["-d", args.prefix]+[v for il in dirs for v in il]
 
-  with tempfile.TemporaryDirectory() as tempDir:
+  # replace header map in lcov trace file
+  def lcovAdjustFileNames(lcovFilename):
+    headerMap=getHeaderMap()
+    for line in fileinput.FileInput(lcovFilename, inplace=1):
+      if line.startswith("SF:"):
+        oldFilename=line[len("SF:"):].rstrip()
+        newFilename=headerMap.get(oldFilename, oldFilename)
+        line="SF:"+newFilename+"\n"
+      print(line, end="")
+
+  tempDir=tempfile.mkdtemp()
+  try:
     # run lcov: init counters
     ret=ret+abs(base.helper.subprocessCall(["lcov", "-c", "--no-external", "-i", "--ignore-errors", "graph", "-o", pj(tempDir, "cov.trace.base")]+dirs, lcovFD))
+    lcovAdjustFileNames(pj(tempDir, "cov.trace.base"))
     # run lcov: count
     ret=ret+abs(base.helper.subprocessCall(["lcov", "-c", "--no-external", "-o", pj(tempDir, "cov.trace.test")]+dirs, lcovFD))
+    lcovAdjustFileNames(pj(tempDir, "cov.trace.test"))
     # run lcov: combine counters
     ret=ret+abs(base.helper.subprocessCall(["lcov", "-a", pj(tempDir, "cov.trace.base"), "-a", pj(tempDir, "cov.trace.test"), "-o", pj(tempDir, "cov.trace.total")], lcovFD))
     # run lcov: remove counters
@@ -1282,16 +1293,6 @@ def coverage(exRun):
       "/mbsim-env/hdf5serie*/h5plotserie/h5plotserie/*", "/mbsim-env/openmbv*/openmbv/openmbv/*", "/mbsim-env/mbsim*/mbsimgui/mbsimgui/*", # GUI (untested)
       "/mbsim-env/mbsim*/modules/mbsimInterface/mbsimInterface/*", # other untested features
       "-o", pj(tempDir, "cov.trace.final")], lcovFD))
-
-    headerMap=getHeaderMap()
-
-    # replace header map in lcov trace file
-    for line in fileinput.FileInput(pj(tempDir, "cov.trace.final"), inplace=1):
-      if line.startswith("SF:"):
-        oldFilename=line[len("SF:"):]
-        newFilename=headerMap.get(oldFilename, oldFilename)
-        line="SF:"+newFilename
-      print(line, end="")
 
     # get coverage rate
     covRate=0
@@ -1316,12 +1317,25 @@ def coverage(exRun):
       # upload
       commitID=getattr(exRun.build_run, repo+"UpdateCommitID")
       if os.environ["MBSIMENVTAGNAME"]=="latest":
-        response=requests.post("https://codecov.io/upload/v4?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
-          (commitID, mbsimenvSecrets.getSecrets()["codecovUploadToken"][repo], exRun.build_run.id, exRun.id,
-           urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
-           "valgrind" if "valgrind" in args.buildType else "normal"),
-          headers={"Accept": "text/plain"})
-        if response.status_code!=200:
+        nrTry=1
+        tries=3
+        while nrTry<=tries:
+          # codecov has some timeouts on connect (try some times more)
+          print("Upload to codecov try %d/%d"%(nrTry, tries), file=lcovFD)
+          codecovError=False
+          try:
+            response=requests.post("https://codecov.io/upload/v4?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
+              (commitID, mbsimenvSecrets.getSecrets()["codecovUploadToken"][repo], exRun.build_run.id, exRun.id,
+               urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
+               "valgrind" if "valgrind" in args.buildType else "normal"),
+              headers={"Accept": "text/plain"})
+          except:
+            codecovError=True
+          if not codecovError and response.status_code==200:
+            break
+          if nrTry<tries: time.sleep(30) # wait some time
+          nrTry=nrTry+1
+        if codecovError or response.status_code!=200:
           ret=ret+1
           print("codecov status code "+str(response.status_code), file=lcovFD)
           lcovFD.write(response.content.decode("utf-8"))
@@ -1350,6 +1364,9 @@ def coverage(exRun):
     exRun.save()
 
     return 1 if ret!=0 else 0
+  finally:
+    if not os.path.isfile("/.dockerenv"): # keep the temp dir when running in docker
+      shutil.rmtree(tempDir)
 
 
 

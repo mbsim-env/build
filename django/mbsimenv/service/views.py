@@ -12,6 +12,7 @@ import hashlib
 import mbsimenvSecrets
 import concurrent.futures
 import urllib.parse
+import requests
 from octicons.templatetags.octicons import octicon
 
 # the user profile page
@@ -327,3 +328,28 @@ def checkValidUser(request):
   if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout):
     return django.http.HttpResponseForbidden()
   return django.http.HttpResponse()
+
+# this URL need a query string of the format ?url=URL&username=USERNAME
+# It gets the atom github feed from the url URL and removes every entries which have "author" set to USERNAME.
+# This filtered atom feed is retunred than.
+# (Use it e.g. to filter out your own commits from your personal github feed)
+def filterGithubFeed(request):
+  import xml.etree.cElementTree as ET
+  # get query data
+  url=request.GET["url"]
+  username=request.GET["username"]
+  # get original feed
+  response=requests.get(url)
+  if response.status_code!=200:
+    return django.http.HttpResponseBadRequest("Cannot get feed from github.")
+  # create filtered feed
+  ET.register_namespace("", "http://www.w3.org/2005/Atom")
+  root=ET.fromstring(response.content)
+  for entry in root.findall("{http://www.w3.org/2005/Atom}entry"):
+    author=entry.find("{http://www.w3.org/2005/Atom}author")
+    if author is None: continue
+    name=author.find("{http://www.w3.org/2005/Atom}name")
+    if name is None: continue
+    if name.text!=username: continue
+    root.remove(entry)
+  return django.http.HttpResponse(b'<?xml version="1.0" encoding="UTF-8"?>\n'+ET.tostring(root), content_type="text/xml")
