@@ -35,6 +35,8 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   mingw64-libarchive \
   diffutils \
   python3-psycopg2 \
+  cmake \
+  ninja-build \
   && yum clean all
 RUN pip3 install django django-octicons
 # bugfix for moc
@@ -54,7 +56,6 @@ ARG JOBS=4
 
 RUN yum --setopt=skip_missing_names_on_install=False -y install \
   wget \
-  cmake \
   unzip \
   bzip2 \
   mercurial
@@ -175,6 +176,7 @@ RUN make install
 FROM fedoraBaseImage
 
 COPY --from=thirdpartyBuildImage /3rdparty/local /3rdparty/local
+COPY docker/buildwin64Image/toolchain-mingw64.cmake /context/toolchain-mingw64.cmake
 
 # ccache
 # enable swig interface to mbsim

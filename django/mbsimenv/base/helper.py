@@ -215,7 +215,12 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0):
     if "LSB core file" in subprocess.check_output(["file", coreFile]).decode('utf-8'):
       os.remove(coreFile)
   # start the program to execute
-  proc=subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, bufsize=-1, env=env)
+  try:
+    proc=subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, bufsize=-1, env=env)
+  except OSError as ex:
+    f.write("\n\n\n******************** FAILED TO START PROCESS ********************\n")
+    f.write(str(ex)+"\n")
+    return 1
   # a guard for the maximal execution time for the starte program
   guard=None
   killed=threading.Event()

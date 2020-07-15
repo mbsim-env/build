@@ -102,6 +102,10 @@ ret=subprocess.call(
   "COIN_CFLAGS=-I/3rdparty/local/include",
   "SOQT_LIBS=-L/3rdparty/local/lib -lSoQt",
   "SOQT_CFLAGS=-I/3rdparty/local/include",
+  "--passToCMake", "-DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake",
+  "-DBLAS_LIBRARIES=/3rdparty/local/lib/libblas.dll.a", "-DBLAS=1",
+  "-DLAPACK_LIBRARIES=/3rdparty/local/lib/liblapack.dll.a", "-DLAPACK=1",
+  "-DBOOST_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw",
   "--passToRunexamples"]+RUNEXAMPLES,
   stdout=sys.stdout, stderr=sys.stderr)
 if ret!=255:

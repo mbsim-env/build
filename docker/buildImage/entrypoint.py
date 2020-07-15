@@ -90,7 +90,7 @@ else:
 
 # args
 if args.buildType == "linux64-ci":
-  ARGS=["--forceBuild", "--disableConfigure", "--disableMakeClean", "--disableDoxygen", "--disableXMLDoc"]
+  ARGS=["--forceBuild", "--disableConfigure", "--disableDoxygen", "--disableXMLDoc"]
   RUNEXAMPLESARGS=["--disableCompare", "--disableMakeClean"]
   RUNEXAMPLESFILTER=["--filter", "'basic' in labels"]
 elif args.buildType == "linux64-dailydebug":
@@ -150,13 +150,16 @@ localRet=subprocess.call(
   "--fmatvecBranch", args.fmatvecBranch,
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
   "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix", "--webapp",
-  "--buildType", args.buildType, "--passToConfigure", "--disable-static",
+  "--buildType", args.buildType,
+  "--passToConfigure", "--disable-static",
   "--enable-python", "--with-qwt-inc-prefix=/3rdparty/local/include", "--with-qwt-lib-prefix=/3rdparty/local/lib",
   "--with-boost-inc=/usr/include/boost169",
   "--with-mkoctfile=/3rdparty/local/bin/mkoctfile",
   "--with-qwt-lib-name=qwt", "--with-qmake=qmake-qt5", "COIN_CFLAGS=-I/3rdparty/local/include",
   "COIN_LIBS=-L/3rdparty/local/lib64 -lCoin", "SOQT_CFLAGS=-I/3rdparty/local/include",
-  "SOQT_LIBS=-L/3rdparty/local/lib64 -lSoQt", "--passToRunexamples", "--buildType", args.buildType]+\
+  "SOQT_LIBS=-L/3rdparty/local/lib64 -lSoQt",
+  "--passToCMake", "-DBOOST_INCLUDEDIR=/usr/include/boost169", "-DBOOST_LIBRARYDIR=/usr/lib64/boost169",
+  "--passToRunexamples", "--buildType", args.buildType]+\
   RUNEXAMPLESARGS+RUNEXAMPLESFILTER,
   stdout=sys.stdout, stderr=sys.stderr)
 buildRunID=builds.models.Run.objects.getCurrent(args.buildType).id

@@ -66,6 +66,8 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   python3-psycopg2 \
   adwaita-qt5 \
   qt5-qtstyleplugins \
+  cmake3 \
+  ninja-build \
   && yum clean all
 # config gcc7 => do not use the "exec form" form now on use the "shell form"!!!!!
 SHELL ["scl", "enable", "devtoolset-7"]
@@ -101,7 +103,6 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   unzip \
   qt5-qttools-devel \
   mercurial \
-  cmake3 \
   patch \
   && yum clean all
 

@@ -79,28 +79,32 @@ def parseArguments():
   
   passOpts=argparser.add_argument_group('Options beeing passed to other commands')
   passOpts.add_argument("--passToRunexamples", default=list(), nargs=argparse.REMAINDER,
-    help="pass all following options, up to but not including the next --passToConfigure argument, to run examples.")
+    help="pass all following options, up to but not including the next --passTo* argument, to run examples.")
   passOpts.add_argument("--passToConfigure", default=list(), nargs=argparse.REMAINDER,
-    help="pass all following options, up to but not including the next --passToRunexamples argument, to configure.")
+    help="pass all following options, up to but not including the next --passTo* argument, to configure.")
+  passOpts.add_argument("--passToCMake", default=list(), nargs=argparse.REMAINDER,
+    help="pass all following options, up to but not including the next --passTo* argument, to configure.")
   
   # parse command line options:
    
-  # parse all options before --passToConfigure and/or --passToRunexamples by argparser. 
-  passTo1=min(sys.argv.index("--passToConfigure"  ) if "--passToConfigure"   in sys.argv else len(sys.argv),
-              sys.argv.index("--passToRunexamples") if "--passToRunexamples" in sys.argv else len(sys.argv))
-  passTo2=max(sys.argv.index("--passToConfigure"  ) if "--passToConfigure"   in sys.argv else len(sys.argv),
-              sys.argv.index("--passToRunexamples") if "--passToRunexamples" in sys.argv else len(sys.argv))
+  def firstPassToIndex(args):
+    arg=next(filter(lambda x: x.startswith("--passTo"), args), None)
+    if arg is None:
+      return len(args)
+    return args.index(arg)
+
+  # parse all options before --passToConfigure, --passToCMake, --passToRunexamples by argparser. 
   global args
-  args=argparser.parse_args(args=sys.argv[1:passTo1]) # do not pass REMAINDER arguments
-  # assign the options after --passToConfigure and/or --passToRunexamples to args.passTo...
-  if "--passToConfigure" in sys.argv[passTo1:passTo2]:
-    args.passToConfigure=sys.argv[passTo1+1:passTo2]
-  if "--passToRunexamples" in sys.argv[passTo1:passTo2]:
-    args.passToRunexamples=sys.argv[passTo1+1:passTo2]
-  if "--passToConfigure" in sys.argv[passTo2:]:
-    args.passToConfigure=sys.argv[passTo2+1:]
-  if "--passToRunexamples" in sys.argv[passTo2:]:
-    args.passToRunexamples=sys.argv[passTo2+1:]
+  args=argparser.parse_args(args=sys.argv[1:firstPassToIndex(sys.argv)])
+  restArgs=sys.argv[firstPassToIndex(sys.argv):]
+  # extract --passTo* args
+  while True:
+    if len(restArgs)>0:
+      nextPassTo=firstPassToIndex(restArgs[1:])+1
+      setattr(args, restArgs[0][2:], restArgs[1:nextPassTo])
+      restArgs=restArgs[firstPassToIndex(restArgs[1:])+1:]
+    else:
+      break
 
 # create main documentation page
 def mainDocPage():
@@ -110,12 +114,16 @@ def mainDocPage():
   staticRuntimeDir="/webserverstatic"
 
   # copy xmldoc
-  if os.path.isdir(pj(staticRuntimeDir, "xmlReference")): shutil.rmtree(pj(staticRuntimeDir, "xmlReference"))
-  shutil.copytree(os.path.normpath(docDir), pj(staticRuntimeDir, "xmlReference"), symlinks=True)
+  if os.path.isdir(pj(staticRuntimeDir, "xmlReference")):
+    shutil.rmtree(pj(staticRuntimeDir, "xmlReference"))
+  if os.path.isdir(os.path.normpath(docDir)):
+    shutil.copytree(os.path.normpath(docDir), pj(staticRuntimeDir, "xmlReference"), symlinks=True)
 
   # copy doc
-  if os.path.isdir(pj(staticRuntimeDir, "doxygenReference")): shutil.rmtree(pj(staticRuntimeDir, "doxygenReference"))
-  shutil.copytree(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc")), pj(staticRuntimeDir, "doxygenReference"), symlinks=True)
+  if os.path.isdir(pj(staticRuntimeDir, "doxygenReference")):
+    shutil.rmtree(pj(staticRuntimeDir, "doxygenReference"))
+  if os.path.isdir(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc"))):
+    shutil.copytree(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc")), pj(staticRuntimeDir, "doxygenReference"), symlinks=True)
 
 def setGithubStatus(run, state):
   import github
@@ -450,7 +458,7 @@ def repoUpdate(run):
     setattr(run, repo+"UpdateOutput", repoUpdFD.getvalue())
     setattr(run, repo+"UpdateTooltip", commitlong)
     setattr(run, repo+"UpdateCommitID", commitidfull[repo])
-    setattr(run, repo+"UpdateMsg", commitsub)
+    setattr(run, repo+"UpdateMsg", commitsub[:builds.models.Run._meta.get_field(repo+"UpdateMsg").max_length])
     run.save()
     repoUpdFD.close()
 
@@ -529,9 +537,10 @@ def build(toolName, run):
 def configure(tool):
   configureFD=io.StringIO()
   savedDir=os.getcwd()
+  cmake=os.path.exists(pj(args.sourceDir, tool.toolName, "CMakeLists.txt"))
   run=0
   try:
-    if not args.disableConfigure or not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName), "config.status")):
+    if not cmake and (not args.disableConfigure or not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName), "config.status"))):
       run=1
       # pre configure
       os.chdir(pj(args.sourceDir, tool.toolName))
@@ -568,17 +577,35 @@ def configure(tool):
         print(" ".join(command), file=configureFD); configureFD.flush()
         if base.helper.subprocessCall(command, configureFD)!=0:
           raise RuntimeError("configure failed")
+    elif cmake and (not args.disableConfigure or not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName), "CMakeCache.txt"))):
+      run=1
+      if not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName))): os.makedirs(pj(args.sourceDir, buildTool(tool.toolName)))
+      os.chdir(pj(args.sourceDir, buildTool(tool.toolName)))
+      # run cmake
+      print("\n\nRUNNING cmake\n", file=configureFD); configureFD.flush()
+      if os.path.exists(pj(args.sourceDir, buildTool(tool.toolName), "CMakeCache.txt")):
+        os.remove(pj(args.sourceDir, buildTool(tool.toolName), "CMakeCache.txt"))
+      if args.prefix is None:
+        raise RuntimeError("Rerun cmake not supported. You must provide --prefix.")
+      else:
+        cmakeCmd=shutil.which("cmake3")
+        if cmakeCmd is None: cmakeCmd="cmake"
+        command=[cmakeCmd, pj(args.sourceDir, tool.toolName), "-GNinja", "-DCMAKE_INSTALL_PREFIX="+args.prefix]
+        command.extend(args.passToCMake)
+        print(" ".join(command), file=configureFD); configureFD.flush()
+        if base.helper.subprocessCall(command, configureFD)!=0:
+          raise RuntimeError("configure failed")
     else:
       print("configure disabled", file=configureFD); configureFD.flush()
 
     result="done"
-  except RuntimeError as ex:
+  except Exception as ex:
     result=str(ex)
   if not args.disableConfigure:
-    print("\n\n\n\n\nCONTENT OF config.log\n", file=configureFD)
-    with open("config.log", "r") as f:
+    filename="config.log" if not cmake else "CMakeCache.txt"
+    print("\n\n\n\n\nCONTENT OF %s\n"%(filename), file=configureFD)
+    with open(filename, "r") as f:
       configureFD.write(f.read())
-  if not args.disableConfigure:
     tool.configureOK=result=="done"
   tool.configureOutput=configureFD.getvalue()
   tool.save()
@@ -594,29 +621,31 @@ def configure(tool):
 def make(tool):
   makeFD=io.StringIO()
   run=0
+  cmake=os.path.exists(pj(args.sourceDir, tool.toolName, "CMakeLists.txt"))
+  buildCmd="make" if not cmake else "ninja"
   try:
     if not args.disableMake:
       run=1
-      # make
+      # build
       errStr=""
       if not args.disableMakeClean:
-        print("\n\nRUNNING make clean\n", file=makeFD); makeFD.flush()
-        if base.helper.subprocessCall(["make", "clean"], makeFD)!=0:
-          errStr=errStr+"make clean failed; "
-      print("\n\nRUNNING make -k\n", file=makeFD); makeFD.flush()
-      if base.helper.subprocessCall(["make", "-k", "-j", str(args.j)],
+        print("\n\nRUNNING %s clean\n"%(buildCmd), file=makeFD); makeFD.flush()
+        if base.helper.subprocessCall([buildCmd, "clean"], makeFD)!=0:
+          errStr=errStr+"%s clean failed; "%(buildCmd)
+      print("\n\nRUNNING %s -k\n"%(buildCmd), file=makeFD); makeFD.flush()
+      if base.helper.subprocessCall([buildCmd, "-k"]+([] if not cmake else [str(1000000)])+["-j", str(args.j)],
                          makeFD)!=0:
-        errStr=errStr+"make failed; "
+        errStr=errStr+"%s failed; "%(buildCmd)
       if not args.disableMakeInstall:
-        print("\n\nRUNNING make install\n", file=makeFD); makeFD.flush()
-        if base.helper.subprocessCall(["make", "-k", "install"], makeFD)!=0:
-          errStr=errStr+"make install failed; "
+        print("\n\nRUNNING %s install\n"%(buildCmd), file=makeFD); makeFD.flush()
+        if base.helper.subprocessCall([buildCmd, "-k"]+([] if not cmake else [str(1000000)])+["install"], makeFD)!=0:
+          errStr=errStr+"%s install failed; "%(buildCmd)
       if errStr!="": raise RuntimeError(errStr)
     else:
       print("make disabled", file=makeFD); makeFD.flush()
 
     result="done"
-  except RuntimeError as ex:
+  except Exception as ex:
     result=str(ex)
   if not args.disableMake:
     tool.makeOK=result=="done"
@@ -640,11 +669,13 @@ def make(tool):
 def check(tool):
   checkFD=io.StringIO()
   run=0
+  cmake=os.path.exists(pj(args.sourceDir, tool.toolName, "CMakeLists.txt"))
+  buildCmd="make" if not cmake else "ninja"
   if not args.disableMakeCheck:
     run=1
-    # make check
-    print("RUNNING make check\n", file=checkFD); checkFD.flush()
-    if base.helper.subprocessCall(["make", "-k", "-j", str(args.j), "check"], checkFD)==0:
+    # check
+    print("RUNNING %s check\n"%(buildCmd), file=checkFD); checkFD.flush()
+    if base.helper.subprocessCall([buildCmd, "-k"]+([] if not cmake else [str(1000000)])+["-j", str(args.j), "check"], checkFD)==0:
       result="done"
     else:
       result="failed"
@@ -652,11 +683,12 @@ def check(tool):
     print("make check disabled", file=checkFD); checkFD.flush()
     result="done"
 
-  for rootDir,_,files in os.walk('.'): # append all test-suite.log files
-    if "test-suite.log" in files:
-      checkFD.write('\n\n\n\n\nCONTENT OF '+pj(rootDir, "test-suite.log")+"\n\n")
-      with open(pj(rootDir, "test-suite.log"), "r") as f:
-        checkFD.write(f.read())
+  if not cmake:
+    for rootDir,_,files in os.walk('.'): # append all test-suite.log files
+      if "test-suite.log" in files:
+        checkFD.write('\n\n\n\n\nCONTENT OF '+pj(rootDir, "test-suite.log")+"\n\n")
+        with open(pj(rootDir, "test-suite.log"), "r") as f:
+          checkFD.write(f.read())
   if not args.disableMakeCheck:
     tool.makeCheckOK=result=="done"
   tool.makeCheckOutput=checkFD.getvalue()
@@ -670,15 +702,16 @@ def check(tool):
 
 
 def doc(tool, disabled, docDirName):
-  if not os.path.isdir(docDirName):
+  if not os.path.isdir(pj(args.sourceDir, tool.toolName, docDirName)):
     return 0, 0
+  cmake=os.path.exists(pj(args.sourceDir, tool.toolName, "CMakeLists.txt"))
 
   docFD=io.StringIO()
   savedDir=os.getcwd()
-  os.chdir(docDirName)
   run=0
   try:
-    if not disabled:
+    if not cmake and not disabled:
+      os.chdir(pj(args.sourceDir, buildTool(tool.toolName), docDirName))
       run=1
       # make doc
       errStr=""
@@ -692,14 +725,28 @@ def doc(tool, disabled, docDirName):
       if base.helper.subprocessCall(["make", "-k", "install"], docFD)!=0:
         errStr=errStr+"make install failed; "
       if errStr!="": raise RuntimeError(errStr)
+    elif cmake and not disabled:
+      os.chdir(pj(args.sourceDir, buildTool(tool.toolName)))
+      run=1
+      # make doc
+      errStr=""
+      print("\n\nRUNNING ninja %s/clean\n"%(docDirName), file=docFD); docFD.flush()
+      if base.helper.subprocessCall(["ninja", "%s/clean"%(docDirName)], docFD)!=0:
+        errStr=errStr+"ninja %s/clean failed; "%(docDirName)
+      print("\n\nRUNNING ninja %s/all\n"%(docDirName), file=docFD); docFD.flush()
+      if base.helper.subprocessCall(["ninja", "-k", "1000000", "%s/all"%(docDirName)], docFD)!=0:
+        errStr=errStr+"ninja %s/all failed; "%(docDirName)
+      print("\n\nRUNNING ninja %s/install\n"%(docDirName), file=docFD); docFD.flush()
+      if base.helper.subprocessCall(["ninja", "%s/install"%(docDirName)], docFD)!=0:
+        errStr=errStr+"ninja %s/install failed; "%(docDirName)
+      if errStr!="": raise RuntimeError(errStr)
     else:
       print(docDirName+" disabled", file=docFD); docFD.flush()
 
     result="done"
-  except RuntimeError as ex:
+  except Exception as ex:
     result=str(ex)
-  finally:
-    os.chdir(savedDir)
+  os.chdir(savedDir)
   if not disabled:
     setattr(tool, docDirName+"OK", result=="done")
   setattr(tool, docDirName+"Output", docFD.getvalue())
