@@ -37,6 +37,7 @@ def getColor(text):
     return "#777"
 
 # a svg badge with the number of all examples
+@django.views.decorators.cache.never_cache
 def currentBuildNrAll(request, buildtype):
   run=builds.models.Run.objects.getCurrent(buildtype)
   if run is None:
@@ -48,6 +49,7 @@ def currentBuildNrAll(request, buildtype):
   return django.shortcuts.render(request, 'service/nrbadge.svg', context, content_type="image/svg+xml")
 
 # a svg badge with the number of failed examples
+@django.views.decorators.cache.never_cache
 def currentBuildNrFailed(request, buildtype):
   run=builds.models.Run.objects.getCurrent(buildtype)
   if run is None:
@@ -60,6 +62,7 @@ def currentBuildNrFailed(request, buildtype):
   return django.shortcuts.render(request, 'service/nrbadge.svg', context, content_type="image/svg+xml")
 
 # a svg badge with the number of all examples
+@django.views.decorators.cache.never_cache
 def currentRunexampleNrAll(request, buildtype):
   run=runexamples.models.Run.objects.getCurrent(buildtype)
   if run is None:
@@ -71,6 +74,7 @@ def currentRunexampleNrAll(request, buildtype):
   return django.shortcuts.render(request, 'service/nrbadge.svg', context, content_type="image/svg+xml")
 
 # a svg badge with the number of failed examples
+@django.views.decorators.cache.never_cache
 def currentRunexampleNrFailed(request, buildtype):
   run=runexamples.models.Run.objects.getCurrent(buildtype)
   if run is None:
@@ -83,6 +87,7 @@ def currentRunexampleNrFailed(request, buildtype):
   return django.shortcuts.render(request, 'service/nrbadge.svg', context, content_type="image/svg+xml")
 
 # a svg badge with the coverage rate
+@django.views.decorators.cache.never_cache
 def currentCoverageRate(request, buildtype):
   run=runexamples.models.Run.objects.getCurrent(buildtype)
   if run is None:
@@ -247,6 +252,7 @@ class Releases(base.views.Base):
     return context
 
 # a svg badge with the number manuals
+@django.views.decorators.cache.never_cache
 def manualsNrAll(request):
   nr=service.models.Manual.objects.all().count()
   context={
@@ -256,6 +262,7 @@ def manualsNrAll(request):
   return django.shortcuts.render(request, 'service/nrbadge.svg', context, content_type="image/svg+xml")
 
 # a svg badge with the number of failed manuals
+@django.views.decorators.cache.never_cache
 def manualsNrFailed(request):
   nr=service.models.Manual.objects.filterFailed().count()
   context={
