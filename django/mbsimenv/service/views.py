@@ -282,8 +282,8 @@ def webhook(request):
       return django.http.HttpResponseBadRequest("Illegal data in 'ref'.")
     res["branch"]=data['ref'][11:]
     res["commitID"]=data["after"]
-    res["addedBranchCombinations"]=[]
     if res["repo"]=="fmatvec" or res["repo"]=="hdf5serie" or res["repo"]=="openmbv" or res["repo"]=="mbsim":
+      res["addedBranchCombinations"]=[]
       # get all branch combinations to build as save in queue
       for bc in service.models.CIBranches.objects.filter(**{res["repo"]+"Branch": res["branch"]}):
         branchCombination={
@@ -301,7 +301,7 @@ def webhook(request):
       ciq.buildCommitID=res["commitID"]
       ciq.recTime=django.utils.timezone.now()
       ciq.save()
-      res["addedBranchCombinations"].append(branchCombination)
+      res["addedBuildCommitID"]=res["commitID"]
     else:
       return django.http.HttpResponseBadRequest("Unknown repo.")
     return django.http.JsonResponse(res)
