@@ -75,7 +75,8 @@ def parseArguments():
   
   outOpts=argparser.add_argument_group('Output Options')
   outOpts.add_argument("--buildType", default="local", type=str, help="A description of the build type (e.g: linux64-dailydebug)")
-  outOpts.add_argument("--removeOlderThan", default=30, type=int, help="Remove all build reports older than X days.")
+  outOpts.add_argument("--removeOlderThan", default=3 if os.environ.get("MBSIMENVTAGNAME", "")=="staging" else 30,
+                       type=int, help="Remove all build reports older than X days.")
   
   passOpts=argparser.add_argument_group('Options beeing passed to other commands')
   passOpts.add_argument("--passToRunexamples", default=list(), nargs=argparse.REMAINDER,

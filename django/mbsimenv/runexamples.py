@@ -123,7 +123,8 @@ cfgOpts.add_argument("--localServerPort", type=int, default=27583, help='Port fo
 cfgOpts.add_argument("--updateURL", type=str, default="https://www.mbsim-env.de", help='Base url of server used to pull references.')
 
 outOpts=argparser.add_argument_group('Output Options')
-outOpts.add_argument("--removeOlderThan", default=30, type=int, help="Remove all examples reports older than X days.")
+outOpts.add_argument("--removeOlderThan", default=3 if os.environ.get("MBSIMENVTAGNAME", "")=="staging" else 30,
+                     type=int, help="Remove all examples reports older than X days.")
 
 debugOpts=argparser.add_argument_group('Debugging and other Options')
 debugOpts.add_argument("--debugDisableMultiprocessing", action="store_true",
