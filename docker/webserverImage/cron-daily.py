@@ -2,10 +2,13 @@
 
 import argparse
 import sys
+import os
 sys.path.append("/context")
 import setup
 sys.path.append("/context/mbsimenv")
 import mbsimenvSecrets
+import django
+import service
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -16,31 +19,43 @@ argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs
 
 args=argparser.parse_args()
 
-# branches to use
-fmatvecBranch="master"
-hdf5serieBranch="master"
-openmbvBranch="master"
-mbsimBranch="master"
+os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings"
+django.setup()
 
-# linux64-dailydebug
-contldd=setup.run("build-linux64-dailydebug", 6, printLog=False, detach=True, addCommands=["--forceBuild"],
-                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
+def dailyBuild(fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch, ext):
+  # linux64-dailydebug
+  contldd=setup.run("build-linux64-dailydebug"+ext, 6, printLog=False, detach=True, addCommands=["--forceBuild"],
+                    fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
+  
+  # linux64-dailyrelease
+  contldr=setup.run("build-linux64-dailyrelease"+ext, 2, printLog=False, detach=True, addCommands=["--forceBuild"],
+                    fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
+  retldr=setup.waitContainer(contldr)
+  
+  # win64-dailyrelease
+  contwdr=setup.run("build-win64-dailyrelease"+ext, 2, printLog=False, detach=True, addCommands=["--forceBuild"],
+                    fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
+  retwdr=setup.waitContainer(contwdr)
+  
+  retldd=setup.waitContainer(contldd)
+  
+  # return
+  return 0 if retldd==0 and retldr==0 and retwdr==0 else 1
 
-# linux64-dailyrelease
-contldr=setup.run("build-linux64-dailyrelease", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
-                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
-retldr=setup.waitContainer(contldr)
-
-# win64-dailyrelease
-contwdr=setup.run("build-win64-dailyrelease", 2, printLog=False, detach=True, addCommands=["--forceBuild"],
-                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
-retwdr=setup.waitContainer(contwdr)
-
-retldd=setup.waitContainer(contldd)
-
+ret=0
+# build the master branch combi first
+ret=ret+dailyBuild("master", "master", "master", "master", "")
+  
 # build doc
 contd=setup.run("builddoc", 2, printLog=False, detach=True, addCommands=["--forceBuild"])
-retd=setup.waitContainer(contd)
+ret=ret+abs(setup.waitContainer(contd))
 
-# return
-sys.exit(0 if retldd==0 and retd==0 and retldr==0 and retwdr==0 else 1)
+# now build all others
+for db in service.models.DailyBranches.objects.all():
+  # skip the master branch combi (already done first, see above)
+  if db.fmatvecBranch=="master" and db.hdf5serieBranch=="master" and db.openmbvBranch=="master" and db.mbsimBranch=="master":
+    continue
+  # build the db branch combi
+  ret=ret+dailyBuild(db.fmatvecBranch, db.hdf5serieBranch, db.openmbvBranch, db.mbsimBranch, "-nonedefbranches")
+
+sys.exit(ret)

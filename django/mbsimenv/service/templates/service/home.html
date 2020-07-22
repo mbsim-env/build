@@ -26,24 +26,6 @@
   </thead>
   <tbody>
     <tr>
-      <td><i class="fa fa-linux"></i>&nbsp;{% octicon "sync" %}&nbsp;linux64-ci</td>
-      <td>{% octicon "gear" %}&nbsp;build</td>
-      <td class="text-nowrap">
-        <a href="{% url "builds:current_buildtype" "linux64-ci" %}">
-          <img alt="image" src="{% url "service:current_build_nrfailed" "linux64-ci" %}"/>/<img alt="image" src="{% url "service:current_build_nrall" "linux64-ci" %}"/>
-        </a>
-      </td>
-    </tr>
-    <tr>
-      <td><i class="fa fa-linux"></i>&nbsp;{% octicon "sync" %}&nbsp;linux64-ci</td>
-      <td>{% octicon "beaker" %}&nbsp;examples</td>
-      <td class="text-nowrap">
-        <a href="{% url "runexamples:current_buildtype" "linux64-ci" %}">
-          <img alt="image" src="{% url "service:current_runexample_nrfailed" "linux64-ci" %}"/>/<img alt="image" src="{% url "service:current_runexample_nrall" "linux64-ci" %}"/>
-        </a>
-      </td>
-    </tr>
-    <tr>
       <td><i class="fa fa-linux"></i>&nbsp;{% octicon "bug" %}&nbsp;linux64-dailydebug</td>
       <td>{% octicon "gear" %}&nbsp;build</td>
       <td class="text-nowrap">
@@ -229,12 +211,51 @@
 <h2 style="margin-top: 1em;"><i class="fa fa-linux"></i>&nbsp;{% octicon "bug" height="38" %}&nbsp;Continuous Integration (CI) <small>Linux64 Debug Build</small></h2>
 <div class="card border-info">
   <div class="card-header bg-info">
-    {% octicon "sync" %}&nbsp;OS: Linux64; Build-Type: debug, nt optimized
+    {% octicon "sync" %}&nbsp;OS: Linux64; Build-Type: debug not optimized
   </div>
   <div class="card-body">
-    <p>{% octicon "pencil" %}&nbsp;<a href="{% url "service:cibranches" %}">Edit branches used for CI</a></p>
+    <p>{% octicon "pencil" %}&nbsp;<a href="{% url "service:editbranches" "CIBranches" %}">Edit branches used for CI</a></p>
     <p><a href="{% url "builds:current_buildtype" "linux64-ci" %}">Build report</a></p>
     <p><a href="{% url "runexamples:current_buildtype" "linux64-ci" %}">Examples report (only some examples)</a></p>
+  </div>
+</div>
+
+<h2 style="margin-top: 1em;"><i class="fa fa-linux"></i><i class="fa fa-windows"></i>&nbsp;{% octicon "bug" height="38" %}<i class="fa fa-hospital-o"></i>&nbsp;Daily builds of none default branches</h2>
+<div class="card border-info">
+  <div class="card-header bg-info">
+    {% octicon "sync" %}&nbsp;OS: Linux64, Win64; Build-Type: debug not optimized, release optimized
+  </div>
+  <div class="card-body">
+    <p>{% octicon "pencil" %}&nbsp;<a href="{% url "service:editbranches" "DailyBranches" %}">
+      Edit branches used for daily none default builds</a>
+    </p>
+    <p><a href="{% url "builds:current_buildtype" "linux64-dailydebug-nonedefbranches" %}">
+      Build report [Linux64 debug]</a>
+    </p>
+    <p><a href="{% url "runexamples:current_buildtype" "linux64-dailydebug-nonedefbranches" %}">
+      Examples report (including result compare) [Linux64 debug]</a>
+    </p>
+    <p><a href="{% url "runexamples:current_buildtype" "linux64-dailydebug-nonedefbranches" %}#coverage">
+      Code coverage for above examples [Linux64 debug]</a>
+    </p>
+    <p><a href="{% url "runexamples:current_buildtype" "linux64-dailydebug-nonedefbranches-valgrind" %}">
+      Valgrind examples report [Linux64 debug]</a>
+    </p>
+    <p><a href="{% url "runexamples:current_buildtype" "linux64-dailydebug-nonedefbranches-valgrind" %}#coverage">
+      Code coverage for above valgrind examples [Linux64 debug]</a>
+    </p>
+    <p><a href="{% url "builds:current_buildtype" "linux64-dailyrelease-nonedefbranches" %}">
+      Build report [Linux64 release]</a>
+    </p>
+    <p><a href="{% url "runexamples:current_buildtype" "linux64-dailyrelease-nonedefbranches" %}">
+      Examples report (only some examples) [Linux64 release]</a>
+    </p>
+    <p><a href="{% url "builds:current_buildtype" "win64-dailyrelease-nonedefbranches" %}">
+      Build report [Win64 release]</a>
+    </p>
+    <p><a href="{% url "runexamples:current_buildtype" "win64-dailyrelease-nonedefbranches" %}">
+      Examples report (only some examples) [Win64 release]</a>
+    </p>
   </div>
 </div>
 

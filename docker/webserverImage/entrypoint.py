@@ -73,15 +73,16 @@ sa.save()
 sa.sites.add(django.contrib.sites.models.Site.objects.get(id=1))
 sa.save()
 
-# create master, master, master, master in cibranches
-if service.models.CIBranches.objects.filter(fmatvecBranch="master", hdf5serieBranch="master",
-                                            openmbvBranch="master", mbsimBranch="master").count()==0:
-  ci=service.models.CIBranches()
-  ci.fmatvecBranch="master"
-  ci.hdf5serieBranch="master"
-  ci.openmbvBranch="master"
-  ci.mbsimBranch="master"
-  ci.save()
+# create master, master, master, master in CIBranches and DailyBranches
+for model in ["CIBranches", "DailyBranches"]:
+  if getattr(service.models, model).objects.filter(fmatvecBranch="master", hdf5serieBranch="master",
+                                                   openmbvBranch="master", mbsimBranch="master").count()==0:
+    bc=getattr(service.models, model)()
+    bc.fmatvecBranch="master"
+    bc.hdf5serieBranch="master"
+    bc.openmbvBranch="master"
+    bc.mbsimBranch="master"
+    bc.save()
 
 # service Info
 with open('/proc/1/cpuset', "r") as fid:

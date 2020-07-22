@@ -11,7 +11,7 @@ class CIBranches(django.db.models.Model):
   class Meta:
     constraints=[
       django.db.models.UniqueConstraint(fields=['fmatvecBranch', 'hdf5serieBranch', 'openmbvBranch', 'mbsimBranch'],
-                                        name="unique_banches"),
+                                        name="unique_ci_banches"),
     ]
 
 class CIQueue(django.db.models.Model):
@@ -22,6 +22,18 @@ class CIQueue(django.db.models.Model):
   openmbvBranch=django.db.models.CharField(blank=True, max_length=50)
   mbsimBranch=django.db.models.CharField(blank=True, max_length=50)
   buildCommitID=django.db.models.CharField(blank=True, max_length=50)
+
+class DailyBranches(django.db.models.Model):
+  id=django.db.models.AutoField(primary_key=True)
+  fmatvecBranch=django.db.models.CharField(max_length=50)
+  hdf5serieBranch=django.db.models.CharField(max_length=50)
+  openmbvBranch=django.db.models.CharField(max_length=50)
+  mbsimBranch=django.db.models.CharField(max_length=50)
+  class Meta:
+    constraints=[
+      django.db.models.UniqueConstraint(fields=['fmatvecBranch', 'hdf5serieBranch', 'openmbvBranch', 'mbsimBranch'],
+                                        name="unique_daily_banches"),
+    ]
 
 class Release(django.db.models.Model):
   id=django.db.models.AutoField(primary_key=True)

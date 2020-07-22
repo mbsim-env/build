@@ -42,7 +42,8 @@ if "MBSIMENVTAGNAME" not in os.environ or os.environ["MBSIMENVTAGNAME"]=="":
   raise RuntimeError("Envvar MBSIMENVTAGNAME is not defined.")
 
 # check buildtype
-if args.buildType != "linux64-ci" and args.buildType != "linux64-dailydebug" and args.buildType != "linux64-dailyrelease":
+if args.buildType != "linux64-ci" and not args.buildType.startswith("linux64-dailydebug") and \
+   not args.buildType.startswith("linux64-dailyrelease"):
   raise RuntimeError("Unknown build type "+args.buildType+".")
 
 os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings"
@@ -77,11 +78,11 @@ if args.valgrindExamples and not os.path.isdir("/mbsim-env/mbsim-valgrind"):
     stdout=sys.stdout, stderr=sys.stderr)
 
 # compile flags
-if args.buildType == "linux64-ci" or args.buildType == "linux64-dailydebug":
+if args.buildType == "linux64-ci" or args.buildType.startswith("linux64-dailydebug"):
   os.environ["CXXFLAGS"]="-O0 -g"
   os.environ["CFLAGS"]="-O0 -g"
   os.environ["FFLAGS"]="-O0 -g"
-elif args.buildType == "linux64-dailyrelease":
+elif args.buildType.startswith("linux64-dailyrelease"):
   os.environ["CXXFLAGS"]="-g -O2 -DNDEBUG"
   os.environ["CFLAGS"]="-g -O2 -DNDEBUG"
   os.environ["FFLAGS"]="-g -O2 -DNDEBUG"
@@ -93,11 +94,12 @@ if args.buildType == "linux64-ci":
   ARGS=["--forceBuild", "--disableConfigure", "--disableDoxygen", "--disableXMLDoc"]
   RUNEXAMPLESARGS=["--disableCompare", "--disableMakeClean"]
   RUNEXAMPLESFILTER=["--filter", "'basic' in labels"]
-elif args.buildType == "linux64-dailydebug":
+elif args.buildType.startswith("linux64-dailydebug"):
   ARGS=["--coverage",]
   RUNEXAMPLESARGS=["--checkGUIs"]
-  RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] if os.environ["MBSIMENVTAGNAME"]=="staging" else [])
-elif args.buildType == "linux64-dailyrelease":
+  RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] \
+   if os.environ["MBSIMENVTAGNAME"]=="staging" or "-nonedefbranches" in args.buildType else [])
+elif args.buildType.startswith("linux64-dailyrelease"):
   ARGS=["--enableDistribution"]
   RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs"]
   RUNEXAMPLESFILTER=["--filter", "'basic' in labels"]

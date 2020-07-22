@@ -28,7 +28,7 @@ if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="
   raise RuntimeError("Envvar MBSIMENVSERVERNAME is not defined.")
 
 # check buildtype
-if args.buildType != "win64-dailyrelease":
+if not args.buildType.startswith("win64-dailyrelease"):
   raise RuntimeError("Unknown build type "+args.buildType+".")
 
 os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings"

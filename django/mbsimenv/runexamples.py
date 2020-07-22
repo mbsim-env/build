@@ -1317,7 +1317,7 @@ def coverage(exRun):
         print(line, end="")
       # upload
       commitID=getattr(exRun.build_run, repo+"UpdateCommitID")
-      if os.environ["MBSIMENVTAGNAME"]=="latest":
+      if os.environ["MBSIMENVTAGNAME"]=="latest" and "-nonedefbranches" not in args.buildType:
         nrTry=1
         tries=3
         while nrTry<=tries:
@@ -1351,7 +1351,7 @@ def coverage(exRun):
             print("S3 status code "+str(response.status_code), file=lcovFD)
             lcovFD.write(response.content.decode("utf-8"))
       else:
-        print("Skipping upload to codecov, this is the staging system!", file=lcovFD)
+        print("Skipping upload to codecov, this is the staging system or a none master/master/master/master build!", file=lcovFD)
         print("https://codecov.io/upload/v4?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
           (commitID, "<secret for %s>"%(repo), exRun.build_run.id, exRun.id,
            urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),

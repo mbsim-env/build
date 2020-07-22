@@ -1,8 +1,8 @@
 "use strict";
 
 // example table
-function initCIBranchesTable(url) {
-  return initDatatable('cibranchesTable', url, [
+function initEditBranchesTable(url) {
+  return initDatatable('editbranchesTable', url, [
     "remove",
     "fmatvecBranch",
     "hdf5serieBranch",
@@ -58,11 +58,11 @@ function addBranchCombination(url) {
     mbsimBranch: $('#SELECTBRANCH_mbsim').val()
   }, function() {
     // done
-    ciBranchesTableObj.ajax.reload();
+    editBranchesTableObj.ajax.reload();
     noti.success("<small>Stored branch combination</small>");
   }, function(reason, msg) {
     //fail
-    noti.fail(reason, "The new branch combination for CI was not stored.<br/>"+msg);
+    noti.fail(reason, "The new branch combination alredy exists.<br/>"+msg);
   }, function() {
     // always
     $("#ADDBRANCH").removeAttr("disabled");
@@ -77,11 +77,11 @@ function deleteBranchCombination(self, url) {
   var noti=new Notification("<small>Pending delete of branch combination</small>");
   ajaxCall(url, {}, function() {
     // done
-    ciBranchesTableObj.ajax.reload();
+    editBranchesTableObj.ajax.reload();
     noti.success("<small>Removed branch combination</small>");
   }, function(reason, msg) {
     //fail
-    noti.fail(reason, "The branch combination for CI was not deleted.<br/>"+msg);
+    noti.fail(reason, "The branch combination was not deleted.<br/>"+msg);
   }, function() {
     // always
     self.removeAttr("disabled");

@@ -98,34 +98,40 @@ def currentCoverageRate(request, buildtype):
     }
   return django.shortcuts.render(request, 'service/nrbadge.svg', context, content_type="image/svg+xml")
 
-# site for ci branch combinations
-class CIBranches(base.views.Base):
-  template_name='service/cibranches.html'
+# site for branch combinations
+class EditBranches(base.views.Base):
+  template_name='service/editbranches.html'
 
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
 
     # just a list which can be used to loop over in the template
     context['repoList']=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
+    context['model']=kwargs["model"]
+    context['modelHuman']="continuous integration" if context["model"]=="CIBranches" else "daily"
     return context
 
-# response to ajax requests of the CI branches datatable
-class DataTableCIBranches(base.views.DataTable):
+# response to ajax requests of the edit branches datatable
+class DataTableEditBranches(base.views.DataTable):
+  def setup(self, request, *args, **kwargs):
+    super().setup(request, *args, **kwargs)
+    self.model=kwargs["model"]
+
   # return the queryset to display [required]
   def queryset(self):
-    return service.models.CIBranches.objects.all()
+    return getattr(service.models, self.model).objects.all()
 
   # return the field name in the dataset using for search/filter [required]
   def searchField(self):
     return "fmatvecBranch"
 
   def colData_remove(self, ds):
-    tooltip="service/CIBranches: id=%d"%(ds.id)
+    tooltip="service/%s: id=%d"%(self.model, ds.id)
     if ds.fmatvecBranch=="master" and ds.hdf5serieBranch=="master" and ds.openmbvBranch=="master" and ds.mbsimBranch=="master":
       return base.helper.tooltip("not removeable", tooltip)
     return base.helper.tooltip(\
       '<button class="btn btn-secondary btn-xs" onclick="deleteBranchCombination($(this), \'{}\');" type="button">{}</button>'.\
-      format(django.urls.reverse('service:db_deletebranchcombi', args=[ds.id]), octicon("diff-removed")), tooltip)
+      format(django.urls.reverse('service:db_deletebranchcombi', args=[self.model, ds.id]), octicon("diff-removed")), tooltip)
 
   def colData_fmatvecBranch(self, ds):
     return '<a href="https://github.com/mbsim-env/fmatvec/tree/'+ds.fmatvecBranch+'">'\
@@ -166,7 +172,7 @@ def repoBranches(request):
   return django.http.JsonResponse(res)
 
 # response to ajax request to add a new branch combination
-def addBranchCombination(request):
+def addBranchCombination(request, model):
   # prepare the cache for github access
   gh=base.helper.GithubCache(request)
   # if not logged in or not the appropriate right then return a http error
@@ -176,8 +182,8 @@ def addBranchCombination(request):
   req=json.loads(request.body)
   if req["fmatvecBranch"]=="" or req["hdf5serieBranch"]=="" or req["openmbvBranch"]=="" or req["mbsimBranch"]=="":
     return django.http.HttpResponseBadRequest("At least one branch name is empty.")
-  # create CIBranches table entry
-  b=service.models.CIBranches()
+  # create branches table entry
+  b=getattr(service.models, model)()
   b.fmatvecBranch=req["fmatvecBranch"]
   b.hdf5serieBranch=req["hdf5serieBranch"]
   b.openmbvBranch=req["openmbvBranch"]
@@ -190,14 +196,14 @@ def addBranchCombination(request):
   return django.http.HttpResponse()
 
 # response to ajax request to delete a branch combination
-def deleteBranchCombination(request, id):
+def deleteBranchCombination(request, model, id):
   # prepare the cache for github access
   gh=base.helper.GithubCache(request)
   # if not logged in or not the appropriate right then return a http error
   if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout):
     return django.http.HttpResponseForbidden()
   # get branch combi in table the example on the the reference should be updated or create it
-  b=service.models.CIBranches.objects.get(id=id)
+  b=getattr(service.models, model).objects.get(id=id)
   if b.fmatvecBranch=="master" and b.hdf5serieBranch=="master" and \
      b.openmbvBranch=="master" and b.mbsimBranch=="master":
     return django.http.HttpResponseBadRequest("This branch combination cannot be deleted.")
@@ -285,6 +291,7 @@ def webhook(request):
     if res["repo"]=="fmatvec" or res["repo"]=="hdf5serie" or res["repo"]=="openmbv" or res["repo"]=="mbsim":
       res["addedBranchCombinations"]=[]
       # get all branch combinations to build as save in queue
+      masterRecTime=django.utils.timezone.now() # we push the master/master/master/master branch combi first
       for bc in service.models.CIBranches.objects.filter(**{res["repo"]+"Branch": res["branch"]}):
         branchCombination={
           "fmatvecBranch": bc.fmatvecBranch,
@@ -292,8 +299,12 @@ def webhook(request):
           "openmbvBranch": bc.openmbvBranch,
           "mbsimBranch": bc.mbsimBranch,
         }
-        ciq, _=service.models.CIQueue.objects.get_or_create(**branchCombination, defaults={"recTime": django.utils.timezone.now()})
-        ciq.recTime=django.utils.timezone.now()
+        if bc.fmatvecBranch=="master" and bc.hdf5serieBranch=="master" and bc.openmbvBranch=="master" and bc.mbsimBranch=="master":
+          recTime=masterRecTime
+        else:
+          recTime=django.utils.timezone.now()
+        ciq, _=service.models.CIQueue.objects.get_or_create(**branchCombination, defaults={"recTime": recTime})
+        ciq.recTime=recTime
         ciq.save()
         res["addedBranchCombinations"].append(branchCombination)
     elif res["repo"]=="build":

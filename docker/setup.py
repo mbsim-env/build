@@ -390,7 +390,7 @@ def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
   # build
   renameStoppedContainer('mbsimenv.build.'+buildType+'.')
   build=dockerClient.containers.run(
-    image=("mbsimenv/buildwin64" if buildType=="win64-dailyrelease" else "mbsimenv/build")+":"+getTagname(),
+    image=("mbsimenv/buildwin64" if buildType.startswith("win64-dailyrelease") else "mbsimenv/build")+":"+getTagname(),
     init=True, name='mbsimenv.build.'+buildType+'.'+getTagname(),
     network=networki.id,
     labels={"buildtype": buildType},
@@ -481,19 +481,22 @@ def run(s, jobs=4,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog, detach=detach)
 
-  elif s=="build-linux64-dailydebug":
-    return runAutobuild(s, "linux64-dailydebug", ["--valgrindExamples"]+addCommands,
+  elif s.startswith("build-linux64-dailydebug"):
+    buildTypeSuffix=s[len("build-linux64-dailydebug"):]
+    return runAutobuild(s, "linux64-dailydebug"+buildTypeSuffix, ["--valgrindExamples"]+addCommands,
                  jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog, detach=detach)
 
-  elif s=="build-linux64-dailyrelease":
-    return runAutobuild(s, "linux64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
+  elif s.startswith("build-linux64-dailyrelease"):
+    buildTypeSuffix=s[len("build-linux64-dailyrelease"):]
+    return runAutobuild(s, "linux64-dailyrelease"+buildTypeSuffix, addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog, detach=detach)
 
-  elif s=="build-win64-dailyrelease":
-    return runAutobuild(s, "win64-dailyrelease", addCommands, jobs=jobs, interactive=interactive,
+  elif s.startswith("build-win64-dailyrelease"):
+    buildTypeSuffix=s[len("build-win64-dailyrelease"):]
+    return runAutobuild(s, "win64-dailyrelease"+buildTypeSuffix, addCommands, jobs=jobs, interactive=interactive,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog, detach=detach)
 

@@ -43,7 +43,8 @@ class Run(base.views.Base):
     context['run']=self.run
     context['repoList']=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
     # the checkboxes for refernece update are enabled for the current runexample and when the logged in user has the rights to do so
-    context["enableUpdate"]=isCurrent and self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout)
+    context["enableUpdate"]=isCurrent and self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout) and \
+                            self.run.buildType=="linux64-dailydebug"
     return context
 
 # handle ajax request to set example reference updates
@@ -240,7 +241,8 @@ class DataTableExample(base.views.DataTable):
     dsStatic=self.getStaticDS(ds)
     checked='checked="checked"' if dsStatic is not None and dsStatic.update else ""
     refCheckbox='<span class="float-right">[<input type="checkbox" onClick="changeRefUpdate($(this), \'%s\', \'%s\');" %s/>]</span>'%\
-                (updateUrl, ds.exampleName, checked) if self.isCurrent and self.allowedUser else ""
+                (updateUrl, ds.exampleName, checked) \
+                if self.isCurrent and self.allowedUser and self.run.buildType=="linux64-dailydebug" else ""
     if ds.results.count()==0:
       ret='<span class="float-left"><span class="text-warning">%s</span>&nbsp;no reference</span>%s'%\
           (octicon("alert"), refCheckbox)

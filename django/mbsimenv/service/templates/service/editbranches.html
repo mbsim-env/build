@@ -3,24 +3,24 @@
 {% load static %}
 {% load octicons %}
 
-{% block title %}MBSim Build Service - CI Branches{% endblock %}
+{% block title %}{{modelHuman|title}} Branches{% endblock %}
 
 {% block body %}
 
 <script src="{% static 'service/scripts.js' %}"> </script>
 <script>
   "use strict";
-  var ciBranchesTableObj;
+  var editBranchesTableObj;
   $(document).ready(function() {
-    ciBranchesTableObj=initCIBranchesTable("{% url 'service:datatable_cibranches' %}");
+    editBranchesTableObj=initEditBranchesTable("{% url 'service:datatable_editbranches' model %}");
     loadBranches("{% url 'service:github_repobranches' %}");
   });
 </script>
 
-<h1>MBSim Build Service - Continuous Integration Branch Configuration</h1>
+<h1>{{modelHuman|title}} Branch Configuration</h1>
 
 <p>
-  The MBSim Build Service provides continuous integration (CI) for arbitrary combinations of git branches of the repositories
+  The MBSim Build Service provides {{modelHuman}} builds for arbitrary combinations of git branches of the repositories
   {% for repo in repoList %}
     {% if not forloop.first %}
       {% autoescape off %}{{ forloop.last|yesno:" and ,&#44; " }}{% endautoescape %}
@@ -35,19 +35,19 @@
   <span class="badge badge-primary">
     {% octicon "git-branch" %}&nbsp;master
   </span>
-  for all repos, where CI is always active) must be activated manually for CI. This can be done on this site.
+  for all repos, where the build is always active) must be activated manually for {{modelHuman}} builds. This can be done on this site.
 </p>
 
-<h2>CI Branch Combinations</h2>
+<h2>Branch Combinations for {{modelHuman|title}}</h2>
 <div class="card border-info">
   <div class="card-header bg-info">
-    {% octicon "eye" %}&nbsp;Current branch combinations activated for CI
+    {% octicon "eye" %}&nbsp;Current branch combinations activated for {{modelHuman}} builds
   </div>
   <div class="card-body">
-    <table style="width:auto" id="cibranchesTable" class="table table-striped table-hover table-bordered table-sm">
+    <table style="width:auto" id="editbranchesTable" class="table table-striped table-hover table-bordered table-sm">
       <thead>
         <tr>
-          <th style="text-align:center;" colspan="1">{% octicon "git-branch" %}&nbsp;CI branch comb.</th>
+          <th style="text-align:center;" colspan="1">{% octicon "git-branch" %}&nbsp;Branch comb.</th>
           <th style="text-align:center;" colspan="4">{% octicon "repo" %}&nbsp;Repositories</th>
         </tr>
         <tr>
@@ -69,7 +69,7 @@
 
 <div style="margin-top: 1em;" class="card border-warning">
   <div class="card-header bg-warning">
-    {% octicon "pencil" %}&nbsp;Add new branch combination for CI
+    {% octicon "pencil" %}&nbsp;Add new branch combination for {{modelHuman}} builds
   </div>
   <div class="card-body">
     <dl style="margin-right:0em;" class="row">
@@ -88,7 +88,7 @@
       <dt class="col-2">
       </dt>
       <dd class="col-10">
-        <button id="ADDBRANCH" onclick="addBranchCombination('{% url 'service:db_addbranchcombi' %}')"
+        <button id="ADDBRANCH" onclick="addBranchCombination('{% url 'service:db_addbranchcombi' model %}')"
                 class="btn btn-secondary btn-xs" type="button" disabled="disabled">
           {% octicon "diff-added" %}&nbsp;Add
         </button>
