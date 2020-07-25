@@ -127,6 +127,13 @@ def mainDocPage():
     shutil.copytree(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc")), pj(staticRuntimeDir, "doxygenReference"), symlinks=True)
 
 def setGithubStatus(run, state):
+  # skip for none build system runs
+  if not args.buildSystemRun:
+    return
+  # skip for -nonedefbranches buildTypes
+  if run.buildType.find("-nonedefbranches")>=0:
+    return
+
   import github
   if state=="pending":
     description="Build started at %s"%(run.startTime.isoformat()+"Z")
@@ -291,8 +298,7 @@ def main():
 #    return 255 # build skipped, same as last build
 
   # set status on commit
-  if args.buildSystemRun:
-    setGithubStatus(run, "pending")
+  setGithubStatus(run, "pending")
 
   # clean prefix dir
   if args.enableCleanPrefix and os.path.isdir(args.prefix if args.prefix is not None else args.prefixAuto):
@@ -358,8 +364,7 @@ def main():
   run.save()
 
   # update status on commitid
-  if args.buildSystemRun:
-    setGithubStatus(run, "success" if nrFailed==0 else "failure")
+  setGithubStatus(run, "success" if nrFailed==0 else "failure")
 
   if nrFailed>0:
     print("\nERROR: %d of %d build parts failed!!!!!"%(nrFailed, nrRun));

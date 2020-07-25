@@ -244,8 +244,7 @@ def main():
   exRun.save()
 
   # update status on commitid
-  if args.buildSystemRun:
-    setGithubStatus(exRun, "pending")
+  setGithubStatus(exRun, "pending")
 
   mainRet=0
   failedExamples=[]
@@ -314,8 +313,7 @@ def main():
   exRun.save()
 
   # update status on commitid
-  if args.buildSystemRun:
-    setGithubStatus(exRun, "success" if len(failedExamples)==0 and coverageFailed==0 else "failure")
+  setGithubStatus(exRun, "success" if len(failedExamples)==0 and coverageFailed==0 else "failure")
 
   # print result summary to console
   if len(failedExamples)>0:
@@ -335,6 +333,13 @@ def main():
 
 
 def setGithubStatus(run, state):
+  # skip for none build system runs
+  if not args.buildSystemRun:
+    return
+  # skip for -nonedefbranches buildTypes
+  if run.buildType.find("-nonedefbranches")>=0:
+    return
+
   import github
   if state=="pending":
     description="Runexamples started at %s"%(run.startTime.isoformat()+"Z")
