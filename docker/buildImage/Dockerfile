@@ -254,7 +254,7 @@ RUN ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/g++ && ln -s $(rea
 USER dockeruser:dockeruser
 
 # ccache config
-RUN ccache -M 10G
+RUN ccache -M 20G
 
 # these are the default arguments when running the container
 CMD []

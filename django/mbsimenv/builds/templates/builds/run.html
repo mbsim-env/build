@@ -120,30 +120,6 @@
   </tbody>
 </table>
 
-{% if examples|length > 0 %}
-  <h2>Examples</h2>
-  <div class="alert alert-{{ examplesAllOK|yesno:"success,danger" }}" role="alert">
-    <span class="text-{{ examplesAllOK|yesno:"success,danger" }}">
-      {% if examplesAllOK %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}
-    </span>
-    {% if examplesAllOK %}
-      All related example runs have passed
-    {% else %}
-      At least one related example run has failed
-    {% endif %}
-    <ul class="list-group">
-      {% for ex in examples %}
-        <li class="list-group-item">
-          <span class="text-{{ ex.ok|yesno:"success,danger" }}">
-            {% if ex.ok %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}
-          </span>
-          <a href="{% url "runexamples:run" ex.id %}">Example run with build type '{{ ex.buildType }}'</a>
-        </li>
-      {% endfor %}
-    </ul>
-  </div>
-{% endif %}
-
 {% if run.distributionOK is not None %}
   <h2>Distribution</h2>
   <div class="alert alert-{{ run.distributionOK|yesno:"success,danger" }}" role="alert">
@@ -201,6 +177,30 @@
         </div>
       </div>
     {% endif %}
+  </div>
+{% endif %}
+
+{% if examples|length > 0 %}
+  <h2>Examples</h2>
+  <div class="alert alert-{{ examplesAllOK|yesno:"success,danger" }}" role="alert">
+    <span class="text-{{ examplesAllOK|yesno:"success,danger" }}">
+      {% if examplesAllOK %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}
+    </span>
+    {% if examplesAllOK %}
+      All related example runs have passed
+    {% else %}
+      At least one related example run has failed
+    {% endif %}
+    <ul class="list-group">
+      {% for ex in examples %}
+        <li class="list-group-item">
+          <span class="text-{{ ex.ok|yesno:"success,danger" }}">
+            {% if ex.ok %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}
+          </span>
+          <a href="{% url "runexamples:run" ex.id %}">Example run with build type '{{ ex.buildType }}'</a>
+        </li>
+      {% endfor %}
+    </ul>
   </div>
 {% endif %}
 

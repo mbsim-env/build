@@ -341,16 +341,6 @@ def main():
   # write main doc file
   mainDocPage()
 
-  # run examples
-  runExamplesErrorCode=0
-  if not args.disableRunExamples:
-    savedDir=os.getcwd()
-    os.chdir(pj(args.sourceDir, "mbsim", "examples"))
-    print("Running examples in "+os.getcwd())
-    sys.stdout.flush()
-    runExamplesErrorCode=runexamples(run)
-    os.chdir(savedDir)
-
   # create distribution
   if args.enableDistribution:
     nrRun=nrRun+1
@@ -362,6 +352,16 @@ def main():
 
   run.endTime=django.utils.timezone.now()
   run.save()
+
+  # run examples
+  runExamplesErrorCode=0
+  if not args.disableRunExamples:
+    savedDir=os.getcwd()
+    os.chdir(pj(args.sourceDir, "mbsim", "examples"))
+    print("Running examples in "+os.getcwd())
+    sys.stdout.flush()
+    runExamplesErrorCode=runexamples(run)
+    os.chdir(savedDir)
 
   # update status on commitid
   setGithubStatus(run, "success" if nrFailed==0 else "failure")

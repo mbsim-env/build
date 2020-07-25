@@ -887,6 +887,9 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   # remove unpacked fmu
   if os.path.isdir("tmp_mbsimTestFMU"): shutil.rmtree("tmp_mbsimTestFMU")
 
+  # remove the generated fmu (just to save disk space)
+  if os.path.isfile("mbsim.fmu"): os.remove("mbsim.fmu")
+
   # return
   if ret1==base.helper.subprocessCall.timedOutErrorCode or ret2==base.helper.subprocessCall.timedOutErrorCode or ret3==base.helper.subprocessCall.timedOutErrorCode:
     ret=base.helper.subprocessCall.timedOutErrorCode
