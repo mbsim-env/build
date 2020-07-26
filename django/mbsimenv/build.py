@@ -574,13 +574,11 @@ def configure(tool):
       os.chdir(pj(args.sourceDir, buildTool(tool.toolName)))
       print("\n\nRUNNING configure\n", file=configureFD); configureFD.flush()
       if args.prefix is None:
-        print(" ".join(["./config.status", "--recheck"]), file=configureFD); configureFD.flush()
         if base.helper.subprocessCall(["./config.status", "--recheck"], configureFD)!=0:
           raise RuntimeError("configure failed")
       else:
         command=[pj(args.sourceDir, tool.toolName, "configure"), "--prefix", args.prefix]
         command.extend(args.passToConfigure)
-        print(" ".join(command), file=configureFD); configureFD.flush()
         if base.helper.subprocessCall(command, configureFD)!=0:
           raise RuntimeError("configure failed")
     elif cmake and (not args.disableConfigure or not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName), "CMakeCache.txt"))):
@@ -598,7 +596,6 @@ def configure(tool):
         if cmakeCmd is None: cmakeCmd="cmake"
         command=[cmakeCmd, pj(args.sourceDir, tool.toolName), "-GNinja", "-DCMAKE_INSTALL_PREFIX="+args.prefix]
         command.extend(args.passToCMake)
-        print(" ".join(command), file=configureFD); configureFD.flush()
         if base.helper.subprocessCall(command, configureFD)!=0:
           raise RuntimeError("configure failed")
     else:

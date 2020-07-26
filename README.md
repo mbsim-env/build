@@ -35,6 +35,8 @@ The Docker image for running the MBSim-Env is till now not available.
 
 ### Building and Running the Linux MBSim-Env Tools as a Developer
 
+!!!!!THIS SECTION IS CURRENTLY OUTDATED!!!!!
+
 Building MBSim-Env from scratch is quite complicated since it has many dependencies to other tools. And not all these
 tools are available via your preferred Linux package manager or minor differences on these lead to problems dependent
 on your preferred Linux distribution.
@@ -42,7 +44,7 @@ That's why we provide Docker images to build and run MBSim-Env easily in the typ
 
 To prepare this the following needs to be done once.
 
-1. Install Docker. Please look on [Docker](https://www.docker.com/) or your Linux distribution how to do this.
+1. Install Docker. Please look at [Docker](https://www.docker.com/) or your Linux distribution how to do this.
 Allow Docker for the user of your choice, e.g. by giving this user access to the Docker socket.
 2. Clone this Git repository to your preferred directory (`<mypath>`) which should have enough 
 space to hold the MBSim-Env source code the build directories as well as all your MBSim-Env models and data.
@@ -65,6 +67,8 @@ Note that you do not need to have any development tools installed on your host c
 everything comes along with the Docker image automatically and consistently.
 
 ### Building and Running the Windows MBSim-Env Tools as a Developer
+
+!!!!!THIS SECTION IS CURRENTLY OUTDATED!!!!!
 
 You can also build (cross-compile) all MBSim-Env tools for Windows using a Docker image. You can than run the generated Windows
 executables using Wine on Linux or run these natively on a Windows PC.
