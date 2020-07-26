@@ -214,6 +214,8 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0):
   for coreFile in glob.glob("*core*"):
     if "LSB core file" in subprocess.check_output(["file", coreFile]).decode('utf-8'):
       os.remove(coreFile)
+  startTime=django.utils.timezone.now()
+  print("\nCalling command\n%s\nwith cwd\n%s\nat %s\n"%(" ".join(map(lambda x: "'"+x+"'", args)), os.getcwd(), startTime), file=f)
   # start the program to execute
   try:
     proc=subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, bufsize=-1, env=env)
@@ -246,6 +248,8 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0):
       lineNP=ex.object[ex.start:] # add broken characters to next line
   # wait for the call program to exit
   ret=proc.wait()
+  endTime=django.utils.timezone.now()
+  print("\nEnded at %s after %s\n"%(endTime, endTime-startTime), file=f)
   # stop the execution time guard thread
   if maxExecutionTime>0:
     if killed.isSet():
@@ -281,7 +285,7 @@ def startLocalServer(port):
     print("No server is running. Starting server. (only done the first time)")
     fnull=open(os.devnull, 'w')
     subprocess.Popen([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../manage.py", "runserver", "--insecure", "localhost:"+str(port)],
-                     stderr=fnull, stdout=fnull)
+                     stderr=fnull, stdout=fnull, preexec_fn=os.setpgrp)
     with open(os.path.dirname(os.path.realpath(__file__))+"/../localserver.json", "w") as f:
       json.dump({"hostname": "localhost", "port": port}, f)
   sock.close()

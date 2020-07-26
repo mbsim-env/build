@@ -530,7 +530,7 @@ def runExample(exRun, example):
         comm=[pj(mbsimBinDir, tool+args.exeExt), "--autoExit"]+files
         allTimedOut=True
         for t in range(0, tries):
-          print("Starting (try %d/%d):\n"%(t+1, tries)+str(comm)+"\n\n", file=outFD)
+          print("Starting (try %d/%d):\n"%(t+1, tries)+"\n\n", file=outFD)
           ret=base.helper.subprocessCall(prefixSimulation(tool)+exePrefix()+comm, outFD, env=denv, maxExecutionTime=(10 if args.prefixSimulationKeyword=='VALGRIND' else 3))
           print("\n\nReturned with "+str(ret), file=outFD)
           if ret!=base.helper.subprocessCall.timedOutErrorCode: allTimedOut=False
@@ -805,9 +805,6 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   noparamArg=[]
   if "noparam" in labels: noparamArg=['--noparam']
   comm=exePrefix()+[pj(mbsimBinDir, "mbsimCreateFMU"+args.exeExt), '--nocompress']+cosimArg+noparamArg+[fmiInputFile]
-  list(map(lambda x: print(x, end=" ", file=executeFD), comm))
-  print("\n", file=executeFD)
-  executeFD.flush()
   ret1=abs(base.helper.subprocessCall(prefixSimulation('mbsimCreateFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime/2))
   retv=valgrindOutputAndAdaptRet("example_fmi_create", ex)
   if retv!=0: ret1=1
@@ -828,8 +825,6 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   if os.path.isdir("tmp_fmuCheck"): shutil.rmtree("tmp_fmuCheck")
   os.mkdir("tmp_fmuCheck")
   comm=exePrefix()+[pj(mbsimBinDir, fmuCheck)]+endTime+["-f", "-l", "5", "-o", "fmuCheck.result.csv", "-z", "tmp_fmuCheck", "mbsim.fmu"]
-  list(map(lambda x: print(x, end=" ", file=executeFD), comm))
-  print("\n", file=executeFD)
   t0=datetime.datetime.now()
   ret2=abs(base.helper.subprocessCall(prefixSimulation('fmuCheck')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
@@ -874,8 +869,6 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   cosimArg=['--me']
   if cosim: cosimArg=['--cosim']
   comm=exePrefix()+[pj(mbsimBinDir, "mbsimTestFMU"+args.exeExt)]+cosimArg+["tmp_mbsimTestFMU"]
-  list(map(lambda x: print(x, end=" ", file=executeFD), comm))
-  print("\n", file=executeFD)
   ret3=abs(base.helper.subprocessCall(prefixSimulation('mbsimTestFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime/3))
   retv=valgrindOutputAndAdaptRet("example_fmi_mbsimTestFMU", ex)
   if retv!=0: ret3=1
@@ -1204,9 +1197,6 @@ def validateXML(ex):
 
         outputFD=base.helper.MultiFile(args.printToConsole)
         print("Running command:", file=outputFD)
-        list(map(lambda x: print(x, end=" ", file=outputFD), [mbxmlutilsvalidate]+typesValue+[pj(root, filename)]))
-        print("\n", file=outputFD)
-        outputFD.flush()
         xmlOut.resultOK=True
         if base.helper.subprocessCall(exePrefix()+[mbxmlutilsvalidate]+typesValue+[pj(root, filename)], outputFD)!=0:
           nrFailed+=1
