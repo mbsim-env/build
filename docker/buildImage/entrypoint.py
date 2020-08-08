@@ -79,10 +79,12 @@ if args.valgrindExamples and not os.path.isdir("/mbsim-env/mbsim-valgrind"):
 
 # compile flags
 if args.buildType == "linux64-ci" or args.buildType.startswith("linux64-dailydebug"):
+  BUILDTYPE="Debug"
   os.environ["CXXFLAGS"]="-O0 -g"
   os.environ["CFLAGS"]="-O0 -g"
   os.environ["FFLAGS"]="-O0 -g"
 elif args.buildType.startswith("linux64-dailyrelease"):
+  BUILDTYPE="Release"
   os.environ["CXXFLAGS"]="-g -O2 -DNDEBUG"
   os.environ["CFLAGS"]="-g -O2 -DNDEBUG"
   os.environ["FFLAGS"]="-g -O2 -DNDEBUG"
@@ -161,6 +163,10 @@ localRet=subprocess.call(
   "COIN_LIBS=-L/3rdparty/local/lib64 -lCoin", "SOQT_CFLAGS=-I/3rdparty/local/include",
   "SOQT_LIBS=-L/3rdparty/local/lib64 -lSoQt",
   "--passToCMake", "-DBOOST_INCLUDEDIR=/usr/include/boost169", "-DBOOST_LIBRARYDIR=/usr/lib64/boost169",
+  "-DCMAKE_BUILD_TYPE="+BUILDTYPE,
+  "-DCMAKE_CXX_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["CXXFLAGS"],
+  "-DCMAKE_C_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["CFLAGS"],
+  "-DCMAKE_Fortran_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["FFLAGS"],
   "--passToRunexamples", "--buildType", args.buildType]+\
   RUNEXAMPLESARGS+RUNEXAMPLESFILTER,
   stdout=sys.stdout, stderr=sys.stderr)

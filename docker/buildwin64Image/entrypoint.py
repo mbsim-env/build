@@ -106,6 +106,10 @@ ret=subprocess.call(
   "-DBLAS_LIBRARIES=/3rdparty/local/lib/libblas.dll.a", "-DBLAS=1",
   "-DLAPACK_LIBRARIES=/3rdparty/local/lib/liblapack.dll.a", "-DLAPACK=1",
   "-DBOOST_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw",
+  "-DCMAKE_BUILD_TYPE=Release",
+  "-DCMAKE_CXX_FLAGS_RELEASE=-g -O2 -gdwarf-2 -DNDEBUG",
+  "-DCMAKE_C_FLAGS_RELEASE=-g -O2 -gdwarf-2 -DNDEBUG",
+  "-DCMAKE_Fortran_FLAGS_RELEASE=-g -O2 -gdwarf-2 -DNDEBUG",
   "--passToRunexamples"]+RUNEXAMPLES,
   stdout=sys.stdout, stderr=sys.stderr)
 if ret!=255:

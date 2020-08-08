@@ -602,8 +602,11 @@ def configure(tool):
   if not args.disableConfigure:
     filename="config.log" if not cmake else "CMakeCache.txt"
     print("\n\n\n\n\nCONTENT OF %s\n"%(filename), file=configureFD)
-    with open(filename, "r") as f:
-      configureFD.write(f.read())
+    try:
+      with open(filename, "r") as f:
+        configureFD.write(f.read())
+    except:
+      pass
     tool.configureOK=result=="done"
   tool.configureOutput=configureFD.getvalue()
   tool.save()
