@@ -268,9 +268,11 @@ def main():
 
   # enable coverage
   if args.coverage:
-    if not "CPPFLAGS" in os.environ: os.environ["CPPFLAGS"]=""
+    if not "CFLAGS" in os.environ: os.environ["CFLAGS"]=""
+    if not "CXXFLAGS" in os.environ: os.environ["CXXFLAGS"]=""
     if not "LDFLAGS"  in os.environ: os.environ["LDFLAGS" ]=""
-    os.environ["CPPFLAGS"]=os.environ["CPPFLAGS"]+" --coverage"
+    os.environ["CFLAGS"]=os.environ["CFLAGS"]+" --coverage"
+    os.environ["CXXFLAGS"]=os.environ["CXXFLAGS"]+" --coverage"
     os.environ["LDFLAGS" ]=os.environ["LDFLAGS" ]+" --coverage -lgcov"
 
   # start messsage
@@ -625,24 +627,24 @@ def make(tool):
   makeFD=io.StringIO()
   run=0
   cmake=os.path.exists(pj(args.sourceDir, tool.toolName, "CMakeLists.txt"))
-  buildCmd="make" if not cmake else "ninja"
+  buildCmd=["make"] if not cmake else ["ninja", "-v"]
   try:
     if not args.disableMake:
       run=1
       # build
       errStr=""
       if not args.disableMakeClean:
-        print("\n\nRUNNING %s clean\n"%(buildCmd), file=makeFD); makeFD.flush()
-        if base.helper.subprocessCall([buildCmd, "clean"], makeFD)!=0:
-          errStr=errStr+"%s clean failed; "%(buildCmd)
-      print("\n\nRUNNING %s -k\n"%(buildCmd), file=makeFD); makeFD.flush()
-      if base.helper.subprocessCall([buildCmd, "-k"]+([] if not cmake else [str(1000000)])+["-j", str(args.j)],
+        print("\n\nRUNNING clean\n", file=makeFD); makeFD.flush()
+        if base.helper.subprocessCall(buildCmd+["clean"], makeFD)!=0:
+          errStr=errStr+"clean failed; "
+      print("\n\nRUNNING build\n", file=makeFD); makeFD.flush()
+      if base.helper.subprocessCall(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["-j", str(args.j)],
                          makeFD)!=0:
-        errStr=errStr+"%s failed; "%(buildCmd)
+        errStr=errStr+"build failed; "
       if not args.disableMakeInstall:
-        print("\n\nRUNNING %s install\n"%(buildCmd), file=makeFD); makeFD.flush()
-        if base.helper.subprocessCall([buildCmd, "-k"]+([] if not cmake else [str(1000000)])+["install"], makeFD)!=0:
-          errStr=errStr+"%s install failed; "%(buildCmd)
+        print("\n\nRUNNING install\n", file=makeFD); makeFD.flush()
+        if base.helper.subprocessCall(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["install"], makeFD)!=0:
+          errStr=errStr+"install failed; "
       if errStr!="": raise RuntimeError(errStr)
     else:
       print("make disabled", file=makeFD); makeFD.flush()
@@ -673,12 +675,12 @@ def check(tool):
   checkFD=io.StringIO()
   run=0
   cmake=os.path.exists(pj(args.sourceDir, tool.toolName, "CMakeLists.txt"))
-  buildCmd="make" if not cmake else "ninja"
+  buildCmd=["make"] if not cmake else ["ninja", "-v"]
   if not args.disableMakeCheck:
     run=1
     # check
-    print("RUNNING %s check\n"%(buildCmd), file=checkFD); checkFD.flush()
-    if base.helper.subprocessCall([buildCmd, "-k"]+([] if not cmake else [str(1000000)])+["-j", str(args.j), "check"], checkFD)==0:
+    print("RUNNING check\n", file=checkFD); checkFD.flush()
+    if base.helper.subprocessCall(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["-j", str(args.j), "check"], checkFD)==0:
       result="done"
     else:
       result="failed"
@@ -733,15 +735,15 @@ def doc(tool, disabled, docDirName):
       run=1
       # make doc
       errStr=""
-      print("\n\nRUNNING ninja %s/clean\n"%(docDirName), file=docFD); docFD.flush()
-      if base.helper.subprocessCall(["ninja", "%s/clean"%(docDirName)], docFD)!=0:
-        errStr=errStr+"ninja %s/clean failed; "%(docDirName)
-      print("\n\nRUNNING ninja %s/all\n"%(docDirName), file=docFD); docFD.flush()
-      if base.helper.subprocessCall(["ninja", "-k", "1000000", "%s/all"%(docDirName)], docFD)!=0:
-        errStr=errStr+"ninja %s/all failed; "%(docDirName)
-      print("\n\nRUNNING ninja %s/install\n"%(docDirName), file=docFD); docFD.flush()
-      if base.helper.subprocessCall(["ninja", "%s/install"%(docDirName)], docFD)!=0:
-        errStr=errStr+"ninja %s/install failed; "%(docDirName)
+      print("\n\nRUNNING ninja %s-clean\n"%(docDirName), file=docFD); docFD.flush()
+      if base.helper.subprocessCall(["ninja", "-v", "%s-clean"%(docDirName)], docFD)!=0:
+        errStr=errStr+"ninja %s-clean failed; "%(docDirName)
+      print("\n\nRUNNING ninja %s\n"%(docDirName), file=docFD); docFD.flush()
+      if base.helper.subprocessCall(["ninja", "-v", "-k", "1000000", "%s"%(docDirName)], docFD)!=0:
+        errStr=errStr+"ninja %s failed; "%(docDirName)
+      print("\n\nRUNNING ninja %s-install\n"%(docDirName), file=docFD); docFD.flush()
+      if base.helper.subprocessCall(["ninja", "-v", "%s-install"%(docDirName)], docFD)!=0:
+        errStr=errStr+"ninja %s-install failed; "%(docDirName)
       if errStr!="": raise RuntimeError(errStr)
     else:
       print(docDirName+" disabled", file=docFD); docFD.flush()

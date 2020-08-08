@@ -536,7 +536,7 @@ def runExample(exRun, example):
         allTimedOut=True
         for t in range(0, tries):
           print("Starting (try %d/%d):\n"%(t+1, tries)+"\n\n", file=outFD)
-          ret=base.helper.subprocessCall(prefixSimulation(tool)+exePrefix()+comm, outFD, env=denv, maxExecutionTime=(10 if args.prefixSimulationKeyword=='VALGRIND' else 3))
+          ret=base.helper.subprocessCall(prefixSimulation(tool)+exePrefix()+comm, outFD, env=denv, maxExecutionTime=(20 if args.prefixSimulationKeyword=='VALGRIND' else 5))
           print("\n\nReturned with "+str(ret), file=outFD)
           if ret!=base.helper.subprocessCall.timedOutErrorCode: allTimedOut=False
           if ret==0: break
@@ -874,7 +874,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   cosimArg=['--me']
   if cosim: cosimArg=['--cosim']
   comm=exePrefix()+[pj(mbsimBinDir, "mbsimTestFMU"+args.exeExt)]+cosimArg+["tmp_mbsimTestFMU"]
-  ret3=abs(base.helper.subprocessCall(prefixSimulation('mbsimTestFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime/3))
+  ret3=abs(base.helper.subprocessCall(prefixSimulation('mbsimTestFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime/2))
   retv=valgrindOutputAndAdaptRet("example_fmi_mbsimTestFMU", ex)
   if retv!=0: ret3=1
   # remove unpacked fmu
