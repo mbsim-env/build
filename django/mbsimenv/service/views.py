@@ -198,6 +198,16 @@ def addBranchCombination(request, model):
     b.save()
   except django.db.utils.IntegrityError:
     return django.http.HttpResponseBadRequest("This branch combination is not allowed (already exists).")
+  # for ci branch trigger the build now
+  if model=="CIBranches":
+    recTime=django.utils.timezone.now()
+    ciq, _=service.models.CIQueue.objects.get_or_create(fmatvecBranch=req["fmatvecBranch"],
+                                                        hdf5serieBranch=req["hdf5serieBranch"],
+                                                        openmbvBranch=req["openmbvBranch"],
+                                                        mbsimBranch=req["mbsimBranch"],
+                                                        defaults={"recTime": recTime})
+    ciq.recTime=recTime
+    ciq.save()
   return django.http.HttpResponse()
 
 # response to ajax request to delete a branch combination
@@ -224,8 +234,9 @@ class Feed(django.contrib.syndication.views.Feed):
   def items(self):
     date=django.utils.timezone.now()-django.utils.timezone.timedelta(days=30)
     # get builds and examples newer than 30days
-    buildRun=builds.models.Run.objects.filterFailed().filter(startTime__gt=date)
-    exampleRun=runexamples.models.Run.objects.filterFailed().filter(startTime__gt=date)
+    buildTypes=["linux64-ci", "linux64-dailydebug", "linux64-dailydebug-valgrind", "linux64-dailyrelease", "win64-dailyrelease"]
+    buildRun=builds.models.Run.objects.filterFailed().filter(startTime__gt=date, buildType__in=buildTypes)
+    exampleRun=runexamples.models.Run.objects.filterFailed().filter(startTime__gt=date, buildType__in=buildTypes)
     # merge both lists and sort by startTime
     return sorted(itertools.chain(buildRun, exampleRun), key=lambda x: x.startTime, reverse=True)
   

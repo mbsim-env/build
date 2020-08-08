@@ -226,7 +226,7 @@ USER dockeruser:dockeruser
 RUN wine cmd echo && wineserver -w
 
 # config ccache
-RUN ccache -M 10G
+RUN ccache -M 20G
 
 # these are the default arguments when running the container
 CMD []

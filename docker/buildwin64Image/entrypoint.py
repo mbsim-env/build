@@ -59,9 +59,6 @@ if not os.path.isdir("/mbsim-env/mbsim"):
   subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/mbsim.git"], cwd="/mbsim-env",
     stdout=sys.stdout, stderr=sys.stderr)
 
-# start wine server
-subprocess.check_call(["wineserver", "-p"], stdout=sys.stdout, stderr=sys.stderr)
-
 # args
 ARGS=["--enableDistribution"]
 RUNEXAMPLES=["--disableCompare", "--disableValidate", "--checkGUIs", "--exeExt", ".exe", "--filter", "'basic' in labels"]
@@ -73,6 +70,8 @@ if args.forceBuild:
 os.environ['WINEPATH']=((os.environ['WINEPATH']+";") if 'WINEPATH' in os.environ else "")+"/mbsim-env/local/bin"
 
 # run build
+subprocess.check_call(["wineserver", "-p"], stdout=sys.stdout, stderr=sys.stderr) # start wine server
+subprocess.check_call(["wine", "cmd", "/c", "echo", "dummy"], stdout=sys.stdout, stderr=sys.stderr) # dummy wine call; needed to avoid zombies when the first wine call is done from ninja
 ret=subprocess.call(
   ["/context/mbsimenv/build.py"]+ARGS+[
   "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun",
@@ -112,6 +111,7 @@ ret=subprocess.call(
   "-DCMAKE_Fortran_FLAGS_RELEASE=-g -O2 -gdwarf-2 -DNDEBUG",
   "--passToRunexamples"]+RUNEXAMPLES,
   stdout=sys.stdout, stderr=sys.stderr)
+subprocess.check_call(["wineserver", "-k"], stdout=sys.stdout, stderr=sys.stderr) # kill wine server
 if ret!=255:
   sys.exit(0)
 if ret!=0:

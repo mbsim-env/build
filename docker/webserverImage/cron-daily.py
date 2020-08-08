@@ -27,15 +27,15 @@ def dailyBuild(fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch, ext):
   contldd=setup.run("build-linux64-dailydebug"+ext, 6, printLog=False, detach=True, addCommands=["--forceBuild"],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
   
-  # linux64-dailyrelease
-  contldr=setup.run("build-linux64-dailyrelease"+ext, 2, printLog=False, detach=True, addCommands=["--forceBuild"],
-                    fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
-  retldr=setup.waitContainer(contldr)
-  
   # win64-dailyrelease
-  contwdr=setup.run("build-win64-dailyrelease"+ext, 2, printLog=False, detach=True, addCommands=["--forceBuild"],
+  contwdr=setup.run("build-win64-dailyrelease"+ext, 3, printLog=False, detach=True, addCommands=["--forceBuild"],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
   retwdr=setup.waitContainer(contwdr)
+  
+  # linux64-dailyrelease
+  contldr=setup.run("build-linux64-dailyrelease"+ext, 3, printLog=False, detach=True, addCommands=["--forceBuild"],
+                    fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
+  retldr=setup.waitContainer(contldr)
   
   retldd=setup.waitContainer(contldd)
   
