@@ -93,7 +93,7 @@ class DataTableExample(base.views.DataTable):
       guiTestHdf5serie=django.db.models.Count("guiTestHdf5serieOK"),
       guiTestOpenmbv=django.db.models.Count("guiTestOpenmbvOK"),
       guiTestMbsimgui=django.db.models.Count("guiTestMbsimguiOK"),
-      ref=django.db.models.Count("results"),
+      ref=django.db.models.Count("resultFiles"),
       webAppHdf5serie=django.db.models.Count(django.db.models.Case(django.db.models.When(
         webappHdf5serie=True, then=django.db.models.Value(1)))),
       webAppOpenmbv=django.db.models.Count(django.db.models.Case(django.db.models.When(
@@ -111,7 +111,7 @@ class DataTableExample(base.views.DataTable):
     vis["refTime"]=runexamples.models.ExampleStatic.objects.filter(
                    exampleName__in=self.queryset().values_list('exampleName', flat=True)).count()>0
     vis["guiTest"]=query["guiTestHdf5serie"]+query["guiTestOpenmbv"]+query["guiTestMbsimgui"]>0
-    vis["ref"]=query["ref"]
+    vis["ref"]=query["ref"]>0
     vis["webApp"]=query["webAppHdf5serie"]+query["webAppOpenmbv"]+query["webAppMbsimgui"]>0
     vis["dep"]=query["dep"]>0
     vis["xmlOut"]=query["xmlOut"]>0
@@ -243,28 +243,28 @@ class DataTableExample(base.views.DataTable):
     refCheckbox='<span class="float-right">[<input type="checkbox" onClick="changeRefUpdate($(this), \'%s\', \'%s\');" %s/>]</span>'%\
                 (updateUrl, ds.exampleName, checked) \
                 if self.isCurrent and self.allowedUser and self.run.buildType=="linux64-dailydebug" else ""
-    if ds.results.count()==0:
+    if ds.resultFiles.count()==0:
       ret='<span class="float-left"><span class="text-warning">%s</span>&nbsp;no reference</span>%s'%\
           (octicon("alert"), refCheckbox)
-    elif ds.results.filterFailed().count()==0:
+    elif ds.resultsFailed==0:
       ret='<span class="float-left"><span class="text-success">%s</span>&nbsp;<a href="%s">passed '\
-          '<span class="badge badge-secondary">%d</span></a></span>'%(octicon("check"), refUrl, ds.results.count())
+          '</a></span>'%(octicon("check"), refUrl)
     else:
       ret='<span class="float-left"><span class="text-danger">%s</span>&nbsp;<a href="%s">failed '\
-          '<span class="badge badge-secondary">%d</span> of <span class="badge badge-secondary">%d</span></a></span>%s'%\
-          (octicon("stop"), refUrl, ds.results.filterFailed().count(), ds.results.count(), refCheckbox)
+          '<span class="badge badge-secondary">%d</span></a></span>%s'%\
+          (octicon("stop"), refUrl, ds.resultsFailed, refCheckbox)
     return ret
   def colClass_ref(self, ds):
-    if ds.results.count()==0:
+    if ds.resultFiles.count()==0:
       return 'table-warning'
-    elif ds.results.filterFailed().count()==0:
+    elif ds.resultsFailed==0:
       return 'table-success'
     else:
       return 'table-danger'
   def colSortKey_ref(self, ds):
-    if ds.results.count()==0:
+    if ds.resultFiles.count()==0:
       return '1'
-    elif ds.results.filterFailed().count()==0:
+    elif ds.resultsFailed==0:
       return '0'
     else:
       return '2'
@@ -540,22 +540,22 @@ class CompareResult(base.views.Base):
 class DataTableCompareResult(base.views.DataTable):
   def setup(self, request, *args, **kwargs):
     super().setup(request, *args, **kwargs)
-    self.results=runexamples.models.Example.objects.get(id=self.kwargs["id"]).results
+    self.allResults=runexamples.models.CompareResult.objects.filter(compareResultFile__example__id=self.kwargs["id"])
 
   # return the queryset to display [required]
   def queryset(self):
-    return self.results
+    return self.allResults
 
   # return the field name in the dataset using for search/filter [required]
   def searchField(self):
-    return "h5Filename"
+    return "compareResultFile__h5Filename"
 
   # return the "data", "sort key" and "class" for columns ["data":required; "sort key" and "class":optional]
 
   def colData_h5file(self, ds):
-    return base.helper.tooltip(ds.h5Filename, "runexamples/CompreResult: id=%d"%(ds.id))
+    return base.helper.tooltip(ds.compareResultFile.h5Filename, "runexamples/CompareResult: id=%d"%(ds.id))
   def colSortKey_h5file(self, ds):
-    return ds.h5Filename
+    return ds.compareResultFile.h5Filename
   def colClass_h5file(self, ds):
     return "text-break"
 
@@ -641,7 +641,7 @@ def chartDifferencePlot(request, id):
 
   # get current result
   compareResult=runexamples.models.CompareResult.objects.get(id=id)
-  with compareResult.h5File_open("rb") as djangoF:
+  with compareResult.compareResultFile.h5File.open("rb") as djangoF:
     try:
       tempF=tempfile.NamedTemporaryFile(mode='wb', delete=False)
       tempF.write(djangoF.read())
@@ -658,9 +658,9 @@ def chartDifferencePlot(request, id):
     return list(map(lambda x: [x[0],0] if math.isnan(x[1]) else x, np.tolist()))
   # get reference result
   try:
-    exampleStatic=runexamples.models.ExampleStatic.objects.get(exampleName=compareResult.example.exampleName)
+    exampleStatic=runexamples.models.ExampleStatic.objects.get(exampleName=compareResult.compareResultFile.example.exampleName)
     for r in exampleStatic.references.all():
-      if r.h5FileName==compareResult.h5FileName:
+      if r.h5FileName==compareResult.compareResultFile.h5FileName:
         break
     with r.h5File.open("rb") as djangoF:
       try:
