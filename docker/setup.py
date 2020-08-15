@@ -389,8 +389,10 @@ def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
 
   # build
   renameStoppedContainer('mbsimenv.build.'+buildType+'.')
+  imageName=("mbsimenv/buildwin64" if buildType.startswith("win64-dailyrelease") else "mbsimenv/build")+":"+getTagname()
+  imageID=dockerClient.images.get(imageName).id
   build=dockerClient.containers.run(
-    image=("mbsimenv/buildwin64" if buildType.startswith("win64-dailyrelease") else "mbsimenv/build")+":"+getTagname(),
+    image=imageName,
     init=True, name='mbsimenv.build.'+buildType+'.'+getTagname(),
     network=networki.id,
     labels={"buildtype": buildType},
@@ -400,7 +402,7 @@ def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
               "--hdf5serieBranch", hdf5serieBranch,
               "--openmbvBranch", openmbvBranch,
               "--mbsimBranch", mbsimBranch]+addCommand) if not interactive else [],
-    environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
+    environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname(), "MBSIMENVIMAGEID": imageID},
     volumes={
       'mbsimenv_mbsim-'+buildType+"."+getTagname():  {"bind": "/mbsim-env",       "mode": "rw"},
       'mbsimenv_ccache.'+getTagname():               {"bind": "/mbsim-ccache",    "mode": "rw"},
