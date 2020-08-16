@@ -834,4 +834,4 @@ if __name__=="__main__":
   # 255 -> build skipped, same as last build
   if args.buildFailedExit and mainRet==1:
     mainRet=args.buildFailedExit
-  exit(mainRet)
+  sys.exit(mainRet)

@@ -202,7 +202,7 @@ def main():
   for d in args.directories:
     if not os.path.isdir(d):
       print("The positional argument (directory) "+d+" does not exist.")
-      exit(1)
+      sys.exit(1)
 
   # if no directory is specified use the current dir (all examples) filter by --filter
   if len(args.directories)==0:
@@ -443,10 +443,10 @@ def addExamplesByFilter(baseDir, directoriesSet):
         {'ppxml': ppxml, 'flatxml': flatxml, 'xml': xml, 'src': src, 'fmi': fmi, 'labels': labels})
     except:
       print("Unable to evaluate the filter:\n"+args.filter)
-      exit(1)
+      sys.exit(1)
     if type(filterResult)!=bool:
       print("The filter does not return a bool value:\n"+args.filter)
-      exit(1)
+      sys.exit(1)
     path=os.path.normpath(root)
     if filterResult and not "tmp_mbsimTestFMU" in path.split(os.sep) and not "tmp_fmuCheck" in path.split(os.sep):
       addOrDiscard(path)
@@ -1375,4 +1375,4 @@ def coverage(exRun):
 
 if __name__=="__main__":
   mainRet=main()
-  exit(mainRet)
+  sys.exit(mainRet)
