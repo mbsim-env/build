@@ -3,7 +3,7 @@
 {% load static %}
 {% load octicons %}
 
-{% block title %}Difference Plot: {{compareResult.example.run.buildType}}{% endblock %}
+{% block title %}Difference Plot: {{compareResult.compareResultFile.example.run.buildType}}{% endblock %}
 
 {% block body %}
 <script src="https://code.highcharts.com/8.1/highcharts.js"> </script>
@@ -15,13 +15,13 @@
     loadDifferencePlot("{% url 'runexamples:chart_differenceplot' compareResult.id %}");
   });
 </script>
-<h1>Difference Plot: <small>{{compareResult.example.run.buildType}}</small></h1>
+<h1>Difference Plot: <small>{{compareResult.compareResultFile.example.run.buildType}}</small></h1>
 <dl style="margin-right:0em;" class="row">
-  <dt class="col-2">Example</dt><dd class="col-10">{{compareResult.example.exampleName}}</dd>
-  <dt class="col-2">File</dt><dd class="col-10">{{compareResult.h5Filename}}</dd>
+  <dt class="col-2">Example</dt><dd class="col-10">{{compareResult.compareResultFile.example.exampleName}}</dd>
+  <dt class="col-2">File</dt><dd class="col-10">{{compareResult.compareResultFile.h5Filename}}</dd>
   <dt class="col-2">Dataset</dt><dd class="col-10">{{compareResult.dataset}}</dd>
   <dt class="col-2">Label</dt><dd class="col-10">{{compareResult.label}}</dd>
-  <dt class="col-2">Start Time</dt><dd class="col-10 DATETIME">{{compareResult.example.run.startTime|date:'c'}}</dd>
+  <dt class="col-2">Start Time</dt><dd class="col-10 DATETIME">{{compareResult.compareResultFile.example.run.startTime|date:'c'}}</dd>
   <dt class="col-2">Navigate</dt>
   <dd class="col-10">
     <a class="btn btn-info btn-xs" href="?previous=1">
@@ -33,7 +33,7 @@
     <a class="btn btn-info btn-xs" href="?current=1">
       {% octicon "chevron-right" %}{% octicon "chevron-right" %} current
     </a>
-    <a class="btn btn-info btn-xs" href="{% url "runexamples:compareresult" compareResult.example.id %}">
+    <a class="btn btn-info btn-xs" href="{% url "runexamples:compareresult" compareResult.compareResultFile.example.id %}">
       {% octicon "chevron-up" %} compare result
     </a>
   </dd>

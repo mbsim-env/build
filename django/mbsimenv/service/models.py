@@ -108,7 +108,9 @@ def manualDeleteHandler(sender, **kwargs):
     man.manualFile.delete(False)
 django.db.models.signals.pre_delete.connect(manualDeleteHandler, sender=Manual)
 
+# only one row if this model exists!!!
 class Info(django.db.models.Model):
   id=django.db.models.CharField(primary_key=True, max_length=50) # the git commit ID
-  shortInfo=django.db.models.TextField()
-  longInfo=django.db.models.TextField()
+  shortInfo=django.db.models.TextField() # container, image, git ID as text
+  longInfo=django.db.models.TextField() # log file of automatic docker build
+  buildImageID=django.db.models.CharField(max_length=100) # the image ID of "mbsimenv/build" used at the last ci build

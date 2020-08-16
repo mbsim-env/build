@@ -944,7 +944,7 @@ def getColumn(arr, col, asColumnVector=True):
       return arr[:][:,None]
   else:
     raise IndexError("Only HDF5 datasets of shape vector and matrix can be handled.")
-def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpRess, datasetName, refObj):
+def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFilesAppend, cmpResFile, cmpRess, datasetName, refObj):
   import numpy
   import h5py
 
@@ -956,9 +956,9 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpRess, data
       curObj=h5CurFile[datasetName]
     except KeyError:
       cmpRes=runexamples.models.CompareResult()
+      cmpResFilesAppend[0]=True
       cmpRess.append(cmpRes)
-      cmpRes.example=ex
-      cmpRes.h5Filename=h5CurFile.filename
+      cmpRes.compareResultFile=cmpResFile
       cmpRes.dataset=datasetName
       cmpRes.result=runexamples.models.CompareResult.Result.DATASETNOTINCUR
       nrFailed[0]+=1
@@ -989,9 +989,9 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpRess, data
     # loop over all columns
     for column in range(refObjCols):
       cmpRes=runexamples.models.CompareResult()
+      cmpResFilesAppend[0]=True
       cmpRess.append(cmpRes)
-      cmpRes.example=ex
-      cmpRes.h5Filename=h5CurFile.filename
+      cmpRes.compareResultFile=cmpResFile
       cmpRes.dataset=datasetName
       cmpRes.label=refLabels[column]
       cmpRes.result=runexamples.models.CompareResult.Result.PASSED
@@ -1012,20 +1012,20 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpRess, data
                          atol=args.atol, equal_nan=True)):
           nrFailed[0]+=1
           cmpRes.result=runexamples.models.CompareResult.Result.FAILED
-          fw=cmpRes.h5File_open("wb")
-          # if h5File_open has already called save() then remove cmpRes from cmpRess (it will trigger a second create in bulk_create)
-          if cmpRes.id is not None:
-            cmpRess.remove(cmpRes)
-          if fw is not None:
+          if cmpResFile.h5File.name is None:
+            # save the file only the first time
+            cmpResFile.h5FileName=cmpResFile.h5Filename # this calls save on the dataset cmpResFile -> it will be skipped for bulk_create later on 
+            fw=cmpResFile.h5File.open("wb")
             with open(h5CurFile.filename, "rb") as fr:
               fw.write(fr.read())
             fw.close()
+            cmpResFile.save()
     # check for labels/columns in current but not in reference
     for label in curLabels[len(refLabels):]:
       cmpRes=runexamples.models.CompareResult()
+      cmpResFilesAppend[0]=True
       cmpRess.append(cmpRes)
-      cmpRes.example=ex
-      cmpRes.h5Filename=h5CurFile.filename
+      cmpRes.compareResultFile=cmpResFile
       cmpRes.dataset=datasetName
       cmpRes.result=runexamples.models.CompareResult.Result.LABELNOTINREF
       nrFailed[0]+=1
@@ -1045,6 +1045,7 @@ def compareExample(ex):
     refFiles=runexamples.models.ExampleStatic.objects.get(exampleName=ex.exampleName).references.all()
   except runexamples.models.ExampleStatic.DoesNotExist:
     refFiles=[]
+  cmpResFiles=[]
   cmpRess=[]
   for refFile in refFiles:
     # open h5 files
@@ -1054,35 +1055,43 @@ def compareExample(ex):
         tempF.write(djangoF.read())
         tempF.close()
         h5RefFile=h5py.File(tempF.name, "r")
+        cmpResFile=runexamples.models.CompareResultFile()
+        cmpResFilesAppend=False
+        cmpResFile.example=ex
+        cmpResFile.h5Filename=refFile.h5FileName
         try:
           h5CurFile=h5py.File(refFile.h5FileName, "r")
         except IOError:
           cmpRes=runexamples.models.CompareResult()
+          cmpResFilesAppend=True
           cmpRess.append(cmpRes)
-          cmpRes.example=ex
-          cmpRes.h5Filename=refFile.h5FileName
+          cmpRes.compareResultFile=cmpResFile
           cmpRes.result=runexamples.models.CompareResult.Result.FILENOTINCUR
           nrFailed[0]+=1
         else:
           # process h5 file
           refMemberNames=set()
           # bind arguments h5CurFile, ex, example, nrFailed in order (nrFailed as lists to pass by reference)
+          dummyReferenceArg=[cmpResFilesAppend]
           dummyFctPtr = functools.partial(compareDatasetVisitor, h5CurFile, ex,
-                                          nrFailed, refMemberNames, cmpRess)
+                                          nrFailed, refMemberNames, dummyReferenceArg, cmpResFile, cmpRess)
           h5RefFile.visititems(dummyFctPtr) # visit all dataset
+          cmpResFilesAppend=dummyReferenceArg[0]
           # check for datasets in current but not in reference
           curMemberNames=set()
           h5CurFile.visititems(functools.partial(appendDatasetName, curMemberNames)) # get all dataset names in cur
           for datasetName in curMemberNames-refMemberNames:
             cmpRes=runexamples.models.CompareResult()
+            cmpResFilesAppend=True
             cmpRess.append(cmpRes)
-            cmpRes.example=ex
-            cmpRes.h5Filename=h5CurFile.filename
+            cmpRes.compareResultFile=cmpResFile
             cmpRes.dataset=datasetName
             cmpRes.result=runexamples.models.CompareResult.Result.DATASETNOTINREF
             nrFailed[0]+=1
           # close h5 files
           h5CurFile.close()
+        if cmpResFilesAppend and cmpResFile.id is None: # cmpResFile dataset is needed but not already saved to the database
+          cmpResFiles.append(cmpResFile) # -> append to bulk_create later on
       finally:
         os.unlink(tempF.name)
   # files in current but not in reference
@@ -1092,14 +1101,20 @@ def compareExample(ex):
   curFiles.extend(glob.glob("*.ombvh5"))
   for curFile in curFiles:
     if not any(map(lambda x: x.h5FileName==curFile, refFiles)):
+      cmpResFile=runexamples.models.CompareResultFile()
+      cmpResFiles.append(cmpResFile)
+      cmpResFile.example=ex
+      cmpResFile.h5Filename=curFile
       cmpRes=runexamples.models.CompareResult()
       cmpRess.append(cmpRes)
-      cmpRes.example=ex
-      cmpRes.h5Filename=curFile
+      cmpRes.compareResultFile=cmpResFile
       cmpRes.result=runexamples.models.CompareResult.Result.FILENOTINREF
       nrFailed[0]+=1
+  runexamples.models.CompareResultFile.objects.bulk_create(cmpResFiles)
   runexamples.models.CompareResult.objects.bulk_create(cmpRess)
-  ex.resultsFailed=ex.results.filterFailed().count()
+  ex.resultsFailed=0
+  for rf in ex.resultFiles.all():
+    ex.resultsFailed+=rf.results.filterFailed().count()
   ex.save()
 
   return 1 if nrFailed[0]>0 else 0

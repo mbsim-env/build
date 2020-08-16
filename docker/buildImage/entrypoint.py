@@ -16,6 +16,7 @@ import hashlib
 sys.path.append("/context/mbsimenv")
 import builds
 import runexamples
+import service
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -93,9 +94,20 @@ else:
 
 # args
 if args.buildType == "linux64-ci":
-  ARGS=["--forceBuild", "--disableConfigure", "--disableDoxygen", "--disableXMLDoc"]
+  ARGS=["--forceBuild", "--disableDoxygen", "--disableXMLDoc"]
   RUNEXAMPLESARGS=["--disableCompare", "--disableMakeClean"]
   RUNEXAMPLESFILTER=["--filter", "'basic' in labels"]
+
+  # get current/last image ID
+  curImageID=os.environ["MBSIMENVIMAGEID"]
+  info=service.models.Info.objects.all().first()
+  lastImageID=info.buildImageID if info is not None else ""
+  # configure needed?
+  if lastImageID==curImageID:
+    ARGS.append("--disableConfigure")
+  # save build image id
+  info.buildImageID=curImageID
+  info.save()
 elif args.buildType.startswith("linux64-dailydebug"):
   ARGS=["--coverage",]
   RUNEXAMPLESARGS=["--checkGUIs"]

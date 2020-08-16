@@ -99,7 +99,7 @@ class Example(django.db.models.Model):
   guiTestOpenmbvOutput=django.db.models.TextField(blank=True)
   guiTestMbsimguiOK=django.db.models.IntegerField(null=True, blank=True, choices=GUITestResult.choices)
   guiTestMbsimguiOutput=django.db.models.TextField(blank=True)
-  # results = related ForeignKey
+  # resultFiles = related ForeignKey
   resultsFailed=django.db.models.PositiveIntegerField(default=0) # just a cached value for performance of filterFailed
   webappHdf5serie=django.db.models.BooleanField()
   webappOpenmbv=django.db.models.BooleanField()
@@ -212,6 +212,35 @@ class ValgrindFrame(django.db.models.Model):
       django.db.models.UniqueConstraint(fields=['whatAndStack', 'nr'], name="unique_orderPerStack"),
     ]
 
+class CompareResultFile(django.db.models.Model):
+  id=django.db.models.AutoField(primary_key=True)
+  uuid=django.db.models.UUIDField(unique=True, default=uuid.uuid4, editable=False) # used for ForeignKey to enable bulk_create
+  example=django.db.models.ForeignKey(Example, on_delete=django.db.models.CASCADE, related_name='resultFiles')
+  # results = related ForeignKey
+  h5Filename=django.db.models.CharField(max_length=100) # must be consistent with h5FileName if set
+  h5File=django.db.models.FileField(null=True, blank=True, max_length=200)
+  @property
+  def h5FileName(self):
+    if self.h5File is None: return None
+    fn=re.sub("^runexamples_CompareResultFile_[0-9]+_", "", self.h5File.name)
+    if fn!=self.h5Filename:
+      raise RuntimeError("Filename missmatch in CompareResultFile")
+    return fn
+  @h5FileName.setter
+  def h5FileName(self, filename):
+    if filename!=self.h5Filename:
+      raise RuntimeError("Filename missmatch in CompareResultFile")
+    if self.id is None:
+      self.save()
+    self.h5File.name="runexamples_CompareResultFile_"+str(self.id)+"_"+filename
+
+# delete all files referenced in CompareResultFile when a CompareResultFile object is deleted
+def compareResultFileDeleteHandler(sender, **kwargs):
+  crf=kwargs["instance"]
+  if crf.h5File is not None:
+    crf.h5File.delete(False)
+django.db.models.signals.pre_delete.connect(compareResultFileDeleteHandler, sender=CompareResultFile)
+
 class CompareResultManager(django.db.models.Manager):
   def filterFailed(self):
     return self.filter(~django.db.models.Q(result=CompareResult.Result.PASSED))
@@ -232,72 +261,34 @@ class CompareResult(django.db.models.Model):
   objects=CompareResultManager()
 
   id=django.db.models.AutoField(primary_key=True)
-  example=django.db.models.ForeignKey(Example, on_delete=django.db.models.CASCADE, related_name='results')
-  h5Filename=django.db.models.CharField(max_length=100)
+  compareResultFile=django.db.models.ForeignKey(CompareResultFile, on_delete=django.db.models.CASCADE, related_name='results', to_field="uuid")
   dataset=django.db.models.CharField(max_length=200)
   label=django.db.models.CharField(max_length=100)
   result=django.db.models.IntegerField(choices=Result.choices)
-  h5File=django.db.models.FileField(null=True, blank=True, max_length=200) # do not use h5File.open, use h5File_open
-  @property
-  def h5FileName(self):
-    if self.h5File is None: return None
-    fn=re.sub("^runexamples_CompareResult_[0-9]+_", "", self.h5File.name)
-    if fn!="" and fn!=self.h5Filename:
-      raise RuntimeError("Internal filename ID error.")
-    return self.h5Filename
-  @h5FileName.setter
-  def h5FileName(self, filename):
-    if filename!=self.h5Filename:
-      raise RuntimeError("Internal filename ID error.")
-    self.h5File.name="runexamples_CompareResult_"+str(self.example.id)+"_"+self.h5Filename
-  
-  def h5File_open(self, mode):
-    if mode=="rb":
-      return self.h5File.open("rb")
-    if mode!="wb":
-      raise RuntimeError("Wrong mode")
-
-    for cr in self.example.results.filter(h5Filename=self.h5Filename):
-      if cr.h5File.name!="" and cr!=self:
-        self.h5FileName=self.h5Filename
-        return None
-    self.h5FileName=self.h5Filename
-    self.save() # needed to enable h5File
-    return self.h5File.open("wb")
 
   def getCurrent(self):
-    id=CompareResult.objects.filter(example__run__buildType=self.example.run.buildType,
-                                    example__exampleName=self.example.exampleName,
-                                    h5Filename=self.h5Filename,
+    id=CompareResult.objects.filter(compareResultFile__example__run__buildType=self.compareResultFile.example.run.buildType,
+                                    compareResultFile__example__exampleName=self.compareResultFile.example.exampleName,
+                                    compareResultFile__h5Filename=self.compareResultFile.h5Filename,
                                     dataset=self.dataset,
                                     label=self.label).\
        aggregate(django.db.models.Max('id'))["id__max"]
     return self if id is None else CompareResult.objects.get(id=id)
   def getNext(self):
-    id=CompareResult.objects.filter(example__run__buildType=self.example.run.buildType,
-                                    example__run__id__gt=self.example.run.id,
-                                    example__exampleName=self.example.exampleName,
-                                    h5Filename=self.h5Filename,
+    id=CompareResult.objects.filter(compareResultFile__example__run__buildType=self.compareResultFile.example.run.buildType,
+                                    compareResultFile__example__run__id__gt=self.compareResultFile.example.run.id,
+                                    compareResultFile__example__exampleName=self.compareResultFile.example.exampleName,
+                                    compareResultFile__h5Filename=self.compareResultFile.h5Filename,
                                     dataset=self.dataset,
                                     label=self.label).\
        aggregate(django.db.models.Min('id'))["id__min"]
     return self if id is None else CompareResult.objects.get(id=id)
   def getPrevious(self):
-    id=CompareResult.objects.filter(example__run__buildType=self.example.run.buildType,
-                                    example__run__id__lt=self.example.run.id,
-                                    example__exampleName=self.example.exampleName,
-                                    h5Filename=self.h5Filename,
+    id=CompareResult.objects.filter(compareResultFile__example__run__buildType=self.compareResultFile.example.run.buildType,
+                                    compareResultFile__example__run__id__lt=self.compareResultFile.example.run.id,
+                                    compareResultFile__example__exampleName=self.compareResultFile.example.exampleName,
+                                    compareResultFile__h5Filename=self.compareResultFile.h5Filename,
                                     dataset=self.dataset,
                                     label=self.label).\
        aggregate(django.db.models.Max('id'))["id__max"]
     return self if id is None else CompareResult.objects.get(id=id)
-
-# delete all files referenced in CompareResult when a CompareResult object is deleted
-def compareResultDeleteHandler(sender, **kwargs):
-  compareResult=kwargs["instance"]
-  if compareResult.h5File is None:
-    return
-  if compareResult.example.results.filter(h5Filename=compareResult.h5Filename).count()>0:
-    return
-  compareResult.h5File.delete(False)
-django.db.models.signals.post_delete.connect(compareResultDeleteHandler, sender=CompareResult)
