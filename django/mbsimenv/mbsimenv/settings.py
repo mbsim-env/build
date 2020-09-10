@@ -110,6 +110,7 @@ if "postgresPassword" not in mbsimenvSecrets.getSecrets() and not os.path.isfile
     }
   }
   SECURE_SSL_REDIRECT = False
+  CSRF_COOKIE_SECURE = False
 else:
   DATABASES={
     'default': {
@@ -123,6 +124,7 @@ else:
     }
   }
   SECURE_SSL_REDIRECT = True
+  CSRF_COOKIE_SECURE = True
 
 
 # Password validation
@@ -191,7 +193,6 @@ STATICFILES_DIRS = [
   os.path.join(BASE_DIR, "static"),
 ]
 
-CSRF_COOKIE_SECURE = True if not DEBUG else False
 SESSION_COOKIE_SECURE = True
 SECURE_REFERRER_POLICY = "origin"
 
