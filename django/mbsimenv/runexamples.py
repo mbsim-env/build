@@ -272,11 +272,12 @@ def main():
     if not args.debugDisableMultiprocessing:
       # init mulitprocessing handling and run in parallel
       django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
-      poolResult=multiprocessing.Pool(args.j).map_async(functools.partial(runExample, exRun), directories, 1)
+      lock=multiprocessing.Manager().Lock()
+      poolResult=multiprocessing.Pool(args.j).map_async(functools.partial(runExample, exRun, lock), directories, 1)
     else: # debugging
       import queue
       poolResult=queue.Queue()
-      poolResult.put(list(map(functools.partial(runExample, exRun), directories)))
+      poolResult.put(list(map(functools.partial(runExample, exRun, None), directories)))
 
     # wait for pool to finish and get result
     retAll=poolResult.get()
@@ -454,7 +455,7 @@ def addExamplesByFilter(baseDir, directoriesSet):
 
 
 # run the given example
-def runExample(exRun, example):
+def runExample(exRun, lock, example):
   print("Started example "+example)
   savedDir=os.getcwd()
   try:
@@ -536,7 +537,11 @@ def runExample(exRun, example):
         allTimedOut=True
         for t in range(0, tries):
           print("Starting (try %d/%d):\n"%(t+1, tries)+"\n\n", file=outFD)
+          if lock is not None and args.exeExt==".exe":
+            lock.acquire() # for Windows (wine) run only one GUI program in parallel (wine often failes with DISPLAY error otherwise)
           ret=base.helper.subprocessCall(prefixSimulation(tool)+exePrefix()+comm, outFD, env=denv, maxExecutionTime=(20 if args.prefixSimulationKeyword=='VALGRIND' else 5))
+          if lock is not None and args.exeExt==".exe":
+            lock.release()
           print("\n\nReturned with "+str(ret), file=outFD)
           if ret!=base.helper.subprocessCall.timedOutErrorCode: allTimedOut=False
           if ret==0: break

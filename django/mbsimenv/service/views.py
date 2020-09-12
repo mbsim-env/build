@@ -23,6 +23,7 @@ class Home(base.views.Base):
     context['manuals']=service.models.Manual.objects.all()
     if service.models.Info.objects.all().count()==1:
       context['info']=service.models.Info.objects.all()[0]
+    context["currentRelease"]=service.models.Release.objects.order_by('-versionMajor', '-versionMinor').first()
     return context
 
 # return the according bootstrap color

@@ -121,7 +121,10 @@
 <h2 style="margin-top: 1em;">{% octicon "desktop-download" height="38" %}&nbsp;Release Downloads</h2>
 <div class="card border-secondary">
   <div class="card-body">
-    <a href="{% url 'service:releases' %}">Tested releases are available here</a>
+    <p>Latest release version is
+      <span class="font-weight-bold">{{ currentRelease.versionMajor }}.{{ currentRelease.versionMinor }}</span>
+      from {{ currentRelease.createDate }}.</p>
+    <p><a href="{% url 'service:releases' %}">Tested releases are available here</a></p>
   </div>
 </div>
 
