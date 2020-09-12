@@ -35,11 +35,11 @@
         </td>
         <td>{{ r.versionMajor }}.{{ r.versionMinor }}</td>
         <td>{{ r.createDate }}</td>
-        <td><a class="font-weight-bold" href="{% url "base:fileDownloadFromDB" "service" "Release" r.id "releaseFile" %}">{{ r.releaseFileName }}</a></td>
+        <td><a class="font-weight-bold" href="{% url "service:currentReleaseFile" r.platform %}">{{ r.releaseFileName }}</a></td>
         <td>{{ r.releaseFile.size|filesizeformat }}</td>
         <td><small>
           {% if r.releaseDebugFile %}
-            <a href="{% url "base:fileDownloadFromDB" "service" "Release" r.id "releaseDebugFile" %}">{{ r.releaseDebugFileName }}</a>
+            <a href="{% url "service:currentReleaseDebugFile" r.platform %}">{{ r.releaseDebugFileName }}</a>
           {% else %}
             -
           {% endif %}
@@ -71,11 +71,11 @@
         </td>
         <td>{{ r.versionMajor }}.{{ r.versionMinor }}</td>
         <td>{{ r.createDate }}</td>
-        <td><a href="{% url "base:fileDownloadFromDB" "service" "Release" r.id "releaseFile" %}">{{ r.releaseFileName }}</a></td>
+        <td><a href="{% url "service:releaseFile" r.releaseFileName %}">{{ r.releaseFileName }}</a></td>
         <td>{{ r.releaseFile.size|filesizeformat }}</td>
         <td><small>
           {% if r.releaseDebugFile %}
-            <a href="{% url "base:fileDownloadFromDB" "service" "Release" r.id "releaseDebugFile" %}">{{ r.releaseDebugFileName }}</a>
+            <a href="{% url "service:releaseFile" r.releaseDebugFileName %}">{{ r.releaseDebugFileName }}</a>
           {% else %}
             -
           {% endif %}

@@ -269,6 +269,24 @@ class Releases(base.views.Base):
     context['olderReleases']=olderReleases
     return context
 
+def releaseFile(request, filename):
+  r=service.models.Release.objects.filter(releaseFile__endswith=filename).first()
+  if r is not None:
+    ff=r.releaseFile
+  else:
+    r=service.models.Release.objects.filter(releaseDebugFile__endswith=filename).first()
+    if r is not None:
+      ff=r.releaseDebugFile
+    else:
+      return django.http.HttpResponseBadRequest("Release file not found.")
+  return django.http.FileResponse(ff, as_attachment=True, filename=filename)
+def currentReleaseFile(request, platform):
+  r=service.models.Release.objects.filter(platform=platform).order_by('-versionMajor', '-versionMinor').first()
+  return django.http.FileResponse(r.releaseFile, as_attachment=True, filename=r.releaseFileName)
+def currentReleaseDebugFile(request, platform):
+  r=service.models.Release.objects.filter(platform=platform).order_by('-versionMajor', '-versionMinor').first()
+  return django.http.FileResponse(r.releaseDebugFile, as_attachment=True, filename=r.releaseDebugFileName)
+
 # a svg badge with the number manuals
 @django.views.decorators.cache.never_cache
 def manualsNrAll(request):
