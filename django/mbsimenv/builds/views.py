@@ -16,6 +16,10 @@ from octicons.templatetags.octicons import octicon
 def currentBuildtype(request, buildtype):
   run=builds.models.Run.objects.getCurrent(buildtype)
   return Run.as_view()(request, id=run.id)
+def currentBuildtypePostfix(request, buildtype, postfix):
+  run=builds.models.Run.objects.getCurrent(buildtype)
+  resm=django.urls.resolve(django.urls.reverse('builds:run', args=[run.id])+postfix+"/")
+  return resm.func(request, *resm.args, **resm.kwargs)
 
 # the build page
 class Run(base.views.Base):
@@ -264,3 +268,10 @@ def releaseDistribution(request, run_id):
     with run.distributionDebugFile.open("rb") as fi:
       fo.write(fi.read())
   return django.http.HttpResponse()
+
+def runDistributionFile(request, id):
+  run=builds.models.Run.objects.get(id=id)
+  return django.http.FileResponse(run.distributionFile, as_attachment=True, filename=run.distributionFileName)
+def runDistributionDebugFile(request, id):
+  run=builds.models.Run.objects.get(id=id)
+  return django.http.FileResponse(run.distributionDebugFile, as_attachment=True, filename=run.distributionDebugFileName)

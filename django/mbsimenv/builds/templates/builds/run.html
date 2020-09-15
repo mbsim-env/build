@@ -128,8 +128,8 @@
     </span>
     {{ run.distributionOK|yesno:"Successfully,Failed to" }} create a binary distribution:<br/>
     <a href="{% url 'base:textFieldFromDB' 'builds' 'Run' run.id 'distributionOutput' %}">log-file</a>;
-    <strong><a href="{% url "base:fileDownloadFromDB" "builds" "Run" run.id "distributionFile" %}">Download</a></strong>;
-    <a href="{% url "base:fileDownloadFromDB" "builds" "Run" run.id "distributionDebugFile" %}">debug-info</a>
+    <strong><a href="distributionFile/">Download</a></strong>;
+    <a href="distributionDebugFile/">debug-info</a>
     {% if run.distributionFile is not None %}
       <div class="card border-light">
         <div class="card-header bg-light">
