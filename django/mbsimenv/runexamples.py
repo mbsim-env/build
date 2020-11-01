@@ -1013,7 +1013,7 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFilesAp
         # check for difference
         refObjCol=getColumn(refObj,column)
         curObjCol=getColumn(curObj,column)
-        if refObjCol.shape[0]!=curObjCol.shape[0] or not numpy.all(numpy.isclose(refObjCol, curObjCol, rtol=args.rtol,
+        if refObjCol.shape[0]!=curObjCol.shape[0] or not numpy.all(numpy.isclose(curObjCol, refObjCol, rtol=args.rtol,
                          atol=args.atol, equal_nan=True)):
           nrFailed[0]+=1
           cmpRes.result=runexamples.models.CompareResult.Result.FAILED
