@@ -284,8 +284,9 @@ def startLocalServer(port):
   if result!=0:
     print("No server is running. Starting server. (only done the first time)")
     fnull=open(os.devnull, 'w')
-    subprocess.Popen([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../manage.py", "runserver", "--insecure", "localhost:"+str(port)],
-                     stderr=fnull, stdout=fnull, preexec_fn=os.setpgrp)
+    subprocess.Popen([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../manage.py",
+                      "runserver", "--insecure", "--noreload", "localhost:"+str(port)],
+                     preexec_fn=os.setpgrp)
     with open(os.path.dirname(os.path.realpath(__file__))+"/../localserver.json", "w") as f:
       json.dump({"hostname": "localhost", "port": port}, f)
   sock.close()

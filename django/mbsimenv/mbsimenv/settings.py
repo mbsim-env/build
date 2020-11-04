@@ -198,7 +198,7 @@ SECURE_REFERRER_POLICY = "origin"
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': False,
+    'disable_existing_loggers': not os.path.isfile("/.dockerenv"),# disable logger on local runs
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',
