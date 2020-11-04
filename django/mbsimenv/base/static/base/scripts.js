@@ -61,7 +61,7 @@ function initDatatable(id, url, colNames, args) {
   },
   function(reason, msg) {
     //fail
-    alert("Internal error: "+reason+": "+msg);
+    alert("Internal error in AJAX call initDatatable::columnsVisible=1: "+reason+": "+msg);
   });
   return table
 }
@@ -80,8 +80,12 @@ function ajaxCall(url, inData, doneFunc, failFunc, alwaysFunc) {
     data: JSON.stringify(inData),
   }).done(function(outData) {
     doneFunc(outData);
-  }).fail(function(jqXHR, _, reason) {
-    failFunc(reason, jqXHR.responseText);
+  }).fail(function(jqXHR, errorThrown, textStatus) {
+    failFunc(textStatus, "responseText: " + jqXHR.responseText + "\n" +
+                         "status: "       + jqXHR.status + "\n" +
+                         "statusText: "   + jqXHR.statusText + "\n" +
+                         "readyState: "   + jqXHR.readyState + "\n" +
+                         "errorThrown: "  + errorThrown);
   }).always(function() {
     if(alwaysFunc!==undefined)
       alwaysFunc();

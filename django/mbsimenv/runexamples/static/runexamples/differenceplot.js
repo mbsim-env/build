@@ -95,6 +95,6 @@ function loadDifferencePlot(url) {
     }
   }, function(reason, msg) {
     //fail
-    alert("Internal error: "+reason+": "+msg);
+    alert("Internal error in AJAX call loadDifferencePlot: "+reason+": "+msg);
   });
 }

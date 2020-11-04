@@ -701,9 +701,7 @@ def run(s, jobs=4,
       network=networki.id,
       # allow access to these sites
       command=["www\\.mbsim-env\\.de\n"+
-               "stackpath\\.bootstrapcdn\\.com\n"+
                "cdn\\.jsdelivr\\.net\n"+
-               "stackpath\\.bootstrapcdn\\.com\n"+
                "code\\.highcharts\\.com\n"+
                "cdn\\.datatables\\.net\n"+
                "cdnjs\\.cloudflare\\.com\n"+

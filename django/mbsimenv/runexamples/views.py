@@ -271,25 +271,31 @@ class DataTableExample(base.views.DataTable):
 
   def colData_webApp(self, ds):
     ret=""
-    enabled="" if self.isCurrent and self.allowedUser else 'disabled="disabled"'
+    addLink=True if self.isCurrent and self.allowedUser else False
+    enabled="" if addLink else 'disabled="disabled"'
+    notLoggedInTooltipAttr=' data-toggle="tooltip" data-placement="bottom" title="You need to be logged in to start the web app!"' \
+                           if not addLink else ""
 
     url=django.urls.reverse('service:webapp', args=["openmbv", self.run.buildType, ds.exampleName])
     vis="visible" if ds.webappOpenmbv else "hidden"
     img=django.templatetags.static.static("base/openmbv.svg")
-    ret+='<a href="%s"><button %s type="button" class="btn btn-outline-primary btn-xs" style="visibility:%s;">'\
-         '<img src="%s" alt="ombv"/></button></a>&nbsp;'%(url, enabled, vis, img)
+    ret+=('<a href="%s">'%(url) if addLink else "") +\
+         '<button %s type="button" class="btn btn-outline-primary btn-xs" style="visibility:%s;"%s>'\
+         '<img src="%s" alt="ombv"/></button>'%(enabled, vis, notLoggedInTooltipAttr, img)+('</a>' if addLink else "")+'&nbsp;'
 
     url=django.urls.reverse('service:webapp', args=["h5plotserie", self.run.buildType, ds.exampleName])
     vis="visible" if ds.webappHdf5serie else "hidden"
     img=django.templatetags.static.static("base/h5plotserie.svg")
-    ret+='<a href="%s"><button %s type="button" class="btn btn-outline-primary btn-xs" style="visibility:%s;">'\
-         '<img src="%s" alt="h5p"/></button></a>&nbsp;'%(url, enabled, vis, img)
+    ret+=('<a href="%s">'%(url) if addLink else "")+\
+         '<button %s type="button" class="btn btn-outline-primary btn-xs" style="visibility:%s;"%s>'\
+         '<img src="%s" alt="h5p"/></button>'%(enabled, vis, notLoggedInTooltipAttr, img)+('</a>' if addLink else "")+'&nbsp;'
 
     url=django.urls.reverse('service:webapp', args=["mbsimgui", self.run.buildType, ds.exampleName])
     vis="visible" if ds.webappMbsimgui else "hidden"
     img=django.templatetags.static.static("base/mbsimgui.svg")
-    ret+='<a href="%s"><button %s type="button" class="btn btn-outline-primary btn-xs" style="visibility:%s;">'\
-         '<img src="%s" alt="gui"/></button></a>'%(url, enabled, vis, img)
+    ret+=('<a href="%s">'%(url) if addLink else "")+\
+         '<button %s type="button" class="btn btn-outline-primary btn-xs" style="visibility:%s;"%s>'\
+         '<img src="%s" alt="gui"/></button>'%(enabled, vis, notLoggedInTooltipAttr, img)+('</a>' if addLink else "")
 
     return ret
   def colSortKey_webApp(self, ds):
@@ -677,7 +683,7 @@ def chartDifferencePlot(request, id):
 
     if ref.shape==cur.shape and numpy.all(numpy.isclose(timeCur, timeRef, rtol=1e-12, atol=1e-12, equal_nan=True)):
       absErr=abs(ref-cur)
-      relErr=absErr/ref
+      relErr=absErr/(abs(ref)+1.0e-14) # avoid diff my zero
     else:
       absErr=None
       relErr=None
