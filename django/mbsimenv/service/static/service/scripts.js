@@ -38,7 +38,7 @@ function loadBranches(url) {
       $("#ADDBRANCH").attr("disabled", "disabled");
   }, function(reason, msg) {
     //fail
-    alert("Internal error: "+reason+": "+msg);
+    alert("Internal error in AJAX call loadBranches: "+reason+": "+msg);
   });
 }
 
