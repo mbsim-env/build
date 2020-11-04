@@ -24,6 +24,10 @@ import builds
 import mbsimenv
 import tempfile
 
+if django.VERSION[0]!=3:
+  print("Need django version 3. This is django version "+django.__version__)
+  sys.exit(1)
+
 # global variables
 toolDependencies=dict()
 docDir=None

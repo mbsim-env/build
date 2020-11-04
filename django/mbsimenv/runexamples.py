@@ -29,6 +29,10 @@ import runexamples
 import builds
 import json
 
+if django.VERSION[0]!=3:
+  print("Need django version 3. This is django version "+django.__version__)
+  sys.exit(1)
+
 # global variables
 mbsimBinDir=None
 canCompare=True # True if numpy and h5py are found
