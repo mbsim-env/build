@@ -27,6 +27,14 @@ import tempfile
 if django.VERSION[0]!=3:
   print("Need django version 3. This is django version "+django.__version__)
   sys.exit(1)
+import octicons
+if not hasattr(octicons, '__version__'):
+  print("The Python module 'octicons' seems not to be the correct 'django-octicons' package!")
+  if hasattr(octicons, 'default_app_config'):
+    print("It seems to be the 'octicons' package.")
+  print("Please ensure that you have installed the package 'django-octicons' not 'octicons' or any other.")
+  print("These two packages provide the same Pyhton module 'octicons' and cannot be installed at the same time.")
+  sys.exit(1)
 
 # global variables
 toolDependencies=dict()
