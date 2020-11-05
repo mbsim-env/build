@@ -46,6 +46,9 @@ class GithubCache(object):
       self.gh=None
 
   def getAccessToken(self):
+    if importlib.util.find_spec("allauth") is None:
+      return None
+
     import allauth
     if not self.request.user.is_authenticated:
       return None
