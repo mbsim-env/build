@@ -89,3 +89,8 @@ Contains the coding style conventions used in the MBSim-Environement.
 ## misc
 
 Contains some miscellaneous files and scripts (e.g. valgrind suppressions)
+
+
+## django
+
+Django 3 project of the mbsim server

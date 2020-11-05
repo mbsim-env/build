@@ -33,4 +33,5 @@ urlpatterns = [
 ]+\
 ([
   django.urls.path('accounts/', django.urls.include('allauth.urls')),
-] if importlib.util.find_spec("allauth") is not None else [])
+] if importlib.util.find_spec("allauth") is not None else \
+[django.urls.path('accounts/', django.views.defaults.permission_denied, name='account_login')])

@@ -14,6 +14,7 @@ import mbsimenv
 import builds
 import socket
 import sys
+import importlib
 
 # a dummy context object doing just nothing (e.g. usefull as a dummy lock(mutext) object.
 class NullContext(object):
@@ -31,6 +32,10 @@ class GithubCache(object):
   dontCache=False
 
   def __init__(self, request):
+    if importlib.util.find_spec("github") is None:
+      self.gh=None
+      return
+
     import github
     self.request=request
 
