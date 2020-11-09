@@ -18,7 +18,7 @@ import django.shortcuts
 import base.views
 import mbsimenv
 import django.conf.urls.static
-import importlib
+import importlib.util
 
 urlpatterns = [
   django.urls.path('', lambda _: django.shortcuts.redirect('service:home')),

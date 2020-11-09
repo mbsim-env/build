@@ -2,4 +2,4 @@
 
 import subprocess
 
-subprocess.check_call(["/context/mbsimenv/builddoc.py"], cwd="/mbsim-env/mbsim/manuals")
+subprocess.check_call(["/context/mbsimenv/builddoc.py", "--buildSystemRun"], cwd="/mbsim-env/mbsim/manuals")

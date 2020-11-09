@@ -11,6 +11,8 @@ for A in "$@"; do
     echo "All arguments to this script are also passed (added) to build.py."
     echo "Moreover, when the mbsim-env git repositories are not already cloned, it does for you."
     echo "(Hence, just cloning https://github.com/mbsim-env/build.git and running this script will build mbsim-env using Docker)"
+    echo "Their is one special argument which build.py does not have: --bt [Debug|Release]"
+    echo "It passes debug or build compile/link flags to build.py. If not given Debug is used"
     echo ""
     break
   fi
@@ -30,18 +32,24 @@ if [ ! -d $MBSIMENVDIR/mbsim ]; then
   (cd $MBSIMENVDIR; git clone https://github.com/mbsim-env/mbsim)
 fi
 
-# split args to normal, --passToConfigure and --passToRunexamples args
+# split args to normal, --passToConfigure, --passToCMake and --passToRunexamples args
+BT=Debug
 ADDTOARGS=normal
 NORMALARGS=()
 CONFIGUREARGS=()
+CMAKEARGS=()
 RUNEXAMPLEARGS=(--exeExt .exe)
 while [ $# -ge 1 ]; do
+  test "$1" == "--bt" && { BT=$2; shift; shift; continue; }
   test "$1" == "--passToConfigure" && { ADDTOARGS=configure; shift; continue; }
+  test "$1" == "--passToCMake" && { ADDTOARGS=cmake; shift; continue; }
   test "$1" == "--passToRunexamples" && { ADDTOARGS=runExamples; shift; continue; }
   if [ $ADDTOARGS == "normal" ]; then
     NORMALARGS+=("$1")
   elif [ $ADDTOARGS == "configure" ]; then
     CONFIGUREARGS+=("$1")
+  elif [ $ADDTOARGS == "cmake" ]; then
+    CMAKEARGS+=("$1")
   elif [ $ADDTOARGS == "runExamples" ]; then
     RUNEXAMPLEARGS+=("$1")
   fi
@@ -57,9 +65,32 @@ CCACHE_DIR=$MBSIMENVDIR/.ccache ccache -M 10G
 # config home
 mkdir -p $MBSIMENVDIR/.home
 
+# debug or release build
+# set envvar for configure build and pass to --passToCMake for cmake builds, see below
+if [ $BT == "Debug" ]; then
+  export CXXFLAGS="-g -O0 -gdwarf-2"
+  export CFLAGS="-g -O0 -gdwarf-2"
+  export FFLAGS="-g -O0 -gdwarf-2"
+elif [ $BT == "Release" ]; then
+  export CXXFLAGS="-g -O2 -gdwarf-2 -DNDEBUG"
+  export CFLAGS="-g -O2 -gdwarf-2 -DNDEBUG"
+  export FFLAGS="-g -O2 -gdwarf-2 -DNDEBUG"
+else
+  echo "Unknown build type: --bt $BT"
+  break
+fi
+
+MBSIMENVTAGNAME=${MBSIMENVTAGNAME:-latest}
+docker run -d --init --entrypoint= --rm \
+  --user $(id -u):$(id -g) \
+  -v "$MBSIMENVDIR":/mbsim-env \
+  --net=host \
+  mbsimenv/build:$MBSIMENVTAGNAME \
+  /mbsim-env/build/docker/buildImage/runlocalserver.py > /dev/null
+
 # run using mbsbd with all required args all all user args appended
-"$SCRIPTDIR"/mbsbd "$MBSIMENVDIR"/build/misc/build.py \
-  --reportOutDir $MBSIMENVDIR/build_report-dockerwin64 \
+"$SCRIPTDIR"/mbsbd "$MBSIMENVDIR"/build/django/mbsimenv/build.py \
+  --buildType localDockerWin64 \
   --sourceDir "$MBSIMENVDIR" \
   --binSuffix=-dockerwin64 \
   --prefix "$MBSIMENVDIR"/local-dockerwin64 \
@@ -67,17 +98,21 @@ mkdir -p $MBSIMENVDIR/.home
   --passToConfigure \
   --enable-shared --disable-static \
   --enable-python \
-  --build=x86_64-redhat-linux \
-  --host=x86_64-w64-mingw32 \
+  --build=x86_64-redhat-linux --host=x86_64-w64-mingw32 \
   --with-lapack-lib-prefix=/3rdparty/local/lib \
   --with-hdf5-prefix=/3rdparty/local \
-  --with-qwt-inc-prefix=/usr/x86_64-w64-mingw32/sys-root/mingw/include/qt5/qwt \
-  --with-qwt-lib-name=qwt-qt5 \
   --with-qmake=/usr/bin/x86_64-w64-mingw32-qmake-qt5 \
+  --with-qwt-inc-prefix=/usr/x86_64-w64-mingw32/sys-root/mingw/include/qt5/qwt --with-qwt-lib-name=qwt-qt5 \
   --with-windres=x86_64-w64-mingw32-windres \
   --with-mkoctfile=/3rdparty/local/bin/mkoctfile.exe \
   --with-javajniosdir=/context/java_jni \
   --with-pythonversion=3.4 \
+  --with-boost-filesystem-lib=boost_filesystem-x64 \
+  --with-boost-system-lib=boost_system-x64 \
+  --with-boost-regex-lib=boost_regex-x64 \
+  --with-boost-date-time-lib=boost_date_time-x64 \
+  --with-boost-timer-lib=boost_timer-x64 \
+  --with-boost-chrono-lib=boost_chrono-x64 \
   PYTHON_CFLAGS="-I/3rdparty/local/python-win64/include -DMS_WIN64" \
   PYTHON_LIBS="-L/3rdparty/local/python-win64/libs -L/3rdparty/local/python-win64 -lpython34" \
   PYTHON_BIN="/3rdparty/local/python-win64/python.exe" \
@@ -85,4 +120,15 @@ mkdir -p $MBSIMENVDIR/.home
   COIN_CFLAGS=-I/3rdparty/local/include \
   SOQT_LIBS="-L/3rdparty/local/lib -lSoQt" \
   SOQT_CFLAGS=-I/3rdparty/local/include \
-  "${CONFIGUREARGS[@]}" "${RUNEXAMPLEARGS[@]}"
+  "${CONFIGUREARGS[@]}" \
+  --passToCMake \
+  -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake \
+  -DBLAS_LIBRARIES=/3rdparty/local/lib/libblas.dll.a -DBLAS=1 \
+  -DLAPACK_LIBRARIES=/3rdparty/local/lib/liblapack.dll.a -DLAPACK=1 \
+  -DBOOST_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw \
+  -DCMAKE_BUILD_TYPE=$BT \
+  -DCMAKE_CXX_FLAGS_${BT^^}="$CXXFLAGS" \
+  -DCMAKE_C_FLAGS_${BT^^}="$CFLAGS" \
+  -DCMAKE_Fortran_FLAGS_${BT^^}="$FFLAGS" \
+  "${CMAKEARGS[@]}" \
+  "${RUNEXAMPLEARGS[@]}"

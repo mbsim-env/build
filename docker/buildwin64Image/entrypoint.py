@@ -31,7 +31,7 @@ if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="
 if not args.buildType.startswith("win64-dailyrelease"):
   raise RuntimeError("Unknown build type "+args.buildType+".")
 
-os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings"
+os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
 django.setup()
 
 # wait for database server
@@ -68,6 +68,9 @@ if args.forceBuild:
   ARGS.append('--forceBuild')
 
 os.environ['WINEPATH']=((os.environ['WINEPATH']+";") if 'WINEPATH' in os.environ else "")+"/mbsim-env/local/bin"
+os.environ['CXXFLAGS']=os.environ.get('CXXFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
+os.environ['CFLAGS']=os.environ.get('CFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
+os.environ['FFLAGS']=os.environ.get('FFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
 
 # run build
 subprocess.check_call(["wineserver", "-p"], stdout=sys.stdout, stderr=sys.stderr) # start wine server

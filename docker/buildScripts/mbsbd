@@ -31,7 +31,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
   fi
 
   MBSIMENVTAGNAME=${MBSIMENVTAGNAME:-latest}
-  
+
   # convert the absolute path stored in PABS to the corresponding docker path
   function convertPABS {
     PCANO=$(readlink -m $PABS)
@@ -48,9 +48,12 @@ if [ "$BASENAME" == "mbsbd" ]; then
   PABS=$PWD; convertPABS; CURDIR=$PABS
   
   #convert args
+  INTERACTIVE=""
   ARGS=()
   while [ $# -ge 1 ]; do
-    if [ "${1:0:1}" == "/" ]; then
+    if [ "_$1" == "_MBSIMENV_INTERACTIVE" ]; then
+      INTERACTIVE="-ti"
+    elif [ "${1:0:1}" == "/" ]; then
       # convert absolute path
       PABS=$1; convertPABS
       ARGS+=("$PABS")
@@ -65,28 +68,44 @@ if [ "$BASENAME" == "mbsbd" ]; then
   
   # convert the array ARGS to a single string where " " (space) in each arg is quoted by "\\ "
   # this is only needed for the scl call below which cannot consume multiple arguments
-  # if is fixed or scl is not neede instead of "$ARGS_SINGLE" "${ARGS[@]}" should be used
+  # if is fixed or scl is not needed instead of "$ARGS_SINGLE" "${ARGS[@]}" should be used
+  # The prefix of ccache in the scl command is needed since scl prefixed PATH with the scl compiler dir
   ARGS_SINGLE=""
   for A in "${ARGS[@]}"; do
-    ARGS_SINGLE+=" ${A// /\\ }"
+    AN=$A
+    AN="${AN// /\\ }"
+    AN="${AN//\"/\\\"}"
+    AN="${AN//\'/\\\'}"
+    ARGS_SINGLE+=" $AN"
   done
+  export LDFLAGS="-L/usr/lib64/boost169"
   # run in mbsimenv/build docker image
-  docker run -ti --init --entrypoint= --rm \
-    --user $(id -u):$(id -g) \
-    -v "$MBSIMENVDIR":/mbsim-env \
-    -v "$MBSIMENVDIR/.ccache":/mbsim-ccache \
-    -v "$MBSIMENVDIR/.home":/tmp/home \
-    -e GIT_COMMITTER_NAME=dummy -e GIT_COMMITTER_EMAIL=dummy \
-    -e HOME=/tmp/home \
-    -e PATH="/mbsim-env/mbsim/examples:/mbsim-env/build/misc:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/3rdparty/local/bin:/mbsim-env/local-docker/bin" \
-    -e PKG_CONFIG_PATH="/osupdate/local/lib/pkgconfig:/osupdate/local/lib64/pkgconfig:/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfig:/mbsim-env/local-docker/lib/pkgconfig:/mbsim-env/local-docker/lib64/pkgconfig" \
-    -w "$CURDIR" \
-    -e DISPLAY \
-    -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
-    --net=host \
-    mbsimenv/build:$MBSIMENVTAGNAME \
-    scl enable devtoolset-7 "PATH=/usr/lib64/ccache:\$PATH $ARGS_SINGLE"
-#    1> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g") 2> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g" > /dev/stderr)
+  # -e PATH= is the PATH in the container appended by :/mbsim-env/local-docker/bin
+  # -e PKG_CONFIG_PATH= is the PKG_CONFIG_PATH in the container appended by :/mbsim-env/local-docker/lib/pkgconfig:/mbsim-env/local-docker/lib64/pkgconfig
+  function callDocker {
+    docker run --init --entrypoint= --rm \
+      $INTERACTIVE \
+      --user $(id -u):$(id -g) \
+      -v "$MBSIMENVDIR":/mbsim-env \
+      -v "$MBSIMENVDIR/.ccache":/mbsim-ccache \
+      -v "$MBSIMENVDIR/.home":/tmp/home \
+      -e LDFLAGS \
+      -e GIT_COMMITTER_NAME=dummy -e GIT_COMMITTER_EMAIL=dummy \
+      -e HOME=/tmp/home \
+      -e PATH="/usr/lib64/ccache:/mbsim-env/build/misc:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/3rdparty/local/bin:/mbsim-env/local-docker/bin" \
+      -e PKG_CONFIG_PATH="/osupdate/local/lib/pkgconfig:/osupdate/local/lib64/pkgconfig:/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfig:/mbsim-env/local-docker/lib/pkgconfig:/mbsim-env/local-docker/lib64/pkgconfig" \
+      -w "$CURDIR" \
+      -e DISPLAY \
+      -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
+      --net=host \
+      mbsimenv/build:$MBSIMENVTAGNAME \
+      scl enable devtoolset-7 "PATH=/usr/lib64/ccache:\$PATH $ARGS_SINGLE"
+  }
+  if [ "_$INTERACTIVE" == "_" ]; then
+    callDocker 1> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g") 2> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g" > /dev/stderr)
+  else
+    callDocker
+  fi
 
 else
   # run via a link

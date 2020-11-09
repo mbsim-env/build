@@ -14,7 +14,7 @@ import mbsimenv
 import builds
 import socket
 import sys
-import importlib
+import importlib.util
 
 # a dummy context object doing just nothing (e.g. usefull as a dummy lock(mutext) object.
 class NullContext(object):
@@ -279,7 +279,12 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0):
 subprocessCall.timedOutErrorCode=1000000
 
 # init django
-def startLocalServer(port):
+def startLocalServer(port, onlyGetServerInfo=False):
+  pidfile=os.path.dirname(os.path.realpath(__file__))+"/../localserver.json"
+  if onlyGetServerInfo:
+    with open(pidfile, "r") as f:
+      localserver=json.load(f)
+    return {"process": None, "hostname": localserver["hostname"], "port": localserver["port"]}
   # make migrations
   try:
     builds.models.Run.objects.count()
@@ -291,13 +296,21 @@ def startLocalServer(port):
   result=sock.connect_ex(('localhost',port))
   if result!=0:
     print("No server is running. Starting server. (only done the first time)")
-    fnull=open(os.devnull, 'w')
-    subprocess.Popen([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../manage.py",
-                      "runserver", "--insecure", "--noreload", "localhost:"+str(port)],
-                     preexec_fn=os.setpgrp)
-    with open(os.path.dirname(os.path.realpath(__file__))+"/../localserver.json", "w") as f:
+    env=os.environ.copy()
+    env['DJANGO_SETTINGS_MODULE']='mbsimenv.settings_'+django.conf.settings.MBSIMENV_TYPE
+    p=subprocess.Popen([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../manage.py",
+                        "runserver", "--insecure", "--noreload", "localhost:"+str(port)],
+                       preexec_fn=os.setpgrp, env=env)
+    with open(pidfile, "w") as f:
       json.dump({"hostname": "localhost", "port": port}, f)
+  else:
+    p=None
+    print("A server is already running. Skipping starting another one.")
   sock.close()
+
+  with open(pidfile, "r") as f:
+    localserver=json.load(f)
+  return {"process": p, "hostname": localserver["hostname"], "port": localserver["port"]}
 
 def tooltip(text, tooltip):
   return '<span data-toggle="tooltip" data-placement="bottom" title="%s">%s</span>'%(tooltip, text)

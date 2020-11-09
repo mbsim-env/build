@@ -5,10 +5,23 @@ import glob
 import datetime
 import io
 import django
-os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings"
-django.setup()
 import base.helper
 import service
+
+argparser=argparse.ArgumentParser(
+  formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+  description="Run latex docu.")
+argparser.add_argument("--buildSystemRun", action="store_true", help='Run in build system mode.')
+args=argparser.parse_args()
+
+if args.buildSystemRun:
+  os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
+else:
+  if os.path.isfile("/.dockerenv"):
+    os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_localdocker"
+  else:
+    os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_local"
+django.setup()
 
 def buildLatex(f):
   if base.helper.subprocessCall(["pdflatex", "-halt-on-error", "-file-line-error", "main.tex"], f)!=0:

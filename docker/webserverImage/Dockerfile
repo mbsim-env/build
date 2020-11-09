@@ -70,7 +70,7 @@ COPY docker/webserverImage/conf/le-redirect-mbsim-env.conf /etc/httpd/conf.d/
 
 # static django files
 RUN mkdir /var/www/html/static
-RUN python3 /context/mbsimenv/manage.py collectstatic --noinput
+RUN DJANGO_SETTINGS_MODULE=mbsimenv.setting_buildsystem python3 /context/mbsimenv/manage.py collectstatic --noinput
 
 # set crontab for
 # - cert updates (once a day at arbitary time)

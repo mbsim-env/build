@@ -28,7 +28,7 @@ if django.VERSION[0]!=3:
   print("Need django version 3. This is django version "+django.__version__)
   sys.exit(1)
 import octicons
-if not hasattr(octicons, '__version__'):
+if not hasattr(octicons, '__version__') or hasattr(octicons, 'default_app_config'):
   print("The Python module 'octicons' seems not to be the correct 'django-octicons' package!")
   if hasattr(octicons, 'default_app_config'):
     print("It seems to be the 'octicons' package.")
@@ -176,14 +176,18 @@ def main():
   args.sourceDir=os.path.abspath(args.sourceDir)
 
   mbsimenvSecrets.getSecrets()
-  os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings"
+  if args.buildSystemRun:
+    os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
+  else:
+    if os.path.isfile("/.dockerenv"):
+      os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_localdocker"
+    else:
+      os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_local"
   django.setup()
-
-  if not args.buildSystemRun:
-    base.helper.startLocalServer(args.localServerPort)
-    with open(os.path.dirname(os.path.realpath(__file__))+"/localserver.json", "r") as f:
-      localserver=json.load(f)
-    print("Running build. See results at: http://%s:%d%s"%(localserver["hostname"], localserver["port"],
+ 
+  if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
+    s=base.helper.startLocalServer(args.localServerPort, django.conf.settings.MBSIMENV_TYPE=="localdocker")
+    print("Build info is avaiable at: http://%s:%d%s"%(s["hostname"], s["port"],
           django.urls.reverse("builds:current_buildtype", args=[args.buildType])))
     print("")
 

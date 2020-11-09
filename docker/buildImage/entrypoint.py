@@ -47,7 +47,7 @@ if args.buildType != "linux64-ci" and not args.buildType.startswith("linux64-dai
    not args.buildType.startswith("linux64-dailyrelease"):
   raise RuntimeError("Unknown build type "+args.buildType+".")
 
-os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings"
+os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
 django.setup()
 
 # wait for database server

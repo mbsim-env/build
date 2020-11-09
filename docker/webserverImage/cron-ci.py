@@ -32,7 +32,7 @@ args=argparser.parse_args()
 if "MBSIMENVTAGNAME" not in os.environ or os.environ["MBSIMENVTAGNAME"]=="":
   raise RuntimeError("Envvar MBSIMENVTAGNAME is not defined.")
 
-os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings"
+os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
 django.setup()
 
 # (the staging service delays the CI script by 20min to avoid load conflicts with the production service (on the same machine))

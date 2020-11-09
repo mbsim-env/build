@@ -31,7 +31,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
   fi
 
   MBSIMENVTAGNAME=${MBSIMENVTAGNAME:-latest}
-  
+
   # convert the absolute path stored in PABS to the corresponding docker path
   function convertPABS {
     PCANO=$(readlink -m $PABS)
@@ -48,17 +48,12 @@ if [ "$BASENAME" == "mbsbd" ]; then
   PABS=$PWD; convertPABS; CURDIR=$PABS
   
   #convert args
+  INTERACTIVE=""
   ARGS=()
-
-  # special fix for runexamples.py
-  if [ "_$(basename $1)" == "_runexamples.py" ]; then
-    ARGS+=("$1")
-    ARGS+=("--exeExt=.exe")
-    shift
-  fi
-
   while [ $# -ge 1 ]; do
-    if [ "${1:0:1}" == "/" ]; then
+    if [ "_$1" == "_MBSIMENV_INTERACTIVE" ]; then
+      INTERACTIVE="-ti"
+    elif [ "${1:0:1}" == "/" ]; then
       # convert absolute path
       PABS=$1; convertPABS
       ARGS+=("$PABS")
@@ -72,26 +67,35 @@ if [ "$BASENAME" == "mbsbd" ]; then
   done
   
   # run in mbsimenv/build docker image
-  # We need to change WINEPATH since we use a different local dir in "user" builds compared to "auto" builds
+  # -e PATH= is the PATH in the container appended by :/mbsim-env/local-dockerwin64/bin
+  # -e PKG_CONFIG_PATH= is the PKG_CONFIG_PATH in the container appended by :/mbsim-env/local-dockerwin64/lib/pkgconfig:/mbsim-env/local-dockerwin64/lib64/pkgconfig
+  # -e WINEPATH= is the WINEPATH in the container appended by ;/mbsim-env/local-dockerwin64/bin
   exePrefix=""
   test ${ARGS: -4} == ".exe" && exePrefix=wine
-  docker run -ti --init --entrypoint= --rm \
-    --user $(id -u):$(id -g) \
-    -v "$MBSIMENVDIR":/mbsim-env \
-    -v "$MBSIMENVDIR/.ccache":/mbsim-ccache \
-    -v "$MBSIMENVDIR/.home":/tmp/home \
-    -e GIT_COMMITTER_NAME=dummy -e GIT_COMMITTER_EMAIL=dummy \
-    -e HOME=/tmp/home \
-    -e PATH="/mbsim-env/mbsim/examples:/mbsim-env/build/buildwin64Scripts:/usr/lib64/ccache:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin" \
-    -e WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/3rdparty/local/python-win64/Lib/site-packages/numpy/.libs;/mbsim-env/local-dockerwin64/bin" \
-    -e PKG_CONFIG_PATH="/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfig:/mbsim-env/local-dockerwin64/lib/pkgconfig:/mbsim-env/local-dockerwin64/lib64/pkgconfig:/usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig" \
-    -w "$CURDIR" \
-    -e DISPLAY \
-    -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
-    --net=host \
-    mbsimenv/buildwin64:$MBSIMENVTAGNAME \
-    $exePrefix "${ARGS[@]}" #\
-#    1> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g") 2> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g" > /dev/stderr)
+  function callDocker {
+    docker run --init --entrypoint= --rm \
+      $INTERACTIVE \
+      --user $(id -u):$(id -g) \
+      -v "$MBSIMENVDIR":/mbsim-env \
+      -v "$MBSIMENVDIR/.ccache":/mbsim-ccache \
+      -v "$MBSIMENVDIR/.home":/tmp/home \
+      -e GIT_COMMITTER_NAME=dummy -e GIT_COMMITTER_EMAIL=dummy \
+      -e HOME=/tmp/home \
+      -e PATH="/home/dockeruser/.local/bin:/home/dockeruser/bin:/usr/lib64/ccache:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/mbsim-env/local-dockerwin64/bin" \
+      -e PKG_CONFIG_PATH="/3rdparty/local/lib/pkgconfig:/usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig:/mbsim-env/local-dockerwin64/lib/pkgconfig:/mbsim-env/local-dockerwin64/lib64/pkgconfig" \
+      -e WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/3rdparty/local/python-win64/Lib/site-packages/numpy/.libs;/mbsim-env/local-dockerwin64/bin" \
+      -w "$CURDIR" \
+      -e DISPLAY \
+      -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
+      --net=host \
+      mbsimenv/buildwin64:$MBSIMENVTAGNAME \
+      $exePrefix "${ARGS[@]}"
+  }
+  if [ "_$INTERACTIVE" == "_" ]; then
+    callDocker 1> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g") 2> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g" > /dev/stderr)
+  else
+    callDocker
+  fi
 
 else
   # run via a link

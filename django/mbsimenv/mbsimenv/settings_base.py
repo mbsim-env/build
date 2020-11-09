@@ -12,20 +12,14 @@ https://docs.djangoproject.com/en/3.0/ref/settings/
 
 import os
 import logging
-import json
 import base.helper
 import mbsimenvSecrets
-import importlib # mfmf use something different for a minimal install
+import importlib.util
 
 DEBUG = False
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
-
-if "postgresPassword" not in mbsimenvSecrets.getSecrets() and not os.path.isfile("/.dockerenv"):
-  MEDIA_ROOT = os.path.join(BASE_DIR, "media_root")
-else:
-  MEDIA_ROOT = "/databasemedia"
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
@@ -56,14 +50,14 @@ INSTALLED_APPS = [
   'django.contrib.messages',
   'django.contrib.staticfiles',
   'django.contrib.sites',
+  'octicons',
 ]+\
 ([
   'allauth',
   'allauth.account',
   'allauth.socialaccount',
   'allauth.socialaccount.providers.github',
-] if importlib.util.find_spec("allauth") is not None else [])+\
-(['octicons'] if importlib.util.find_spec("octicons") is not None else [])
+] if importlib.util.find_spec("allauth") is not None else [])
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -99,32 +93,30 @@ WSGI_APPLICATION = 'mbsimenv.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/3.0/ref/settings/#databases
 
-if "postgresPassword" not in mbsimenvSecrets.getSecrets() and not os.path.isfile("/.dockerenv"):
-  DATABASES={
-    'default': {
-      'ENGINE': 'django.db.backends.sqlite3',
-      'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-      'OPTIONS': {
-        'timeout': 60,
-      },
+def databases(mbsimenv_type):
+  if mbsimenv_type!="buildsystem":
+    DATABASES={
+      'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+        'OPTIONS': {
+          'timeout': 60,
+        },
+      }
     }
-  }
-  SECURE_SSL_REDIRECT = False
-  CSRF_COOKIE_SECURE = False
-else:
-  DATABASES={
-    'default': {
-      'ENGINE': 'django.db.backends.postgresql',
-      'NAME': 'mbsimenv-service-database',
-      'USER': 'mbsimenvuser',
-      'PASSWORD': mbsimenvSecrets.getSecrets()["postgresPassword"] if "postgresPassword" in mbsimenvSecrets.getSecrets() else "",
-      'HOST': 'database',
-      'PORT': '5432',
-      'CONN_MAX_AGE': 30,
+  else:
+    DATABASES={
+      'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': 'mbsimenv-service-database',
+        'USER': 'mbsimenvuser',
+        'PASSWORD': mbsimenvSecrets.getSecrets()["postgresPassword"] if "postgresPassword" in mbsimenvSecrets.getSecrets() else "",
+        'HOST': 'database',
+        'PORT': '5432',
+        'CONN_MAX_AGE': 30,
+      }
     }
-  }
-  SECURE_SSL_REDIRECT = True
-  CSRF_COOKIE_SECURE = True
+  return DATABASES
 
 
 # Password validation
@@ -198,7 +190,6 @@ SECURE_REFERRER_POLICY = "origin"
 
 LOGGING = {
     'version': 1,
-    'disable_existing_loggers': not os.path.isfile("/.dockerenv"),# disable logger on local runs
     'handlers': {
         'console': {
             'class': 'logging.StreamHandler',

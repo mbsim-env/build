@@ -19,7 +19,7 @@ argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs
 
 args=argparser.parse_args()
 
-os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings"
+os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
 django.setup()
 
 def dailyBuild(fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch, ext):

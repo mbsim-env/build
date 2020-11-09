@@ -178,7 +178,7 @@ class DataTable(django.views.View):
       first=True
       for col in req["columns"]:
         if first:
-          if mbsimenv.settings.DEBUG:
+          if django.conf.settings.DEBUG:
             dtds[col["data"]]=traceback.format_exc()
           else:
             dtds[col["data"]]="Internal error: please report this site to the webmaster"
