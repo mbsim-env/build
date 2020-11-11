@@ -85,7 +85,7 @@ docker run -d --init --entrypoint= --rm \
   --user $(id -u):$(id -g) \
   -v "$MBSIMENVDIR":/mbsim-env \
   --net=host \
-  mbsimenv/build:$MBSIMENVTAGNAME \
+  mbsimenv/buildwin64:$MBSIMENVTAGNAME \
   /mbsim-env/build/docker/buildImage/runlocalserver.py > /dev/null
 
 # run using mbsbd with all required args all all user args appended
@@ -113,6 +113,9 @@ docker run -d --init --entrypoint= --rm \
   --with-boost-date-time-lib=boost_date_time-x64 \
   --with-boost-timer-lib=boost_timer-x64 \
   --with-boost-chrono-lib=boost_chrono-x64 \
+  CXXFLAGS="$CXXFLAGS" \
+  CFLAGS="$CFLAGS" \
+  FFLAGS="$FFLAGS" \
   PYTHON_CFLAGS="-I/3rdparty/local/python-win64/include -DMS_WIN64" \
   PYTHON_LIBS="-L/3rdparty/local/python-win64/libs -L/3rdparty/local/python-win64 -lpython34" \
   PYTHON_BIN="/3rdparty/local/python-win64/python.exe" \
