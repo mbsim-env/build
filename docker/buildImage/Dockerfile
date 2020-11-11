@@ -13,7 +13,7 @@ ENV LD_LIBRARY_PATH=/osupdate/local/lib:/osupdate/local/lib64:/3rdparty/local/li
     XDG_RUNTIME_DIR=/run/user/$UID
 
 # install everything needed to build mbsim-env tools from centos7
-RUN yum install -y http://www6.atomicorp.com/channels/atomic/centos/7/x86_64/RPMS/atomic-release-1.0-21.el7.art.noarch.rpm \
+RUN yum install -y http://www6.atomicorp.com/channels/atomic/centos/7/x86_64/RPMS/atomic-release-1.0-21.el7.art.noarch.rpm && \
   yum --setopt=skip_missing_names_on_install=False -y install epel-release centos-release-scl && \
   yum --setopt=skip_missing_names_on_install=False -y install \
   xkeyboard-config \
@@ -89,8 +89,6 @@ ARG MESAVERSION=18.1.3
 ARG OCTAVEVERSION=4.4.1
 ARG SWIGVERSION=4.0.1
 ARG QWTVERSION=6.1.3
-ARG COINBRANCH=7e191c8f6a31
-ARG SOQTBRANCH=945ec22f6219
 ARG NUHTMLVERSION=18.8.29
 
 # install additional packaged needed to build the tools not part of centos7
@@ -104,7 +102,6 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   bzip2 \
   unzip \
   qt5-qttools-devel \
-  mercurial \
   patch \
   && yum clean all
 
@@ -139,12 +136,15 @@ RUN sed -i -re "s~^( *QWT_INSTALL_PREFIX *= *).*~\1/3rdparty/local~" qwt-$QWTVER
 RUN mkdir /3rdparty/qwt-build
 
 # coin
-RUN hg clone https://bitbucket.org/Coin3D/coin -r $COINBRANCH
+RUN git clone https://github.com/coin3d/coin.git
+ARG COINBRANCH=CI-builds
+RUN (cd coin; git checkout $COINBRANCH)
 RUN mkdir /3rdparty/coin-build
 
 # soqt
-WORKDIR /3rdparty
-RUN hg clone https://bitbucket.org/Coin3D/soqt -r $SOQTBRANCH
+RUN git clone https://github.com/coin3d/soqt.git
+ARG SOQTBRANCH=CI-builds
+RUN (cd soqt; git checkout $SOQTBRANCH)
 RUN mkdir /3rdparty/soqt-build
 
 # nu-html
@@ -188,12 +188,14 @@ RUN make install
 
 # Coin3D
 WORKDIR /3rdparty/coin-build
-RUN cmake3 -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=/3rdparty/local ../coin
+RUN (cd ../coin && git submodule init && git submodule update)
+RUN cmake3 -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DBoost_INCLUDE_DIR=/usr/include/boost169 -DCMAKE_INSTALL_PREFIX=/3rdparty/local ../coin
 RUN make -j $JOBS
 RUN make install
 
 # SoQt
 WORKDIR /3rdparty/soqt-build
+RUN (cd ../soqt && git submodule init && git submodule update)
 RUN cmake3 -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=/3rdparty/local ../soqt
 RUN make -j $JOBS
 RUN make install
