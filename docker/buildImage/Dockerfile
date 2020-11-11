@@ -13,7 +13,8 @@ ENV LD_LIBRARY_PATH=/osupdate/local/lib:/osupdate/local/lib64:/3rdparty/local/li
     XDG_RUNTIME_DIR=/run/user/$UID
 
 # install everything needed to build mbsim-env tools from centos7
-RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release centos-release-scl && \
+RUN yum install -y http://www6.atomicorp.com/channels/atomic/centos/7/x86_64/RPMS/atomic-release-1.0-21.el7.art.noarch.rpm \
+  yum --setopt=skip_missing_names_on_install=False -y install epel-release centos-release-scl && \
   yum --setopt=skip_missing_names_on_install=False -y install \
   xkeyboard-config \
   xorg-x11-fonts-Type1 \
@@ -68,6 +69,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   qt5-qtstyleplugins \
   cmake3 \
   ninja-build \
+  atomic-sqlite \
   && yum clean all
 # config gcc7 => do not use the "exec form" form now on use the "shell form"!!!!!
 SHELL ["scl", "enable", "devtoolset-7"]
@@ -230,8 +232,9 @@ COPY django/mbsimenv /context/mbsimenv
 # enable nu-html -> add to CLASSPATH
 # CCACHE handling: /usr/lib64/ccache cannot be added here to PATH due to scl.
 #                  this is done in the entrypoint wrapper, see below
-ENV PATH=/mbsim-env/build/misc:$PATH \
-    LD_LIBRARY_PATH=/3rdparty/local/lib/octave/4.4.1:$LD_LIBRARY_PATH \
+# PATH and LD_LIBRARY_PATH for (atomic-)sqlite-3.8
+ENV PATH=/opt/atomicorp/atomic/root/usr/bin:/mbsim-env/build/misc:$PATH \
+    LD_LIBRARY_PATH=/opt/atomicorp/atomic/root/usr/lib64:/3rdparty/local/lib/octave/4.4.1:$LD_LIBRARY_PATH \
     CCACHE_DIR=/mbsim-ccache \
     MBSIM_SWIG=1 \
     CLASSPATH=$CLASSPATH:/3rdparty/vnu.jar

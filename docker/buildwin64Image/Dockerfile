@@ -37,6 +37,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   python3-psycopg2 \
   cmake \
   ninja-build \
+  sqlite \
   && yum clean all
 RUN pip3 install django django-octicons
 # bugfix for moc
