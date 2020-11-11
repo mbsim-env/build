@@ -37,6 +37,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   python3-psycopg2 \
   cmake \
   ninja-build \
+  sqlite \
   && yum clean all
 RUN pip3 install django django-octicons
 # bugfix for moc
@@ -57,8 +58,7 @@ ARG JOBS=4
 RUN yum --setopt=skip_missing_names_on_install=False -y install \
   wget \
   unzip \
-  bzip2 \
-  mercurial
+  bzip2
 
 RUN mkdir /3rdparty
 
@@ -149,10 +149,11 @@ RUN sed -i -re "s/^ *if *\((.*)&& *have_window_system *\( *\)(.*)$/if(have_windo
   /3rdparty/local/lib/octave/$OCTAVEVERSION/oct/x86_64-w64-mingw32/PKG_ADD
 
 # coin
-ARG COINBRANCH=Coin-4.0.0
+ARG COINBRANCH=CI-builds
 WORKDIR /3rdparty
-RUN hg clone https://bitbucket.org/Coin3D/coin -r $COINBRANCH
+RUN git clone https://github.com/coin3d/coin.git
 WORKDIR /3rdparty/coin
+RUN git checkout $COINBRANCH && git submodule init && git submodule update
 RUN mkdir /3rdparty/coin-build
 WORKDIR /3rdparty/coin-build
 RUN cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DCMAKE_CXX_FLAGS="-g -O2 -fpermissive" -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DBoost_INCLUDE_DIR="/usr/x86_64-w64-mingw32/sys-root/mingw/include" -DSIM_TIMEVAL_TV_SEC_T=time_t -DSIM_TIMEVAL_TV_USEC_T=time_t ../coin
@@ -160,9 +161,11 @@ RUN make -j $JOBS
 RUN make install
 
 # soqt
-ARG SOQTBRANCH=SoQt-1.6.0
+ARG SOQTBRANCH=CI-builds
 WORKDIR /3rdparty
-RUN hg clone https://bitbucket.org/Coin3D/soqt -r $SOQTBRANCH
+RUN git clone https://github.com/coin3d/soqt.git
+WORKDIR /3rdparty/soqt
+RUN git checkout $SOQTBRANCH && git submodule init && git submodule update
 RUN mkdir /3rdparty/soqt-build
 WORKDIR /3rdparty/soqt-build
 RUN cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DCMAKE_CXX_FLAGS="-g -O2 -fpermissive" -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DQt5_DIR=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/cmake/Qt5 ../soqt
