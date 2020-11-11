@@ -6,13 +6,16 @@ MBSIMENVDIR=$(readlink -f "$SCRIPTDIR"/../../..)
 # help
 for A in "$@"; do
   if [ "$A" == "-h" -o "$A" == "--help" ]; then
-    echo "This script runs the build.py script from mbsim-env."
-    echo "It automatically passes all required arguments to build.py needed for the Docker win64 build of mbsim-env."
-    echo "All arguments to this script are also passed (added) to build.py."
-    echo "Moreover, when the mbsim-env git repositories are not already cloned, it does for you."
-    echo "(Hence, just cloning https://github.com/mbsim-env/build.git and running this script will build mbsim-env using Docker)"
+    echo "This script runs the build.py script from mbsim-env in a mbsimenv/buildwin64 Docker container."
+    echo "If you don't know Docker consider a mbsimenv/buildwin64 container as a virtual machine with mbsimenv installed."
+    echo "It automatically passes all required arguments to build.py needed for the Docker build of mbsim-env."
+    echo "All arguments to this script are passed (added) to build.py."
+    echo ""
+    echo "When the mbsim-env git repositories are not already cloned, it does for you the first time."
+    echo "Hence, just cloning https://github.com/mbsim-env/build.git and running this script will build mbsim-env using Docker."
+    echo ""
     echo "Their is one special argument which build.py does not have: --bt [Debug|Release]"
-    echo "It passes debug or build compile/link flags to build.py. If not given Debug is used"
+    echo "It passes debug or release compile/link flags to build.py. If not given Debug is used."
     echo ""
     break
   fi

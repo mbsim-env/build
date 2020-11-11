@@ -12,15 +12,13 @@ if [ "$BASENAME" == "mbsbd" ]; then
   
   # help
   if [ $# -le 0 ]; then
-    echo "This script runs the command provided as first argument in the mbsimenv/buildwin64 Docker image."
-    echo "All other arguments are passed to the command running in Docker."
-    echo "If this script is started via a symbolic link to it, then the name of the program to run is"
-    echo "the name of link and all arguments are passed."
-    echo "Examples:"
-    echo "$ <path>/mbsbd make - runs make in the Docker directory corresponding to the current directory."
-    echo "$ <path>/mbsbd mbsimxml MBS.mbsx - runs the MBSim XML model MBS.mbsx in the Docker"
-    echo "                                           directory corresponding to the current directory."
-    echo "..."
+    echo "This script is not intended to be used directly! Start one of the following symbolic links instead:"
+    (cd $DIRNAME; find * -type l)
+    echo ""
+    echo "This will start the corresponding script/program in a mbsimenv/buildwin64 Docker container."
+    echo "If the program is a Windows executable *.exe it will be started using Wine which is also installed in the container."
+    echo "If you don't know Docker consider a mbsimenv/buildwin64 container as a virtual machine with mbsimenv installed."
+    echo "All arguments are passed to the command running in the container."
     exit 0
   fi
   
@@ -39,7 +37,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
       PABS=/mbsim-env${PCANO:${#MBSIMENVDIR}}
     else
       echo "ERROR: The path $PABS is not a subdir of $MBSIMENVDIR. This cannot be handled by $BASENAME."
-      echo "If you mean a native path in the Docker image prefix this argument with DOCKERDIR:"
+      echo "If you mean a native path in the Docker container prefix this argument with DOCKERDIR:"
       exit 1
     fi
   }
@@ -66,7 +64,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
     shift
   done
   
-  # run in mbsimenv/build docker image
+  # run in mbsimenv/buildwin docker image
   # -e PATH= is the PATH in the container appended by :/mbsim-env/local-dockerwin64/bin
   # -e PKG_CONFIG_PATH= is the PKG_CONFIG_PATH in the container appended by :/mbsim-env/local-dockerwin64/lib/pkgconfig:/mbsim-env/local-dockerwin64/lib64/pkgconfig
   # -e WINEPATH= is the WINEPATH in the container appended by ;/mbsim-env/local-dockerwin64/bin

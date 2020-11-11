@@ -6,8 +6,9 @@ MBSIMENVDIR=$(readlink -f "$SCRIPTDIR"/../../..)
 # help
 for A in "$@"; do
   if [ "$A" == "-h" -o "$A" == "--help" ]; then
-    echo "This script runs the runexamples.py script from mbsim-env."
-    echo "All arguments to this script are passed to runexamples.py."
+    echo "This script runs the runexamples.py script from mbsim-env in a mbsimenv/build Docker container."
+    echo "If you don't know Docker consider a mbsimenv/build container as a virtual machine with mbsimenv installed."
+    echo "All arguments to this script are passed (added) to runexamples.py."
     echo ""
     break
   fi
