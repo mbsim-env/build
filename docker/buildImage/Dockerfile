@@ -71,10 +71,11 @@ RUN yum install -y http://www6.atomicorp.com/channels/atomic/centos/7/x86_64/RPM
   ninja-build \
   atomic-sqlite \
   && yum clean all
-# config gcc7 => do not use the "exec form" form now on use the "shell form"!!!!!
-SHELL ["scl", "enable", "devtoolset-7"]
+# config devtoolset-7 and atomic SCL
+ENV PATH=/opt/atomicorp/atomic/root/usr/bin:/opt/atomicorp/atomic/root/usr/sbin:/opt/rh/devtoolset-7/root/usr/bin:$PATH \
+    LD_LIBRARY_PATH=/opt/atomicorp/atomic/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib:/opt/rh/devtoolset-7/root/usr/lib64/dyninst:/opt/rh/devtoolset-7/root/usr/lib/dyninst:/opt/rh/devtoolset-7/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib:$LD_LIBRARY_PATH
 RUN npm install mathjax-node
-RUN pip3 install h5py sympy django django-octicons
+RUN pip3 install h5py==2.9.0 sympy django django-octicons
 
 
 
@@ -223,7 +224,6 @@ ENV LIBGL_ALWAYS_INDIRECT=1
 
 # copy build repo
 COPY docker/buildImage/entrypoint.py /context/entrypoint.py
-COPY docker/buildImage/scl_wrapper_entrypoint.sh /context/scl_wrapper_entrypoint.sh
 COPY docker/buildImage/distribute.py /context/distribute.py
 COPY docker/buildImage/c++-analyzer /context/c++-analyzer
 COPY docker/buildImage/ccc-analyzer /context/ccc-analyzer
@@ -232,11 +232,9 @@ COPY django/mbsimenv /context/mbsimenv
 
 # enable ccache (after all other things are done); note /mbsim-env is usually a persistent Docker volume;
 # enable nu-html -> add to CLASSPATH
-# CCACHE handling: /usr/lib64/ccache cannot be added here to PATH due to scl.
-#                  this is done in the entrypoint wrapper, see below
-# PATH and LD_LIBRARY_PATH for (atomic-)sqlite-3.8
-ENV PATH=/opt/atomicorp/atomic/root/usr/bin:/mbsim-env/build/misc:$PATH \
-    LD_LIBRARY_PATH=/opt/atomicorp/atomic/root/usr/lib64:/3rdparty/local/lib/octave/4.4.1:$LD_LIBRARY_PATH \
+# PATH for cache
+ENV PATH=/usr/lib64/ccache:/mbsim-env/build/misc:$PATH \
+    LD_LIBRARY_PATH=/3rdparty/local/lib/octave/4.4.1:$LD_LIBRARY_PATH \
     CCACHE_DIR=/mbsim-ccache \
     MBSIM_SWIG=1 \
     CLASSPATH=$CLASSPATH:/3rdparty/vnu.jar
@@ -264,6 +262,4 @@ RUN ccache -M 20G
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
-# (we need a special wrapper to call the entrypoint.py inside of scl
-#  also handling of ccache PATH handling is needed their)
-ENTRYPOINT ["/context/scl_wrapper_entrypoint.sh"]
+ENTRYPOINT ["/context/entrypoint.py"]
