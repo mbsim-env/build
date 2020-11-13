@@ -65,6 +65,7 @@ def parseArguments():
   
   cfgOpts.add_argument("--enableCleanPrefix", action="store_true", help="Remove the prefix dir completely before starting")
   cfgOpts.add_argument("--disableUpdate", action="store_true", help="Do not update repositories")
+  cfgOpts.add_argument("--disablePreConfigure", action="store_true", help="Do not manually run autotool (aclocal, libtoolize, ...). 'make' may still trigger it")
   cfgOpts.add_argument("--disableConfigure", action="store_true", help="Do not manually configure. 'make' may still trigger it")
   cfgOpts.add_argument("--disableMakeClean", action="store_true", help="Do not 'make clean'")
   cfgOpts.add_argument("--disableMakeInstall", action="store_true", help="Do not 'make install'")
@@ -567,25 +568,26 @@ def configure(tool):
     if not cmake and (not args.disableConfigure or not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName), "config.status"))):
       run=1
       # pre configure
-      os.chdir(pj(args.sourceDir, tool.toolName))
-      print("\n\nRUNNING aclocal\n", file=configureFD); configureFD.flush()
-      if base.helper.subprocessCall(["aclocal", "--force"], configureFD)!=0:
-        raise RuntimeError("aclocal failed")
-      print("\n\nRUNNING autoheader\n", file=configureFD); configureFD.flush()
-      if base.helper.subprocessCall(["autoheader", "--force"], configureFD)!=0:
-        raise RuntimeError("autoheader failed")
-      print("\n\nRUNNING libtoolize\n", file=configureFD); configureFD.flush()
-      if base.helper.subprocessCall(["libtoolize", "-c", "--force"], configureFD)!=0:
-        raise RuntimeError("libtoolize failed")
-      print("\n\nRUNNING automake\n", file=configureFD); configureFD.flush()
-      if base.helper.subprocessCall(["automake", "-a", "-c", "-f"], configureFD)!=0:
-        raise RuntimeError("automake failed")
-      print("\n\nRUNNING autoconf\n", file=configureFD); configureFD.flush()
-      if base.helper.subprocessCall(["autoconf", "--force"], configureFD)!=0:
-        raise RuntimeError("autoconf failed")
-      print("\n\nRUNNING autoreconf\n", file=configureFD); configureFD.flush()
-      if base.helper.subprocessCall(["autoreconf", "--force"], configureFD)!=0:
-        raise RuntimeError("autoreconf failed")
+      if not args.disablePreConfigure or not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName), "config.status")):
+        os.chdir(pj(args.sourceDir, tool.toolName))
+        print("\n\nRUNNING aclocal\n", file=configureFD); configureFD.flush()
+        if base.helper.subprocessCall(["aclocal", "--force"], configureFD)!=0:
+          raise RuntimeError("aclocal failed")
+        print("\n\nRUNNING autoheader\n", file=configureFD); configureFD.flush()
+        if base.helper.subprocessCall(["autoheader", "--force"], configureFD)!=0:
+          raise RuntimeError("autoheader failed")
+        print("\n\nRUNNING libtoolize\n", file=configureFD); configureFD.flush()
+        if base.helper.subprocessCall(["libtoolize", "-c", "--force"], configureFD)!=0:
+          raise RuntimeError("libtoolize failed")
+        print("\n\nRUNNING automake\n", file=configureFD); configureFD.flush()
+        if base.helper.subprocessCall(["automake", "-a", "-c", "-f"], configureFD)!=0:
+          raise RuntimeError("automake failed")
+        print("\n\nRUNNING autoconf\n", file=configureFD); configureFD.flush()
+        if base.helper.subprocessCall(["autoconf", "--force"], configureFD)!=0:
+          raise RuntimeError("autoconf failed")
+        print("\n\nRUNNING autoreconf\n", file=configureFD); configureFD.flush()
+        if base.helper.subprocessCall(["autoreconf", "--force"], configureFD)!=0:
+          raise RuntimeError("autoreconf failed")
       # configure
       os.chdir(savedDir)
       if not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName))): os.makedirs(pj(args.sourceDir, buildTool(tool.toolName)))

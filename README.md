@@ -58,6 +58,12 @@ All other MBSim-Env commands like `mbsimxml`, `openmbv` or `h5plotserie` are als
 Make adaptions to the source code and rerun `build.sh` (with proper options to speed up the build) or run `make` in the corresponding
 build directory (`fmatvec-docker`, `hdf5serie-docker`, ...) to rebuild your changed code parts.
 
+Run `runexamples.sh` in the directory `mbsim/examples` to run examples.
+See `runexamples.sh -h` for available options.
+
+Run `mbsimenv-bash.sh` to start an interactive bash inside of the Docker container.
+See `mbsimenv-bash.sh -h` for available options.
+
 Note that you do not need to have any development tools installed on your host computer (no make, not gcc, ... is required) since
 everything comes along with the Docker image automatically and consistently.
 
@@ -70,8 +76,8 @@ To build and run MBSim-Env for Windows just follow the instructions from the pre
 `<mypath>/build/docker/buildScripts` with `<mypath>/build/docker/buildwin64Scripts`.
 The build directories are named `fmatvec-dockerwin64`, `hdf5serie-dockerwin64`, ...
 
-Note that you can use the same base directory (`<mypath>`) for the Linux and Windows build.
-This will use the same source for both platforms.
+It is recommended NOT to use the same base directory `<mypath>` for the Linux and Windows Docker build.
+This works in principle but causes problems due to different versions of the autotools build tools.
 
 
 
