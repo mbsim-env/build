@@ -474,6 +474,7 @@ def addExamplesByFilter(baseDir, directoriesSet):
 def runExample(exRun, lock, example):
   print("Started example "+example)
   savedDir=os.getcwd()
+  runExampleRet=0 # run ok
   try:
     os.chdir(example)
 
@@ -491,7 +492,6 @@ def runExample(exRun, lock, example):
     ex.webappMbsimgui=args.webapp
     ex.save()
 
-    runExampleRet=0 # run ok
     # execute the example
     executeRet=0
     if not args.disableRun:
