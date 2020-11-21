@@ -26,6 +26,7 @@ urlpatterns = [
   django.urls.path('service/', django.urls.include('service.urls')),
   django.urls.path('builds/', django.urls.include('builds.urls')),
   django.urls.path('base/', django.urls.include('base.urls')),
+  django.urls.path('home/', django.urls.include('home.urls')),
   django.urls.path('admin/', django.contrib.admin.site.urls),
   django.urls.path('accounts/login/', lambda _: django.shortcuts.redirect('github_login')),
   django.urls.path('accounts/logout/', base.views.userLogout),

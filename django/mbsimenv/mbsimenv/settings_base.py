@@ -16,8 +16,6 @@ import base.helper
 import mbsimenvSecrets
 import importlib.util
 
-DEBUG = False
-
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -28,10 +26,11 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY=mbsimenvSecrets.getSecrets()["djangoSecretKey"]
 
 # if debugging enabled python requests (urllib3) logging
-if DEBUG:
-  l=logging.getLogger("urllib3")
-  l.setLevel(logging.DEBUG)
-  l.addHandler(logging.StreamHandler())
+def debug(enabled):
+  if enabled:
+    l=logging.getLogger("urllib3")
+    l.setLevel(logging.DEBUG)
+    l.addHandler(logging.StreamHandler())
 
 ALLOWED_HOSTS = [os.environ.get("MBSIMENVSERVERNAME", ""), 'localhost', '127.0.0.1', '[::1]']
 
@@ -43,6 +42,7 @@ INSTALLED_APPS = [
   'runexamples.apps.RunexamplesConfig',
   'builds.apps.BuildsConfig',
   'service.apps.ServiceConfig',
+  'home.apps.HomeConfig',
   'django.contrib.admin',
   'django.contrib.auth',
   'django.contrib.contenttypes',

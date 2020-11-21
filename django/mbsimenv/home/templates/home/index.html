@@ -1,0 +1,12 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}The Homepage{% endblock %}
+
+{% block body %}
+<h1>The MBSim Env Homepage</h1>
+<p>Add your data here.</p>
+<p>And a link to a <a href="subdir/subhome.html">subpage</a>.</p>
+<img src="{% static 'home/mbsimenv.svg' %}" width=150/>
+<p>The build system is available <a href="{% url 'service:home' %}">here</a>.</p>
+{% endblock %}
