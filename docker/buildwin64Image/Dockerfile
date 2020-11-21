@@ -217,7 +217,14 @@ COPY misc /mbsim-build/build/misc
 COPY docker/buildImage/distribute.py /context/distribute.py
 COPY docker/buildwin64Image/entrypoint.py /context/entrypoint.py
 COPY docker/buildwin64Image/jni_md.h /context/java_jni/jni_md.h
-COPY django/mbsimenv /context/mbsimenv
+COPY django/mbsimenv/build.py           /context/mbsimenv/build.py                    
+COPY django/mbsimenv/runexamples.py     /context/mbsimenv/runexamples.py              
+COPY django/mbsimenv/mbsimenvSecrets.py /context/mbsimenv/mbsimenvSecrets.py          
+COPY django/mbsimenv/mbsimenv           /context/mbsimenv/mbsimenv                        
+COPY django/mbsimenv/base               /context/mbsimenv/base                        
+COPY django/mbsimenv/builds             /context/mbsimenv/builds                      
+COPY django/mbsimenv/runexamples        /context/mbsimenv/runexamples                 
+COPY django/mbsimenv/service            /context/mbsimenv/service                     
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser

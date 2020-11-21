@@ -10,8 +10,6 @@ import fcntl
 import time
 import re
 import string
-import mbsimenv
-import builds
 import socket
 import sys
 import importlib.util
@@ -280,6 +278,7 @@ subprocessCall.timedOutErrorCode=1000000
 
 # init django
 def startLocalServer(port, onlyGetServerInfo=False):
+  import builds
   pidfile=os.path.dirname(os.path.realpath(__file__))+"/../localserver.json"
   if onlyGetServerInfo:
     with open(pidfile, "r") as f:

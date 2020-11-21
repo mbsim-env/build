@@ -18,7 +18,11 @@ RUN pip3 install django django-octicons
 
 # copy context files
 COPY docker/builddocImage/entrypoint.py /context/entrypoint.py
-COPY django/mbsimenv /context/mbsimenv
+COPY django/mbsimenv/builddoc.py        /context/mbsimenv/builddoc.py
+COPY django/mbsimenv/mbsimenvSecrets.py /context/mbsimenv/mbsimenvSecrets.py
+COPY django/mbsimenv/mbsimenv           /context/mbsimenv/mbsimenv
+COPY django/mbsimenv/base               /context/mbsimenv/base
+COPY django/mbsimenv/service            /context/mbsimenv/service
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
