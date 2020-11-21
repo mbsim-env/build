@@ -51,6 +51,8 @@ function initDatatable(id, url, colNames, args) {
       }
     ],
     "columns": columns,
+    "stateSave": true,
+    "stateDuration": 10 * 60,
   };
   var table=$("#"+id).DataTable(Object.assign({}, arg1, args));
   ajaxCall(url+"?columnsVisible=1", {}, function(data) {

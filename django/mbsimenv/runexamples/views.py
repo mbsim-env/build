@@ -174,7 +174,7 @@ class DataTableExample(base.views.DataTable):
       ret+='</div></div>'
     return ret
   def colSortKey_run(self, ds):
-    return ds.runResult
+    return -ds.runResult
   def colClass_run(self, ds):
     return "table-success" if ds.runResult==runexamples.models.Example.RunResult.PASSED and not ds.willFail or \
                               ds.runResult!=runexamples.models.Example.RunResult.PASSED and ds.willFail else "table-danger"
@@ -229,11 +229,11 @@ class DataTableExample(base.views.DataTable):
       ret+='</div></div>'
     return ret
   def colSortKey_guiTest(self, ds):
-    m={None:                                          "0",
-       runexamples.models.Example.RunResult.PASSED:   "1",
-       runexamples.models.Example.RunResult.TIMEDOUT: "2",
-       runexamples.models.Example.RunResult.FAILED:   "3"}
-    return m[ds.guiTestOpenmbvOK]+m[ds.guiTestHdf5serieOK]+m[ds.guiTestMbsimguiOK]
+    m={None:                                            0,
+       runexamples.models.Example.RunResult.PASSED:     1,
+       runexamples.models.Example.RunResult.FAILED:    10,
+       runexamples.models.Example.RunResult.TIMEDOUT: 100}
+    return -(m[ds.guiTestOpenmbvOK]+m[ds.guiTestHdf5serieOK]+m[ds.guiTestMbsimguiOK])
 
   def colData_ref(self, ds):
     refUrl=django.urls.reverse('runexamples:compareresult', args=[ds.id])
@@ -263,11 +263,11 @@ class DataTableExample(base.views.DataTable):
       return 'table-danger'
   def colSortKey_ref(self, ds):
     if ds.resultFiles.count()==0:
-      return '1'
+      return -0
     elif ds.resultsFailed==0:
-      return '0'
+      return -1
     else:
-      return '2'
+      return -2
 
   def colData_webApp(self, ds):
     ret=""
@@ -299,7 +299,7 @@ class DataTableExample(base.views.DataTable):
 
     return ret
   def colSortKey_webApp(self, ds):
-    return "%d%d%d"%(ds.webappOpenmbv, ds.webappHdf5serie, ds.webappMbsimgui)
+    return -(ds.webappOpenmbv+ds.webappHdf5serie+ds.webappMbsimgui)
 
   def colData_dep(self, ds):
     if ds.deprecatedNr is not None and ds.deprecatedNr>0:
@@ -314,7 +314,7 @@ class DataTableExample(base.views.DataTable):
     else:
       return 'table-success'
   def colSortKey_dep(self, ds):
-    return ds.deprecatedNr
+    return -ds.deprecatedNr
 
   def colData_xmlOut(self, ds):
     nrAll=ds.xmlOutputs.count()
@@ -393,7 +393,7 @@ class DataTableValgrindError(base.views.DataTable):
       </span><br/>'''.format(octicon("triangle-down"), ds.suppressionRawText)+\
       self.vertText(ds.kind, True, 24), "runexamples/ValgrindError: id=%s"%(ds.id))
   def colSort_kind(self, ds):
-    return str(self.isLeak(ds))+"_"+ds.kind
+    return ("1" if self.isLeak(ds) else "0")+"_"+ds.kind
   def colClass_kind(self, ds):
     return 'table-warning' if self.isLeak(ds) else "table-danger"
 
@@ -515,7 +515,8 @@ class DataTableXMLOutput(base.views.DataTable):
       return '<span class="text-success">'+octicon("check")+'</span>&nbsp;<a href="%s">passed</a>'%(url)
     else:
       return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;<a href="%s">failed</a>'%(url)
-
+  def colSortKey_result(self, ds):
+    return ds.resultOK
   def colClass_result(self, ds):
     if ds.resultOK:
       return "table-success"
@@ -601,18 +602,39 @@ class DataTableCompareResult(base.views.DataTable):
       return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;[label not in ref]'
     if ds.result==runexamples.models.CompareResult.Result.LABELDIFFER:
       return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;[label differ]'
-    if ds.result==runexamples.models.CompareResult.Result.LABELDIFFER:
+    if ds.result==runexamples.models.CompareResult.Result.LABELMISSING:
       return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;[label missing]'
     if ds.result==runexamples.models.CompareResult.Result.PASSED:
       return '<span class="text-success">'+octicon("check")+'</span>&nbsp;passed'
     url=django.urls.reverse('runexamples:differenceplot', args=[ds.id])
     return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;<a href="%s">failed</a>'%(url)
+  def colSortKey_result(self, ds):
+    if ds.result==runexamples.models.CompareResult.Result.FAILED:
+      return -9
+    if ds.result==runexamples.models.CompareResult.Result.FILENOTINCUR:
+      return -8
+    if ds.result==runexamples.models.CompareResult.Result.FILENOTINREF:
+      return -7
+    if ds.result==runexamples.models.CompareResult.Result.DATASETNOTINCUR:
+      return -6
+    if ds.result==runexamples.models.CompareResult.Result.DATASETNOTINREF:
+      return -5
+    if ds.result==runexamples.models.CompareResult.Result.LABELNOTINCUR:
+      return -4
+    if ds.result==runexamples.models.CompareResult.Result.LABELNOTINREF:
+      return -3
+    if ds.result==runexamples.models.CompareResult.Result.LABELDIFFER:
+      return -2
+    if ds.result==runexamples.models.CompareResult.Result.LABELMISSING:
+      return -1
+    if ds.result==runexamples.models.CompareResult.Result.PASSED:
+      return -0
   def colClass_result(self, ds):
     if ds.result==runexamples.models.CompareResult.Result.FILENOTINCUR or ds.result==runexamples.models.CompareResult.Result.FILENOTINREF or \
        ds.result==runexamples.models.CompareResult.Result.DATASETNOTINCUR or ds.result==runexamples.models.CompareResult.Result.DATASETNOTINREF:
       return ''
     if ds.result==runexamples.models.CompareResult.Result.LABELNOTINCUR or ds.result==runexamples.models.CompareResult.Result.LABELNOTINREF or \
-       ds.result==runexamples.models.CompareResult.Result.LABELDIFFER or ds.result==runexamples.models.CompareResult.Result.LABELDIFFER:
+       ds.result==runexamples.models.CompareResult.Result.LABELDIFFER or ds.result==runexamples.models.CompareResult.Result.LABELMISSING:
       return 'table-danger'
     if ds.result==runexamples.models.CompareResult.Result.PASSED:
       return 'table-success'
