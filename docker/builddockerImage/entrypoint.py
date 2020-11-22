@@ -33,7 +33,7 @@ f=io.StringIO()
 failed=False
 try:
   print("Start building build system from commit ID "+args.commitID+" at "+\
-        django.utils.timezone.now().strftime("%Y-%m-%dT%H:%M:%SZ"), file=f)
+        django.utils.timezone.now().strftime("%Y-%m-%dT%H:%M:%SZ")+"\n\n", file=f)
   
   if not os.path.isdir("/mbsim-env/build"):
     p=subprocess.run(["git", "clone", "https://github.com/mbsim-env/build.git"], cwd="/mbsim-env",
@@ -53,14 +53,16 @@ try:
     if ret!=0:
       raise RuntimeError("Building the docker image failed.")
   
-  print("Finished building build system from commit ID "+args.commitID+" at "+\
+  print("\n\nFinished building build system from commit ID "+args.commitID+" at "+\
         django.utils.timezone.now().strftime("%Y-%m-%dT%H:%M:%SZ"), file=f)
 
 except:
   print(traceback.format_exc(), file=f)
   failed=True
 finally:
-  print("Save build result output in database.")
+  print("Save build result output in database", file=f)
+  if not failed:
+    print("and restart services.", file=f)
   sys.stdout.flush()
   
   info, _=service.models.Info.objects.get_or_create(id=args.commitID)
