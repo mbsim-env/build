@@ -105,7 +105,7 @@ class DataTableTool(base.views.DataTable):
     else:
       return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;<a href="%s">failed</a>'%(url)
   def colSortKey_configure(self, ds):
-    return ds.configureOK
+    return int(ds.configureOK) if ds.configureOK is not None else 2
   def colClass_configure(self, ds):
     if ds.configureOK is None:
       return ""
@@ -120,7 +120,7 @@ class DataTableTool(base.views.DataTable):
     else:
       return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;<a href="%s">failed</a>'%(url)
   def colSortKey_make(self, ds):
-    return ds.makeOK
+    return int(ds.makeOK) if ds.makeOK is not None else 2
   def colClass_make(self, ds):
     if ds.makeOK is None:
       return ""
@@ -135,7 +135,7 @@ class DataTableTool(base.views.DataTable):
     else:
       return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;<a href="%s">failed</a>'%(url)
   def colSortKey_makeCheck(self, ds):
-    return ds.makeCheckOK
+    return int(ds.makeCheckOK) if ds.makeCheckOK is not None else 2
   def colClass_makeCheck(self, ds):
     if ds.makeCheckOK is None:
       return ""
@@ -150,7 +150,7 @@ class DataTableTool(base.views.DataTable):
     else:
       return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;<a href="%s">failed</a>'%(url)
   def colSortKey_doc(self, ds):
-    return ds.docOK
+    return int(ds.docOK) if ds.docOK is not None else 2
   def colClass_doc(self, ds):
     if ds.docOK is None:
       return ""
@@ -165,7 +165,7 @@ class DataTableTool(base.views.DataTable):
     else:
       return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;<a href="%s">failed</a>'%(url)
   def colSortKey_xmldoc(self, ds):
-    return ds.xmldocOK
+    return int(ds.xmldocOK) if ds.xmldocOK is not None else 2
   def colClass_xmldoc(self, ds):
     if ds.xmldocOK is None:
       return ""

@@ -174,7 +174,9 @@ class DataTableExample(base.views.DataTable):
       ret+='</div></div>'
     return ret
   def colSortKey_run(self, ds):
-    return -ds.runResult
+    if ds.willFail: return 2
+    if ds.runResult is None: return 1
+    return int(-ds.runResult)
   def colClass_run(self, ds):
     return "table-success" if ds.runResult==runexamples.models.Example.RunResult.PASSED and not ds.willFail or \
                               ds.runResult!=runexamples.models.Example.RunResult.PASSED and ds.willFail else "table-danger"
@@ -182,7 +184,7 @@ class DataTableExample(base.views.DataTable):
   def colData_time(self, ds):
     return str(datetime.timedelta(seconds=round(ds.time.total_seconds()))) if ds.time is not None else ""
   def colSortKey_time(self, ds):
-    return ds.time.total_seconds()
+    return ds.time.total_seconds() if ds.time is not None else 1.0e50
   def colClass_time(self, ds):
     if self.getRefTime(ds) is None or ds.time is None or ds.time <= self.getRefTime(ds)*1.1:
       return "table-success"
@@ -192,7 +194,7 @@ class DataTableExample(base.views.DataTable):
   def colData_refTime(self, ds):
     return str(datetime.timedelta(seconds=round(self.getRefTime(ds).total_seconds()))) if self.getRefTime(ds) is not None else ""
   def colSortKey_refTime(self, ds):
-    return self.getRefTime(ds).total_seconds() if self.getRefTime(ds) is not None else 0
+    return self.getRefTime(ds).total_seconds() if self.getRefTime(ds) is not None else 1.0e50
 
   def colData_guiTest(self, ds):
     ret=""
@@ -314,7 +316,7 @@ class DataTableExample(base.views.DataTable):
     else:
       return 'table-success'
   def colSortKey_dep(self, ds):
-    return -ds.deprecatedNr
+    return -ds.deprecatedNr if ds.deprecatedNr is not None else 0
 
   def colData_xmlOut(self, ds):
     nrAll=ds.xmlOutputs.count()
@@ -562,7 +564,7 @@ class DataTableCompareResult(base.views.DataTable):
   def colData_h5file(self, ds):
     return base.helper.tooltip(ds.compareResultFile.h5Filename, "runexamples/CompareResult: id=%d"%(ds.id))
   def colSortKey_h5file(self, ds):
-    return ds.compareResultFile.h5Filename
+    return ds.compareResultFile.h5Filename if ds.compareResultFile.h5Filename is not None else ""
   def colClass_h5file(self, ds):
     return "text-break"
 
@@ -629,6 +631,7 @@ class DataTableCompareResult(base.views.DataTable):
       return -1
     if ds.result==runexamples.models.CompareResult.Result.PASSED:
       return -0
+    return 1
   def colClass_result(self, ds):
     if ds.result==runexamples.models.CompareResult.Result.FILENOTINCUR or ds.result==runexamples.models.CompareResult.Result.FILENOTINREF or \
        ds.result==runexamples.models.CompareResult.Result.DATASETNOTINCUR or ds.result==runexamples.models.CompareResult.Result.DATASETNOTINREF:
