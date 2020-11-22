@@ -242,7 +242,7 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfil
       fileobjNew.seek(0)
       return {"custom_context": True, "fileobj": fileobjNew, "dockerfile": dockerfile}
     except:
-      print("The workaround for docker-py bug https://github.com/docker/docker-py/pull/2391 does not work, skipping it; uid and gui are not adapted which may lead to unexpected docker build cache invalidations.")
+      print("WARNING: The workaround for docker-py bug https://github.com/docker/docker-py/pull/2391 does not work, skipping it; uid and gui are not adapted which may lead to unexpected docker build cache invalidations.")
       return {"path": path, "dockerfile": dockerfile}
   # MISSING END: this is a workaround for docker-py bug https://github.com/docker/docker-py/pull/2391
   # fix permissions (the permissions are part of the docker cache)
@@ -321,8 +321,8 @@ def build(s, jobs=4, fd=sys.stdout, baseDir=scriptdir, cacheFromSelf=False):
   elif s=="builddocker":
     return buildImage(tag="mbsimenv/builddocker:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"MBSIMENVTAGNAME": getTagname()},
-      path=baseDir,
-      dockerfile="builddockerImage/Dockerfile",
+      path=baseDir+"/..",
+      dockerfile="docker/builddockerImage/Dockerfile",
       rm=False)
 
   elif s=="webserver":
@@ -436,12 +436,24 @@ def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
     return ret
 
 def runNetworkAndDatabase(printLog, daemon):
-  # networks
-  for n in dockerClient.networks.list(names=["mbsimenv_service_extern:"+getTagname(), "mbsimenv_service_intern:"+getTagname()]):
-    n.remove()
-    print("Network "+n.name+" removed (id="+n.id+")")
-  networki=dockerClient.networks.create(name="mbsimenv_service_intern:"+getTagname(), internal=True)
-  networke=dockerClient.networks.create(name="mbsimenv_service_extern:"+getTagname())
+  # networks (try to remove existing ones. if this fails and none except builddocker is connected reuse it
+  for nn in ["mbsimenv_service_extern", "mbsimenv_service_intern"]:
+    n=None
+    try:
+      n=dockerClient.networks.get(nn+":"+getTagname())
+      try:
+        n.remove()
+        n=None
+      except docker.errors.APIError:
+        if any(map(lambda c: c.name!="mbsimenv.builddocker."+getTagname(), n.containers)):
+          raise RuntimeError("Network "+nn+" exists but cannot be removed since containers other than builddocker are connected: "+
+                             ", ".join(map(lambda c: c.name, n.containers)))
+    except docker.errors.NotFound:
+      pass
+    if nn=="mbsimenv_service_extern":
+      networke=n if n is not None else dockerClient.networks.create(name="mbsimenv_service_extern:"+getTagname())
+    if nn=="mbsimenv_service_intern":
+      networki=n if n is not None else dockerClient.networks.create(name="mbsimenv_service_intern:"+getTagname(), internal=True)
 
   # database
   renameStoppedContainer('mbsimenv.database.')
@@ -552,17 +564,34 @@ def run(s, jobs=4,
       return ret
 
   elif s=="builddocker":
+    stopDatabase=False
+    if len(dockerClient.networks.list(names="mbsimenv_service_intern:"+getTagname()))==1:
+      networki=dockerClient.networks.get("mbsimenv_service_intern:"+getTagname())
+      networke=dockerClient.networks.get("mbsimenv_service_extern:"+getTagname())
+      database=dockerClient.containers.get('mbsimenv.database.'+getTagname())
+    else:
+      if detach:
+        raise RuntimeError("Cannot run with --detach")
+      networki, networke, database=runNetworkAndDatabase(printLog, "")
+      stopDatabase=True
+
+    # build
     renameStoppedContainer('mbsimenv.builddocker.')
     builddocker=dockerClient.containers.run(image="mbsimenv/builddocker:"+getTagname(),
       init=True, name='mbsimenv.builddocker.'+getTagname(),
+      network=networki.id,
       entrypoint=None if not interactive else ["sleep", "infinity"],
       environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
       command=["-j", str(jobs), builddockerBranch],
       volumes={
         'mbsimenv_mbsim-builddocker.'+getTagname():  {"bind": "/mbsim-env",           "mode": "rw"},
         '/var/run/docker.sock':                      {"bind": "/var/run/docker.sock", "mode": "rw"},
+        'mbsimenv_config.'+getTagname():             {"bind": "/mbsim-config",        "mode": "ro"},
       },
       detach=True, stdout=True, stderr=True)
+    networki.disconnect(builddocker)
+    networki.connect(builddocker)
+    networke.connect(builddocker)
     if interactive:
       print("Use")
       print("docker exec -ti %s bash"%(builddocker.short_id))
@@ -580,6 +609,8 @@ def run(s, jobs=4,
       return builddocker
     else:
       ret=runWait([builddocker], printLog=printLog)
+      if stopDatabase:
+        database.stop()
       return ret
 
   elif s=="service":
@@ -602,14 +633,18 @@ def run(s, jobs=4,
           c=dockerClient.containers.get(cn+getTagname())
           if c.status=="created":
             c.remove()
+            print("Container "+cn+getTagname()+" removed (id="+c.id+")")
           if c.status!="exited" and c.status!="dead":
             c.stop()
             print("Container "+cn+getTagname()+" stopped (id="+c.id+")")
         except docker.errors.NotFound:
-          pass
+          print("Container "+cn+getTagname()+" cannot be stopped (id="+c.id+")")
       for n in dockerClient.networks.list(names=["mbsimenv_service_extern:"+getTagname(), "mbsimenv_service_intern:"+getTagname()]):
-        n.remove()
-        print("Network "+n.name+" removed (id="+n.id+")")
+        try:
+          n.remove()
+          print("Network "+n.name+" removed (id="+n.id+")")
+        except docker.errors.APIError:
+          print("Network "+n.name+" cannot be removed (id="+n.id+")")
       return 0
 
     if daemon=="status":

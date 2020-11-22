@@ -58,7 +58,7 @@ if ciq is not None:
   if ciq.buildCommitID:
     print("Start build of build-system: "+ciq.buildCommitID)
     sys.stdout.flush()
-    #mfmf# run rebuild build-system
-    #mfmfret=setup.run("builddocker", args.jobs, printLog=False, builddockerBranch=ciq.buildCommitID)
+    # run rebuild build-system
+    ret=setup.run("builddocker", args.jobs, printLog=False, builddockerBranch=ciq.buildCommitID)
     ciq.delete()
-    #mfmfsys.exit(ret)
+    sys.exit(ret)
