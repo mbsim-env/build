@@ -2,11 +2,16 @@
 
 # imports
 import sys
+import argparse
+import io
 import os
 import subprocess
-import datetime
 import setup
-import argparse
+import traceback
+import socket
+import django
+sys.path.append("/context/mbsimenv")
+import service
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -18,43 +23,64 @@ argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs
 
 args=argparser.parse_args()
 
-with open("/mbsim-report/builddocker.txt", "w") as f:
-  print("Building build system from commit ID "+args.commitID)
-  sys.stdout.flush()
+print("Building build system from commit ID "+args.commitID)
+sys.stdout.flush()
 
+os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
+django.setup()
+
+f=io.StringIO()
+failed=False
+try:
   print("Start building build system from commit ID "+args.commitID+" at "+\
-        datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"), file=f)
-  f.flush()
-
+        django.utils.timezone.now().strftime("%Y-%m-%dT%H:%M:%SZ")+"\n\n", file=f)
+  
   if not os.path.isdir("/mbsim-env/build"):
-    subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/build.git"], cwd="/mbsim-env", stdout=f, stderr=f)
-    f.flush()
-  subprocess.check_call(["git", "fetch"], cwd="/mbsim-env/build", stdout=f, stderr=f)
-  f.flush()
-  subprocess.check_call(["git", "checkout", args.commitID], cwd="/mbsim-env/build", stdout=f, stderr=f)
-  f.flush()
+    p=subprocess.run(["git", "clone", "https://github.com/mbsim-env/build.git"], cwd="/mbsim-env",
+                     stderr=subprocess.STDOUT, stdout=subprocess.PIPE, encoding="UTF-8")
+    f.write(p.stdout)
+    p.check_returncode()
+  p=subprocess.run(["git", "fetch"], cwd="/mbsim-env/build",
+                   stderr=subprocess.STDOUT, stdout=subprocess.PIPE, encoding="UTF-8")
+  f.write(p.stdout)
+  p.check_returncode()
+  p=subprocess.run(["git", "checkout", args.commitID], cwd="/mbsim-env/build",
+                   stderr=subprocess.STDOUT, stdout=subprocess.PIPE, encoding="UTF-8")
+  f.write(p.stdout)
+  p.check_returncode()
   for s in setup.allServices:
     ret=setup.build(s, args.jobs, fd=f, baseDir="/mbsim-env/build/docker")
-    f.flush()
     if ret!=0:
-      sys.exit(ret)
+      raise RuntimeError("Building the docker image failed.")
+  
+  print("\n\nFinished building build system from commit ID "+args.commitID+" at "+\
+        django.utils.timezone.now().strftime("%Y-%m-%dT%H:%M:%SZ"), file=f)
 
-  print("Finished building build system from commit ID "+args.commitID+" at "+\
-        datetime.datetime.utcnow().strftime("%Y-%m-%dT%H:%M:%SZ"), file=f)
-  f.flush()
-
-  print("Restarting service now.")
-  print("Stopping service now.", file=f)
+except:
+  print(traceback.format_exc(), file=f)
+  failed=True
+finally:
+  print("Save build result output in database", file=f)
+  if not failed:
+    print("and restart services.", file=f)
   sys.stdout.flush()
-  f.flush()
-  if setup.run('service', 6, daemon="stop", keepBuildDockerContainerRunning=True)!=0:
-    print("Stopping service failed.", file=f)
-    sys.exit(1)
-  print("Restarting service now.", file=f)
-  f.flush()
-  if setup.run('service', 6, daemon="start")!=0:
-    print("Starting service failed.", file=f)
-    sys.exit(1)
-  print("All done.", file=f)
+  
+  info, _=service.models.Info.objects.get_or_create(id=args.commitID)
+  info.longInfo=f.getvalue()
+  info.save()
+  service.models.Info.objects.exclude(id=args.commitID).delete() # remove everything except the current runnig Info object
 
-sys.exit(0)
+  django.db.connections.close_all() # close all connections before restarting
+
+if not failed:
+  print("Restart now.")
+  print("Stopping service now.")
+  sys.stdout.flush()
+  if setup.run('service', 6, daemon="stop", keepBuildDockerContainerRunning=True)!=0:
+    raise RuntimeError("Stopping service failed.")
+  print("Restarting service now.")
+  sys.stdout.flush()
+  if setup.run('service', 6, daemon="start")!=0:
+    raise RuntimeError("Starting service failed.")
+  print("All done.")
+  sys.stdout.flush()
