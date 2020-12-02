@@ -4,9 +4,55 @@
 {% block title %}The Homepage{% endblock %}
 
 {% block body %}
-<h1>The MBSim Env Homepage</h1>
-<p>Add your data here.</p>
-<p>And a link to a <a href="{% url 'home:base' 'subdir/subhome.html' %}">subpage</a>.</p>
-<img src="{% static 'home/mbsimenv.svg' %}" width=150/>
-<p>The build system is available <a href="{% url 'service:home' %}">here</a>.</p>
+
+<div style="margin-left: 1em;">
+  <h1>The MBSim Environment</h1>
+
+  <h2>Introduction</h2>
+  <p>The MBSim Environment provides tools for simulation, visualization and analysis of multibody systems.</p>
+  <p><img src="{% static 'home/mbsimgui.png' %}" style="height: 180px;">
+  <img src="{% static 'home/openmbv.png' %}" style="height: 180px;">
+  <img src="{% static 'home/h5plotserie.png' %}" style="height: 180px;"></p>
+  <ul>
+    <li>Graphical model design</li>
+    <li>Parametric model setup via octave or python preprocessor</li>
+    <li>Generate arbitrary user functions by use of symbolic expressions</li>
+    <li>Motion view in 3D</li>
+    <li>Output data plotting</li>
+    <li>Modules for control, hydraulics, physics and flexible bodies</li>
+    <li>Model exchange via Functional Mock-up Interface (FMI)</li>
+    <li>Full extensibility via C++ or Python interface</li>
+ </ul>
+
+  <h2>Download</h2>
+
+  <h3>Linux</h3>
+  <ul>
+    <li><a href="https://www.mbsim-env.de/service/releases/current/linux64">Latest Release</a></li>
+    <li><a href="https://www.mbsim-env.de/builds/run/current/linux64-dailyrelease/distributionFile">Nightly Build</a></li>
+  </ul>
+
+  <h3>Windows</h3>
+  <ul>
+    <li><a href="https://www.mbsim-env.de/service/releases/current/win64/">Latest Release</a></li>
+    <li><a href="https://www.mbsim-env.de/builds/run/current/win64-dailyrelease/distributionFile">Nightly Build</a>
+  </ul>
+  <p>Look <a href="{% url 'service:releases' %}">here</a> for all released versions of the MBSim environment.</p>
+
+  <h3>Source code</h3>
+  <p>Git repos of all MBSim environment projects are hosted on <a href="https://github.com/mbsim-env">GitHub</a>.</p>
+
+  <h2>Documentation</h2>
+  <ul>
+    <li>First steps using the MBSim Environment (<a href="https://www.mbsim-env.de/base/fileDownloadFromDB/service/Manual/mbsimgui_first_steps/manualFile/">Tutorial</a>)</li>
+    <li>Analysing Dynamical Phenomenons: Introduction to MBSim (<a href="{% static 'papers/IMSD10Paper.pdf' %}">Paper</a>)</li>
+    <li>MBSim-Env XML Reference Manual (<a href="{% static "runtime/xmlReference/http___www_mbsim-env_de_MBSimXML/mbsimxml.html" %}">Reference</a>)</li>
+  </ul>
+  <p>More documents including the C++ API References can be found <a href="{% url 'service:home' %}">here</a>.</p>
+
+  <h2>Build system</h2>
+  <p>The build system of the MBSim environment can be found <a href="{% url 'service:home' %}">here</a>.</p>
+
+</div>
+
 {% endblock %}
