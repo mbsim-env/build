@@ -28,14 +28,14 @@
 
   <h3>Linux</h3>
   <ul>
-    <li><a href="https://www.mbsim-env.de/service/releases/current/linux64">Latest Release</a></li>
-    <li><a href="https://www.mbsim-env.de/builds/run/current/linux64-dailyrelease/distributionFile">Nightly Build</a></li>
+    <li><b><a href="{% url 'service:currentReleaseFile' 'linux64' %}">Latest Release</a></b></li>
+    <li><a href="{% url 'builds:current_buildtype' 'linux64-dailyrelease' %}distributionFile/">Nightly Build</a></li>
   </ul>
 
   <h3>Windows</h3>
   <ul>
-    <li><a href="https://www.mbsim-env.de/service/releases/current/win64/">Latest Release</a></li>
-    <li><a href="https://www.mbsim-env.de/builds/run/current/win64-dailyrelease/distributionFile">Nightly Build</a>
+    <li><b><a href="{% url 'service:currentReleaseFile' 'win64' %}">Latest Release</a></b></li>
+    <li><a href="{% url 'builds:current_buildtype' 'win64-dailyrelease' %}distributionFile">Nightly Build</a>
   </ul>
   <p>Look <a href="{% url 'service:releases' %}">here</a> for all released versions of the MBSim environment.</p>
 
@@ -44,7 +44,7 @@
 
   <h2>Documentation</h2>
   <ul>
-    <li>First steps using the MBSim Environment (<a href="https://www.mbsim-env.de/base/fileDownloadFromDB/service/Manual/mbsimgui_first_steps/manualFile/">Tutorial</a>)</li>
+    <li>First steps using the MBSim Environment (<a href="{% url 'base:fileDownloadFromDB' 'service' 'Manual' 'mbsimgui_first_steps' 'manualFile' %}">Tutorial</a>)</li>
     <li>Analysing Dynamical Phenomenons: Introduction to MBSim (<a href="{% static 'papers/IMSD10Paper.pdf' %}">Paper</a>)</li>
     <li>MBSim-Env XML Reference Manual (<a href="{% static "runtime/xmlReference/http___www_mbsim-env_de_MBSimXML/mbsimxml.html" %}">Reference</a>)</li>
   </ul>

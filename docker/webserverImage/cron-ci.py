@@ -41,7 +41,10 @@ waitTime=datetime.timedelta(minutes=1) if os.environ["MBSIMENVTAGNAME"]!="stagin
 
 ciq=service.models.CIQueue.objects.all().order_by("recTime").first()
 if ciq is not None:
-  if ciq.fmatvecBranch is not None and ciq.hdf5serieBranch is not None and ciq.openmbvBranch is not None and ciq.mbsimBranch is not None:
+  if ciq.fmatvecBranch is not None   and ciq.fmatvecBranch!="" and \
+     ciq.hdf5serieBranch is not None and ciq.hdf5serieBranch!="" and \
+     ciq.openmbvBranch is not None   and ciq.openmbvBranch!="" and \
+     ciq.mbsimBranch is not None     and ciq.mbsimBranch!="":
     print("Found something to build: "+ciq.fmatvecBranch+", "+ciq.hdf5serieBranch+", "+\
           ciq.openmbvBranch+", "+ciq.mbsimBranch+" starting in, at most, "+str(waitTime))
     sys.stdout.flush()
@@ -55,7 +58,7 @@ if ciq is not None:
                     fmatvecBranch=ciq.fmatvecBranch, hdf5serieBranch=ciq.hdf5serieBranch,
                     openmbvBranch=ciq.openmbvBranch, mbsimBranch=ciq.mbsimBranch)
       sys.exit(ret)
-  if ciq.buildCommitID is not None:
+  if ciq.buildCommitID is not None and ciq.buildCommitID!="":
     print("Start build of build-system: "+ciq.buildCommitID)
     sys.stdout.flush()
     # run rebuild build-system
