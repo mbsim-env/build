@@ -38,13 +38,22 @@
     </script>
 
     <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
-      <a class="navbar-brand" href="{% url "service:home" %}" data-toggle="tooltip" data-placement="bottom" title="Home">
+      <a class="navbar-brand" href="{% url "home:base" "index.html" %}" data-toggle="tooltip" data-placement="bottom" title="Home">
         <img height="22%" src="{% static 'base/mbsimenv.svg' %}"/> MBSim-Env
       </a>
       <div class="collapse navbar-collapse">
         <span class="navbar-nav mr-auto">
+          <a href="{% url "home:base" "index.html" %}">
+            <span class="navbar-text" style="margin-left: 1em">Home</span>
+          </a>
+          <a href="{% url 'service:releases' %}">
+            <span class="navbar-text" style="margin-left: 1em">Download</span>
+          </a>
+          <a href="https://github.com/mbsim-env/">
+            <span class="navbar-text" style="margin-left: 1em">Source Code</span>
+          </a>
           <a href="{% url "service:home" %}">
-            <span class="navbar-text" style="margin-left: 1em">The MBSim-Environment Project Page</span>
+            <span class="navbar-text" style="margin-left: 1em">Build System</span>
           </a>
         </span>
         {% if view.request.user.is_authenticated %}

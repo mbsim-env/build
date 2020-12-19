@@ -7,7 +7,7 @@
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
 {% endblock %}
 
-{% block title %}MBSim-Env Official Releases{% endblock %}
+{% block title %}MBSim-Env Official Downloads{% endblock %}
 
 {% block body %}
 
@@ -48,6 +48,15 @@
     {% endfor %}
   </tbody>
 </table>
+
+<h2 style="margin-top: 5ex">Nightly Builds</h2>
+<p>The nightly build system of MBSim-Env generates each night a full build of MBSim using the current development state. Each offizial release is just a release of such an nightly build which is validated and done at a stable state. You can download the latest build here.
+<ul class="list-group list-group-flush">
+  <li class="list-group-item"><a href="{% url 'builds:current_buildtype' 'linux64-dailyrelease' %}distributionFile/">Latest Nightly Linux Build</a></li>
+  <li class="list-group-item"><a href="{% url 'builds:current_buildtype' 'win64-dailyrelease' %}distributionFile/">Latest Nightly Windows Build</a></li>
+</ul>
+
+
 
 <h2 style="margin-top: 5ex">Older Releases</h2>
 <p>The following table lists older releases</p>
