@@ -345,11 +345,14 @@ def webhook(request):
         ciq.save()
         res["addedBranchCombinations"].append(branchCombination)
     elif res["repo"]=="build":
-      ciq=service.models.CIQueue()
-      ciq.buildCommitID=res["commitID"]
-      ciq.recTime=django.utils.timezone.now()
-      ciq.save()
-      res["addedBuildCommitID"]=res["commitID"]
+      if res["branch"]=="staging":
+        ciq=service.models.CIQueue()
+        ciq.buildCommitID=res["commitID"]
+        ciq.recTime=django.utils.timezone.now()
+        ciq.save()
+        res["addedBuildCommitID"]=res["commitID"]
+      else:
+        res["skipNoneStagingBranch"]=res["commitID"]
     else:
       return django.http.HttpResponseBadRequest("Unknown repo.")
     return django.http.JsonResponse(res)
