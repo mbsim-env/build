@@ -58,8 +58,8 @@ if ciq is not None:
                     fmatvecBranch=ciq.fmatvecBranch, hdf5serieBranch=ciq.hdf5serieBranch,
                     openmbvBranch=ciq.openmbvBranch, mbsimBranch=ciq.mbsimBranch)
       sys.exit(ret)
-  if ciq.buildCommitID is not None and ciq.buildCommitID!="":
-    print("Start build of build-system: "+ciq.buildCommitID)
+  if os.environ["MBSIMENVTAGNAME"]=="staging" and ciq.buildCommitID is not None and ciq.buildCommitID!="":
+    print("Start build of staging build-system: "+ciq.buildCommitID)
     sys.stdout.flush()
     # run rebuild build-system
     ciq.delete()
