@@ -132,6 +132,7 @@ docker run -d --init --entrypoint= --rm \
   -DBLAS_LIBRARIES=/3rdparty/local/lib/libblas.dll.a -DBLAS=1 \
   -DLAPACK_LIBRARIES=/3rdparty/local/lib/liblapack.dll.a -DLAPACK=1 \
   -DBOOST_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw \
+  -DBoost_ARCHITECTURE=-x64 \
   -DCMAKE_BUILD_TYPE=$BT \
   -DCMAKE_CXX_FLAGS_${BT^^}="$CXXFLAGS" \
   -DCMAKE_C_FLAGS_${BT^^}="$CFLAGS" \
