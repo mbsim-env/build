@@ -733,7 +733,7 @@ def allExampleStatic(request):
     for ref in ex.references.all():
       references.append({"id": ref.id, "h5FileName": ref.h5FileName, "h5FileSHA1": ref.h5FileSHA1})
     allEx[ex.exampleName]={
-      "refTime": ex.refTime.total_seconds(),
+      "refTime": ex.refTime.total_seconds() if ex.refTime is not None else None,
       "references": references,
     }
   return django.http.JsonResponse(allEx)

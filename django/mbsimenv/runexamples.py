@@ -831,7 +831,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   noparamArg=[]
   if "noparam" in labels: noparamArg=['--noparam']
   comm=exePrefix()+[pj(mbsimBinDir, "mbsimCreateFMU"+args.exeExt), '--nocompress']+cosimArg+noparamArg+[fmiInputFile]
-  ret1=abs(base.helper.subprocessCall(prefixSimulation('mbsimCreateFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime/2))
+  ret1=abs(base.helper.subprocessCall(prefixSimulation('mbsimCreateFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
   retv=valgrindOutputAndAdaptRet("example_fmi_create", ex)
   if retv!=0: ret1=1
 
@@ -895,7 +895,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   cosimArg=['--me']
   if cosim: cosimArg=['--cosim']
   comm=exePrefix()+[pj(mbsimBinDir, "mbsimTestFMU"+args.exeExt)]+cosimArg+["tmp_mbsimTestFMU"]
-  ret3=abs(base.helper.subprocessCall(prefixSimulation('mbsimTestFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime/2))
+  ret3=abs(base.helper.subprocessCall(prefixSimulation('mbsimTestFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
   retv=valgrindOutputAndAdaptRet("example_fmi_mbsimTestFMU", ex)
   if retv!=0: ret3=1
   # remove unpacked fmu
