@@ -6,7 +6,7 @@ $(document).ready(function() {
     if(!localStorage.getItem('cookieWarning')) {
       $("body").prepend(
        `<div class="alert alert-info fixed-bottom" id="COOKIEWARNING" style="margin: 1em" role="alert">
-          <strong>This website uses Cookies:</strong> We assume you are fine with this.
+          <strong>This website uses required Cookies only, like session ID and user-settings!</strong>
           Read more in on the impressum/disclaimer page.
           <button type="button" id="COOKIEBUTTON" class="close" data-dismiss="alert">OK</button>
         </div>`);
