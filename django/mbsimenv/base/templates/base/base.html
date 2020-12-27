@@ -37,46 +37,52 @@
       });
     </script>
 
-    <nav class="navbar navbar-expand-sm navbar-dark bg-dark">
-      <a class="navbar-brand" href="{% url "home:base" "index.html" %}" data-toggle="tooltip" data-placement="bottom" title="Home">
+    <nav class="navbar navbar-expand-md navbar-dark bg-dark">
+      <a class="navbar-brand" href="{% url "service:home" %}">
         <img height="22%" src="{% static 'base/mbsimenv.svg' %}"/> MBSim-Env
       </a>
-      <div class="collapse navbar-collapse">
-        <span class="navbar-nav mr-auto">
-          <a href="{% url "home:base" "index.html" %}">
-            <span class="navbar-text" style="margin-left: 1em">Home</span>
-          </a>
-          <a href="{% url 'service:releases' %}">
-            <span class="navbar-text" style="margin-left: 1em">Download</span>
-          </a>
-          <a href="{% url 'home:base' 'videos.html' %}">
-            <span class="navbar-text" style="margin-left: 1em">Videos</span>
-          </a>
-          <a href="https://github.com/mbsim-env/">
-            <span class="navbar-text" style="margin-left: 1em">Source Code</span>
-          </a>
-          <a href="{% url "service:home" %}">
-            <span class="navbar-text" style="margin-left: 1em">Build System</span>
-          </a>
-        </span>
-        {% if view.request.user.is_authenticated %}
-          <span class="nav-item dropdown">
-            <a class="nav-link" data-toggle="dropdown">
-              <span class="text-light">{% autoescape off %}{{ userAvatarEle }}{% endautoescape %}{% octicon "triangle-down" %}</span>
-            </a>
-            <span class="dropdown-menu dropdown-menu-right">
-              <span class="dropdown-item">Logged in as<br/><strong>{{ view.request.user.username }}</strong></span>
-              <a class="dropdown-item" href="{% url "base_userprofile" %}">{% octicon "person" height="25" %} User profile</a>
-              <a class="dropdown-item" href="{% url "account_logout" %}">{% octicon "sign-out" height="25" %} Log out</a>
-            </span>
-          </span>
-        {% else %}
-          <a href="{% url "account_login" %}">
-            <span class="text-light" data-toggle="tooltip" data-placement="bottom" title="Login with Github account">
-              {% octicon "sign-in" height="25" %} with {% octicon "mark-github" height="25" %}
-            </span>
-          </a>
-        {% endif %}
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarContent">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarContent">
+        <ul class="navbar-nav mr-auto">
+          <li class="nav-item {{navbar.home|yesno:"active,"}}">
+            <a class="nav-link" href="{% url "home:base" "index.html" %}">Home</a>
+          </li>
+          <li class="nav-item {{navbar.download|yesno:"active,"}}">
+            <a class="nav-link" href="{% url 'service:releases' %}">Download</a>
+          </li>
+          <li class="nav-item {{navbar.videos|yesno:"active,"}}">
+            <a class="nav-link" href="{% url 'home:videos' %}">Videos</a>
+          </li>
+          <li class="nav-item {{navbar.sourcecode|yesno:"active,"}}">
+            <a class="nav-link" href="https://github.com/mbsim-env/">Source Code</a>
+          </li>
+          <li class="nav-item {{navbar.buildsystem|yesno:"active,"}}">
+            <a class="nav-link" href="{% url "service:home" %}">Build System</a>
+          </li>
+        </ul>
+        <ul class="navbar-nav ml-auto">
+          {% if view.request.user.is_authenticated %}
+            <li class="nav-item dropdown">
+              <a class="nav-link dropdown-toggle text-light" href="#" role="button" data-toggle="dropdown">
+                {% autoescape off %}{{ userAvatarEle }}{% endautoescape %}
+              </a>
+              <div class="dropdown-menu dropdown-menu-right">
+                <span class="dropdown-item">Logged in as<br/><strong>{{ view.request.user.username }}</strong></span>
+                <a class="dropdown-item" href="{% url "base_userprofile" %}">{% octicon "person" height="22" %} User profile</a>
+                <a class="dropdown-item" href="{% url "account_logout" %}">{% octicon "sign-out" height="22" %} Log out</a>
+              </div>
+            </li>
+          {% else %}
+            <li class="nav-item">
+              <a class="nav-link text-light" href="{% url "account_login" %}"
+                 data-toggle="tooltip" data-placement="bottom" title="Login with Github account">
+                {% octicon "sign-in" height="22" %} with {% octicon "mark-github" height="22" %}
+              </a>
+            </li>
+          {% endif %}
+        </ul>
       </div>
     </nav>
 

@@ -20,6 +20,7 @@ class Home(base.views.Base):
   template_name='service/home.html'
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
+    context["navbar"]["buildsystem"]=True
     context['manuals']=service.models.Manual.objects.all()
     if service.models.Info.objects.all().count()==1:
       context['info']=service.models.Info.objects.all()[0]
@@ -110,6 +111,7 @@ class EditBranches(base.views.Base):
 
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
+    context["navbar"]["buildsystem"]=True
 
     # just a list which can be used to loop over in the template
     context['repoList']=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
@@ -257,6 +259,7 @@ class Releases(base.views.Base):
 
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
+    context["navbar"]["download"]=True
 
     allReleases=service.models.Release.objects.order_by('-versionMajor', '-versionMinor')
     currentVersionMajor=allReleases[0].versionMajor
@@ -363,6 +366,7 @@ class Webapp(base.views.Base):
   template_name='service/webapp.html'
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
+    context["navbar"]["buildsystem"]=True
     context["prog"]=kwargs["prog"]
     context["buildType"]=kwargs["buildType"]
     context["exampleName"]=kwargs["exampleName"]

@@ -36,6 +36,7 @@ class Run(base.views.Base):
 
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
+    context["navbar"]["buildsystem"]=True
 
     # check if this examplerun is the current (last one)
     isCurrent=self.run.getCurrent().id==self.run.id
@@ -358,6 +359,7 @@ class Valgrind(base.views.Base):
     return super().dispatch(request, *args, **kwargs)
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
+    context["navbar"]["buildsystem"]=True
     context["valgrind"]=self.valgrind
     return context
 
@@ -486,6 +488,7 @@ class XMLOutput(base.views.Base):
 
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
+    context["navbar"]["buildsystem"]=True
     context['example']=self.example
     return context
 
@@ -543,6 +546,7 @@ class CompareResult(base.views.Base):
 
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
+    context["navbar"]["buildsystem"]=True
     context['example']=self.example
     return context
 
@@ -661,6 +665,7 @@ class DifferencePlot(base.views.Base):
 
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
+    context["navbar"]["buildsystem"]=True
     context['compareResult']=self.compareResult
     return context
 

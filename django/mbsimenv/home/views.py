@@ -6,6 +6,14 @@ class Home(base.views.Base):
     return ["home/"+self.kwargs["suburl"]]
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
+    context["navbar"]["home"]=True
+    return context
+
+class Videos(base.views.Base):
+  template_name='home/videos.html'
+  def get_context_data(self, **kwargs):
+    context=super().get_context_data(**kwargs)
+    context["navbar"]["videos"]=True
     videos=[
       {"file": "home/videos/xml_mbsim_logo.webm"         , "title": "MBSim-Logo"     , "example": "xml/mbsim_logo"         },
       {"file": "home/videos/xml_woodpecker.webm"              , "title": "Woodpacker"     , "example": "xml/woodpecker"         },
