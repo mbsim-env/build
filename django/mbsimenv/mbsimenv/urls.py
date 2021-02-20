@@ -21,7 +21,7 @@ import django.conf.urls.static
 import importlib.util
 
 urlpatterns = [
-  django.urls.path('', lambda _: django.shortcuts.redirect('service:home')),
+  django.urls.path('', lambda _: django.shortcuts.redirect('home:base', "index.html")),
   django.urls.path('base/', django.urls.include('base.urls')),
   django.urls.path('admin/', django.contrib.admin.site.urls),
   django.urls.path('accounts/login/', lambda _: django.shortcuts.redirect('github_login')),

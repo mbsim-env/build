@@ -40,6 +40,7 @@ class Run(base.views.Base):
 
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
+    context["navbar"]["buildsystem"]=True
 
     # get the corresponding examplerun ID to this build ID
     # and check if all these examples have passed or not
