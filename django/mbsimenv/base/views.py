@@ -11,6 +11,13 @@ from octicons.templatetags.octicons import octicon
 class Base(django.views.generic.base.TemplateView):
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
+    context["navbar"]={
+      "home": False,
+      "download": False,
+      "videos": False,
+      "sourcecode": False,
+      "buildsystem": False,
+    }
     if not self.request.user.is_authenticated:
       # nobody is logged in -> use dummy avatar
       userAvatarEle=octicon("person", height="21")
@@ -42,6 +49,9 @@ def fileDownloadFromDB(request, app, model, id, field):
 # the impresusm page
 class Impressum(Base):
   template_name='base/impressum_disclaimer_datenschutz.html'
+  def get_context_data(self, **kwargs):
+    context=super().get_context_data(**kwargs)
+    context["navbar"]["home"]=True
 
 # dummy http page just to display all available octicons
 class ListOcticons(Base):
@@ -61,6 +71,7 @@ class UserProfile(Base):
   def get_context_data(self, **kwargs):
     import allauth
     context=super().get_context_data(**kwargs)
+    context["navbar"]["buildsystem"]=True
     if not self.request.user.is_authenticated:
       # nobody is logged in -> use large dummy avatar; no social user available
       userLargeAvatarEle=octicon("person", height="125")

@@ -1186,7 +1186,8 @@ def updateReference():
     serverExampleStatic=serverAllExampleStatic[example]
     localExampleStatic, _=runexamples.models.ExampleStatic.objects.get_or_create(exampleName=example)
     # set refTime from server
-    localExampleStatic.refTime=datetime.timedelta(seconds=serverExampleStatic["refTime"])
+    localExampleStatic.refTime=datetime.timedelta(seconds=serverExampleStatic["refTime"]) \
+                               if serverExampleStatic["refTime"] is not None else None
     # loop over all reference files
     for serverReference in serverExampleStatic["references"]:
       # get/create local reference (skip if already up to date)

@@ -118,16 +118,6 @@
   </tbody>
 </table>
 
-<h2 style="margin-top: 1em;">{% octicon "desktop-download" height="38" %}&nbsp;Release Downloads</h2>
-<div class="card border-secondary">
-  <div class="card-body">
-    <p>Latest release version is
-      <span class="font-weight-bold">{{ currentRelease.versionMajor }}.{{ currentRelease.versionMinor }}</span>
-      from {{ currentRelease.createDate }}.</p>
-    <p><a href="{% url 'service:releases' %}">Tested releases are available here</a></p>
-  </div>
-</div>
-
 <h2 style="margin-top: 1em;">{% octicon "question" height="38" %}</span>&nbsp;Documentation</h2>
 
 <h3 id="manuals">Manuals</h3>
@@ -152,7 +142,7 @@
   </li>
 </ul>
 
-<h3>C++ API Reference</h3>
+<h3 id="CppAPI">C++ API Reference</h3>
 <ul class="list-group">
   <li class="list-group-item"><a href="{% static "runtime/doxygenReference/fmatvec/index.html" %}">fmatvec</a></li>
   <li class="list-group-item"><a href="{% static "runtime/doxygenReference/hdf5serie/index.html" %}">HDF5Serie</a></li>
@@ -165,13 +155,6 @@
   <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsimphysics/index.html" %}">MBSim Physics module</a></li>
   <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbxmlutils/index.html" %}">MBXMLUtils</a></li>
   <li class="list-group-item"><a href="{% static "runtime/doxygenReference/openmbvcppinterface/index.html" %}">OpenMBV C++ Interface</a></li>
-</ul>
-
-<h3>Papers</h3>
-<ul class="list-group">
-  <li class="list-group-item">
-    <a href="{% static "papers/IMSD10Paper.pdf" %}">IMSD 2010: <span class="font-italic">Analysing Dynamical Phenomenons: Introduction to MBSim</span></a>
-  </li>
 </ul>
 
 <h2 style="margin-top: 1em;"><i class="fa fa-linux"></i>&nbsp;{% octicon "bug" height="38" %}&nbsp;Daily Linux64 Debug Build</h2>
@@ -267,14 +250,6 @@
   <div class="card-body">
     A news feed of all failures of the build system is available via auto discovery
     of this page and <a href="{% url "service:feed" %}">{% octicon "rss" %}&nbsp;here at this link</a>.
-  </div>
-</div>
-
-<h2 style="margin-top: 1em;">{% octicon "file" height="38" %}&nbsp;Source Code</h2>
-<div class="card border-secondary">
-  <div class="card-body">
-    Git repos of all MBSim-Env projects are hosted on
-    <a href="https://github.com/mbsim-env/">{% octicon "logo-github" %}</a>
   </div>
 </div>
 

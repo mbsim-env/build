@@ -562,7 +562,7 @@ def build(toolName, run):
 def configure(tool):
   configureFD=io.StringIO()
   savedDir=os.getcwd()
-  cmake=os.path.exists(pj(args.sourceDir, tool.toolName, "CMakeLists.txt"))
+  cmake=not os.path.exists(pj(args.sourceDir, tool.toolName, "configure.ac"))
   run=0
   try:
     if not cmake and (not args.disableConfigure or not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName), "config.status"))):
@@ -647,7 +647,7 @@ def configure(tool):
 def make(tool):
   makeFD=io.StringIO()
   run=0
-  cmake=os.path.exists(pj(args.sourceDir, tool.toolName, "CMakeLists.txt"))
+  cmake=not os.path.exists(pj(args.sourceDir, tool.toolName, "configure.ac"))
   buildCmd=["make"] if not cmake else ["ninja", "-v"]
   try:
     if not args.disableMake:
@@ -695,7 +695,7 @@ def make(tool):
 def check(tool):
   checkFD=io.StringIO()
   run=0
-  cmake=os.path.exists(pj(args.sourceDir, tool.toolName, "CMakeLists.txt"))
+  cmake=not os.path.exists(pj(args.sourceDir, tool.toolName, "configure.ac"))
   buildCmd=["make"] if not cmake else ["ninja", "-v"]
   if not args.disableMakeCheck:
     run=1
@@ -730,7 +730,7 @@ def check(tool):
 def doc(tool, disabled, docDirName):
   if not os.path.isdir(pj(args.sourceDir, tool.toolName, docDirName)):
     return 0, 0
-  cmake=os.path.exists(pj(args.sourceDir, tool.toolName, "CMakeLists.txt"))
+  cmake=not os.path.exists(pj(args.sourceDir, tool.toolName, "configure.ac"))
 
   docFD=io.StringIO()
   savedDir=os.getcwd()

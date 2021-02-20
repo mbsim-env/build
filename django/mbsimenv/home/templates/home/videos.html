@@ -1,0 +1,29 @@
+{% extends "base/base.html" %}
+{% load static %}
+
+{% block title %}MBSim Videos{% endblock %}
+
+{% block body %}
+
+<div class="container">
+  {% for video in videos %}
+    <div class="row" style="margin-top:2em;margin-bottom:2em;">
+      <figure class="figure col-md">
+        <video class="figure-img img-fluid" controls>
+          <source src="{% static video.col1.file %}" type="video/webm">
+        </video>
+        <figcaption class="figure-caption text-center"><span class="h2">{{ video.col1.title }} <a href="https://github.com/mbsim-env/mbsim/tree/master/examples/{{ video.col1.example }}"><small>source</small></a></span></figcaption>
+      </figure>
+      {% if video.col2 is not None %}
+        <figure class="figure col-md">
+          <video class="figure-img img-fluid" controls>
+            <source src="{% static video.col2.file %}" type="video/webm">
+          </video>
+          <figcaption class="figure-caption text-center"><span class="h2">{{ video.col2.title }} <a href="https://github.com/mbsim-env/mbsim/tree/master/examples/{{ video.col2.example }}"><small>source</small></a></span></figcaption>
+        </figure>
+      {% endif %}
+    </div>
+  {% endfor %}
+</div>
+
+{% endblock %}

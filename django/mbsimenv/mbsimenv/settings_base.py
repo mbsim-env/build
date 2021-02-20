@@ -15,6 +15,7 @@ import logging
 import base.helper
 import mbsimenvSecrets
 import importlib.util
+import django.contrib.staticfiles.storage
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -189,6 +190,14 @@ STATIC_ROOT = '/var/www/html/static'
 STATICFILES_DIRS = [
   os.path.join(BASE_DIR, "static"),
 ]
+class PartialManifestStaticFilesStorage(django.contrib.staticfiles.storage.ManifestStaticFilesStorage):
+  manifest_strict = False # required to enable hashed_name
+  def hashed_name(self, name, content=None, filename=None):
+    # everything in runtime/ does not use a hash in the filename -> use the name as it
+    if name.startswith("runtime/"):
+      return name
+    return super().hashed_name(name, content, filename)
+STATICFILES_STORAGE = "mbsimenv.settings_base.PartialManifestStaticFilesStorage"
 
 SESSION_COOKIE_SECURE = True
 SECURE_REFERRER_POLICY = "origin"
