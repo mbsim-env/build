@@ -28,6 +28,8 @@ function loadDifferencePlot(url) {
       chart: {
         zoomType: 'xy',
         seriesBoostThreshold: 100,
+        panning: { enabled: true, type: 'xy' },
+        panKey: 'ctrl',
       },
       plotOptions: { series: { states: { inactive: { opacity: 1.0 }}}},
       title: { text: 'Signal' },
@@ -44,6 +46,8 @@ function loadDifferencePlot(url) {
         chart: {
           zoomType: 'xy',
           seriesBoostThreshold: 100,
+          panning: { enabled: true, type: 'xy' },
+          panKey: 'ctrl',
         },
         plotOptions: { series: { states: { inactive: { opacity: 1.0 }}}},
         title: { text: 'Absolute Error' },
@@ -73,6 +77,8 @@ function loadDifferencePlot(url) {
         chart: {
           zoomType: 'xy',
           seriesBoostThreshold: 100,
+          panning: { enabled: true, type: 'xy' },
+          panKey: 'ctrl',
         },
         plotOptions: { series: { states: { inactive: { opacity: 1.0 }}}},
         title: { text: 'Relative Error' },
