@@ -217,9 +217,8 @@ def subprocessCheckOutput(comm, f):
 # subprocess call with MultiFile output
 def subprocessCall(args, f, env=os.environ, maxExecutionTime=0):
   # remove core dumps from previous runs
-  for coreFile in glob.glob("*core*"):
-    if "LSB core file" in subprocess.check_output(["file", coreFile]).decode('utf-8'):
-      os.remove(coreFile)
+  for coreFile in glob.glob("core.*")+glob.glob("vgcore.*"):
+    os.remove(coreFile)
   startTime=django.utils.timezone.now()
   print("\nCalling command\n%s\nwith cwd\n%s\nat %s\n"%(" ".join(map(lambda x: "'"+x+"'", args)), os.getcwd(), startTime), file=f)
   # start the program to execute
@@ -264,14 +263,19 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0):
       guard.cancel()
   # check for core dump file
   exeRE=re.compile("^.*LSB core file.*, *from '([^']*)' *,.*$")
-  for coreFile in glob.glob("*core*"):
+  for coreFile in glob.glob("core.*")+glob.glob("vgcore.*"):
     m=exeRE.match(subprocess.check_output(["file", coreFile]).decode('utf-8'))
-    if m is None: continue
+    if m is None:
+      f.write("\n\n\nCORE DUMP file found but cannot extract executalbe name!\n\n\n")
+      continue
     exe=m.group(1).split(" ")[0]
     out=subprocess.check_output(["gdb", "-q", "-n", "-ex", "bt", "-batch", exe, coreFile]).decode('utf-8')
     f.write("\n\n\n******************** START: CORE DUMP BACKTRACE OF "+exe+" ********************\n\n\n")
     f.write(out)
     f.write("\n\n\n******************** END: CORE DUMP BACKTRACE ********************\n\n\n")
+  # remove core dumps (these require a lot of disc space)
+  for coreFile in glob.glob("core.*")+glob.glob("vgcore.*"):
+    os.remove(coreFile)
   # return the return value ot the called programm
   return ret
 subprocessCall.timedOutErrorCode=1000000
