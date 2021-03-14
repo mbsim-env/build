@@ -35,7 +35,6 @@ RUN yum install -y http://www6.atomicorp.com/channels/atomic/centos/7/x86_64/RPM
   python3-devel \
   qt5-qtbase-devel \
   qt5-qtsvg-devel \
-  hdf5-devel \
   python3-pip \
   boost169-devel \
   lapack-devel \
@@ -198,6 +197,17 @@ RUN make install
 WORKDIR /3rdparty/soqt-build
 RUN (cd ../soqt && git submodule init && git submodule update)
 RUN cmake3 -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=/3rdparty/local ../soqt
+RUN make -j $JOBS
+RUN make install
+
+# HDF5
+WORKDIR /3rdparty
+RUN git clone https://github.com/HDFGroup/hdf5.git
+ARG HDF5BRANCH=hdf5-1_10_7
+RUN (cd hdf5; git checkout $HDF5BRANCH)
+RUN mkdir /3rdparty/hdf5-build
+WORKDIR /3rdparty/hdf5-build
+RUN cmake3 -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=/3rdparty/local ../hdf5
 RUN make -j $JOBS
 RUN make install
 

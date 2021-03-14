@@ -78,18 +78,22 @@ RUN make -j $JOBS
 RUN make install
 
 # hdf5
-ARG HDF5VERSION=1_8_12
+# HDF5
 WORKDIR /3rdparty
-RUN git clone --depth 1 -b hdf5-$HDF5VERSION https://bitbucket.hdfgroup.org/scm/hdffv/hdf5.git
-WORKDIR /3rdparty/hdf5
-RUN git checkout -b test
-COPY docker/buildwin64Image/hdf5.patch /context/hdf5.patch
-RUN git apply /context/hdf5.patch
+RUN git clone https://github.com/HDFGroup/hdf5.git
+ARG HDF5BRANCH=hdf5-1_10_7
+RUN (cd hdf5; git checkout $HDF5BRANCH)
 RUN mkdir /3rdparty/hdf5-build
 WORKDIR /3rdparty/hdf5-build
-RUN cmake ../hdf5 -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DMSVC=TRUE -DHDF5_BUILD_CPP_LIB=ON -DBUILD_SHARED_LIBS=1
+RUN cmake ../hdf5 -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DBUILD_SHARED_LIBS=1 -DBUILD_STATIC_LIBS=0
 RUN make -j $JOBS
 RUN make install
+# fixes and adaptions
+# remove static programs and replace by shared
+RUN for i in /3rdparty/local/bin/*-shared.exe; do mv -f $i ${i:0:-11}.exe; done
+# remove static libs
+RUN rm /3rdparty/local/lib/libhdf5.a /3rdparty/local/lib/libhdf5_cpp.a /3rdparty/local/lib/libhdf5_hl.a /3rdparty/local/lib/libhdf5_hl_cpp.a /3rdparty/local/lib/libhdf5_tools.a 
+# fix link filenames
 RUN ln -s /3rdparty/local/lib/hdf5.lib /3rdparty/local/lib/libhdf5.lib && \
     ln -s /3rdparty/local/lib/hdf5_cpp.lib /3rdparty/local/lib/libhdf5_cpp.lib
 

@@ -170,6 +170,7 @@ localRet=subprocess.call(
   "--passToConfigure", "--disable-static",
   "--enable-python", "--with-qwt-inc-prefix=/3rdparty/local/include", "--with-qwt-lib-prefix=/3rdparty/local/lib",
   "--with-boost-inc=/usr/include/boost169",
+  "--with-hdf5-prefix=/3rdparty/local",
   "--with-mkoctfile=/3rdparty/local/bin/mkoctfile",
   "--with-qwt-lib-name=qwt", "--with-qmake=qmake-qt5", "COIN_CFLAGS=-I/3rdparty/local/include",
   "COIN_LIBS=-L/3rdparty/local/lib64 -lCoin", "SOQT_CFLAGS=-I/3rdparty/local/include",

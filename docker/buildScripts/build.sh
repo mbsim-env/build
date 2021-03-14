@@ -103,6 +103,7 @@ docker run -d --init --entrypoint= --rm \
   --enable-python \
   --with-qwt-inc-prefix=/3rdparty/local/include --with-qwt-lib-prefix=/3rdparty/local/lib --with-qwt-lib-name=qwt \
   --with-boost-inc=/usr/include/boost169 \
+  --with-hdf5-prefix=/3rdparty/local \
   --with-mkoctfile=/3rdparty/local/bin/mkoctfile \
   --with-qmake=qmake-qt5 \
   CXXFLAGS="$CXXFLAGS" \
