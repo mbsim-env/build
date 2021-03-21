@@ -495,12 +495,16 @@ def runExample(exRun, lock, example):
     # execute the example
     executeRet=0
     if not args.disableRun:
+      executeFD=base.helper.MultiFile(args.printToConsole)
+      # remove lock from all h5 file, just to avoid the the results depend on crashes of previous runs
+      base.helper.subprocessCall([pj(mbsimBinDir, "h5lockserie"+args.exeExt), "--remove"]+glob.glob("*.ombvh5")+glob.glob("*.mbsh5"),
+                                 executeFD, maxExecutionTime=1)
+
       # clean output of previous run
       list(map(os.remove, glob.glob("*.fmuh5")))
       list(map(os.remove, glob.glob("*.mbsh5")))
       list(map(os.remove, glob.glob("*.ombvh5")))
 
-      executeFD=base.helper.MultiFile(args.printToConsole)
       dt=0
       if os.path.isfile("Makefile"):
         executeRet, dt=executeSrcExample(ex, executeFD)
