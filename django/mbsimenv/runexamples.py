@@ -522,7 +522,7 @@ def runExample(exRun, lock, example):
         dt=0
       executeFD.close()
       ex.time=datetime.timedelta(seconds=dt)
-      ex.runOutput=executeFD.getData()
+      ex.runOutput=executeFD.getData().replace("\0", "&#00;");
       ex.runResult=runexamples.models.Example.RunResult.TIMEDOUT if executeRet==base.helper.subprocessCall.timedOutErrorCode else \
                    (runexamples.models.Example.RunResult.FAILED if executeRet!=0 else runexamples.models.Example.RunResult.PASSED)
       ex.save()
@@ -578,7 +578,7 @@ def runExample(exRun, lock, example):
           setattr(ex, exOK, runexamples.models.Example.GUITestResult.TIMEDOUT)
         else:
           setattr(ex, exOK, runexamples.models.Example.GUITestResult.PASSED if ret==0 else runexamples.models.Example.GUITestResult.FAILED)
-        setattr(ex, exOutput, outFD.getData())
+        setattr(ex, exOutput, outFD.getData().replace("\0", "&#00;"))
         ex.save()
       runGUI(ombvFiles, "openmbv", ex, "guiTestOpenmbvOK", "guiTestOpenmbvOutput")
       runGUI(h5pFiles, "h5plotserie", ex, "guiTestHdf5serieOK", "guiTestHdf5serieOutput")
@@ -604,7 +604,7 @@ def runExample(exRun, lock, example):
     print("", file=fatalScriptErrorFD)
     print(traceback.format_exc(), file=fatalScriptErrorFD)
     fatalScriptErrorFD.close()
-    ex.runOutput=fatalScriptErrorFD.getData()
+    ex.runOutput=fatalScriptErrorFD.getData().replace("\0", "&#00;")
     ex.runResult=runexamples.models.Example.RunResult.FAILED
     ex.save()
     runExampleRet=1
@@ -1251,7 +1251,7 @@ def validateXML(ex):
           nrFailed+=1
           xmlOut.resultOK=False
         outputFD.close()
-        xmlOut.resultOutput=outputFD.getData()
+        xmlOut.resultOutput=outputFD.getData().replace("\0", "&#00;")
         xmlOut.save()
   ex.xmlOutputsFailed=ex.xmlOutputs.filterFailed().count()
   ex.save()
@@ -1401,7 +1401,7 @@ def coverage(exRun):
     lcovFD.close()
     exRun.coverageOK=ret==0
     exRun.coverageRate=covRate
-    exRun.coverageOutput=lcovFD.getData()
+    exRun.coverageOutput=lcovFD.getData().replace("\0", "&#00;")
     exRun.save()
 
     return 1 if ret!=0 else 0

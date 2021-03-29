@@ -130,8 +130,6 @@ class DataTableEditBranches(base.views.DataTable):
 
   def colData_remove(self, ds):
     tooltip="service/%s: id=%d"%(self.model, ds.id)
-    if ds.fmatvecBranch=="master" and ds.hdf5serieBranch=="master" and ds.openmbvBranch=="master" and ds.mbsimBranch=="master":
-      return base.helper.tooltip("not removeable", tooltip)
     return base.helper.tooltip(\
       '<button class="btn btn-secondary btn-xs" onclick="deleteBranchCombination($(this), \'{}\');" type="button">{}</button>'.\
       format(django.urls.reverse('service:db_deletebranchcombi', args=[self.model, ds.id]), octicon("diff-removed")), tooltip)
@@ -217,9 +215,6 @@ def deleteBranchCombination(request, model, id):
     return django.http.HttpResponseForbidden()
   # get branch combi in table the example on the the reference should be updated or create it
   b=getattr(service.models, model).objects.get(id=id)
-  if b.fmatvecBranch=="master" and b.hdf5serieBranch=="master" and \
-     b.openmbvBranch=="master" and b.mbsimBranch=="master":
-    return django.http.HttpResponseBadRequest("This branch combination cannot be deleted.")
   b.delete()
   return django.http.HttpResponse()
 

@@ -73,10 +73,9 @@ sa.save()
 sa.sites.add(django.contrib.sites.models.Site.objects.get(id=1))
 sa.save()
 
-# create master, master, master, master in CIBranches and DailyBranches
+# add master, master, master, master in CIBranches and DailyBranches, if the branch combi is empty
 for model in ["CIBranches", "DailyBranches"]:
-  if getattr(service.models, model).objects.filter(fmatvecBranch="master", hdf5serieBranch="master",
-                                                   openmbvBranch="master", mbsimBranch="master").count()==0:
+  if getattr(service.models, model).objects.count()==0:
     bc=getattr(service.models, model)()
     bc.fmatvecBranch="master"
     bc.hdf5serieBranch="master"

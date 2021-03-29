@@ -43,8 +43,10 @@ def dailyBuild(fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch, ext):
   return 0 if retldd==0 and retldr==0 and retwdr==0 else 1
 
 ret=0
-# build the master branch combi first
-ret=ret+dailyBuild("master", "master", "master", "master", "")
+# build the master branch combi first (if it exists)
+if service.models.DailyBranches.objects.filter(fmatvecBranch="master", hdf5serieBranch="master",
+                                               openmbvBranch="master", mbsimBranch="master").count()>0:
+  ret=ret+dailyBuild("master", "master", "master", "master", "")
   
 # build doc
 contd=setup.run("builddoc", 2, printLog=False, detach=True, addCommands=["--forceBuild"])

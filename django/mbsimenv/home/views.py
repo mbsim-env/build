@@ -15,13 +15,14 @@ class Videos(base.views.Base):
     context=super().get_context_data(**kwargs)
     context["navbar"]["videos"]=True
     videos=[
+      #                                                                                           path in mbsim/examples repo
+      #        path to video in django static                       title                         (may be None)
       {"file": "home/videos/xml_mbsim_logo.webm"         , "title": "MBSim-Logo"     , "example": "xml/mbsim_logo"         },
-      {"file": "home/videos/xml_woodpecker.webm"              , "title": "Woodpacker"     , "example": "xml/woodpecker"         },
+      {"file": "home/videos/xml_woodpecker.webm"         , "title": "Woodpacker"     , "example": "xml/woodpecker"         },
       {"file": "home/videos/xml_rack_contact.webm"       , "title": "Rack"           , "example": "xml/rack_contact"       },
       {"file": "home/videos/xml_bevel_gear_contact.webm" , "title": "Bevel Gear"     , "example": "xml/bevel_gear_contact" },
       {"file": "home/videos/xml_planar_gear_contact.webm", "title": "Planar Gear"    , "example": "xml/planar_gear_contact"},
       {"file": "home/videos/xml_planetary_gear.webm"     , "title": "Planetary Gear" , "example": "xml/planetary_gear"     },
-
       {"file": "home/videos/xml_chaintensioner.webm"     , "title": "Chain Tensioner", "example": "xml/chaintensioner"     },
       {"file": "home/videos/xml_constraints.webm"        , "title": "Constraints"    , "example": "xml/constraints"        },
       {"file": "home/videos/xmlflat_tippe_top.webm"      , "title": "Tippe-Top"      , "example": "xmlflat/tippe_top"      },

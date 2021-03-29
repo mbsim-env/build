@@ -197,6 +197,13 @@ if args.valgrindExamples:
   # update
   CURDIR=os.getcwd()
   os.chdir("/mbsim-env/mbsim-valgrind/examples")
+
+  if subprocess.call(["git", "fetch"])!=0:
+    ret=ret+1
+    print("git fetch failed.")
+  if subprocess.call(["git", "checkout", args.mbsimBranch])!=0:
+    ret=ret+1
+    print("git checkout of branch "+args.mbsimBranch+" failed.")
   if subprocess.call(["git", "pull"])!=0:
     ret=ret+1
     print("git pull of mbsim-valgrind/examples failed.")
