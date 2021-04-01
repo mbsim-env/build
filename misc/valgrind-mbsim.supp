@@ -8,7 +8,7 @@
 
 # OCTAVE
 {
-   
+   xxx
    Memcheck:Leak
    match-leak-kinds: definite
    fun:malloc
@@ -26,7 +26,7 @@
    fun:_ZN6octave14dynamic_loader8load_octERKSsS2_b
 }
 {
-   
+   xxx
    Memcheck:Leak
    match-leak-kinds: definite
    fun:malloc
@@ -46,7 +46,7 @@
    fun:_ZN12octave_valueaSERKS_
 }
 {
-   
+   xxx
    Memcheck:Leak
    match-leak-kinds: definite
    fun:malloc
@@ -63,7 +63,7 @@
    fun:open
 }
 {
-   
+   xxx
    Memcheck:Leak
    match-leak-kinds: possible
    fun:_Znwm
@@ -78,7 +78,7 @@
    fun:_ZN10MBXMLUtils9DOMParser6createERKSt3setIN5boost10filesystem4pathESt4lessIS4_ESaIS4_EE
 }
 {
-   
+   xxx
    Memcheck:Leak
    match-leak-kinds: possible
    fun:_Znwm
@@ -92,7 +92,7 @@
    fun:_ZN11xercesc_3_115DOMLSParserImpl8parseURIEPKt
 }
 {
-   
+   xxx
    Memcheck:Leak
    match-leak-kinds: possible
    ...
@@ -101,7 +101,7 @@
    fun:_ZN11xercesc_3_121DOMImplementationImpl14createLSParserENS_19DOMImplementationLS23DOMImplementationLSModeEPKtPNS_13MemoryManagerEPNS_14XMLGrammarPoolE
 }
 {
-   
+   xxx
    Memcheck:Leak
    match-leak-kinds: possible
    fun:_Znwm
@@ -118,21 +118,21 @@
    fun:_ZN5boost12interprocess20shared_memory_objectC1ENS0_11open_only_tEPKcNS0_6mode_tE
 }
 {
-   
+   xxx
    Memcheck:Leak
    match-leak-kinds: definite
    ...
    fun:_ZN6octave11eval_stringERKSsbRii
 }
 {
-   
+   xxx
    Memcheck:Leak
    match-leak-kinds: definite
    ...
    fun:_ZN6octave11interpreterD1Ev
 }
 {
-   
+   xxx
    Memcheck:Leak
    match-leak-kinds: possible
    ...
