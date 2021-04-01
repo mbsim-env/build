@@ -218,7 +218,7 @@ if args.valgrindExamples:
       "--baseExampleDir", "/mbsim-env/mbsim-valgrind/examples"] if "--coverage" in ARGS else [])+\
     ["--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
     "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh "+\
-    "--child-silent-after-fork=yes --num-callers=300 --gen-suppressions=all "+\
+    "--child-silent-after-fork=yes --num-callers=24 --gen-suppressions=all "+\
     "--suppressions=/mbsim-build/build/misc/valgrind-mbsim.supp "+\
     "--suppressions=/mbsim-build/build/misc/valgrind-python.supp --leak-check=full"]+RUNEXAMPLESFILTER
     , env=valgrindEnv)

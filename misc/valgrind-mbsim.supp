@@ -11,6 +11,116 @@
    
    Memcheck:Leak
    match-leak-kinds: definite
+   fun:malloc
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   fun:_ZN6octave19octave_dlopen_shlibC1ERKSs
+   fun:_ZN6octave15dynamic_library10dynlib_rep12new_instanceERKSs
+   fun:dynamic_library
+   fun:open
+   fun:_ZN6octave14dynamic_loader8load_octERKSsS2_b
+}
+{
+   
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:_dl_close_worker
+   fun:_dl_close
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlclose
+   fun:_ZN6octave19octave_dlopen_shlibD1Ev
+   fun:_ZN6octave19octave_dlopen_shlibD0Ev
+   fun:operator=
+   fun:close
+   fun:_ZN6octave14dynamic_loader11shlibs_list6removeERNS_15dynamic_libraryE
+   fun:_ZN6octave14dynamic_loader10remove_octERKSsRNS_15dynamic_libraryE
+   fun:_ZN19octave_dld_functionD1Ev
+   fun:_ZN19octave_dld_functionD0Ev
+   fun:_ZN12octave_valueaSERKS_
+}
+{
+   
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:malloc
+   fun:dl_open_worker
+   fun:_dl_catch_error
+   fun:_dl_open
+   fun:dlopen_doit
+   fun:_dl_catch_error
+   fun:_dlerror_run
+   fun:dlopen@@GLIBC_2.2.5
+   fun:_ZN6octave19octave_dlopen_shlibC1ERKSs
+   fun:_ZN6octave15dynamic_library10dynlib_rep12new_instanceERKSs
+   fun:dynamic_library
+   fun:open
+}
+{
+   
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN11xercesc_3_117MemoryManagerImpl8allocateEm
+   fun:_ZN11xercesc_3_113XMLStringPool11addNewEntryEPKt
+   fun:_ZN11xercesc_3_110XMLScanner16setURIStringPoolEPNS_13XMLStringPoolE
+   fun:_ZN11xercesc_3_117AbstractDOMParser10initializeEv
+   fun:_ZN11xercesc_3_117AbstractDOMParserC1EPNS_12XMLValidatorEPNS_13MemoryManagerEPNS_14XMLGrammarPoolE
+   fun:_ZN11xercesc_3_115DOMLSParserImplC1EPNS_12XMLValidatorEPNS_13MemoryManagerEPNS_14XMLGrammarPoolE
+   fun:_ZN11xercesc_3_121DOMImplementationImpl14createLSParserENS_19DOMImplementationLS23DOMImplementationLSModeEPKtPNS_13MemoryManagerEPNS_14XMLGrammarPoolE
+   fun:_ZN10MBXMLUtils9DOMParserC1ERKSt3setIN5boost10filesystem4pathESt4lessIS4_ESaIS4_EE
+   fun:_ZN10MBXMLUtils9DOMParser6createERKSt3setIN5boost10filesystem4pathESt4lessIS4_ESaIS4_EE
+}
+{
+   
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN11xercesc_3_117MemoryManagerImpl8allocateEm
+   fun:_ZN11xercesc_3_113XMLStringPool11addNewEntryEPKt
+   fun:_ZN11xercesc_3_19ElemStack5resetEjjjj
+   fun:_ZN11xercesc_3_112IGXMLScanner9scanResetERKNS_11InputSourceE
+   fun:_ZN11xercesc_3_112IGXMLScanner12scanDocumentERKNS_11InputSourceE
+   fun:_ZN11xercesc_3_110XMLScanner12scanDocumentEPKt
+   fun:_ZN11xercesc_3_117AbstractDOMParser5parseEPKt
+   fun:_ZN11xercesc_3_115DOMLSParserImpl8parseURIEPKt
+}
+{
+   
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZN11xercesc_3_117AbstractDOMParserC1EPNS_12XMLValidatorEPNS_13MemoryManagerEPNS_14XMLGrammarPoolE
+   fun:_ZN11xercesc_3_115DOMLSParserImplC1EPNS_12XMLValidatorEPNS_13MemoryManagerEPNS_14XMLGrammarPoolE
+   fun:_ZN11xercesc_3_121DOMImplementationImpl14createLSParserENS_19DOMImplementationLS23DOMImplementationLSModeEPKtPNS_13MemoryManagerEPNS_14XMLGrammarPoolE
+}
+{
+   
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN9__gnu_cxx13new_allocatorIcE8allocateEmPKv
+   fun:_ZNSs4_Rep9_S_createEmmRKSaIcE
+   fun:_ZNSs9_M_mutateEmmm
+   fun:_ZNSs15_M_replace_safeEmmPKcm
+   fun:_ZNSs6assignEPKcm
+   fun:_ZNSs6assignEPKc
+   fun:_ZNSsaSEPKc
+   fun:_ZN5boost12interprocess19fill_system_messageEiRSs
+   fun:_ZN5boost12interprocess22interprocess_exceptionC1ERKNS0_10error_infoEPKc
+   fun:_ZN5boost12interprocess20shared_memory_object19priv_open_or_createENS0_9ipcdetail13create_enum_tEPKcNS0_6mode_tERKNS0_11permissionsE
+   fun:_ZN5boost12interprocess20shared_memory_objectC1ENS0_11open_only_tEPKcNS0_6mode_tE
+}
+{
+   
+   Memcheck:Leak
+   match-leak-kinds: definite
    ...
    fun:_ZN6octave11eval_stringERKSsbRii
 }
