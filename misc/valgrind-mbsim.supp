@@ -1,3 +1,190 @@
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN15SoGLRenderCache4openEP7SoState
+   fun:_ZN13SoGLCacheList4openEP16SoGLRenderActioni
+   fun:_ZN11SoSeparator17GLRenderBelowPathEP16SoGLRenderAction
+   fun:_ZN8SoAction8traverseEP6SoNode
+   fun:_ZN16SoGLRenderAction14beginTraversalEP6SoNode
+   fun:_ZN17SoGLRenderActionP12renderSingleEP6SoNode
+   fun:_ZN17SoGLRenderActionP6renderEP6SoNode
+   fun:_ZN16SoGLRenderAction14beginTraversalEP6SoNode
+   fun:_ZN8SoAction5applyEP6SoNode
+   fun:_ZN10OpenMBVGUI12SoQtMyViewer12actualRedrawEv
+}
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN8SoSFTime14createInstanceEv
+   fun:_ZN4SoDB17createGlobalFieldERK6SbName6SoType
+   fun:_ZN4SoDB4initEv
+   fun:_ZN4SoQt4initEP7QWidget
+   fun:_ZN10OpenMBVGUI10MainWindowC1ERSt4listISsSaISsEE
+}
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZNSt12__shared_ptrIN11xercesc_3_111DOMLSParserELN9__gnu_cxx12_Lock_policyE2EE5resetIS1_St5_BindIFMS1_FvvESt12_PlaceholderILi1EEEEEENSt9enable_ifIXsrSt21__sp_is_constructibleIS1_T_E5valueEvE4typeEPSF_T0_
+}
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:*
+}
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN9__gnu_cxx13new_allocatorISt13_Rb_tree_nodeISt4pairIKSsN5boost10filesystem4pathEEEE8allocateEmPKv
+   fun:_ZNSt16allocator_traitsISaISt13_Rb_tree_nodeISt4pairIKSsN5boost10filesystem4pathEEEEE8allocateERS8_m
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsN5boost10filesystem4pathEESt10_Select1stIS5_ESt4lessISsESaIS5_EE11_M_get_nodeEv
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsN5boost10filesystem4pathEESt10_Select1stIS5_ESt4lessISsESaIS5_EE14_M_create_nodeIJS0_ISsS4_EEEEPSt13_Rb_tree_nodeIS5_EDpOT_
+   fun:_ZNKSt8_Rb_treeISsSt4pairIKSsN5boost10filesystem4pathEESt10_Select1stIS5_ESt4lessISsESaIS5_EE11_Alloc_nodeclIS0_ISsS4_EEEPSt13_Rb_tree_nodeIS5_EOT_
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsN5boost10filesystem4pathEESt10_Select1stIS5_ESt4lessISsESaIS5_EE10_M_insert_IS0_ISsS4_ENSB_11_Alloc_nodeEEESt17_Rb_tree_iteratorIS5_EPSt18_Rb_tree_node_baseSI_OT_RT0_
+   fun:_ZNSt8_Rb_treeISsSt4pairIKSsN5boost10filesystem4pathEESt10_Select1stIS5_ESt4lessISsESaIS5_EE16_M_insert_uniqueIS0_ISsS4_EEES0_ISt17_Rb_tree_iteratorIS5_EbEOT_
+}
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN9__gnu_cxx13new_allocatorIcE8allocateEmPKv
+   fun:_ZNSs4_Rep9_S_createEmmRKSaIcE
+   fun:_ZNSs12_S_constructIPKcEEPcT_S3_RKSaIcESt20forward_iterator_tag
+   fun:_ZNSs16_S_construct_auxIPKcEEPcT_S3_RKSaIcESt12__false_type
+   fun:_ZNSs12_S_constructIPKcEEPcT_S3_RKSaIcE
+}
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN10MBXMLUtils9DOMParser6createERKSt3setIN5boost10filesystem4pathESt4lessIS4_ESaIS4_EE
+   fun:_ZN10MBXMLUtils10Preprocess14preprocessFileERSt6vectorIN5boost10filesystem4pathESaIS4_EESt3setIS4_St4lessIS4_ES5_ERKS4_
+   fun:main
+}
+{
+   xxx
+   Memcheck:Cond
+   fun:_swrast_depth_test_span
+   fun:_swrast_write_rgba_span
+   fun:smooth_rgba_triangle
+   fun:quadfunc_rgba
+   fun:_tnl_render_quads_verts
+   fun:run_render
+   fun:_tnl_run_pipeline
+   fun:_tnl_draw_prims
+   fun:_tnl_draw
+   fun:vbo_draw_arrays
+   fun:vbo_exec_DrawArrays
+}
+{
+   xxx
+   Memcheck:Cond
+   fun:_swrast_depth_test_span
+   fun:_swrast_write_rgba_span
+   fun:smooth_rgba_triangle
+   fun:_tnl_render_quads_verts
+   fun:run_render
+   fun:_tnl_run_pipeline
+   fun:_tnl_draw_prims
+   fun:_tnl_draw
+   fun:vbo_draw_arrays
+   fun:vbo_exec_DrawArrays
+}
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:_ZN10SoGLImageP19createGLDisplayListEP7SoState
+   fun:_ZN9SoGLImage16getGLDisplayListEP7SoState
+   fun:_ZN28SoGLMultiTextureImageElement8updateGLEi
+   fun:_ZN28SoGLMultiTextureImageElement3setEP7SoStateP6SoNodeiP9SoGLImageN26SoMultiTextureImageElement5ModelERK7SbColor
+   fun:_ZN10SoTexture28GLRenderEP16SoGLRenderAction
+   fun:_ZN11SoSeparator17GLRenderBelowPathEP16SoGLRenderAction
+   fun:_ZN11SoSeparator17GLRenderBelowPathEP16SoGLRenderAction
+}
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:_Znwm
+   fun:cc_dl_open
+   fun:cc_dl_handle_with_gl_symbols
+   fun:coin_glglue_dl_handle
+   fun:glxglue_getprocaddress
+   fun:cc_glglue_getprocaddress
+   fun:glxglue_init
+   fun:cc_glglue_instance
+}
+{
+   xxx
+   Memcheck:Param
+   pwrite64(buf)
+   obj:/usr/lib64/libpthread-2.17.so
+   fun:H5FD__sec2_write
+   fun:H5FD_write
+   fun:H5F__accum_write
+   fun:H5PB_write
+   fun:H5F_block_write
+   fun:H5D__chunk_flush_entry
+   fun:H5D__chunk_flush
+   fun:H5D__flush_real
+   fun:H5D__flush_all_cb
+   fun:H5I__iterate_cb
+   fun:H5SL_iterate
+   fun:H5I_iterate
+   fun:H5D_flush_all
+   fun:H5F__flush_phase1
+   fun:H5F__flush
+   fun:H5F__start_swmr_write
+   fun:H5Fstart_swmr_write
+}
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZN9PythonCpp16initialize*
+}
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZN10MBXMLUtils9DOMParser5parseERKN5boost10filesystem4pathEPSt6vectorIS3_SaIS3_EEb
+   fun:_ZN10MBXMLUtils10Preprocess14preprocessFileERSt6vectorIN5boost10filesystem4pathESaIS4_EESt3setIS4_St4lessIS4_ES5_ERKS4_
+   fun:main
+}
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:_Znwm
+   fun:_ZNSt14__shared_countILN9__gnu_cxx12_Lock_policyE2EEC1IPN10MBXMLUtils9DOMParserEEET_
+   fun:_ZNSt14__shared_countILN9__gnu_cxx12_Lock_policyE2EEC1IPN10MBXMLUtils9DOMParserEEET_St17integral_constantIbLb0EE
+   fun:_ZNSt12__shared_ptrIN10MBXMLUtils9DOMParserELN9__gnu_cxx12_Lock_policyE2EEC1IS1_vEEPT_
+   fun:_ZNSt10shared_ptrIN10MBXMLUtils9DOMParserEEC1IS1_vEEPT_
+   fun:_ZN10MBXMLUtils9DOMParser6createERKSt3setIN5boost10filesystem4pathESt4lessIS4_ESaIS4_EE
+   fun:_ZN10MBXMLUtils10Preprocess14preprocessFileERSt6vectorIN5boost10filesystem4pathESaIS4_EESt3setIS4_St4lessIS4_ES5_ERKS4_
+   fun:main
+}
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_Z*octave*
+}
 # BOOST
 {
    boost chrono bug or valgrind bug?
@@ -7,6 +194,27 @@
 }
 
 # OCTAVE
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: definite
+   ...
+   fun:_Z*octave*
+}
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: definite
+   ...
+   fun:_PyEval_*
+}
+{
+   xxx
+   Memcheck:Leak
+   match-leak-kinds: possible
+   ...
+   fun:_ZN5boost12interprocess*
+}
 {
    xxx
    Memcheck:Leak

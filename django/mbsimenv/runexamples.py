@@ -642,7 +642,7 @@ def prefixSimulation(id):
     # remove valgrind output
     for xmlFile in glob.glob("valgrind.*.xml"):
       os.remove(xmlFile)
-    return args.prefixSimulation+['--xml=yes', '--xml-file=valgrind.%%p.%s.xml'%(id)]
+    return args.prefixSimulation+['--xml=yes', '--xml-file='+os.getcwd()+'/valgrind.%%p.%s.xml'%(id)]
   return args.prefixSimulation
 
 # get additional output files of simulations.

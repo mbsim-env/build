@@ -210,6 +210,7 @@ if args.valgrindExamples:
   sys.stdout.flush()
   valgrindEnv=os.environ.copy()
   valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
+  valgrindEnv["HDF5SERIE_NOCRASHFIX"]="1"
   # build
   localRet=subprocess.call(["python3", "/context/mbsimenv/runexamples.py", "--checkGUIs", "--disableCompare", "--disableValidate",
     "--buildType", args.buildType+"-valgrind", "--buildSystemRun", "-j", str(args.jobs),
