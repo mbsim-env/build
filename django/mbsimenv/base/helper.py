@@ -239,8 +239,10 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0):
   fcntl.fcntl(fd, fcntl.F_SETFL, fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NONBLOCK)
   # read all output
   lineNP=b'' # not already processed bytes (required since we read 100 bytes which may break a unicode multi byte character)
+  sleepTime=0.01
   while proc.poll() is None:
-    time.sleep(0.5)
+    time.sleep(sleepTime)
+    if sleepTime<0.5: sleepTime=sleepTime*1.01
     try:
       line=lineNP+proc.stdout.read()
     except:
