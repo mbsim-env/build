@@ -9,9 +9,21 @@
 {% block head %}
 <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
 <link rel="alternate" type="application/atom+xml" title="MBSim-Env Build-System News" href="{% url "service:feed" %}"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"> </script>
 {% endblock %}
 
 {% block body %}
+
+<script>
+  "use strict";
+  $(document).ready(function() {
+    new QRCode(document.getElementById("FEEDQRCODE"), {
+      text: "https://{{ hostname }}{% url "service:feed" %}",
+      width: 128, height: 128,
+      correctLevel : QRCode.CorrectLevel.Q // correctlevel H is buggy
+    });
+   });
+</script>
 
 <h1>Official Build System of the <i>MBSim-Environment</i></h1>
 
@@ -250,6 +262,7 @@
   <div class="card-body">
     A news feed of all failures of the build system is available via auto discovery
     of this page and <a href="{% url "service:feed" %}">{% octicon "rss" %}&nbsp;here at this link</a>.
+    <div id="FEEDQRCODE"></div>
   </div>
 </div>
 

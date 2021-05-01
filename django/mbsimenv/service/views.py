@@ -26,6 +26,7 @@ class Home(base.views.Base):
     if service.models.Info.objects.all().count()==1:
       context['info']=service.models.Info.objects.all()[0]
     context["currentRelease"]=service.models.Release.objects.order_by('-versionMajor', '-versionMinor').first()
+    context["hostname"]=os.environ.get('MBSIMENVSERVERNAME', 'localhost')
     return context
 
 # return the according bootstrap color
