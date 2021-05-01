@@ -17,7 +17,7 @@
 <script>
   "use strict";
   $(document).ready(function() {
-    new QRCode(document.getElementById("FEEDQRCODE"), {
+    new QRCode("FEEDQRCODE", {
       text: "https://{{ hostname }}{% url "service:feed" %}",
       width: 128, height: 128,
       correctLevel : QRCode.CorrectLevel.Q // correctlevel H is buggy

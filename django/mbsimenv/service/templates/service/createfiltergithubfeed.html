@@ -14,7 +14,7 @@
 <script>
   "use strict";
   $(document).ready(function() {
-    var filteredQRCode=new QRCode(document.getElementById("FILTEREDQRCODE"), {
+    var filteredQRCode=new QRCode("FILTEREDQRCODE", {
       text: $("#FILTEREDURL").text().trim(),
       width: 256, height: 256,
       correctLevel : QRCode.CorrectLevel.Q // correctlevel H is buggy
