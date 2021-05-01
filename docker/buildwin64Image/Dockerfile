@@ -234,7 +234,7 @@ COPY django/mbsimenv/service            /context/mbsimenv/service
 USER dockeruser:dockeruser
 
 # init conf
-RUN wine cmd echo && wineserver -w
+RUN wine cmd /c echo dummy && wineserver -w
 
 # config ccache
 RUN ccache -M 20G
