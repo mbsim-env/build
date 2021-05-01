@@ -1,0 +1,55 @@
+{% extends "base/base.html" %}
+
+{% load octicons %}
+
+{% block title %}Filter GitHub Organization Feeds{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
+{% endblock %}
+
+{% block body %}
+
+<script>
+  "use strict";
+  $(document).ready(function() {
+    $('.CHANGE').on('keyup mouseleave', function(e) {
+      if($("#USERNAME").val()=="" &&
+         $("#URL").val().match(new RegExp("^https://github.com/organizations/[^/]+/([^\.]+).private.atom?.*"))) {
+        var user=$("#URL").val().replace(new RegExp("^https://github.com/organizations/[^/]+/([^\.]+).private.atom?.*"), "$1");
+        $("#USERNAME").val(user);
+      }
+      var url="{% url 'service:filtergithubfeed' %}?url="+encodeURIComponent($("#URL").val())+"&username="+$("#USERNAME").val();
+      $("#FILTEREDURL").text("https://{{ hostname }}"+url);
+      $("#FILTEREDURL").attr("href", url);
+    });
+  });
+</script>
+
+<h1>Filter GitHub Organization Feeds</h1>
+
+<p>{% octicon "logo-github" %} provides a news feed for each organizations. This feed shows all activities for a given organization.
+When logged in on GitHub this organization news feed is available as HTML at<br/>
+<code>https://github.com/orgs/{org}/dashboard</code> e.g.
+<code><a href="https://github.com/orgs/mbsim-env/dashboard">https://github.com/orgs/mbsim-env/dashboard</a></code><br/>
+and as a Atom news feed as alternative link of this URL. Note that you need to be logged on in GibHub since the URL of this alternative feed link contains an access token.
+Copy and paste this feed URL (including the access token) to the below form and also enter a valid GitHub user name
+(your user name). The resulting URL, shown after the form, is a Atom feed URL providing the same entries as the GitHub feed without all activities of the given user name.</p>
+<form style="margin-top: 2em;">
+  <div class="form-group">
+    <label for="URL">GitHub Atom organization feed URL:</label>
+    <input type="input" class="form-control CHANGE" id="URL">
+    <small class="form-text text-muted">We will never store the access token contain in this URL.</small>
+  </div>
+  <div class="form-group">
+    <label for="USERNAME">GitHub Username to filter out:</label>
+    <input type="input" class="form-control CHANGE" id="USERNAME">
+  </div>
+</form>
+<p style="margin-top: 2em;">
+  <code><a id="FILTEREDURL" style="font-size: 150%;" href="{% url "service:filtergithubfeed" %}?url=URL&username=USERNAME">
+    https://{{ hostname }}{% url "service:filtergithubfeed" %}?url=URL&username=USERNAME
+  </a></code>
+</p>
+
+{% endblock %}

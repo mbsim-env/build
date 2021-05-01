@@ -13,6 +13,7 @@ import mbsimenvSecrets
 import concurrent.futures
 import urllib.parse
 import requests
+import os
 from octicons.templatetags.octicons import octicon
 
 # the user profile page
@@ -396,3 +397,12 @@ def filterGithubFeed(request):
     if name.text!=username: continue
     root.remove(entry)
   return django.http.HttpResponse(b'<?xml version="1.0" encoding="UTF-8"?>\n'+ET.tostring(root), content_type="text/xml")
+
+# the user profile page
+class CreateFilterGitHubFeed(base.views.Base):
+  template_name='service/createfiltergithubfeed.html'
+  def get_context_data(self, **kwargs):
+    context=super().get_context_data(**kwargs)
+    context["navbar"]["buildsystem"]=True
+    context["hostname"]=os.environ.get('MBSIMENVSERVERNAME', 'localhost')
+    return context
