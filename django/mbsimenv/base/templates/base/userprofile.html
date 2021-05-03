@@ -57,6 +57,11 @@
         <dt class="col-2">Access token</dt><dd class="col-10">&nbsp;{{ githubAccessTokenDummy }}</dd>
       {% endif %}
     {% endif %}
+    {% if session %}
+      <dt class="col-2">Session ID</dt><dd class="col-10">&nbsp;{{ session.id }}</dd>
+      <dt class="col-2">Session data</dt><dd class="col-10">&nbsp;{{ session.data }}</dd>
+      <dt class="col-2">Session expire</dt><dd class="col-10 DATETIME">&nbsp;{{ session.expire|date:'c' }}</dd>
+    {% endif %}
   </dl>
   
 {% else %}

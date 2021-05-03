@@ -91,6 +91,12 @@ class UserProfile(Base):
     context["socialUser"]=socialUser
     context["githubAccessTokenDummy"]="<not shown for security reasons>" if self.gh.getAccessToken() else None
     context["githubUserInMbsimenv"]=self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout)
+    sessionDBObj=list(django.contrib.sessions.models.Session.objects.filter(session_key=self.request.session.session_key))
+    if len(sessionDBObj)>0:
+      context["session"]={}
+      context["session"]["id"]=sessionDBObj[0].session_key
+      context["session"]["data"]=sessionDBObj[0].get_decoded()
+      context["session"]["expire"]=sessionDBObj[0].expire_date
     return context
 
 # on logout, log out and redirect to user profile

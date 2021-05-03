@@ -74,10 +74,14 @@ RUN DJANGO_SETTINGS_MODULE=mbsimenv.settings_buildsystem python3 /context/mbsime
 
 # set crontab for
 # - cert updates (once a day at arbitary time)
+# - django clear expired sessions (once a day)
 RUN mkdir /var/www/html/certbot
 RUN echo -e 'SHELL=/bin/bash\n\
 1 0 * * * python3 -c "import time; import random; time.sleep(random.randint(0,24*60*60-100))"; \
-/usr/bin/certbot-2 renew --webroot -w /var/www/html/certbot --post-hook "httpd -k graceful" 2> >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/2) > >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/1)' | crontab /dev/stdin
+/usr/bin/certbot-2 renew --webroot -w /var/www/html/certbot --post-hook "httpd -k graceful" \
+2> >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/2) > >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/1)\n\
+39 7 * * * DJANGO_SETTINGS_MODULE=mbsimenv.settings_buildsystem python3 /context/mbsimenv/manage.py clearsessions' \
+| crontab /dev/stdin
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
