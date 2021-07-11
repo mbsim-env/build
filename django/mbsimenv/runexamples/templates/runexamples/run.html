@@ -80,7 +80,7 @@
   </tbody>
 </table>
 
-{% if run.coverageOK %}
+{% if run.coverageOK is not None %}
   <h2 id="coverage">Code Coverage</h2>
   <div class="alert alert-{{ run.coverageOK|yesno:"success,danger" }}" role="alert">
     <span class="text-{{ run.coverageOK|yesno:"success,danger" }}">
