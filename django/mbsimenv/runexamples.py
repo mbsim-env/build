@@ -1343,7 +1343,7 @@ def coverage(exRun):
       if m is not None:
         covRate=float(m.group(1))
 
-    # upload to codecov v5
+    # upload to codecov v4
     repos=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
     for repo in repos:
       # run lcov: remove all counters except one repo
@@ -1355,27 +1355,21 @@ def coverage(exRun):
         if line.startswith("SF:/mbsim-env/"+repo+"/"):
           line=line.replace("SF:/mbsim-env/"+repo+"/", "SF:/")
         print(line, end="")
-      # upload (v5)
+      # upload (v4)
       commitID=getattr(exRun.build_run, repo+"UpdateCommitID")
       if os.environ["MBSIMENVTAGNAME"]=="latest" and "-nonedefbranches" not in args.buildType:
-        # save coverage file in database
-        with open(pj(tempDir, "cov.trace.final."+repo), "r") as f:
-          setattr(exRun, repo+"Lcov", f.read())
-        lcovDownloadURL="https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("base:textFieldFromDB", args=["runexamples", "Run", exRun.id, repo+"Lcov"])
-        print("lcov download URL: "+lcovDownloadURL, file=lcovFD)
- 
         nrTry=1
         tries=3
         while nrTry<=tries:
           # codecov has some timeouts on connect (try some times more)
-          print("Upload to codecov v5 try %d/%d"%(nrTry, tries), file=lcovFD)
+          print("Upload to codecov v4 try %d/%d"%(nrTry, tries), file=lcovFD)
           codecovError=False
           try:
-            response=requests.post("https://codecov.io/upload/v5?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s&url=%s"% \
+            response=requests.post("https://codecov.io/upload/v4?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
               (commitID, mbsimenvSecrets.getSecrets()["codecovUploadToken"][repo], exRun.build_run.id, exRun.id,
                urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
-               "valgrind" if "valgrind" in args.buildType else "normal", urllib.parse.quote(lcovDownloadURL)),
-               headers={"Accept": "text/plain"})
+               "valgrind" if "valgrind" in args.buildType else "normal"),
+              headers={"Accept": "text/plain"})
           except:
             codecovError=True
           if not codecovError and response.status_code==200:
@@ -1384,14 +1378,24 @@ def coverage(exRun):
           nrTry=nrTry+1
         if codecovError or response.status_code!=200:
           ret=ret+1
-        print("codecov status code "+str(response.status_code), file=lcovFD)
-        lcovFD.write(response.content.decode("utf-8"))
+          print("codecov status code "+str(response.status_code), file=lcovFD)
+          lcovFD.write(response.content.decode("utf-8"))
+        else:
+          res=response.text.splitlines()
+          codecovURL=res[0]
+          uploadURL=res[1]
+          with open(pj(tempDir, "cov.trace.final."+repo), "r") as f:
+            response=requests.put(uploadURL, headers={"Content-Type": "text/plain"}, data=f.read())
+          if response.status_code!=200:
+            ret=ret+1
+            print("S3 status code "+str(response.status_code), file=lcovFD)
+            lcovFD.write(response.content.decode("utf-8"))
       else:
-        print("Skipping upload to codecov v5, this is the staging system or a none master/master/master/master build!", file=lcovFD)
-        print("https://codecov.io/upload/v5?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s&url=%s"% \
+        print("Skipping upload to codecov v4, this is the staging system or a none master/master/master/master build!", file=lcovFD)
+        print("https://codecov.io/upload/v4?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
           (commitID, "<secret for %s>"%(repo), exRun.build_run.id, exRun.id,
            urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
-           "valgrind" if "valgrind" in args.buildType else "normal", lcovDownloadURL), file=lcovFD)
+           "valgrind" if "valgrind" in args.buildType else "normal"), file=lcovFD)
 
     # set coverage info on exRun
     lcovFD.close()

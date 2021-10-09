@@ -36,10 +36,6 @@ class Run(django.db.models.Model):
   coverageOK=django.db.models.BooleanField(null=True, blank=True)
   coverageRate=django.db.models.FloatField(null=True, blank=True)
   coverageOutput=django.db.models.TextField(blank=True)
-  fmatvecLcov=django.db.models.TextField(blank=True)
-  hdf5serieLcov=django.db.models.TextField(blank=True)
-  openmbvLcov=django.db.models.TextField(blank=True)
-  mbsimLcov=django.db.models.TextField(blank=True)
 
   def getCurrent(self):
     return Run.objects.getCurrent(self.buildType)
