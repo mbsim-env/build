@@ -54,7 +54,8 @@ if ciq is not None:
       sys.stdout.flush()
       # run linux64-ci
       ciq.delete()
-      ret=setup.run("build-linux64-ci", args.jobs, printLog=False,
+      enforceConfigure=False # if this is set to True the CI build enforces a configure run which is sometime required.
+      ret=setup.run("build-linux64-ci", args.jobs, printLog=False, enforceConfigure=enforceConfigure,
                     fmatvecBranch=ciq.fmatvecBranch, hdf5serieBranch=ciq.hdf5serieBranch,
                     openmbvBranch=ciq.openmbvBranch, mbsimBranch=ciq.mbsimBranch)
       sys.exit(ret)

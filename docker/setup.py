@@ -370,7 +370,7 @@ def renameStoppedContainer(name):
   except docker.errors.NotFound:
     pass
 
-def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
+def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False, enforceConfigure=False,
                  fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
                  printLog=True, detach=False):
   stopDatabase=False
@@ -401,7 +401,7 @@ def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False,
               "--fmatvecBranch", fmatvecBranch,
               "--hdf5serieBranch", hdf5serieBranch,
               "--openmbvBranch", openmbvBranch,
-              "--mbsimBranch", mbsimBranch]+addCommand) if not interactive else [],
+              "--mbsimBranch", mbsimBranch]+addCommand+(["--enforceConfigure"] if enforceConfigure else [])) if not interactive else [],
     environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname(), "MBSIMENVIMAGEID": imageID},
     volumes={
       'mbsimenv_mbsim-'+buildType+"."+getTagname():  {"bind": "/mbsim-env",       "mode": "rw"},
@@ -482,6 +482,7 @@ def runNetworkAndDatabase(printLog, daemon):
 def run(s, jobs=4,
         addCommands=[],
         interactive=False,
+        enforceConfigure=False,
         fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
         builddockerBranch="master", keepBuildDockerContainerRunning=False,
         networkID=None, hostname=None,
@@ -491,26 +492,28 @@ def run(s, jobs=4,
     raise RuntimeError("Cannot run detached an interactively.")
 
   if s=="build-linux64-ci":
-    return runAutobuild(s, "linux64-ci", addCommands, jobs=jobs, interactive=interactive,
+    return runAutobuild(s, "linux64-ci", addCommands, jobs=jobs, interactive=interactive, enforceConfigure=enforceConfigure,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog, detach=detach)
 
   elif s.startswith("build-linux64-dailydebug"):
     buildTypeSuffix=s[len("build-linux64-dailydebug"):]
     return runAutobuild(s, "linux64-dailydebug"+buildTypeSuffix, ["--valgrindExamples"]+addCommands,
-                 jobs=jobs, interactive=interactive,
+                 jobs=jobs, interactive=interactive, enforceConfigure=enforceConfigure,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog, detach=detach)
 
   elif s.startswith("build-linux64-dailyrelease"):
     buildTypeSuffix=s[len("build-linux64-dailyrelease"):]
-    return runAutobuild(s, "linux64-dailyrelease"+buildTypeSuffix, addCommands, jobs=jobs, interactive=interactive,
+    return runAutobuild(s, "linux64-dailyrelease"+buildTypeSuffix, addCommands,
+                 jobs=jobs, interactive=interactive, enforceConfigure=enforceConfigure,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog, detach=detach)
 
   elif s.startswith("build-win64-dailyrelease"):
     buildTypeSuffix=s[len("build-win64-dailyrelease"):]
-    return runAutobuild(s, "win64-dailyrelease"+buildTypeSuffix, addCommands, jobs=jobs, interactive=interactive,
+    return runAutobuild(s, "win64-dailyrelease"+buildTypeSuffix, addCommands, jobs=jobs,
+                 interactive=interactive, enforceConfigure=enforceConfigure,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog, detach=detach)
 

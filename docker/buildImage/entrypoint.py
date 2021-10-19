@@ -24,6 +24,7 @@ argparser=argparse.ArgumentParser(
   description="Entrypoint for container mbsimenv/build.")
   
 argparser.add_argument("--buildType", type=str, required=True, help="The build type")
+argparser.add_argument("--enforceConfigure", action="store_true", help="Enforce the configure step")
 argparser.add_argument("--fmatvecBranch", type=str, default="master", help="fmatvec branch")
 argparser.add_argument("--hdf5serieBranch", type=str, default="master", help="hdf5serie branch")
 argparser.add_argument("--openmbvBranch", type=str, default="master", help="openmbv branch")
@@ -103,7 +104,7 @@ if args.buildType == "linux64-ci":
   info=service.models.Info.objects.all().first()
   lastImageID=info.buildImageID if info is not None else ""
   # configure needed?
-  if lastImageID==curImageID:
+  if lastImageID==curImageID and not args.enforceConfigure:
     ARGS.append("--disableConfigure")
   # save build image id
   info.buildImageID=curImageID
