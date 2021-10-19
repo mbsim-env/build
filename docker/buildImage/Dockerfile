@@ -207,7 +207,7 @@ ARG HDF5BRANCH=hdf5-1_10_7
 RUN (cd hdf5; git checkout $HDF5BRANCH)
 RUN mkdir /3rdparty/hdf5-build
 WORKDIR /3rdparty/hdf5-build
-RUN cmake3 -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=/3rdparty/local ../hdf5
+RUN cmake3 -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DHDF5_ENABLE_Z_LIB_SUPPORT=on ../hdf5
 RUN make -j $JOBS
 RUN make install
 

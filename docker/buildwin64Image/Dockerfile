@@ -85,7 +85,7 @@ ARG HDF5BRANCH=hdf5-1_10_7
 RUN (cd hdf5; git checkout $HDF5BRANCH)
 RUN mkdir /3rdparty/hdf5-build
 WORKDIR /3rdparty/hdf5-build
-RUN cmake ../hdf5 -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DBUILD_SHARED_LIBS=1 -DBUILD_STATIC_LIBS=0
+RUN cmake ../hdf5 -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DBUILD_SHARED_LIBS=1 -DBUILD_STATIC_LIBS=0 -DHDF5_ENABLE_Z_LIB_SUPPORT=on -DZLIB_INCLUDE_DIR=/usr/x86_64-w64-mingw32/sys-root/mingw/include -DZLIB_LIBRARY=/usr/x86_64-w64-mingw32/sys-root/mingw/lib/libz.dll.a
 RUN make -j $JOBS
 RUN make install
 # fixes and adaptions
