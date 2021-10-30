@@ -366,15 +366,21 @@ def setGithubStatus(run, state):
     description="Runexamples passed after %.1f min"%((run.endTime-run.startTime).total_seconds()/60)
   else:
     raise RuntimeError("Unknown state "+state+" provided")
-  gh=github.Github(mbsimenvSecrets.getSecrets()["githubStatusAccessToken"])
-  for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
-    if os.environ["MBSIMENVTAGNAME"]=="latest":
-      commit=gh.get_repo("mbsim-env/"+repo).get_commit(getattr(run.build_run, repo+"UpdateCommitID"))
-      commit.create_status(state, "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[run.id]),
-        description, "runexamples/%s/%s/%s/%s/%s"%(run.buildType, run.build_run.fmatvecBranch, run.build_run.hdf5serieBranch,
-                                                                  run.build_run.openmbvBranch, run.build_run.mbsimBranch))
+  try:
+    gh=github.Github(mbsimenvSecrets.getSecrets()["githubStatusAccessToken"])
+    for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
+      if os.environ["MBSIMENVTAGNAME"]=="latest":
+        commit=gh.get_repo("mbsim-env/"+repo).get_commit(getattr(run.build_run, repo+"UpdateCommitID"))
+        commit.create_status(state, "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[run.id]),
+          description, "runexamples/%s/%s/%s/%s/%s"%(run.buildType, run.build_run.fmatvecBranch, run.build_run.hdf5serieBranch,
+                                                                    run.build_run.openmbvBranch, run.build_run.mbsimBranch))
+      else:
+        print("Skipping setting github status, this is the staging system!")
+  except ex:
+    if django.conf.settings.DEBUG:
+      raise ex
     else:
-      print("Skipping setting github status, this is the staging system!")
+      raise RuntimeError("Original exception avoided in setGithubStatus to ensure that no secret is printed.")
 
 def pkgconfig(module, options):
   comm=["pkg-config", module]

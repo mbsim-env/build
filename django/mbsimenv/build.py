@@ -156,14 +156,20 @@ def setGithubStatus(run, state):
     description="Build passed after %.1f min"%((run.endTime-run.startTime).total_seconds()/60)
   else:
     raise RuntimeError("Unknown state "+state+" provided")
-  gh=github.Github(mbsimenvSecrets.getSecrets()["githubStatusAccessToken"])
-  for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
-    if os.environ["MBSIMENVTAGNAME"]=="latest":
-      commit=gh.get_repo("mbsim-env/"+repo).get_commit(getattr(run, repo+"UpdateCommitID"))
-      commit.create_status(state, "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("builds:run", args=[run.id]),
-        description, "builds/%s/%s/%s/%s/%s"%(run.buildType, run.fmatvecBranch, run.hdf5serieBranch, run.openmbvBranch, run.mbsimBranch))
+  try:
+    gh=github.Github(mbsimenvSecrets.getSecrets()["githubStatusAccessToken"])
+    for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
+      if os.environ["MBSIMENVTAGNAME"]=="latest":
+        commit=gh.get_repo("mbsim-env/"+repo).get_commit(getattr(run, repo+"UpdateCommitID"))
+        commit.create_status(state, "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("builds:run", args=[run.id]),
+          description, "builds/%s/%s/%s/%s/%s"%(run.buildType, run.fmatvecBranch, run.hdf5serieBranch, run.openmbvBranch, run.mbsimBranch))
+      else:
+        print("Skipping setting github status, this is the staging system!")
+  except ex:
+    if django.conf.settings.DEBUG:
+      raise ex
     else:
-      print("Skipping setting github status, this is the staging system!")
+      raise RuntimeError("Original exception avoided in setGithubStatus to ensure that no secret is printed.")
 
 def removeOldBuilds():
   olderThan=django.utils.timezone.now()-datetime.timedelta(days=args.removeOlderThan)
