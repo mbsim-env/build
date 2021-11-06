@@ -286,7 +286,7 @@ subprocessCall.timedOutErrorCode=1000000
 def startLocalServer(port, onlyGetServerInfo=False):
   import builds
   pidfile=os.path.dirname(os.path.realpath(__file__))+"/../localserver.json"
-  if onlyGetServerInfo:
+  if onlyGetServerInfo and os.path.exists(pidfile):
     with open(pidfile, "r") as f:
       localserver=json.load(f)
     return {"process": None, "hostname": localserver["hostname"], "port": localserver["port"]}

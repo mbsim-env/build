@@ -23,4 +23,4 @@ docker run -d --init --entrypoint= --rm \
   /mbsim-env/build/docker/buildImage/runlocalserver.py > /dev/null
 
 # run using mbsbd with all required args all all user args appended
-"$SCRIPTDIR"/mbsbd "$MBSIMENVDIR"/build/django/mbsimenv/runexamples.py --buildType localDockerWin64 "$@"
+"$SCRIPTDIR"/mbsbd "$MBSIMENVDIR"/build/django/mbsimenv/runexamples.py --buildType localDockerWin64 --exeExt .exe "$@"

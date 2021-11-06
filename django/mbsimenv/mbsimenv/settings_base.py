@@ -193,6 +193,8 @@ STATICFILES_DIRS = [
 class PartialManifestStaticFilesStorage(django.contrib.staticfiles.storage.ManifestStaticFilesStorage):
   manifest_strict = False # required to enable hashed_name
   def hashed_name(self, name, content=None, filename=None):
+    if django.conf.settings.MBSIMENV_TYPE=="localdocker": # localdocker does not collect static files -> dont use the hash
+      return name
     # everything in runtime/ does not use a hash in the filename -> use the name as it
     if name.startswith("runtime/"):
       return name

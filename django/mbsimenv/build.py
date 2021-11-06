@@ -716,11 +716,13 @@ def check(tool):
     result="done"
 
   if not cmake:
-    for rootDir,_,files in os.walk('.'): # append all test-suite.log files
-      if "test-suite.log" in files:
-        checkFD.write('\n\n\n\n\nCONTENT OF '+pj(rootDir, "test-suite.log")+"\n\n")
-        with open(pj(rootDir, "test-suite.log"), "r") as f:
-          checkFD.write(f.read())
+    for rootDir,_,files in os.walk('.'): # append all .log files of all tests
+      for f in files:
+        if f.endswith(".trs"):
+          fLog=f[0:-4]+".log"
+          checkFD.write('\n\n\n\n\nCONTENT OF '+pj(rootDir, fLog)+"\n\n")
+          with open(pj(rootDir, fLog), "r") as f:
+            checkFD.write(f.read())
   if not args.disableMakeCheck:
     tool.makeCheckOK=result=="done"
   tool.makeCheckOutput=checkFD.getvalue()
