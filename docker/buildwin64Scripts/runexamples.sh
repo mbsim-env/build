@@ -19,8 +19,10 @@ docker run -d --init --entrypoint= --rm \
   --user $(id -u):$(id -g) \
   -v "$MBSIMENVDIR":/mbsim-env \
   --net=host \
-  mbsimenv/build:$MBSIMENVTAGNAME \
+  mbsimenv/buildwin64:$MBSIMENVTAGNAME \
   /mbsim-env/build/docker/buildImage/runlocalserver.py > /dev/null
+# wait until localserver.json exists to avoid a race-condition between containers
+while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1; done
 
 # run using mbsbd with all required args all all user args appended
 "$SCRIPTDIR"/mbsbd "$MBSIMENVDIR"/build/django/mbsimenv/runexamples.py --buildType localDockerWin64 --exeExt .exe "$@"
