@@ -113,7 +113,7 @@ elif args.buildType.startswith("linux64-dailydebug"):
   ARGS=["--coverage",]
   RUNEXAMPLESARGS=["--checkGUIs"]
   RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] \
-   if os.environ["MBSIMENVTAGNAME"]=="staging" or "-nonedefbranches" in args.buildType else [])
+    if os.environ["MBSIMENVTAGNAME"]=="staging" or "-nonedefbranches" in args.buildType else ["--filter", "'nightly' in labels"])
 elif args.buildType.startswith("linux64-dailyrelease"):
   ARGS=["--enableDistribution"]
   RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs"]
@@ -222,7 +222,7 @@ if args.valgrindExamples:
     "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh "+\
     "--child-silent-after-fork=yes --num-callers=24 --gen-suppressions=all "+\
     "--suppressions=/mbsim-build/build/misc/valgrind-mbsim.supp "+\
-    "--suppressions=/mbsim-build/build/misc/valgrind-python.supp --leak-check=full"]+RUNEXAMPLESFILTER
+    "--suppressions=/mbsim-build/build/misc/valgrind-python.supp --leak-check=full", "--filter", "'nightly' in labels"]
     , env=valgrindEnv)
   if localRet!=0:
     ret=ret+1

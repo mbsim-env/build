@@ -88,11 +88,11 @@ mainOpts.add_argument("--action", default="report", type=str,
 - 'copyToReference' Copy current results to reference directory
 - 'updateReference' Update references from URL, use the build system if not given
 - 'list'            List directories to be run''')
-mainOpts.add_argument("-j", default=1, type=int,
+mainOpts.add_argument("-j", default=multiprocessing.cpu_count(), type=int,
   help="Number of jobs to run in parallel (applies only to the action 'report') [default: %(default)s]")
-mainOpts.add_argument("--filter", default="'nightly' in labels", type=str,
+mainOpts.add_argument("--filter", default="'basic' in labels", type=str,
   help='''Filter the specifed directories using the given Python code. If not given all directories with the
-label 'nightly' are used [default: %(default)s]
+label 'basic' are used [default: %(default)s]
 A directory is processed if the provided Python code evaluates to True where the following variables are defined:
 - src      Is True if the directory is a source code example
 - flatxml  Is True if the directory is a xml flat example

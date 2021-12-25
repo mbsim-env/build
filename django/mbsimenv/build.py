@@ -23,6 +23,7 @@ import mbsimenvSecrets
 import builds
 import mbsimenv
 import tempfile
+import multiprocessing
 
 if django.VERSION[0]!=3:
   print("Need django version 3. This is django version "+django.__version__)
@@ -60,8 +61,9 @@ def parseArguments():
     help="run config.status --recheck instead of configure")
   
   cfgOpts=argparser.add_argument_group('Configuration Options')
-  cfgOpts.add_argument("-j", default=1, type=int, help="Number of jobs to run in parallel (for make and examples)")
+  cfgOpts.add_argument("-j", default=multiprocessing.cpu_count(), type=int, help="Number of jobs to run in parallel (for make and examples)")
   cfgOpts.add_argument("--forceBuild", action="store_true", help="Force building even if --buildSystemRun is used and no new commits exist")
+  cfgOpts.add_argument("--buildTools", action="append", type=str, help="The list of tools to build. Build all tools if not specified.")
   
   cfgOpts.add_argument("--enableCleanPrefix", action="store_true", help="Remove the prefix dir completely before starting")
   cfgOpts.add_argument("--disableUpdate", action="store_true", help="Do not update repositories")
@@ -208,49 +210,49 @@ def main():
     pj('fmatvec'): [False, set([ # depends on
       ])],
     pj('hdf5serie', 'h5plotserie'): [False, set([ # depends on
-        pj('hdf5serie', 'hdf5serie')
+        pj('hdf5serie', 'hdf5serie'),
       ])],
     pj('hdf5serie', 'hdf5serie'): [False, set([ # depends on
-        pj('fmatvec')
+        pj('fmatvec'),
       ])],
     pj('openmbv', 'mbxmlutils'): [False, set([ # depends on
-        pj('fmatvec')
+        pj('fmatvec'),
       ])],
     pj('openmbv', 'openmbv'): [False, set([ # depends on
         pj('openmbv', 'openmbvcppinterface'),
-        pj('hdf5serie', 'hdf5serie')
+        pj('hdf5serie', 'hdf5serie'),
       ])],
     pj('openmbv', 'openmbvcppinterface'): [False, set([ # depends on
         pj('hdf5serie', 'hdf5serie'),
-        pj('openmbv', 'mbxmlutils')
+        pj('openmbv', 'mbxmlutils'),
       ])],
     pj('mbsim', 'kernel'): [False, set([ # depends on
         pj('fmatvec'),
-        pj('openmbv', 'openmbvcppinterface')
+        pj('openmbv', 'openmbvcppinterface'),
       ])],
     pj('mbsim', 'modules', 'mbsimHydraulics'): [False, set([ # depends on
         pj('mbsim', 'kernel'),
-        pj('mbsim', 'modules', 'mbsimControl')
+        pj('mbsim', 'modules', 'mbsimControl'),
       ])],
     pj('mbsim', 'modules', 'mbsimFlexibleBody'): [False, set([ # depends on
         pj('mbsim', 'kernel'),
-        pj('mbsim', 'thirdparty', 'nurbs++')
+        pj('mbsim', 'thirdparty', 'nurbs++'),
       ])],
     pj('mbsim', 'thirdparty', 'nurbs++'): [False, set([ # depends on
       ])],
     pj('mbsim', 'modules', 'mbsimElectronics'): [False, set([ # depends on
         pj('mbsim', 'kernel'),
-        pj('mbsim', 'modules', 'mbsimControl')
+        pj('mbsim', 'modules', 'mbsimControl'),
       ])],
     pj('mbsim', 'modules', 'mbsimControl'): [False, set([ # depends on
-        pj('mbsim', 'kernel')
+        pj('mbsim', 'kernel'),
       ])],
     pj('mbsim', 'modules', 'mbsimPhysics'): [False, set([ # depends on
-        pj('mbsim', 'kernel')
+        pj('mbsim', 'kernel'),
       ])],
     pj('mbsim', 'modules', 'mbsimInterface'): [False, set([ # depends on
         pj('mbsim', 'kernel'),
-        pj('mbsim', 'modules', 'mbsimControl')
+        pj('mbsim', 'modules', 'mbsimControl'),
       ])],
     pj('mbsim', 'mbsimxml'): [False, set([ # depends on
         pj('mbsim', 'kernel'),
@@ -262,17 +264,17 @@ def main():
         pj('mbsim', 'modules', 'mbsimElectronics'),
         pj('mbsim', 'modules', 'mbsimControl'),
         pj('mbsim', 'modules', 'mbsimPhysics'),
-        pj('mbsim', 'modules', 'mbsimInterface')
+        pj('mbsim', 'modules', 'mbsimInterface'),
       ])],
     pj('mbsim', 'mbsimgui'): [False, set([ # depends on
         pj('openmbv', 'openmbv'),
         pj('openmbv', 'mbxmlutils'),
-        pj('mbsim', 'mbsimxml')
+        pj('mbsim', 'mbsimxml'),
       ])],
     pj('mbsim', 'mbsimfmi'): [False, set([ # depends on
         pj('mbsim', 'kernel'),
         pj('mbsim', 'mbsimxml'),
-        pj('mbsim', 'modules', 'mbsimControl')
+        pj('mbsim', 'modules', 'mbsimControl'),
       ])],
   }
 
@@ -332,7 +334,7 @@ def main():
 
   # a sorted list of all tools te be build (in the correct order according the dependencies)
   orderedBuildTools=list()
-  sortBuildTools(set(toolDependencies), orderedBuildTools)
+  sortBuildTools(set(toolDependencies) if args.buildTools is None else set(args.buildTools), orderedBuildTools)
 
   # list tools which are not updated and must not be rebuild according dependencies
   for toolName in set(toolDependencies)-set(orderedBuildTools):
