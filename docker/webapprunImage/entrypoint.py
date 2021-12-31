@@ -28,7 +28,7 @@ prog=data.get('prog', None)
 exampleName=data.get('exampleName', "")
 
 # check arg
-if buildType not in ["linux64-dailydebug", "linux64-ci", "linux64-dailyrelease"] or \
+if buildType not in ["linux64-dailydebug", "linux64-ci", "linux64-dailyrelease", "linux64-dailydebug-nonedefbranches", "linux64-dailyrelease-nonedefbranches"] or \
    prog not in ["openmbv", "h5plotserie", "mbsimgui"]:
   raise RuntimeError('Unknown buildType or prog.')
 

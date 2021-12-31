@@ -207,74 +207,74 @@ def main():
 
   toolDependencies={
     #   |ToolName   |WillFail (if WillFail is true no Atom Feed error is reported if this Tool fails somehow)
-    pj('fmatvec'): [False, set([ # depends on
+    'fmatvec': [False, set([ # depends on
       ])],
-    pj('hdf5serie', 'h5plotserie'): [False, set([ # depends on
-        pj('hdf5serie', 'hdf5serie'),
+    'hdf5serie/h5plotserie': [False, set([ # depends on
+        'hdf5serie/hdf5serie',
       ])],
-    pj('hdf5serie', 'hdf5serie'): [False, set([ # depends on
-        pj('fmatvec'),
+    'hdf5serie/hdf5serie': [False, set([ # depends on
+        'fmatvec',
       ])],
-    pj('openmbv', 'mbxmlutils'): [False, set([ # depends on
-        pj('fmatvec'),
+    'openmbv/mbxmlutils': [False, set([ # depends on
+        'fmatvec',
       ])],
-    pj('openmbv', 'openmbv'): [False, set([ # depends on
-        pj('openmbv', 'openmbvcppinterface'),
-        pj('hdf5serie', 'hdf5serie'),
+    'openmbv/openmbv': [False, set([ # depends on
+        'openmbv/openmbvcppinterface',
+        'hdf5serie/hdf5serie',
       ])],
-    pj('openmbv', 'openmbvcppinterface'): [False, set([ # depends on
-        pj('hdf5serie', 'hdf5serie'),
-        pj('openmbv', 'mbxmlutils'),
+    'openmbv/openmbvcppinterface': [False, set([ # depends on
+        'hdf5serie/hdf5serie',
+        'openmbv/mbxmlutils',
       ])],
-    pj('mbsim', 'kernel'): [False, set([ # depends on
-        pj('fmatvec'),
-        pj('openmbv', 'openmbvcppinterface'),
+    'mbsim/kernel': [False, set([ # depends on
+        'fmatvec',
+        'openmbv/openmbvcppinterface',
       ])],
-    pj('mbsim', 'modules', 'mbsimHydraulics'): [False, set([ # depends on
-        pj('mbsim', 'kernel'),
-        pj('mbsim', 'modules', 'mbsimControl'),
+    'mbsim/modules/mbsimHydraulics': [False, set([ # depends on
+        'mbsim/kernel',
+        'mbsim/modules/mbsimControl',
       ])],
-    pj('mbsim', 'modules', 'mbsimFlexibleBody'): [False, set([ # depends on
-        pj('mbsim', 'kernel'),
-        pj('mbsim', 'thirdparty', 'nurbs++'),
+    'mbsim/modules/mbsimFlexibleBody': [False, set([ # depends on
+        'mbsim/kernel',
+        'mbsim/thirdparty/nurbs++',
       ])],
-    pj('mbsim', 'thirdparty', 'nurbs++'): [False, set([ # depends on
+    'mbsim/thirdparty/nurbs++': [False, set([ # depends on
       ])],
-    pj('mbsim', 'modules', 'mbsimElectronics'): [False, set([ # depends on
-        pj('mbsim', 'kernel'),
-        pj('mbsim', 'modules', 'mbsimControl'),
+    'mbsim/modules/mbsimElectronics': [False, set([ # depends on
+        'mbsim/kernel',
+        'mbsim/modules/mbsimControl',
       ])],
-    pj('mbsim', 'modules', 'mbsimControl'): [False, set([ # depends on
-        pj('mbsim', 'kernel'),
+    'mbsim/modules/mbsimControl': [False, set([ # depends on
+        'mbsim/kernel',
       ])],
-    pj('mbsim', 'modules', 'mbsimPhysics'): [False, set([ # depends on
-        pj('mbsim', 'kernel'),
+    'mbsim/modules/mbsimPhysics': [False, set([ # depends on
+        'mbsim/kernel',
       ])],
-    pj('mbsim', 'modules', 'mbsimInterface'): [False, set([ # depends on
-        pj('mbsim', 'kernel'),
-        pj('mbsim', 'modules', 'mbsimControl'),
+    'mbsim/modules/mbsimInterface': [False, set([ # depends on
+        'mbsim/kernel',
+        'mbsim/modules/mbsimControl',
       ])],
-    pj('mbsim', 'mbsimxml'): [False, set([ # depends on
-        pj('mbsim', 'kernel'),
-        pj('openmbv', 'openmbvcppinterface'),
-        pj('openmbv', 'mbxmlutils'),
+    'mbsim/mbsimxml': [False, set([ # depends on
+        'mbsim/kernel',
+        'openmbv/openmbvcppinterface',
+        'openmbv/mbxmlutils',
         # dependencies to mbsim modules are only required for correct xmldoc generation 
-        pj('mbsim', 'modules', 'mbsimHydraulics'),
-        pj('mbsim', 'modules', 'mbsimFlexibleBody'),
-        pj('mbsim', 'modules', 'mbsimElectronics'),
-        pj('mbsim', 'modules', 'mbsimControl'),
-        pj('mbsim', 'modules', 'mbsimPhysics'),
-        pj('mbsim', 'modules', 'mbsimInterface'),
+        'mbsim/modules/mbsimHydraulics',
+        'mbsim/modules/mbsimFlexibleBody',
+        'mbsim/modules/mbsimElectronics',
+        'mbsim/modules/mbsimControl',
+        'mbsim/modules/mbsimPhysics',
+        'mbsim/modules/mbsimInterface',
       ])],
-    pj('mbsim', 'mbsimgui'): [False, set([ # depends on
-        pj('openmbv', 'openmbv'),
-        pj('openmbv', 'mbxmlutils'),
-        pj('mbsim', 'mbsimxml'),
+    'mbsim/mbsimgui': [False, set([ # depends on
+        'openmbv/openmbv',
+        'openmbv/mbxmlutils',
+        'mbsim/mbsimxml',
       ])],
-    pj('mbsim', 'mbsimfmi'): [False, set([ # depends on
-        pj('mbsim', 'kernel'),
-        pj('mbsim', 'mbsimxml'),
-        pj('mbsim', 'modules', 'mbsimControl'),
+    'mbsim/mbsimfmi': [False, set([ # depends on
+        'mbsim/kernel',
+        'mbsim/mbsimxml',
+        'mbsim/modules/mbsimControl',
       ])],
   }
 

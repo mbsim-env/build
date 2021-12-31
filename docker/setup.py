@@ -46,7 +46,7 @@ def parseArgs():
 
 scriptdir=os.path.dirname(os.path.realpath(__file__))
 
-buildTypes=["linux64-dailydebug", "linux64-dailyrelease", "win64-dailyrelease", "linux64-ci"]
+buildTypes=["linux64-dailydebug", "linux64-dailyrelease", "win64-dailyrelease", "linux64-ci", "linux64-dailydebug-nonedefbranches", "linux64-dailyrelease-nonedefbranches", "win64-dailyrelease-nonedefbranches"]
 
 dockerClient=docker.from_env()
 dockerClientLL=docker.APIClient()
@@ -795,7 +795,8 @@ def run(s, jobs=4,
         'mbsimenv_mbsim-linux64-ci.'+getTagname():           {"bind": "/mbsim-env-linux64-ci",           "mode": "ro"},
         'mbsimenv_mbsim-linux64-dailydebug.'+getTagname():   {"bind": "/mbsim-env-linux64-dailydebug",   "mode": "ro"},
         'mbsimenv_mbsim-linux64-dailyrelease.'+getTagname(): {"bind": "/mbsim-env-linux64-dailyrelease", "mode": "ro"},
-        'mbsimenv_mbsim-win64-dailyrelease.'+getTagname():   {"bind": "/mbsim-env-win64-dailyrelease",   "mode": "ro"},
+        'mbsimenv_mbsim-linux64-dailydebug-nonedefbranches.'+getTagname():   {"bind": "/mbsim-env-linux64-dailydebug-nonedefbranches",   "mode": "ro"},
+        'mbsimenv_mbsim-linux64-dailyrelease-nonedefbranches.'+getTagname(): {"bind": "/mbsim-env-linux64-dailyrelease-nonedefbranches", "mode": "ro"},
       },
       detach=True, stdout=True, stderr=True)
     networki.disconnect(webapprun)
