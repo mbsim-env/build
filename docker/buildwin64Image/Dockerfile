@@ -39,7 +39,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   ninja-build \
   sqlite \
   && yum clean all
-RUN pip3 install django django-octicons
+RUN pip3 install django==3.1 django-octicons==1.0
 # bugfix for moc
 RUN mv /usr/x86_64-w64-mingw32/bin/qt5/moc /usr/x86_64-w64-mingw32/bin/qt5/moc.org
 COPY docker/buildwin64Image/moc /usr/x86_64-w64-mingw32/bin/qt5/moc

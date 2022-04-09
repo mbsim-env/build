@@ -382,9 +382,9 @@ def setGithubStatus(run, state):
                                                                     run.build_run.openmbvBranch, run.build_run.mbsimBranch))
       else:
         print("Skipping setting github status, this is the staging system!")
-  except ex:
+  except:
     if django.conf.settings.DEBUG:
-      raise ex
+      raise
     else:
       raise RuntimeError("Original exception avoided in setGithubStatus to ensure that no secret is printed.")
 
@@ -488,6 +488,8 @@ def runExample(exRun, lock, example):
   sys.stdout.flush()
   savedDir=os.getcwd()
   runExampleRet=0 # run ok
+  executeFD=base.helper.MultiFile(args.printToConsole)
+  exRunOutputWritten=False
   try:
     os.chdir(example)
 
@@ -508,7 +510,6 @@ def runExample(exRun, lock, example):
     # execute the example
     executeRet=0
     if not args.disableRun:
-      executeFD=base.helper.MultiFile(args.printToConsole)
       # remove lock from all h5 file, just to avoid the the results depend on crashes of previous runs
       base.helper.subprocessCall(exePrefix()+[pj(mbsimBinDir, "h5lockserie"+args.exeExt), "--remove"]+glob.glob("*.ombvh5")+glob.glob("*.mbsh5"),
                                  executeFD, maxExecutionTime=1)
@@ -533,9 +534,10 @@ def runExample(exRun, lock, example):
         print("Unknown example type in directory "+example+" found.", file=executeFD)
         executeRet=1
         dt=0
-      executeFD.close()
       ex.time=datetime.timedelta(seconds=dt)
+      executeFD.close()
       ex.runOutput=executeFD.getData().replace("\0", "&#00;");
+      exRunOutputWritten=True
       ex.runResult=runexamples.models.Example.RunResult.TIMEDOUT if executeRet==base.helper.subprocessCall.timedOutErrorCode else \
                    (runexamples.models.Example.RunResult.FAILED if executeRet!=0 else runexamples.models.Example.RunResult.PASSED)
       ex.save()
@@ -613,11 +615,16 @@ def runExample(exRun, lock, example):
 
   except:
     fatalScriptErrorFD=base.helper.MultiFile(args.printToConsole)
-    print("Fatal Script Errors should not happen. So this is a bug in runexamples.py which should be fixed.", file=fatalScriptErrorFD)
+    print("\n\n\n", file=fatalScriptErrorFD)
+    print("Fatal Test-Script Error! This may happen due to a previous error of the test or due to bugs in runexamples.py.",
+          file=fatalScriptErrorFD)
     print("", file=fatalScriptErrorFD)
     print(traceback.format_exc(), file=fatalScriptErrorFD)
     fatalScriptErrorFD.close()
-    ex.runOutput=fatalScriptErrorFD.getData().replace("\0", "&#00;")
+    if not exRunOutputWritten:
+      executeFD.close()
+      ex.runOutput=executeFD.getData().replace("\0", "&#00;");
+    ex.runOutput+=fatalScriptErrorFD.getData().replace("\0", "&#00;")
     ex.runResult=runexamples.models.Example.RunResult.FAILED
     ex.save()
     runExampleRet=1

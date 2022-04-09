@@ -69,12 +69,13 @@ RUN yum install -y http://www6.atomicorp.com/channels/atomic/centos/7/x86_64/RPM
   cmake3 \
   ninja-build \
   atomic-sqlite \
+  ca-certificates \
   && yum clean all
 # config devtoolset-7 and atomic SCL
 ENV PATH=/opt/atomicorp/atomic/root/usr/bin:/opt/atomicorp/atomic/root/usr/sbin:/opt/rh/devtoolset-7/root/usr/bin:$PATH \
     LD_LIBRARY_PATH=/opt/atomicorp/atomic/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib:/opt/rh/devtoolset-7/root/usr/lib64/dyninst:/opt/rh/devtoolset-7/root/usr/lib/dyninst:/opt/rh/devtoolset-7/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib:$LD_LIBRARY_PATH
-RUN npm install mathjax-node
-RUN pip3 install h5py==2.9.0 sympy django django-octicons
+#RUN npm install mathjax-node
+RUN pip3 install h5py==2.9.0 sympy django==3.1 django-octicons==1.0
 
 
 

@@ -8,7 +8,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && 
   python3-psycopg2 \
   git \
   && yum clean all
-RUN pip3 install django django-octicons
+RUN pip3 install django==3.1 django-octicons==1.0
 
 COPY docker/builddockerImage/entrypoint.py /context/entrypoint.py
 COPY docker/setup.py /context/setup.py

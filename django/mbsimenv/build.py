@@ -167,9 +167,9 @@ def setGithubStatus(run, state):
           description, "builds/%s/%s/%s/%s/%s"%(run.buildType, run.fmatvecBranch, run.hdf5serieBranch, run.openmbvBranch, run.mbsimBranch))
       else:
         print("Skipping setting github status, this is the staging system!")
-  except ex:
+  except:
     if django.conf.settings.DEBUG:
-      raise ex
+      raise
     else:
       raise RuntimeError("Original exception avoided in setGithubStatus to ensure that no secret is printed.")
 

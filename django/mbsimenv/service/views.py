@@ -368,7 +368,8 @@ class Webapp(base.views.Base):
     context["exampleName"]=kwargs["exampleName"]
     # we can only pass additonal information to websockify via a token query. we use a url quoted json string as token
     context["token"]=urllib.parse.quote_plus(json.dumps({
-      "prog": kwargs["prog"], "buildType": kwargs["buildType"], "exampleName": kwargs["exampleName"]
+      # kwargs may be lazy, so we need to convert these explicitly to str
+      "prog": str(kwargs["prog"]), "buildType": str(kwargs["buildType"]), "exampleName": str(kwargs["exampleName"])
     }))
     return context
 

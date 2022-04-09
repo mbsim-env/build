@@ -27,7 +27,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   python36-defusedxml \
   python3-psycopg2 \
   && yum clean all
-RUN pip3 install django django-allauth django-octicons h5py==2.9.0
+RUN pip3 install django==3.1 django-allauth==0.43 django-octicons==1.0 h5py==2.9.0 cryptography==2.3
 
 # a webserver is running on port 80
 EXPOSE 80/tcp 443/tcp
