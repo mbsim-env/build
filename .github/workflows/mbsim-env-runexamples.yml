@@ -1,0 +1,143 @@
+name: Runexamples
+on:
+  workflow_call:
+    inputs:
+      matrix:
+        required: true
+        type: string
+      buildInfo:
+        required: true
+        type: string
+      runexamplesInfo:
+        required: true
+        type: string
+      downloadArtifactLocalLcov:
+        required: true
+        type: boolean
+      uploadArtifactLcovdata:
+        required: true
+        type: boolean
+      downloadArtifactLcovdata:
+        required: true
+        type: boolean
+    outputs:
+      runexamplesInfo:
+        value: ${{jobs.runexamples.outputs.runexamplesInfo}}
+    secrets:
+      githubAccessToken:
+        required: true
+      djangoSecretKey:
+        required: true
+      postgresPassword:
+        required: true
+      filestoragePassword:
+        required: true
+      codecovUploadToken_fmatvec:
+        required: true
+      codecovUploadToken_hdf5serie:
+        required: true
+      codecovUploadToken_openmbv:
+        required: true
+      codecovUploadToken_mbsim:
+        required: true
+env:
+  # tagname and servername of remote mbsimenv server
+  MBSIMENVTAGNAME: staging
+  MBSIMENVSERVERNAME: wwwstaging.mbsim-env.de
+  # connect to this server:port for www, database and filestorage
+  MBSIMENVWWW: www.mbsim-env.de:10443
+  MBSIMENVDATABASE: www.mbsim-env.de:15432
+  MBSIMENVFILESTORAGE: www.mbsim-env.de:11122
+  # get secrets
+  mbsimenvsec_githubAccessToken: ${{secrets.githubAccessToken}}
+  mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
+  mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
+  mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
+  mbsimenvsec_codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+  mbsimenvsec_codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+  mbsimenvsec_codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+  mbsimenvsec_codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+jobs:
+  runexamples:
+    name: "............................................................"
+    runs-on: ubuntu-latest
+    outputs:
+      runexamplesInfo: ${{steps.runexamplesDetails.outputs.runexamplesInfo}}
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(inputs.matrix)}}
+    steps:
+      - name: "Artifact: download prefix and coverage-files"
+        if: inputs.downloadArtifactLocalLcov
+        uses: actions/download-artifact@v3
+        with:
+          name: mbsim-env-local-cov
+          path: ${{github.workspace}}
+      - name: "Artifact: untar/uncompress prefix and coverage-files"
+        if: inputs.downloadArtifactLocalLcov
+        run: >
+          mkdir -m 777 -p ${{github.workspace}}/mbsim-env/ &&
+          tar -xzf ${{github.workspace}}/local-cov.tar.gz -C ${{github.workspace}}/mbsim-env/ &&
+          chmod -R 777 ${{github.workspace}}/mbsim-env # the docker user id is different than the current user id
+      - name: "Artifact: download lcov-files"
+        if: inputs.downloadArtifactLcovdata
+        uses: actions/download-artifact@v3
+        with:
+          name: mbsim-env-covdata
+          path: ${{github.workspace}}/mbsim-env/local
+      - name: "Docker: pull image"
+        run: >
+          docker image pull mbsimenv/build:${{env.MBSIMENVTAGNAME}} &&
+          mkdir -m 777 -p ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
+      - name: "Docker: run container"
+        run: >
+          docker run
+          --init
+          --label buildtype=linux64-dailydebug
+          --env MBSIMENVDATABASE
+          --env MBSIMENVFILESTORAGE
+          --env MBSIMENVSERVERNAME
+          --env MBSIMENVTAGNAME
+          --env MBSIMENVIMAGEID=$(docker image inspect -f "{{.Id}}" mbsimenv/build:${{env.MBSIMENVTAGNAME}})
+          --env mbsimenvsec_githubAccessToken
+          --env mbsimenvsec_djangoSecretKey
+          --env mbsimenvsec_postgresPassword
+          --env mbsimenvsec_filestoragePassword
+          --env mbsimenvsec_codecovUploadToken_fmatvec
+          --env mbsimenvsec_codecovUploadToken_hdf5serie
+          --env mbsimenvsec_codecovUploadToken_openmbv
+          --env mbsimenvsec_codecovUploadToken_mbsim
+          -v ${{github.workspace}}/mbsim-env:/mbsim-env
+          -v ${{github.workspace}}/mbsim-ccache:/mbsim-ccache
+          mbsimenv/build:${{env.MBSIMENVTAGNAME}}
+          --buildType linux64-dailydebug
+          --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
+          -j $(nproc)
+          --ccacheSize 5
+          --fmatvecBranch ${{fromJson(inputs.buildInfo).repo.fmatvec}}
+          --hdf5serieBranch ${{fromJson(inputs.buildInfo).repo.hdf5serie}}
+          --openmbvBranch ${{fromJson(inputs.buildInfo).repo.openmbv}}
+          --mbsimBranch ${{fromJson(inputs.buildInfo).repo.mbsim}}
+          --buildRunID ${{fromJson(inputs.buildInfo).buildRunID}}
+          --runID ${{fromJson(inputs.runexamplesInfo).runID}}
+          ${{matrix.data.args}}
+      - name: "Dump link to MBSim-Env server"
+        id: runexamplesDetails
+        shell: python
+        run: |
+          import json
+          try:
+            with open("${{github.workspace}}/mbsim-env/local/.runexamplesInfo.json", "r") as f:
+              runexamplesInfo=json.load(f)
+            print("https://${{env.MBSIMENVSERVERNAME}}/runexamples/run/"+str(runexamplesInfo["runID"])+"/")
+            print("::set-output name=runexamplesInfo::"+json.dumps(runexamplesInfo))
+          except:
+            print("No runexamplesInfo file found")
+            print("::set-output name=runexamplesInfo::{}")
+      - name: "Artifact: upload lcov-files"
+        if: inputs.uploadArtifactLcovdata
+        uses: actions/upload-artifact@v3
+        with:
+          name: mbsim-env-covdata
+          retention-days: 1
+          path: ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*

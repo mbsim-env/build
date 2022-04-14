@@ -5,6 +5,8 @@ app_name="runexamples"
 
 urlpatterns = [
   django.urls.path('run/current/<str:buildtype>/', runexamples.views.currentBuildtype, name='current_buildtype'),
+  django.urls.path('run/current/<str:buildtype>/<str:fmatvecBranch>/<str:hdf5serieBranch>/<str:openmbvBranch>/<str:mbsimBranch>/',
+    runexamples.views.currentBuildtypeBranch, name='current_buildtype_branch'),
   django.urls.path('run/<int:id>/', runexamples.views.Run.as_view(), name='run'),
   django.urls.path('valgrind/<int:id>/', runexamples.views.Valgrind.as_view(), name='valgrind'),
   django.urls.path('xmloutput/<int:id>/', runexamples.views.XMLOutput.as_view(), name='xmloutput'),

@@ -5,6 +5,10 @@
 
 {% block title %}Build Results of MBSim-Env: {{run.buildType}}{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+{% endblock %}
+
 {% block body %}
 
 <script src="{% static 'builds/scripts.js' %}"> </script>
@@ -13,15 +17,44 @@
   $(document).ready(function() {
     initToolTable("{% url 'builds:datatable_tool' run.id %}");
     releaseDistribution("{% url 'builds:releaseDistribution' run.id %}");
+    $(".TABLEROWHREF").click(function() {
+      window.document.location=$(this).data("href");
+    });
   });
 </script>
-<h1>Build Results of MBSim-Env: <small>{{run.buildType}}</small></h1>
+<h1>Build Results of MBSim-Env</h1>
 <dl style="margin-right:0em;" class="row">
-  <dt class="col-2">Called Command</dt>
+  <dt class="col-2">Build type</dt>
+  <dd class="col-10">
+    <div class="dropdown">
+      <button class="btn btn-secondary btn-xs" type="button" data-toggle="dropdown">{%autoescape off%}{{runBuildTypeIcon}}{%endautoescape%} {{run.buildType}} {% octicon "triangle-down" %}</button>
+      <div class="dropdown-menu" style="padding:1.5em;">
+        <p><b>Switch to current build of build-type:</b></p>
+        <table class="table table-hover table-bordered table-sm">
+          <thead>
+            <tr>
+              <th>Build Type</th>
+            </tr>
+          </thead>
+            {% for buildType in allBuildTypes %}
+              <tr class="TABLEROWHREF" style="cursor:pointer;"
+                  data-href="{% url "builds:current_buildtype_branch" buildType.buildType run.fmatvecBranch run.hdf5serieBranch run.openmbvBranch run.mbsimBranch %}">
+                <td>{%autoescape off%}{{buildType.icon}}{%endautoescape%}&nbsp;{{buildType.buildType}}</td>
+              </tr>
+            {% endfor %}
+          <tbody>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </dd>
+  <dt class="col-2">Executor</dt>
+  <dd class="col-10">{%autoescape off%}{{run.executor}}{%endautoescape%}</dd>
+  <dt class="col-2">Called command</dt>
   <dd class="col-10">
     <div class="dropdown">
       <button class="btn btn-secondary btn-xs" type="button" data-toggle="dropdown">show {% octicon "triangle-down" %}</button>
-      <code class="dropdown-menu" style="padding-left: 0.5em; padding-right: 0.5em;">
+      <code class="dropdown-menu" style="padding:1.5em;">
         {{run.command}}
       </code>
     </div>
@@ -56,11 +89,44 @@
   <thead>
     <tr>
       <th>{% octicon "repo" %}&nbsp;Repository</th>
-      <th>{% octicon "git-branch" %}&nbsp;Branch</th>
+      <th>
+        <div class="dropdown">
+          <button class="btn btn-xs btn-secondary" type="button" data-toggle="dropdown">
+            {% octicon "git-branch" %}&nbsp;<b>Branch</b> {% octicon "triangle-down" %}
+          </button>
+          <div class="dropdown-menu" style="padding:1.5em;">
+            <p><b>Switch to current build of branches:</b></p>
+            <table class="table table-hover table-bordered table-sm">
+              <thead>
+                <tr>
+                  <th><span class="badge badge-success">{% octicon "repo" %}&nbsp;fmatvec</span></th>
+                  <th><span class="badge badge-success">{% octicon "repo" %}&nbsp;hdf5serie</span></th>
+                  <th><span class="badge badge-success">{% octicon "repo" %}&nbsp;openmbv</span></th>
+                  <th><span class="badge badge-success">{% octicon "repo" %}&nbsp;mbsim</span></th>
+                </tr>
+              </thead>
+                {% for branch in allBranches %}
+                  <tr class="TABLEROWHREF" style="cursor:pointer;"
+                      data-href="{% url "builds:current_buildtype_branch" run.buildType branch.fmatvecBranch branch.hdf5serieBranch branch.openmbvBranch branch.mbsimBranch %}">
+                    <td><span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{branch.fmatvecBranch}}</span></td>
+                    <td><span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{branch.hdf5serieBranch}}</span></td>
+                    <td><span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{branch.openmbvBranch}}</span></td>
+                    <td><span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{branch.mbsimBranch}}</span></td>
+                  </tr>
+                {% endfor %}
+              <tbody>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </th>
       {% if run.fmatvecUpdateOK is not None or run.hdf5serieUpdateOK is not None or run.openmbvUpdateOK is not None or run.mbsimUpdateOK is not None %}
         <th>{% octicon "sync" %}&nbsp;Update</th>
       {% endif %}
       <th>{% octicon "git-commit" %}&nbsp;Commit</th>
+      <th>{% octicon "person" %}&nbsp;Author</th>
+      <th>{% octicon "clock" %}&nbsp;Date</th>
+      <th>{% octicon "note" %}&nbsp;Subject</th>
     </tr>
   </thead>
   <tbody>
@@ -68,7 +134,8 @@
       {% cycle "fmatvecUpdateOutput" "hdf5serieUpdateOutput" "openmbvUpdateOutput" "mbsimUpdateOutput" as repoUpdateOutput silent %}
       {% cycle run.fmatvecBranch run.hdf5serieBranch run.openmbvBranch run.mbsimBranch as repoBranch silent %}
       {% cycle run.fmatvecUpdateOK run.hdf5serieUpdateOK run.openmbvUpdateOK run.mbsimUpdateOK as repoUpdateOK silent %}
-      {% cycle run.fmatvecUpdateTooltip run.hdf5serieUpdateTooltip run.openmbvUpdateTooltip run.mbsimUpdateTooltip as repoUpdateTooltip silent %}
+      {% cycle run.fmatvecUpdateAuthor run.hdf5serieUpdateAuthor run.openmbvUpdateAuthor run.mbsimUpdateAuthor as repoUpdateAuthor silent %}
+      {% cycle run.fmatvecUpdateDate run.hdf5serieUpdateDate run.openmbvUpdateDate run.mbsimUpdateDate as repoUpdateDate silent %}
       {% cycle run.fmatvecUpdateCommitID run.hdf5serieUpdateCommitID run.openmbvUpdateCommitID run.mbsimUpdateCommitID as repoUpdateCommitID silent %}
       {% cycle run.fmatvecUpdateMsg run.hdf5serieUpdateMsg run.openmbvUpdateMsg run.mbsimUpdateMsg as repoUpdateMsg silent %}
       <tr>
@@ -90,11 +157,19 @@
             {% endif %}
           </td>
         {% endif %}
-        <td class="text-break" data-toggle="tooltip" data-placement="bottom" title="{{ repoUpdateTooltip }}">
+        <td>
           <a href="https://github.com/mbsim-env/{{ repo }}/commit/{{ repoUpdateCommitID }}">
             <code>{{ repoUpdateCommitID|truncatechars:8 }}</code>
-          </a>:
-          {{ repoUpdateMsg }}
+          </a>
+        </td>
+        <td>
+          <i>{{repoUpdateAuthor}}</i>
+        </td>
+        <td {% if newestRepo == repo %}class="table-info"{%endif%}>
+          <span class="DATETIME">{{repoUpdateDate|date:'c'}}</span>
+        </td>
+        <td class="text-break">
+          {{repoUpdateMsg}}
         </td>
       </tr>
     {% endfor %}
@@ -181,7 +256,7 @@
 {% endif %}
 
 {% if examples|length > 0 %}
-  <h2>Examples</h2>
+  <h2 id="EXAMPLES">Examples</h2>
   <div class="alert alert-{{ examplesAllOK|yesno:"success,danger" }}" role="alert">
     <span class="text-{{ examplesAllOK|yesno:"success,danger" }}">
       {% if examplesAllOK %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}

@@ -36,15 +36,19 @@ try:
         django.utils.timezone.now().strftime("%Y-%m-%dT%H:%M:%SZ")+"\n\n", file=f)
   
   if not os.path.isdir("/mbsim-env/build"):
-    p=subprocess.run(["git", "clone", "https://github.com/mbsim-env/build.git"], cwd="/mbsim-env",
+    p=subprocess.run(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/build.git"], cwd="/mbsim-env",
                      stderr=subprocess.STDOUT, stdout=subprocess.PIPE, encoding="UTF-8")
     f.write(p.stdout)
     p.check_returncode()
-  p=subprocess.run(["git", "fetch"], cwd="/mbsim-env/build",
+  p=subprocess.run(["git", "checkout", "-q", "HEAD~0"], cwd="/mbsim-env/build",
                    stderr=subprocess.STDOUT, stdout=subprocess.PIPE, encoding="UTF-8")
   f.write(p.stdout)
   p.check_returncode()
-  p=subprocess.run(["git", "checkout", args.commitID], cwd="/mbsim-env/build",
+  p=subprocess.run(["git", "fetch", "-q", "--depth", "1", "origin", args.commitID+":"+args.commitID], cwd="/mbsim-env/build",
+                   stderr=subprocess.STDOUT, stdout=subprocess.PIPE, encoding="UTF-8")
+  f.write(p.stdout)
+  p.check_returncode()
+  p=subprocess.run(["git", "checkout", "-q", args.commitID], cwd="/mbsim-env/build",
                    stderr=subprocess.STDOUT, stdout=subprocess.PIPE, encoding="UTF-8")
   f.write(p.stdout)
   p.check_returncode()

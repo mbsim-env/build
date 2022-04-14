@@ -39,7 +39,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   ninja-build \
   sqlite \
   && yum clean all
-RUN pip3 install django==3.1 django-octicons==1.0
+RUN python3 -m pip install --upgrade pip && pip3 install django==3.2 django-octicons==1.0 paramiko==2.9
 # bugfix for moc
 RUN mv /usr/x86_64-w64-mingw32/bin/qt5/moc /usr/x86_64-w64-mingw32/bin/qt5/moc.org
 COPY docker/buildwin64Image/moc /usr/x86_64-w64-mingw32/bin/qt5/moc
@@ -208,13 +208,18 @@ LABEL org.label-schema.schema-version="1.0" \
 
 # Add user dockeruser, create volumes and set volume ownership and permissions
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
-  mkdir /mbsim-env /mbsim-ccache /databasemedia && \
-  chown dockeruser:dockeruser /mbsim-env /mbsim-ccache /databasemedia
+  mkdir /mbsim-env /mbsim-ccache && \
+  chown dockeruser:dockeruser /mbsim-env /mbsim-ccache
 
 # configure wine
 COPY docker/buildwin64Image/wine.inf /context/wine.inf
 RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\+g'); \
     sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.inf >> /usr/share/wine/wine.inf
+
+# init conf
+USER dockeruser:dockeruser
+RUN wine cmd /c echo dummy && wineserver -w
+USER root:root
 
 # copy
 COPY misc /mbsim-build/build/misc
@@ -232,12 +237,6 @@ COPY django/mbsimenv/service            /context/mbsimenv/service
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser
-
-# init conf
-RUN wine cmd /c echo dummy && wineserver -w
-
-# config ccache
-RUN ccache -M 20G
 
 # these are the default arguments when running the container
 CMD []

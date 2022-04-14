@@ -1,0 +1,151 @@
+name: Build
+on:
+  workflow_call:
+    inputs:
+      matrix:
+        required: true
+        type: string
+      uploadArtifactLocalLcov:
+        required: true
+        type: boolean
+    outputs:
+      buildInfo:
+        value: ${{jobs.build.outputs.buildInfo}}
+    secrets:
+      githubAccessToken:
+        required: true
+      djangoSecretKey:
+        required: true
+      postgresPassword:
+        required: true
+      filestoragePassword:
+        required: true
+      codecovUploadToken_fmatvec:
+        required: true
+      codecovUploadToken_hdf5serie:
+        required: true
+      codecovUploadToken_openmbv:
+        required: true
+      codecovUploadToken_mbsim:
+        required: true
+env:
+  # tagname and servername of remote mbsimenv server
+  MBSIMENVTAGNAME: staging
+  MBSIMENVSERVERNAME: wwwstaging.mbsim-env.de
+  # connect to this server:port for www, database and filestorage
+  MBSIMENVWWW: www.mbsim-env.de:10443
+  MBSIMENVDATABASE: www.mbsim-env.de:15432
+  MBSIMENVFILESTORAGE: www.mbsim-env.de:11122
+  # get secrets
+  mbsimenvsec_githubAccessToken: ${{secrets.githubAccessToken}}
+  mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
+  mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
+  mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
+  mbsimenvsec_codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+  mbsimenvsec_codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+  mbsimenvsec_codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+  mbsimenvsec_codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+jobs:
+  build:
+    name: "${{matrix.data.os.buildType}}: ${{matrix.data.branches.fmatvecBranch}} ${{matrix.data.branches.hdf5serieBranch}} ${{matrix.data.branches.openmbvBranch}} ${{matrix.data.branches.mbsimBranch}}"
+    runs-on: ubuntu-latest
+    outputs:
+      buildInfo: ${{steps.buildDetails.outputs.buildInfo}}
+    strategy:
+      fail-fast: false
+      matrix: ${{fromJson(inputs.matrix)}}
+    steps:
+      - name: "Dump build config"
+        run: >
+          echo -e " buildType       = ${{matrix.data.os.buildType}}
+                    image           = ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}}
+                    fmatvecBranch   = ${{matrix.data.branches.fmatvecBranch}}
+                    hdf5serieBranch = ${{matrix.data.branches.hdf5serieBranch}}
+                    openmbvBranch   = ${{matrix.data.branches.openmbvBranch}}
+                    mbsimBranch     = ${{matrix.data.branches.mbsimBranch}}
+                    Triggered by repo = ${{github.repository}}
+                                 branch = ${{github.ref_name}}
+                                 sha = ${{github.sha}}
+                                 event = ${{github.event_name}}" | tr -s ' '
+      - name: "Docker: pull image"
+        run: >
+          docker image pull ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}} &&
+          mkdir -m 777 -p ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
+      - name: "Create build matrix UUID"
+        shell: python
+        id: matrixUUID
+        run: |
+          import uuid
+          print("::set-output name=matrixUUID::"+str(uuid.uuid4()))
+      - name: "Cache: ccache"
+        uses: actions/cache@v2
+        with:
+          path: ${{github.workspace}}/mbsim-ccache
+          key: ccache-${{matrix.data.os.buildType}}--${{steps.matrixUUID.outputs.matrixUUID}}
+          restore-keys: |
+            ccache-${{matrix.data.os.buildType}}--
+      - name: "Cache: fix ccache file permissions"
+        run: chmod -R 777 ${{github.workspace}}/mbsim-ccache # the docker user id is different than the current user id
+      - name: "Docker: run container"
+        run: >
+          docker run
+          --init
+          --label buildtype=${{matrix.data.os.buildType}}
+          --env MBSIMENVDATABASE
+          --env MBSIMENVFILESTORAGE
+          --env MBSIMENVSERVERNAME
+          --env MBSIMENVTAGNAME
+          --env MBSIMENVIMAGEID=$(docker image inspect -f "{{.Id}}" ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}})
+          --env mbsimenvsec_githubAccessToken
+          --env mbsimenvsec_djangoSecretKey
+          --env mbsimenvsec_postgresPassword
+          --env mbsimenvsec_filestoragePassword
+          --env mbsimenvsec_codecovUploadToken_fmatvec
+          --env mbsimenvsec_codecovUploadToken_hdf5serie
+          --env mbsimenvsec_codecovUploadToken_openmbv
+          --env mbsimenvsec_codecovUploadToken_mbsim
+          -v ${{github.workspace}}/mbsim-env:/mbsim-env
+          -v ${{github.workspace}}/mbsim-ccache:/mbsim-ccache
+          ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}}
+          --buildType ${{matrix.data.os.buildType}}
+          --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
+          -j $(nproc)
+          ${{github.run_attempt>1 && '--forceBuild' || ''}}
+          --ccacheSize 5
+          --fmatvecBranch ${{matrix.data.branches.fmatvecBranch}}
+          --hdf5serieBranch ${{matrix.data.branches.hdf5serieBranch}}
+          --openmbvBranch ${{matrix.data.branches.openmbvBranch}}
+          --mbsimBranch ${{matrix.data.branches.mbsimBranch}}
+          ${{matrix.data.os.args}}
+      - name: "Dump link to MBSim-Env server"
+        id: buildDetails
+        shell: python
+        run: |
+          import json
+          try:
+            with open("${{github.workspace}}/mbsim-env/local/.buildInfo.json", "r") as f:
+              buildInfo=json.load(f)
+            if buildInfo["skipped"]:
+              print("This build was skipped since the same build was already done")
+            else:
+              print("https://${{env.MBSIMENVSERVERNAME}}/builds/run/"+str(buildInfo["buildRunID"])+"/")
+            print("::set-output name=buildInfo::"+json.dumps(buildInfo))
+          except:
+            print("No buildInfo file found")
+            print("::set-output name=buildInfo::{}")
+      - name: "Artifact: tar/compress prefix and coverage-files"
+        if: inputs.uploadArtifactLocalLcov && !fromJson(steps.buildDetails.outputs.buildInfo).skipped
+        run: >
+          (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcda" >  ${{github.workspace}}/local-cov.files) &&
+          (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcno" >> ${{github.workspace}}/local-cov.files) &&
+          tar -czf ${{github.workspace}}/local-cov.tar.gz -C ${{github.workspace}}/mbsim-env/
+          local/ -T ${{github.workspace}}/local-cov.files;
+          rm -f ${{github.workspace}}/local-cov.files
+      - name: "Artifact: upload prefix and coverage-files"
+        if: inputs.uploadArtifactLocalLcov && !fromJson(steps.buildDetails.outputs.buildInfo).skipped
+        uses: actions/upload-artifact@v3
+        with:
+          name: mbsim-env-local-cov
+          retention-days: 1
+          path: ${{github.workspace}}/local-cov.tar.gz
+      #MISSING skip cache upload if ${{fromJson(steps.buildDetails.outputs.buildInfo).skipped}}

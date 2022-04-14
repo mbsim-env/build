@@ -13,7 +13,7 @@
   <div style="margin-right:0em;" class="row">
     <span class="col-3">
       {% autoescape off %}{{ userLargeAvatarEle }}{% endautoescape %}<br/>
-      {{ view.request.user.first_name }} {{ view.request.user.last_name }}<br/>
+      <i>{{ view.request.user.first_name }} {{ view.request.user.last_name }}</i><br/>
       {{ view.request.user.email }}
     </span>
 
@@ -46,8 +46,8 @@
   <p style="margin-top: 2em;">In detail this site stores the following information for your account:</p>
   <dl style="margin-right:0em;" class="row">
     <dt class="col-2">Username</dt><dd class="col-10">&nbsp;{{ view.request.user.username }}</dd>
-    <dt class="col-2">First name</dt><dd class="col-10">&nbsp;{{ view.request.user.first_name }}</dd>
-    <dt class="col-2">Last name</dt><dd class="col-10">&nbsp;{{ view.request.user.last_name }}</dd>
+    <dt class="col-2">First name</dt><dd class="col-10">&nbsp;<i>{{ view.request.user.first_name }}</i></dd>
+    <dt class="col-2">Last name</dt><dd class="col-10">&nbsp;<i>{{ view.request.user.last_name }}</i></dd>
     <dt class="col-2">e-Mail</dt><dd class="col-10">&nbsp;{{ view.request.user.email }}</dd>
     {% if socialUser %}
       <dt class="col-2">Provider name</dt><dd class="col-10">&nbsp;{{ socialUser.provider }}</dd>
@@ -58,7 +58,7 @@
       {% endif %}
     {% endif %}
     {% if session %}
-      <dt class="col-2">Session ID</dt><dd class="col-10">&nbsp;{{ session.id }}</dd>
+      <dt class="col-2">Session ID</dt><dd class="col-10">&nbsp;&lt;not shown for security reasons&gt;</dd>
       <dt class="col-2">Session data</dt><dd class="col-10">&nbsp;{{ session.data }}</dd>
       <dt class="col-2">Session expire</dt><dd class="col-10 DATETIME">&nbsp;{{ session.expire|date:'c' }}</dd>
     {% endif %}

@@ -22,18 +22,18 @@ args=argparser.parse_args()
 os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
 django.setup()
 
-def dailyBuild(fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch, ext):
+def dailyBuild(fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch):
   # linux64-dailydebug
-  contldd=setup.run("build-linux64-dailydebug"+ext, 6, printLog=False, detach=True, addCommands=["--forceBuild"],
+  contldd=setup.run("build-linux64-dailydebug", 6, printLog=False, detach=True, addCommands=["--forceBuild"],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
   
   # win64-dailyrelease
-  contwdr=setup.run("build-win64-dailyrelease"+ext, 3, printLog=False, detach=True, addCommands=["--forceBuild"],
+  contwdr=setup.run("build-win64-dailyrelease", 3, printLog=False, detach=True, addCommands=["--forceBuild"],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
   retwdr=setup.waitContainer(contwdr)
   
   # linux64-dailyrelease
-  contldr=setup.run("build-linux64-dailyrelease"+ext, 3, printLog=False, detach=True, addCommands=["--forceBuild"],
+  contldr=setup.run("build-linux64-dailyrelease", 3, printLog=False, detach=True, addCommands=["--forceBuild"],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
   retldr=setup.waitContainer(contldr)
   
@@ -46,7 +46,7 @@ ret=0
 # build the master branch combi first (if it exists)
 if service.models.DailyBranches.objects.filter(fmatvecBranch="master", hdf5serieBranch="master",
                                                openmbvBranch="master", mbsimBranch="master").count()>0:
-  ret=ret+dailyBuild("master", "master", "master", "master", "")
+  ret=ret+dailyBuild("master", "master", "master", "master")
   
 # build doc
 contd=setup.run("builddoc", 2, printLog=False, detach=True, addCommands=["--forceBuild"])
@@ -58,6 +58,6 @@ for db in service.models.DailyBranches.objects.all():
   if db.fmatvecBranch=="master" and db.hdf5serieBranch=="master" and db.openmbvBranch=="master" and db.mbsimBranch=="master":
     continue
   # build the db branch combi
-  ret=ret+dailyBuild(db.fmatvecBranch, db.hdf5serieBranch, db.openmbvBranch, db.mbsimBranch, "-nonedefbranches")
+  ret=ret+dailyBuild(db.fmatvecBranch, db.hdf5serieBranch, db.openmbvBranch, db.mbsimBranch)
 
 sys.exit(ret)

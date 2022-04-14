@@ -24,6 +24,14 @@ else:
     os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_local"
 django.setup()
 
+# close old connections before model save(); CONN_MAX_AGE is used
+# (to avoid connection failures between two save() on the same model when a large time is in-between;
+#  e.g. firewalls may drop such TCP connections)
+def closeOldConnections(**kwargs):
+  if not django.db.connections[kwargs["using"]].in_atomic_block:
+    django.db.close_old_connections()
+django.db.models.signals.pre_save.connect(closeOldConnections)
+
 def buildLatex(f):
   if base.helper.subprocessCall(["pdflatex", "-halt-on-error", "-file-line-error", "main.tex"], f)!=0:
     return 1
@@ -64,7 +72,7 @@ for texMain in glob.glob("*/main.tex"):
   manual.save()
   with manual.manualFile.open("wb") as fo:
     with open("main.pdf", "rb") as fi:
-      fo.write(fi.read())
+      base.helper.copyFile(fi, fo)
   f.close()
 
   os.chdir(curdir)

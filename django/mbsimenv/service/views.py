@@ -14,6 +14,7 @@ import concurrent.futures
 import urllib.parse
 import requests
 import os
+import re
 from octicons.templatetags.octicons import octicon
 
 # the user profile page
@@ -27,6 +28,7 @@ class Home(base.views.Base):
       context['info']=service.models.Info.objects.all()[0]
     context["currentRelease"]=service.models.Release.objects.order_by('-versionMajor', '-versionMinor').first()
     context["hostname"]=os.environ.get('MBSIMENVSERVERNAME', 'localhost')
+    context["authenticated"]=self.request.user.is_authenticated
     return context
 
 # return the according bootstrap color
@@ -42,7 +44,7 @@ def getColor(text):
 
 # a svg badge with the number of all examples
 def currentBuildNrAll(request, buildtype):
-  run=builds.models.Run.objects.getCurrent(buildtype)
+  run=builds.models.Run.objects.getCurrent(buildtype, "master", "master", "master", "master")
   if run is None:
     context={"nr": "n/a", "color": getColor("secondary")}
   elif run.endTime is None:
@@ -53,7 +55,7 @@ def currentBuildNrAll(request, buildtype):
 
 # a svg badge with the number of failed examples
 def currentBuildNrFailed(request, buildtype):
-  run=builds.models.Run.objects.getCurrent(buildtype)
+  run=builds.models.Run.objects.getCurrent(buildtype, "master", "master", "master", "master")
   if run is None:
     context={"nr": "n/a", "color": getColor("secondary")}
   elif run.endTime is None:
@@ -65,7 +67,7 @@ def currentBuildNrFailed(request, buildtype):
 
 # a svg badge with the number of all examples
 def currentRunexampleNrAll(request, buildtype):
-  run=runexamples.models.Run.objects.getCurrent(buildtype)
+  run=runexamples.models.Run.objects.getCurrent(buildtype, "master", "master", "master", "master")
   if run is None:
     context={"nr": "n/a", "color": getColor("secondary")}
   elif run.endTime is None:
@@ -76,7 +78,7 @@ def currentRunexampleNrAll(request, buildtype):
 
 # a svg badge with the number of failed examples
 def currentRunexampleNrFailed(request, buildtype):
-  run=runexamples.models.Run.objects.getCurrent(buildtype)
+  run=runexamples.models.Run.objects.getCurrent(buildtype, "master", "master", "master", "master")
   if run is None:
     context={"nr": "n/a", "color": getColor("secondary")}
   elif run.endTime is None:
@@ -88,7 +90,7 @@ def currentRunexampleNrFailed(request, buildtype):
 
 # a svg badge with the coverage rate
 def currentCoverageRate(request, buildtype):
-  run=runexamples.models.Run.objects.getCurrent(buildtype)
+  run=runexamples.models.Run.objects.getCurrent(buildtype, "master", "master", "master", "master")
   if run is None:
     context={"nr": "n/a", "color": getColor("secondary")}
   elif run.endTime is None:
@@ -174,6 +176,17 @@ def repoBranches(request):
     res["enable"]=True
   return django.http.JsonResponse(res)
 
+# return all current branch combinations as json
+def getBranchCombination(request, model):
+  res=[]
+  for b in getattr(service.models, model).objects.all():
+    res.append({"id": b.id,
+                "fmatvecBranch": b.fmatvecBranch,
+                "hdf5serieBranch": b.hdf5serieBranch,
+                "openmbvBranch": b.openmbvBranch,
+                "mbsimBranch": b.mbsimBranch})
+  return django.http.JsonResponse({"data": res})
+
 # response to ajax request to add a new branch combination
 def addBranchCombination(request, model):
   # prepare the cache for github access
@@ -198,6 +211,7 @@ def addBranchCombination(request, model):
     return django.http.HttpResponseBadRequest("This branch combination is not allowed (already exists).")
   # for ci branch trigger the build now
   if model=="CIBranches":
+    # executor: MBSim-Env
     recTime=django.utils.timezone.now()
     ciq, _=service.models.CIQueue.objects.get_or_create(fmatvecBranch=req["fmatvecBranch"],
                                                         hdf5serieBranch=req["hdf5serieBranch"],
@@ -206,6 +220,22 @@ def addBranchCombination(request, model):
                                                         defaults={"recTime": recTime})
     ciq.recTime=recTime
     ciq.save()
+    # executor: Github Actions
+    data={"event_type": "branchCombiAdded",
+          "client_payload":
+            {"model": model,
+             "branches":
+               {"id": b.id,
+                "fmatvecBranch": b.fmatvecBranch,
+                "hdf5serieBranch": b.hdf5serieBranch,
+                "openmbvBranch": b.openmbvBranch,
+                "mbsimBranch": b.mbsimBranch,
+         }  }  }
+    response=requests.post("https://api.github.com/repos/mbsim-env/build/dispatches", json=data,
+                           headers={"Authorization": "token "+mbsimenvSecrets.getSecrets("githubAccessToken")})
+    if response.status_code!=204:
+      return django.http.HttpResponseBadRequest("Branch combination added but failed to trigger the Github Actions workflow."+\
+                                                (response.content.decode("utf-8") if django.conf.settings.DEBUG else ""))
   return django.http.HttpResponse()
 
 # response to ajax request to delete a branch combination
@@ -220,16 +250,18 @@ def deleteBranchCombination(request, model, id):
   b.delete()
   return django.http.HttpResponse()
 
+html2text=re.compile("<[^>]*>")
 class Feed(django.contrib.syndication.views.Feed):
+  feed_type=django.utils.feedgenerator.Atom1Feed
   title="MBSim-Env Build System Feeds"
-  description="Fail builds and examples of the MBSim-Environment build system."
+  subtitle="Failed builds and examples of the MBSim-Environment build system."
   link=django.urls.reverse_lazy("service:home")
 
   # return a iterator for all items of the feed
   def items(self):
     date=django.utils.timezone.now()-django.utils.timezone.timedelta(days=30)
     # get builds and examples newer than 30days
-    buildTypes=["linux64-ci", "linux64-dailydebug", "linux64-dailydebug-valgrind", "linux64-dailyrelease", "win64-dailyrelease"]
+    buildTypes=["linux64-ci", "win64-ci", "linux64-dailydebug", "linux64-dailydebug-valgrind", "linux64-dailyrelease", "win64-dailyrelease"]
     buildRun=builds.models.Run.objects.filterFailed().filter(startTime__gt=date, buildType__in=buildTypes)
     exampleRun=runexamples.models.Run.objects.filterFailed().filter(startTime__gt=date, buildType__in=buildTypes)
     # merge both lists and sort by startTime
@@ -237,13 +269,47 @@ class Feed(django.contrib.syndication.views.Feed):
   
   # reutrn feed entry title, description, link and pubdate
   def item_title(self, run):
-    return ("Build" if type(run) is builds.models.Run else "Examples")+" failed: "+run.buildType
+    isBuild=type(run) is builds.models.Run
+    buildRun=run if isBuild else run.build_run
+    executor=" ("+html2text.sub("", buildRun.executor)+")" if buildRun is not None else ""
+    return ("Build" if isBuild else "Examples")+" failed: "+run.buildType+executor
   def item_description(self, run):
-    return "{} of {} {} failed.".format(run.nrFailed(), run.nrAll(), "build parts" if type(run) is builds.models.Run else "examples")
+    isBuild=type(run) is builds.models.Run
+    buildRun=run if isBuild else run.build_run
+    if buildRun is None:
+      return '''<p><b>{NRFAILED} of {NRALL} {TYPE} failed.</b></p>'''
+    return '''<p><b>{NRFAILED} of {NRALL} {TYPE} failed.</b></p>
+              <p>Build was run on: {EXECUTOR}</p>
+              <p>Build done with the following branches:</p>
+              <dl>
+                <dt>fmatvec</dt><dd><b>{FMATVECBRANCH}</b>: <i>{FMATVECAUTHOR}</i> - {FMATVECMSG}</dd>
+                <dt>hdf5serie</dt><dd><b>{HDF5SERIEBRANCH}</b>: <i>{HDF5SERIEAUTHOR}</i> - {HDF5SERIEMSG}</dd>
+                <dt>openmbv</dt><dd><b>{OPENMBVBRANCH}</b>: <i>{OPENMBVAUTHOR}</i> - {OPENMBVMSG}</dd>
+                <dt>mbsim</dt><dd><b>{MBSIMBRANCH}</b>: <i>{MBSIMAUTHOR}</i> - {MBSIMMSG}</dd>
+              </dl>'''.format(
+      NRFAILED=run.nrFailed(), NRALL=run.nrAll(),
+      TYPE="build parts" if isBuild else "examples",
+      FMATVECBRANCH=buildRun.fmatvecBranch, FMATVECAUTHOR=buildRun.fmatvecUpdateAuthor, FMATVECMSG=buildRun.fmatvecUpdateMsg,
+      HDF5SERIEBRANCH=buildRun.hdf5serieBranch, HDF5SERIEAUTHOR=buildRun.hdf5serieUpdateAuthor, HDF5SERIEMSG=buildRun.hdf5serieUpdateMsg,
+      OPENMBVBRANCH=buildRun.openmbvBranch, OPENMBVAUTHOR=buildRun.openmbvUpdateAuthor, OPENMBVMSG=buildRun.openmbvUpdateMsg,
+      MBSIMBRANCH=buildRun.mbsimBranch, MBSIMAUTHOR=buildRun.mbsimUpdateAuthor, MBSIMMSG=buildRun.mbsimUpdateMsg,
+      EXECUTOR=buildRun.executor,
+    )
   def item_link(self, run):
-    return django.urls.reverse("builds:run" if type(run) is builds.models.Run else "runexamples:run", args=[run.id])
+    isBuild=type(run) is builds.models.Run
+    return django.urls.reverse("builds:run" if isBuild else "runexamples:run", args=[run.id])
   def item_pubdate(self, run):
     return run.startTime
+  def item_updateddate(self, run):
+    return run.startTime
+  def item_enclosures(self, run):
+    isBuild=type(run) is builds.models.Run
+    OCTICON="gear" if isBuild else "beaker"
+    return [django.utils.feedgenerator.Enclosure(
+      "https://"+os.environ['MBSIMENVSERVERNAME']+django.templatetags.static.static("octiconpng/"+OCTICON+".png"),
+      "0", "image/png")]
+  def item_author_name(self, run):
+    return "MBSim-Env"
 
 # site for release download
 class Releases(base.views.Base):
@@ -253,11 +319,14 @@ class Releases(base.views.Base):
     context=super().get_context_data(**kwargs)
     context["navbar"]["download"]=True
 
+    currentReleases=[]
+    olderReleases=[]
     allReleases=service.models.Release.objects.order_by('-versionMajor', '-versionMinor')
-    currentVersionMajor=allReleases[0].versionMajor
-    currentVersionMinor=allReleases[0].versionMinor
-    currentReleases=allReleases.filter(versionMajor=currentVersionMajor, versionMinor=currentVersionMinor)
-    olderReleases=allReleases.exclude(versionMajor=currentVersionMajor, versionMinor=currentVersionMinor)
+    if allReleases:
+      currentVersionMajor=allReleases[0].versionMajor
+      currentVersionMinor=allReleases[0].versionMinor
+      currentReleases=allReleases.filter(versionMajor=currentVersionMajor, versionMinor=currentVersionMinor)
+      olderReleases=allReleases.exclude(versionMajor=currentVersionMajor, versionMinor=currentVersionMinor)
 
     # just a list which can be used to loop over in the template
     context['currentReleases']=currentReleases
@@ -307,7 +376,7 @@ def webhook(request):
   rawdata=request.body
   sig=request.headers['X_HUB_SIGNATURE'][5:]
   try:
-    if not hmac.compare_digest(sig, hmac.new(mbsimenvSecrets.getSecrets()["githubWebhookSecret"].encode('utf-8'), rawdata, hashlib.sha1).hexdigest()):
+    if not hmac.compare_digest(sig, hmac.new(mbsimenvSecrets.getSecrets("githubWebhookSecret").encode('utf-8'), rawdata, hashlib.sha1).hexdigest()):
       return django.http.HttpResponseForbidden()
   except ex:
     if django.conf.settings.DEBUG:
@@ -326,9 +395,14 @@ def webhook(request):
     res["commitID"]=data["after"]
     if res["repo"]=="fmatvec" or res["repo"]=="hdf5serie" or res["repo"]=="openmbv" or res["repo"]=="mbsim":
       res["addedBranchCombinations"]=[]
+
+      # executor: MBSim-Env
+
       # get all branch combinations to build as save in queue
       masterRecTime=django.utils.timezone.now() # we push the master/master/master/master branch combi first
+      empty=True
       for bc in service.models.CIBranches.objects.filter(**{res["repo"]+"Branch": res["branch"]}):
+        empty=False
         branchCombination={
           "fmatvecBranch": bc.fmatvecBranch,
           "hdf5serieBranch": bc.hdf5serieBranch,
@@ -343,6 +417,36 @@ def webhook(request):
         ciq.recTime=recTime
         ciq.save()
         res["addedBranchCombinations"].append(branchCombination)
+      if empty: # branch not found in branch combinations -> build this branch with master of all other branches
+        branchCombination={
+          "fmatvecBranch": "master",
+          "hdf5serieBranch": "master",
+          "openmbvBranch": "master",
+          "mbsimBranch": "master",
+        }
+        branchCombination[res["repo"]+"Branch"]=res["branch"]
+        recTime=django.utils.timezone.now()
+        ciq, _=service.models.CIQueue.objects.get_or_create(**branchCombination, defaults={"recTime": recTime})
+        ciq.recTime=recTime
+        ciq.save()
+        res["addedBranchCombinations"].append(branchCombination)
+
+      # executor: Github Actions
+
+      data={"event_type": "ci",
+            "client_payload":
+              {"repository": "mbsim-env/"+res["repo"],
+               "ref_name": res["branch"],
+               "sha": res["commitID"]}
+           }
+      response=requests.post("https://api.github.com/repos/mbsim-env/build/dispatches", json=data,
+                             headers={"Authorization": "token "+mbsimenvSecrets.getSecrets("githubAccessToken")})
+      if response.status_code!=204:
+        return django.http.HttpResponseBadRequest("Faild to dispatch to mbsim-env/build Github Actions workflow."+\
+                                                  (response.content.decode("utf-8") if django.conf.settings.DEBUG else ""))
+      # just some messages
+      res["githubAction"]={"target": "mbsim-env/build", "data": data}
+
     elif res["repo"]=="build":
       if res["branch"]=="staging":
         ciq=service.models.CIQueue()
@@ -363,14 +467,11 @@ class Webapp(base.views.Base):
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
     context["navbar"]["buildsystem"]=True
-    context["prog"]=kwargs["prog"]
-    context["buildType"]=kwargs["buildType"]
-    context["exampleName"]=kwargs["exampleName"]
+    context["prog"]=self.request.GET["prog"]
+    context["buildRunID"]=self.request.GET["buildRunID"]
+    context["exampleName"]=self.request.GET["exampleName"]
     # we can only pass additonal information to websockify via a token query. we use a url quoted json string as token
-    context["token"]=urllib.parse.quote_plus(json.dumps({
-      # kwargs may be lazy, so we need to convert these explicitly to str
-      "prog": str(kwargs["prog"]), "buildType": str(kwargs["buildType"]), "exampleName": str(kwargs["exampleName"])
-    }))
+    context["token"]=urllib.parse.quote_plus(json.dumps(self.request.GET))
     return context
 
 def checkValidUser(request):
@@ -414,3 +515,136 @@ class CreateFilterGitHubFeed(base.views.Base):
     context["navbar"]["buildsystem"]=True
     context["hostname"]=os.environ.get('MBSIMENVSERVERNAME', 'localhost')
     return context
+
+class LatestBranchCombiBuilds(base.views.Base):
+  template_name='service/latestbranchcombibuilds.html'
+  def get_context_data(self, **kwargs):
+    context=super().get_context_data(**kwargs)
+    context["navbar"]["buildsystem"]=True
+    context['model']=kwargs["model"]
+    context['modelHuman']="continuous integration" if context["model"]=="CIBranches" else "daily"
+    return context
+
+class DataTableLatestBranchCombiBuilds(base.views.DataTable):
+  def setup(self, request, *args, **kwargs):
+    super().setup(request, *args, **kwargs)
+    self.model=kwargs["model"]
+
+  # return the queryset to display [required]
+  def queryset(self):
+    if self.model=="CIBranches":
+      return builds.models.Run.objects.filter(buildType__endswith="-ci")
+    elif self.model=="DailyBranches":
+      return builds.models.Run.objects.exclude(buildType__endswith="-ci")
+    else:
+      return None
+
+  # return the field name in the dataset using for search/filter [required]
+  def searchField(self):
+    return "id"
+
+  def colData_timedate(self, ds):
+    import humanize
+    return base.helper.tooltip(humanize.naturaldelta(django.utils.timezone.now()-ds.startTime)+"<br/>ago",
+                               ds.startTime.isoformat()+"&#013;builds/Run: id="+str(ds.id))
+  def colSortKey_timedate(self, ds):
+    return ds.startTime.isoformat()
+  def colData_buildType_executor(self, ds):
+    return base.helper.buildTypeIcon(ds.buildType)+'&nbsp'+ds.buildType+'<br/>'+\
+           octicon("terminal")+'&nbsp;'+ds.executor
+
+  def _colData_Branch(self, ds, repo):
+    import humanize
+    return '''<nobr>
+                <a href="https://github.com/mbsim-env/{REPO}/tree/{BRANCH}">
+                  <span class="badge badge-primary">{OCTICONBRANCH}&nbsp;{BRANCH}</span>
+                </a>
+                <a href="https://github.com/mbsim-env/{REPO}/commit/{COMMITID}">
+                  {OCTICONCOMMIT}{COMMITIDSHORT}…
+                </a>
+              </nobr><br/>
+              <nobr>
+                {OCTICONPERSON}&nbsp;<i>{AUTHOR}</i>
+              </nobr><br/>
+              <nobr>
+                {DATE_WITHTOOLTIP}
+              </nobr><br/>
+              {MSG}'''.\
+           format(REPO=repo, BRANCH=getattr(ds, repo+"Branch"),
+                  OCTICONBRANCH=octicon("git-branch"), OCTICONCOMMIT=octicon("git-commit"),
+                  COMMITID=getattr(ds, repo+"UpdateCommitID"), COMMITIDSHORT=getattr(ds, repo+"UpdateCommitID")[0:7],
+                  MSG=getattr(ds, repo+"UpdateMsg"), OCTICONPERSON=octicon("person"), AUTHOR=getattr(ds, repo+"UpdateAuthor"),
+                  OCTICONCLOCK=octicon("clock"),
+                  DATE_WITHTOOLTIP=base.helper.tooltip(octicon("clock")+"&nbsp;"+humanize.naturaldelta(
+                    django.utils.timezone.now()-getattr(ds, repo+"UpdateDate"))+" ago",
+                    getattr(ds, repo+"UpdateDate").isoformat()
+                  ) if getattr(ds, repo+"UpdateDate") is not None else "" \
+                 )
+  def colData_fmatvecBranch(self, ds):
+    return self._colData_Branch(ds, "fmatvec")
+  def colData_hdf5serieBranch(self, ds):
+    return self._colData_Branch(ds, "hdf5serie")
+  def colData_openmbvBranch(self, ds):
+    return self._colData_Branch(ds, "openmbv")
+  def colData_mbsimBranch(self, ds):
+    return self._colData_Branch(ds, "mbsim")
+
+  def _colClass_Branch(self, ds, repo):
+    newest=None
+    newestRepo=""
+    for r in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
+      cur=getattr(ds, r+"UpdateDate")
+      if cur is not None and (newest is None or cur>newest):
+        newest=cur
+        newestRepo=r
+    return "table-info" if repo==newestRepo else ""
+  def colClass_fmatvecBranch(self, ds):
+    return self._colClass_Branch(ds, "fmatvec")
+  def colClass_hdf5serieBranch(self, ds):
+    return self._colClass_Branch(ds, "hdf5serie")
+  def colClass_openmbvBranch(self, ds):
+    return self._colClass_Branch(ds, "openmbv")
+  def colClass_mbsimBranch(self, ds):
+    return self._colClass_Branch(ds, "mbsim")
+
+  def colData_buildStatus_exampleStatus(self, ds):
+    buildFinished=ds.endTime is not None
+    data='''<a href="{URL}">
+              <span class="badge badge-{COLOR}">{NRFAILED}</span>/<span class="badge badge-secondary">{NRALL}</span>
+            </a>'''.format(
+         URL=django.urls.reverse("builds:run", args=[ds.id]),
+         COLOR=("success" if ds.nrFailed()==0 else "danger") if buildFinished else "secondary",
+         NRFAILED=ds.nrFailed() if buildFinished else "...", NRALL=ds.nrAll() if buildFinished else "...")
+    data='<nobr>'+octicon("gear")+' '+data+'</nobr><br/>'
+    nrAll=0
+    nrFailed=0
+    count=0
+    exid=None
+    examplesFinished=True
+    for ex in ds.examples.all():
+      if exid is None: exid=ex.id
+      count+=1
+      nrAll+=ex.nrAll()
+      nrFailed+=ex.nrFailed()
+      if examplesFinished: examplesFinished=ex.endTime is not None
+    if count>0:
+      d='''<a href="{URL}">
+             <span class="badge badge-{COLOR}">{NRFAILED}</span>/<span class="badge badge-secondary">{NRALL}</span>
+           </a>'''.format(
+        URL=django.urls.reverse("runexamples:run", args=[exid]) if count==1 else \
+            django.urls.reverse("builds:run", args=[ds.id])+"#EXAMPLES",
+        COLOR=("success" if nrFailed==0 else "danger") if examplesFinished else "secondary",
+        NRFAILED=nrFailed if examplesFinished else "...", NRALL=nrAll if examplesFinished else "...")
+      data+='<nobr>'+octicon("beaker")+' '+d+'</nobr>'
+    return data
+  def colClass_buildStatus_exampleStatus(self, ds):
+    buildFinished=ds.endTime is not None
+    examplesFailed=False
+    examplesFinished=True
+    for ex in ds.examples.all():
+      if examplesFinished: examplesFinished=ex.endTime is not None
+      if ex.nrFailed()>0:
+        examplesFailed=True
+        break
+    return "table-danger" if examplesFailed or ds.nrFailed()>0 else \
+           ("table-success" if buildFinished and examplesFinished else "table-wanring")

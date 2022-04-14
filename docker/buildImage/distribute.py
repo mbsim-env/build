@@ -191,22 +191,6 @@ def addStrToDist(text, arcname, exeBit=False):
 
 
 
-def addRepoState():
-  print("Add repository state")
-  sys.stdout.flush()
-
-  text='This build was done with the following repository states (sha1 commit id):\n\n'
-  savedDir=os.getcwd()
-  for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
-    os.chdir(args.prefix+"/../"+repo)
-    commitid=subprocess.check_output(['git', 'log', '-n', '1', '--format=%H', 'HEAD']).decode('utf-8').rstrip()
-    text+=repo+": "+commitid+"\n"
-  os.chdir(savedDir)
-
-  addStrToDist(text, 'mbsim-env/RepoState.txt')
-
-
-
 def addReadme():
   print("Add README.txt file")
   sys.stdout.flush()
@@ -526,7 +510,6 @@ def main():
     debugArchive=zipfile.ZipFile(args.outDir+"/"+debugArchiveName, mode='w', compression=zipfile.ZIP_DEFLATED)
  
   # add special files
-  addRepoState()
   addReadme()
   addMBSimEnvTest()
 

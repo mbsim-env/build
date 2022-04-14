@@ -24,7 +24,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/3.0/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY=mbsimenvSecrets.getSecrets()["djangoSecretKey"]
+SECRET_KEY=mbsimenvSecrets.getSecrets("djangoSecretKey")
 
 # if debugging enabled python requests (urllib3) logging
 def debug(enabled):
@@ -33,7 +33,9 @@ def debug(enabled):
     l.setLevel(logging.DEBUG)
     l.addHandler(logging.StreamHandler())
 
-ALLOWED_HOSTS = [os.environ.get("MBSIMENVSERVERNAME", ""), 'localhost', '127.0.0.1', '[::1]']
+ALLOWED_HOSTS = [os.environ.get("MBSIMENVSERVERNAME", ""), 'webserver', 'localhost', '127.0.0.1', '[::1]']
+if os.environ.get("MBSIMENVSERVERNAME", "")=="wwwstaging.mbsim-env.de": # special handling for external docker builds which cannot use ipv6 only staging ip address
+  ALLOWED_HOSTS.append("www.mbsim-env.de")
 
 
 # Application definition
@@ -111,14 +113,19 @@ def databases(mbsimenv_type):
       }
     }
   else:
+    def databaseServerAndPort():
+      if "MBSIMENVDATABASE" not in os.environ:
+        return ["database", 5432]
+      x=os.environ["MBSIMENVDATABASE"].split(":")
+      return [x[0], int(x[1])]
     DATABASES={
       'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': 'mbsimenv-service-database',
         'USER': 'mbsimenvuser',
-        'PASSWORD': mbsimenvSecrets.getSecrets()["postgresPassword"] if "postgresPassword" in mbsimenvSecrets.getSecrets() else "",
-        'HOST': 'database',
-        'PORT': '5432',
+        'PASSWORD': mbsimenvSecrets.getSecrets("postgresPassword"),
+        'HOST': databaseServerAndPort()[0],
+        'PORT': databaseServerAndPort()[1],
         'CONN_MAX_AGE': 30,
       }
     }
@@ -156,6 +163,7 @@ SITE_ID = 1
 ACCOUNT_UNIQUE_EMAIL = False
 SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_EMAIL_REQUIRED = True
+SOCIALACCOUNT_STORE_TOKENS = True
 SOCIALACCOUNT_PROVIDERS = {
     'github': {
         'SCOPE': [

@@ -13,6 +13,7 @@ import string
 import socket
 import sys
 import importlib.util
+import octicons.templatetags.octicons
 
 # a dummy context object doing just nothing (e.g. usefull as a dummy lock(mutext) object.
 class NullContext(object):
@@ -215,7 +216,7 @@ def subprocessCheckOutput(comm, f):
   return p.stdout
 
 # subprocess call with MultiFile output
-def subprocessCall(args, f, env=os.environ, maxExecutionTime=0):
+def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   # remove core dumps from previous runs
   for coreFile in glob.glob("core.*")+glob.glob("vgcore.*"):
     os.remove(coreFile)
@@ -238,21 +239,44 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0):
   fd=proc.stdout.fileno()
   fcntl.fcntl(fd, fcntl.F_SETFL, fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NONBLOCK)
   # read all output
-  lineNP=b'' # not already processed bytes (required since we read 100 bytes which may break a unicode multi byte character)
+  dataNP=b'' # not already processed bytes (required since we read 100 bytes which may break a unicode multi byte character)
   sleepTime=0.01
+  stopByRE=False
   while proc.poll() is None:
     time.sleep(sleepTime)
     if sleepTime<0.5: sleepTime=sleepTime*1.01
     try:
-      line=lineNP+proc.stdout.read()
+      data=dataNP+proc.stdout.read()
     except:
       continue
-    lineNP=b''
+    dataNP=b''
+    if b"\n" not in data: # process only full lines
+      dataNP=data
+      continue
+    # remove carrige returns
+    data=re.sub(b"\n.*\r", b"\n", data)
+    data=re.sub(b"^.*\r", b"", data)
     try:
-      print(line.decode("utf-8"), end="", file=f)
-    except UnicodeDecodeError as ex: # catch broken multibyte unicode characters and append it to next line
-      print(line[0:ex.start].decode("utf-8"), end="", file=f) # print up to first broken character
-      lineNP=ex.object[ex.start:] # add broken characters to next line
+      dataLine=data.decode("utf-8")
+      print(dataLine, end="", file=f)
+    except UnicodeDecodeError as ex: # catch broken multibyte unicode characters and append it to next data
+      dataLine=data[0:ex.start].decode("utf-8")
+      print(dataLine, end="", file=f) # print up to first broken character
+      dataNP=ex.object[ex.start:] # add broken characters to next data
+    # check stop regex
+    if stopRE is not None and stopRE.search(dataLine) is not None:
+      stopByRE=True
+      break
+  if stopByRE:
+    f.write("\n\n\n******************** START: MESSAGE FROM runexamples.py ********************\n")
+    f.write("Terminating due to stop regex in output\n")
+    f.write("******************** END: MESSAGE FROM runexamples.py **********************\n\n\n\n")
+    proc.terminate()
+    time.sleep(1)
+    if proc.poll() is None:
+      proc.kill()
+  # print not yet processed data
+  print(dataNP.decode("utf-8"), end="", file=f)
   # wait for the call program to exit
   ret=proc.wait()
   endTime=django.utils.timezone.now()
@@ -263,6 +287,8 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0):
       return subprocessCall.timedOutErrorCode # return to indicate that the program was terminated/killed
     else:
       guard.cancel()
+  if stopByRE:
+    return subprocessCall.timedOutErrorCode # return to indicate that the program was terminated/killed
   # check for core dump file
   exeRE=re.compile("^.*LSB core file.*, *from '([^']*)' *,.*$")
   for coreFile in glob.glob("core.*")+glob.glob("vgcore.*"):
@@ -319,3 +345,45 @@ def startLocalServer(port, onlyGetServerInfo=False):
 
 def tooltip(text, tooltip):
   return '<span data-toggle="tooltip" data-placement="bottom" title="%s">%s</span>'%(tooltip, text)
+
+def copyFile(fi, fo):
+  if type(fi)==bytes:
+    fo.write(fi)
+  else:
+    while True:
+      data=fi.read(32768)
+      if len(data)==0:
+        break
+      fo.write(data)
+
+getExecutorIDRE=re.compile("\WMBSIMENV_EXECUTOR_([a-zA-Z0-9_]+)")
+def getExecutorID(executor):
+  m=getExecutorIDRE.search(executor)
+  if m is not None:
+    return m.group(1)
+  return None
+
+def buildTypeIcon(buildType):
+  ret=""
+  if "linux64" in buildType:
+    ret+='<i class="fa-brands fa-linux"></i>'
+  if "win64" in buildType:
+    ret+='<i class="fa-brands fa-windows"></i>'
+  if "release" in buildType:
+    ret+='<i class="fa-solid fa-building"></i>'
+  if "debug" in buildType or "-ci" in buildType:
+    ret+=octicons.templatetags.octicons.octicon("bug")
+  if "docker" in buildType:
+    ret+='<i class="fa-brands fa-docker"></i>'
+  return ret
+
+def bulk_create(objects, objs, ignore_conflicts=False):
+  if django.conf.settings.DATABASES["default"]["ENGINE"]=='django.db.backends.sqlite3':
+    # for sqlite bulk_create with related objects does not work -> use save on each object as a workaround
+    for o in objs:
+      o.save()
+  else:
+    objects.bulk_create(objs, ignore_conflicts=ignore_conflicts)
+
+# add this to the Field's help_text option to show this field in MBSimEnvModelAdmin inlines (as read only)
+inlineAdmin='<span class="inlineadmin"/>'

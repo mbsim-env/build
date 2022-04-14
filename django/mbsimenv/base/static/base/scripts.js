@@ -28,7 +28,8 @@ $(document).ready(function() {
 // colNames: the column names of the table
 //   [ "colname1", "colname2", ... ]
 // args: additional argument passed to datatable
-function initDatatable(id, url, colNames, args) {
+// doneCallback is called, if given, after a successfull ajax request
+function initDatatable(id, url, colNames, args, doneCallback) {
   var columns=[];
   for(var i=0; i<colNames.length; ++i)
     columns.push({"data": colNames[i], "name": colNames[i]});
@@ -60,6 +61,8 @@ function initDatatable(id, url, colNames, args) {
     if(data.columnsVisibility)
       for(var col in data.columnsVisibility)
         table.column(col+":name").visible(data.columnsVisibility[col]);
+    if(doneCallback!==undefined)
+      doneCallback(data);
   },
   function(reason, msg) {
     //fail

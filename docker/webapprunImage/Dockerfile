@@ -5,7 +5,12 @@ USER root:root
 
 RUN yum --setopt=skip_missing_names_on_install=False -y install \
   xfwm4 \
+  bzip2 \
   && yum clean all
+
+# compile splash program
+COPY fullscreensplash.cc /context/fullscreensplash.cc
+RUN g++ -fPIC -o /context/fullscreensplash -I/usr/include/qt5 /context/fullscreensplash.cc -lQt5Widgets -lQt5Core
 
 COPY entrypoint.py /context/entrypoint.py
 
@@ -17,8 +22,7 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.vendor="MBSim-Environment"
 
 # Add user dockeruser, create volumes and set volume ownership and permissions
-RUN mkdir -p /mbsim-env-linux64-ci /mbsim-env-linux64-dailydebug /mbsim-env-linux64-dailyrelease /mbsim-env-win64-dailyrelease && \
-  chown dockeruser:dockeruser /mbsim-env-linux64-ci /mbsim-env-linux64-dailydebug /mbsim-env-linux64-dailyrelease /mbsim-env-win64-dailyrelease
+RUN mkdir -p /mbsim-env && chown root:root /mbsim-env
 
 # proxy and
 # prepare env for starting programs in the vnc server
@@ -34,6 +38,8 @@ USER dockeruser:dockeruser
 
 # create XAUTH file
 RUN touch /tmp/mbsimwebapp-xauth && chmod 600 /tmp/mbsimwebapp-xauth
+
+USER root:root
 
 # these are the default arguments when running the container
 CMD []

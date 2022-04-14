@@ -1,15 +1,17 @@
 import django
 import re
+import base
 
 class RunManager(django.db.models.Manager):
   # return the current Run object for buildType (the one with the newest id)
-  def getCurrent(self, buildType):
-    run_id=self.filter(buildType=buildType).\
-           aggregate(django.db.models.Max('id'))["id__max"]
-    if run_id:
-      return Run.objects.get(id=run_id)
-    else:
-      return None
+  def getCurrent(self, buildType=None, fmatvecBranch=None, hdf5serieBranch=None, openmbvBranch=None, mbsimBranch=None):
+    args={}
+    if buildType is not None: args["buildType"]=buildType
+    if fmatvecBranch is not None: args["fmatvecBranch"]=fmatvecBranch
+    if hdf5serieBranch is not None: args["hdf5serieBranch"]=hdf5serieBranch
+    if openmbvBranch is not None: args["openmbvBranch"]=openmbvBranch
+    if mbsimBranch is not None: args["mbsimBranch"]=mbsimBranch
+    return self.filter(**args).order_by('-startTime').first()
 
   # return a queryset with all failed runs
   def filterFailed(self):
@@ -26,14 +28,15 @@ class Run(django.db.models.Model):
   objects=RunManager()
 
   id=django.db.models.AutoField(primary_key=True)
-  buildType=django.db.models.CharField(max_length=50)
+  buildType=django.db.models.CharField(max_length=50, help_text=base.helper.inlineAdmin)
+  executor=django.db.models.TextField(help_text=base.helper.inlineAdmin)
   command=django.db.models.TextField()
-  startTime=django.db.models.DateTimeField()
+  startTime=django.db.models.DateTimeField(help_text=base.helper.inlineAdmin)
   endTime=django.db.models.DateTimeField(null=True, blank=True)
-  fmatvecBranch=django.db.models.CharField(max_length=50)
-  hdf5serieBranch=django.db.models.CharField(max_length=50)
-  openmbvBranch=django.db.models.CharField(max_length=50)
-  mbsimBranch=django.db.models.CharField(max_length=50)
+  fmatvecBranch=django.db.models.CharField(max_length=50, help_text=base.helper.inlineAdmin)
+  hdf5serieBranch=django.db.models.CharField(max_length=50, help_text=base.helper.inlineAdmin)
+  openmbvBranch=django.db.models.CharField(max_length=50, help_text=base.helper.inlineAdmin)
+  mbsimBranch=django.db.models.CharField(max_length=50, help_text=base.helper.inlineAdmin)
   fmatvecUpdateOK=django.db.models.BooleanField(null=True, blank=True)
   hdf5serieUpdateOK=django.db.models.BooleanField(null=True, blank=True)
   openmbvUpdateOK=django.db.models.BooleanField(null=True, blank=True)
@@ -42,10 +45,6 @@ class Run(django.db.models.Model):
   hdf5serieUpdateOutput=django.db.models.TextField()
   openmbvUpdateOutput=django.db.models.TextField()
   mbsimUpdateOutput=django.db.models.TextField()
-  fmatvecUpdateTooltip=django.db.models.TextField()
-  hdf5serieUpdateTooltip=django.db.models.TextField()
-  openmbvUpdateTooltip=django.db.models.TextField()
-  mbsimUpdateTooltip=django.db.models.TextField()
   fmatvecUpdateCommitID=django.db.models.CharField(max_length=50)
   hdf5serieUpdateCommitID=django.db.models.CharField(max_length=50)
   openmbvUpdateCommitID=django.db.models.CharField(max_length=50)
@@ -54,6 +53,14 @@ class Run(django.db.models.Model):
   hdf5serieUpdateMsg=django.db.models.CharField(max_length=100)
   openmbvUpdateMsg=django.db.models.CharField(max_length=100)
   mbsimUpdateMsg=django.db.models.CharField(max_length=100)
+  fmatvecUpdateAuthor=django.db.models.CharField(max_length=30)
+  hdf5serieUpdateAuthor=django.db.models.CharField(max_length=30)
+  openmbvUpdateAuthor=django.db.models.CharField(max_length=30)
+  mbsimUpdateAuthor=django.db.models.CharField(max_length=30)
+  fmatvecUpdateDate=django.db.models.DateTimeField(null=True)
+  hdf5serieUpdateDate=django.db.models.DateTimeField(null=True)
+  openmbvUpdateDate=django.db.models.DateTimeField(null=True)
+  mbsimUpdateDate=django.db.models.DateTimeField(null=True)
   # tools = related ForeignKey
   toolsFailed=django.db.models.PositiveIntegerField(default=0) # just a cached value for performance of filterFailed
   # examples = related ForeignKey
@@ -81,17 +88,30 @@ class Run(django.db.models.Model):
     self.distributionDebugFile.name="builds_Run_"+str(self.id)+"_"+filename
 
   def getCurrent(self):
-    return Run.objects.getCurrent(self.buildType)
+    return Run.objects.getCurrent(self.buildType, self.fmatvecBranch, self.hdf5serieBranch,
+                                                  self.openmbvBranch, self.mbsimBranch)
   def getNext(self):
-    id=Run.objects.filter(buildType=self.buildType,
-                          id__gt=self.id).\
-       aggregate(django.db.models.Min('id'))["id__min"]
-    return self if id is None else Run.objects.get(id=id)
+    ret=Run.objects.filter(buildType=self.buildType,
+                      fmatvecBranch=self.fmatvecBranch,
+                      hdf5serieBranch=self.hdf5serieBranch,
+                      openmbvBranch=self.openmbvBranch,
+                      mbsimBranch=self.mbsimBranch,
+                      startTime__gt=self.startTime).\
+                    order_by("startTime").first()
+    if ret is None:
+      return self
+    return ret
   def getPrevious(self):
-    id=Run.objects.filter(buildType=self.buildType,
-                          id__lt=self.id).\
-       aggregate(django.db.models.Max('id'))["id__max"]
-    return self if id is None else Run.objects.get(id=id)
+    ret=Run.objects.filter(buildType=self.buildType,
+                      fmatvecBranch=self.fmatvecBranch,
+                      hdf5serieBranch=self.hdf5serieBranch,
+                      openmbvBranch=self.openmbvBranch,
+                      mbsimBranch=self.mbsimBranch,
+                      startTime__lt=self.startTime).\
+                    order_by("-startTime").first()
+    if ret is None:
+      return self
+    return ret
 
   def nrAll(self):
     # 4 from the run (git update) and all the tools
@@ -131,7 +151,7 @@ class Tool(django.db.models.Model):
 
   id=django.db.models.AutoField(primary_key=True)
   run=django.db.models.ForeignKey(Run, on_delete=django.db.models.CASCADE, related_name='tools')
-  toolName=django.db.models.CharField(max_length=200)
+  toolName=django.db.models.CharField(max_length=200, help_text=base.helper.inlineAdmin)
   willFail=django.db.models.BooleanField()
   configureOK=django.db.models.BooleanField(null=True, blank=True)
   configureOutput=django.db.models.TextField(blank=True)

@@ -62,7 +62,7 @@ function addBranchCombination(url) {
     noti.success("<small>Stored branch combination</small>");
   }, function(reason, msg) {
     //fail
-    noti.fail(reason, "The new branch combination alredy exists.<br/>"+msg);
+    noti.fail(reason, "Fail!<br/>"+msg);
   }, function() {
     // always
     $("#ADDBRANCH").removeAttr("disabled");
@@ -85,5 +85,21 @@ function deleteBranchCombination(self, url) {
   }, function() {
     // always
     self.removeAttr("disabled");
+  });
+}
+
+function initLatestBranchCombiBuilds(url) {
+  return initDatatable('latestBranchCombiBuilds', url, [
+    "timedate",
+    "buildType_executor",
+    "fmatvecBranch",
+    "hdf5serieBranch",
+    "openmbvBranch",
+    "mbsimBranch",
+    "buildStatus_exampleStatus",
+  ], {
+    "ordering": true,
+    "orderFixed": [0, "desc"],
+    "searching": false,
   });
 }

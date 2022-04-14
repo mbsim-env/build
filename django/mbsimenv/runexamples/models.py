@@ -1,5 +1,6 @@
 import django
 import builds.models
+import base
 import django.contrib.contenttypes.models
 import django.contrib.contenttypes.fields
 import re
@@ -7,13 +8,14 @@ import uuid
 
 class RunManager(django.db.models.Manager):
   # return the current Run object for buildType (the one with the newest id)
-  def getCurrent(self, buildType):
-    run_id=self.filter(buildType=buildType).\
-           aggregate(django.db.models.Max('id'))["id__max"]
-    if run_id:
-      return Run.objects.get(id=run_id)
-    else:
-      return None
+  def getCurrent(self, buildType=None, fmatvecBranch=None, hdf5serieBranch=None, openmbvBranch=None, mbsimBranch=None):
+    args={}
+    if buildType is not None: args["buildType"]=buildType
+    if fmatvecBranch is not None: args["build_run__fmatvecBranch"]=fmatvecBranch
+    if hdf5serieBranch is not None: args["build_run__hdf5serieBranch"]=hdf5serieBranch
+    if openmbvBranch is not None: args["build_run__openmbvBranch"]=openmbvBranch
+    if mbsimBranch is not None: args["build_run__mbsimBranch"]=mbsimBranch
+    return self.filter(**args).order_by('-startTime').first()
 
   # return a queryset with all failed runs
   def filterFailed(self):
@@ -27,9 +29,10 @@ class Run(django.db.models.Model):
 
   id=django.db.models.AutoField(primary_key=True)
   build_run=django.db.models.ForeignKey(builds.models.Run, null=True, blank=True, on_delete=django.db.models.SET_NULL, related_name="examples")
-  buildType=django.db.models.CharField(max_length=50)
+  buildType=django.db.models.CharField(max_length=50, help_text=base.helper.inlineAdmin)
+  executor=django.db.models.TextField(help_text=base.helper.inlineAdmin)
   command=django.db.models.TextField()
-  startTime=django.db.models.DateTimeField()
+  startTime=django.db.models.DateTimeField(help_text=base.helper.inlineAdmin)
   endTime=django.db.models.DateTimeField(null=True, blank=True)
   # examples = related ForeignKey
   examplesFailed=django.db.models.PositiveIntegerField(default=0) # just a cached value for performance of filterFailed
@@ -38,17 +41,42 @@ class Run(django.db.models.Model):
   coverageOutput=django.db.models.TextField(blank=True)
 
   def getCurrent(self):
+    if self.build_run:
+      return Run.objects.getCurrent(self.buildType, self.build_run.fmatvecBranch, self.build_run.hdf5serieBranch,
+                                                    self.build_run.openmbvBranch, self.build_run.mbsimBranch)
     return Run.objects.getCurrent(self.buildType)
   def getNext(self):
-    id=Run.objects.filter(buildType=self.buildType,
-                          id__gt=self.id).\
-       aggregate(django.db.models.Min('id'))["id__min"]
-    return self if id is None else Run.objects.get(id=id)
+    if self.build_run:
+      ret=Run.objects.filter(buildType=self.buildType,
+                        build_run__fmatvecBranch=self.build_run.fmatvecBranch,
+                        build_run__hdf5serieBranch=self.build_run.hdf5serieBranch,
+                        build_run__openmbvBranch=self.build_run.openmbvBranch,
+                        build_run__mbsimBranch=self.build_run.mbsimBranch,
+                        startTime__gt=self.startTime).\
+                      order_by("startTime").first()
+    else:
+      ret=Run.objects.filter(buildType=self.buildType,
+                        startTime__gt=self.startTime).\
+                      order_by("startTime").first()
+    if ret is None:
+      return self
+    return ret
   def getPrevious(self):
-    id=Run.objects.filter(buildType=self.buildType,
-                          id__lt=self.id).\
-       aggregate(django.db.models.Max('id'))["id__max"]
-    return self if id is None else Run.objects.get(id=id)
+    if self.build_run:
+      ret=Run.objects.filter(buildType=self.buildType,
+                        build_run__fmatvecBranch=self.build_run.fmatvecBranch,
+                        build_run__hdf5serieBranch=self.build_run.hdf5serieBranch,
+                        build_run__openmbvBranch=self.build_run.openmbvBranch,
+                        build_run__mbsimBranch=self.build_run.mbsimBranch,
+                        startTime__lt=self.startTime).\
+                      order_by("-startTime").first()
+    else:
+      ret=Run.objects.filter(buildType=self.buildType,
+                        startTime__lt=self.startTime).\
+                      order_by("-startTime").first()
+    if ret is None:
+      return self
+    return ret
 
   def nrAll(self):
     nr=self.examples.count()
@@ -87,7 +115,7 @@ class Example(django.db.models.Model):
 
   id=django.db.models.AutoField(primary_key=True)
   run=django.db.models.ForeignKey(Run, on_delete=django.db.models.CASCADE, related_name='examples')
-  exampleName=django.db.models.CharField(max_length=200)
+  exampleName=django.db.models.CharField(max_length=200, help_text=base.helper.inlineAdmin)
   willFail=django.db.models.BooleanField()
   runResult=django.db.models.IntegerField(null=True, blank=True, choices=RunResult.choices)
   runOutput=django.db.models.TextField(blank=True)
@@ -109,22 +137,54 @@ class Example(django.db.models.Model):
   xmlOutputsFailed=django.db.models.PositiveIntegerField(default=0) # just a cached value for performance of filterFailed
 
   def getCurrent(self):
-    id=Example.objects.filter(run__buildType=self.run.buildType,
-                              exampleName=self.exampleName).\
-       aggregate(django.db.models.Max('id'))["id__max"]
-    return self if id is None else Example.objects.get(id=id)
+    if self.run.build_run:
+      return Example.objects.filter(run__buildType=self.run.buildType,
+                               run__build_run__fmatvecBranch=self.run.build_run.fmatvecBranch,
+                               run__build_run__hdf5serieBranch=self.run.build_run.hdf5serieBranch,
+                               run__build_run__openmbvBranch=self.run.build_run.openmbvBranch,
+                               run__build_run__mbsimBranch=self.run.build_run.mbsimBranch,
+                               exampleName=self.exampleName).\
+                             order_by("-startTime").first()
+    else:
+      return Example.objects.filter(run__buildType=self.run.buildType,
+                               exampleName=self.exampleName).\
+                             order_by("-startTime").first()
   def getNext(self):
-    id=Example.objects.filter(run__buildType=self.run.buildType,
-                              run__id__gt=self.run.id,
-                              exampleName=self.exampleName).\
-       aggregate(django.db.models.Min('id'))["id__min"]
-    return self if id is None else Example.objects.get(id=id)
+    if self.run.build_run:
+      ret=Example.objects.filter(run__buildType=self.run.buildType,
+                            run__build_run__fmatvecBranch=self.run.build_run.fmatvecBranch,
+                            run__build_run__hdf5serieBranch=self.run.build_run.hdf5serieBranch,
+                            run__build_run__openmbvBranch=self.run.build_run.openmbvBranch,
+                            run__build_run__mbsimBranch=self.run.build_run.mbsimBranch,
+                            run__startTime__gt=self.run.startTime,
+                            exampleName=self.exampleName).\
+                          order_by("run__startTime").first()
+    else:
+      ret=Example.objects.filter(run__buildType=self.run.buildType,
+                            run__startTime__gt=self.run.startTime,
+                            exampleName=self.exampleName).\
+                          order_by("run__startTime").first()
+    if ret is None:
+      return self
+    return ret
   def getPrevious(self):
-    id=Example.objects.filter(run__buildType=self.run.buildType,
-                              run__id__lt=self.run.id,
-                              exampleName=self.exampleName).\
-       aggregate(django.db.models.Max('id'))["id__max"]
-    return self if id is None else Example.objects.get(id=id)
+    if self.run.build_run:
+      ret=Example.objects.filter(run__buildType=self.run.buildType,
+                            run__build_run__fmatvecBranch=self.run.build_run.fmatvecBranch,
+                            run__build_run__hdf5serieBranch=self.run.build_run.hdf5serieBranch,
+                            run__build_run__openmbvBranch=self.run.build_run.openmbvBranch,
+                            run__build_run__mbsimBranch=self.run.build_run.mbsimBranch,
+                            run__startTime__lt=self.run.startTime,
+                            exampleName=self.exampleName).\
+                          order_by("-run__startTime").first()
+    else:
+      ret=Example.objects.filter(run__buildType=self.run.buildType,
+                            run__startTime__lt=self.run.startTime,
+                            exampleName=self.exampleName).\
+                          order_by("-run__startTime").first()
+    if ret is None:
+      return self
+    return ret
 
 class XMLOutputManager(django.db.models.Manager):
   # return a queryset with all failed xmloutput of the current queryset
@@ -136,7 +196,7 @@ class XMLOutput(django.db.models.Model):
 
   id=django.db.models.AutoField(primary_key=True)
   example=django.db.models.ForeignKey(Example, on_delete=django.db.models.CASCADE, related_name='xmlOutputs')
-  filename=django.db.models.CharField(max_length=200)
+  filename=django.db.models.CharField(max_length=200, help_text=base.helper.inlineAdmin)
   resultOK=django.db.models.BooleanField()
   resultOutput=django.db.models.TextField()
 
@@ -145,11 +205,14 @@ class ExampleStatic(django.db.models.Model):
   refTime=django.db.models.DurationField(null=True, blank=True)
   update=django.db.models.BooleanField(default=False)
   # references = related ForeignKey
+  totalTimeNormal=django.db.models.DurationField(null=True, blank=True) # total time of example run (without valgrind)
+  totalTimeValgrind=django.db.models.DurationField(null=True, blank=True) # total time of example run (with valgrind)
+  queued=django.db.models.BooleanField(default=False)
 
 class ExampleStaticReference(django.db.models.Model):
   id=django.db.models.AutoField(primary_key=True)
   exampleStatic=django.db.models.ForeignKey(ExampleStatic, on_delete=django.db.models.CASCADE, related_name='references')
-  h5File=django.db.models.FileField(null=True, blank=True, max_length=200)
+  h5File=django.db.models.FileField(null=True, blank=True, max_length=200, help_text=base.helper.inlineAdmin)
   @property
   def h5FileName(self):
     if self.h5File is None: return None
@@ -171,7 +234,7 @@ django.db.models.signals.pre_delete.connect(exampleStaticReferenceDeleteHandler,
 class Valgrind(django.db.models.Model):
   id=django.db.models.AutoField(primary_key=True)
   uuid=django.db.models.UUIDField(unique=True, default=uuid.uuid4, editable=False) # used for ForeignKey to enable bulk_create
-  programType=django.db.models.CharField(max_length=50)
+  programType=django.db.models.CharField(max_length=50, help_text=base.helper.inlineAdmin)
   programCmd=django.db.models.TextField()
   valgrindCmd=django.db.models.TextField()
   example=django.db.models.ForeignKey(Example, on_delete=django.db.models.CASCADE, related_name="valgrinds")
@@ -182,7 +245,7 @@ class ValgrindError(django.db.models.Model):
   uuid=django.db.models.UUIDField(unique=True, default=uuid.uuid4, editable=False) # used for ForeignKey to enable bulk_create
 
   valgrind=django.db.models.ForeignKey(Valgrind, on_delete=django.db.models.CASCADE, related_name="errors", to_field="uuid")
-  kind=django.db.models.CharField(max_length=100)
+  kind=django.db.models.CharField(max_length=100, help_text=base.helper.inlineAdmin)
   # whatsAndStacks = related ForeignKey
   suppressionRawText=django.db.models.TextField()
 
@@ -191,7 +254,7 @@ class ValgrindWhatAndStack(django.db.models.Model):
   uuid=django.db.models.UUIDField(unique=True, default=uuid.uuid4, editable=False) # used for ForeignKey to enable bulk_create
   valgrindError=django.db.models.ForeignKey(ValgrindError, on_delete=django.db.models.CASCADE, related_name="whatsAndStacks", to_field="uuid")
   nr=django.db.models.PositiveSmallIntegerField() # defines the order of the "what" (and stack) entries
-  what=django.db.models.CharField(max_length=200)
+  what=django.db.models.CharField(max_length=200, help_text=base.helper.inlineAdmin)
   # stacks = related ForeignKey
   class Meta:
     constraints=[
@@ -204,9 +267,9 @@ class ValgrindFrame(django.db.models.Model):
   nr=django.db.models.PositiveSmallIntegerField() # defines the order of the stack frame entries
   obj=django.db.models.CharField(max_length=250)
   fn=django.db.models.TextField() # a function name can be very long (templates)
-  dir=django.db.models.CharField(max_length=250)
-  file=django.db.models.CharField(max_length=100)
-  line=django.db.models.PositiveIntegerField(null=True, blank=True)
+  dir=django.db.models.CharField(max_length=250, help_text=base.helper.inlineAdmin)
+  file=django.db.models.CharField(max_length=100, help_text=base.helper.inlineAdmin)
+  line=django.db.models.PositiveIntegerField(null=True, blank=True, help_text=base.helper.inlineAdmin)
   class Meta:
     constraints=[
       django.db.models.UniqueConstraint(fields=['whatAndStack', 'nr'], name="unique_orderPerStack"),
@@ -217,7 +280,7 @@ class CompareResultFile(django.db.models.Model):
   uuid=django.db.models.UUIDField(unique=True, default=uuid.uuid4, editable=False) # used for ForeignKey to enable bulk_create
   example=django.db.models.ForeignKey(Example, on_delete=django.db.models.CASCADE, related_name='resultFiles')
   # results = related ForeignKey
-  h5Filename=django.db.models.CharField(max_length=100) # must be consistent with h5FileName if set
+  h5Filename=django.db.models.CharField(max_length=100, help_text=base.helper.inlineAdmin) # must be consistent with h5FileName if set
   h5File=django.db.models.FileField(null=True, blank=True, max_length=200)
   @property
   def h5FileName(self):
@@ -262,33 +325,80 @@ class CompareResult(django.db.models.Model):
 
   id=django.db.models.AutoField(primary_key=True)
   compareResultFile=django.db.models.ForeignKey(CompareResultFile, on_delete=django.db.models.CASCADE, related_name='results', to_field="uuid")
-  dataset=django.db.models.CharField(max_length=200)
-  label=django.db.models.CharField(max_length=100)
+  dataset=django.db.models.CharField(max_length=200, help_text=base.helper.inlineAdmin)
+  label=django.db.models.CharField(max_length=100, help_text=base.helper.inlineAdmin)
   result=django.db.models.IntegerField(choices=Result.choices)
 
   def getCurrent(self):
-    id=CompareResult.objects.filter(compareResultFile__example__run__buildType=self.compareResultFile.example.run.buildType,
-                                    compareResultFile__example__exampleName=self.compareResultFile.example.exampleName,
-                                    compareResultFile__h5Filename=self.compareResultFile.h5Filename,
-                                    dataset=self.dataset,
-                                    label=self.label).\
-       aggregate(django.db.models.Max('id'))["id__max"]
-    return self if id is None else CompareResult.objects.get(id=id)
+    if self.compareResultFile.example.run.build_run:
+      return CompareResult.objects.filter(
+           compareResultFile__example__run__buildType=self.compareResultFile.example.run.buildType,
+           compareResultFile__example__exampleName=self.compareResultFile.example.exampleName,
+           compareResultFile__h5Filename=self.compareResultFile.h5Filename,
+           compareResultFile__example__run__build_run__fmatvecBranch=self.compareResultFile.example.run.build_run.fmatvecBranch,
+           compareResultFile__example__run__build_run__hdf5serieBranch=self.compareResultFile.example.run.build_run.hdf5serieBranch,
+           compareResultFile__example__run__build_run__openmbvBranch=self.compareResultFile.example.run.build_run.openmbvBranch,
+           compareResultFile__example__run__build_run__mbsimBranch=self.compareResultFile.example.run.build_run.mbsimBranch,
+           dataset=self.dataset,
+           label=self.label).\
+         order_by("-compareResultFile__example__run__startTime").first()
+    else:
+      return CompareResult.objects.filter(
+           compareResultFile__example__run__buildType=self.compareResultFile.example.run.buildType,
+           compareResultFile__example__exampleName=self.compareResultFile.example.exampleName,
+           compareResultFile__h5Filename=self.compareResultFile.h5Filename,
+           dataset=self.dataset,
+           label=self.label).\
+         order_by("-compareResultFile__example__run__startTime").first()
   def getNext(self):
-    id=CompareResult.objects.filter(compareResultFile__example__run__buildType=self.compareResultFile.example.run.buildType,
-                                    compareResultFile__example__run__id__gt=self.compareResultFile.example.run.id,
-                                    compareResultFile__example__exampleName=self.compareResultFile.example.exampleName,
-                                    compareResultFile__h5Filename=self.compareResultFile.h5Filename,
-                                    dataset=self.dataset,
-                                    label=self.label).\
-       aggregate(django.db.models.Min('id'))["id__min"]
-    return self if id is None else CompareResult.objects.get(id=id)
+    if self.compareResultFile.example.run.build_run:
+      ret=CompareResult.objects.filter(
+           compareResultFile__example__run__buildType=self.compareResultFile.example.run.buildType,
+           compareResultFile__example__run__startTime__gt=self.compareResultFile.example.run.startTime,
+           compareResultFile__example__exampleName=self.compareResultFile.example.exampleName,
+           compareResultFile__h5Filename=self.compareResultFile.h5Filename,
+           compareResultFile__example__run__build_run__fmatvecBranch=self.compareResultFile.example.run.build_run.fmatvecBranch,
+           compareResultFile__example__run__build_run__hdf5serieBranch=self.compareResultFile.example.run.build_run.hdf5serieBranch,
+           compareResultFile__example__run__build_run__openmbvBranch=self.compareResultFile.example.run.build_run.openmbvBranch,
+           compareResultFile__example__run__build_run__mbsimBranch=self.compareResultFile.example.run.build_run.mbsimBranch,
+           dataset=self.dataset,
+           label=self.label).\
+         order_by("compareResultFile__example__run__startTime").first()
+    else:
+      ret=CompareResult.objects.filter(
+           compareResultFile__example__run__buildType=self.compareResultFile.example.run.buildType,
+           compareResultFile__example__run__startTime__gt=self.compareResultFile.example.run.startTime,
+           compareResultFile__example__exampleName=self.compareResultFile.example.exampleName,
+           compareResultFile__h5Filename=self.compareResultFile.h5Filename,
+           dataset=self.dataset,
+           label=self.label).\
+         order_by("compareResultFile__example__run__startTime").first()
+    if ret is None:
+      return self
+    return ret
   def getPrevious(self):
-    id=CompareResult.objects.filter(compareResultFile__example__run__buildType=self.compareResultFile.example.run.buildType,
-                                    compareResultFile__example__run__id__lt=self.compareResultFile.example.run.id,
-                                    compareResultFile__example__exampleName=self.compareResultFile.example.exampleName,
-                                    compareResultFile__h5Filename=self.compareResultFile.h5Filename,
-                                    dataset=self.dataset,
-                                    label=self.label).\
-       aggregate(django.db.models.Max('id'))["id__max"]
-    return self if id is None else CompareResult.objects.get(id=id)
+    if self.compareResultFile.example.run.build_run:
+      ret=CompareResult.objects.filter(
+           compareResultFile__example__run__buildType=self.compareResultFile.example.run.buildType,
+           compareResultFile__example__run__startTime__lt=self.compareResultFile.example.run.startTime,
+           compareResultFile__example__exampleName=self.compareResultFile.example.exampleName,
+           compareResultFile__h5Filename=self.compareResultFile.h5Filename,
+           compareResultFile__example__run__build_run__fmatvecBranch=self.compareResultFile.example.run.build_run.fmatvecBranch,
+           compareResultFile__example__run__build_run__hdf5serieBranch=self.compareResultFile.example.run.build_run.hdf5serieBranch,
+           compareResultFile__example__run__build_run__openmbvBranch=self.compareResultFile.example.run.build_run.openmbvBranch,
+           compareResultFile__example__run__build_run__mbsimBranch=self.compareResultFile.example.run.build_run.mbsimBranch,
+           dataset=self.dataset,
+           label=self.label).\
+         order_by("-compareResultFile__example__run__startTime").first()
+    else:
+      ret=CompareResult.objects.filter(
+           compareResultFile__example__run__buildType=self.compareResultFile.example.run.buildType,
+           compareResultFile__example__run__startTime__lt=self.compareResultFile.example.run.startTime,
+           compareResultFile__example__exampleName=self.compareResultFile.example.exampleName,
+           compareResultFile__h5Filename=self.compareResultFile.h5Filename,
+           dataset=self.dataset,
+           label=self.label).\
+         order_by("-compareResultFile__example__run__startTime").first()
+    if ret is None:
+      return self
+    return ret

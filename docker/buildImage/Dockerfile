@@ -9,13 +9,13 @@ RUN mkdir /run/user/$UID
 # environment variables to find the osupdate, 3rd party and mbsim libraries and binaries
 ENV LD_LIBRARY_PATH=/osupdate/local/lib:/osupdate/local/lib64:/3rdparty/local/lib:/3rdparty/local/lib64 \
     PKG_CONFIG_PATH=/osupdate/local/lib/pkgconfig:/osupdate/local/lib64/pkgconfig:/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfig \
-    PATH=$PATH:/3rdparty/local/bin \
+    PATH=/osupdate/local/bin:$PATH:/3rdparty/local/bin \
     XDG_RUNTIME_DIR=/run/user/$UID
 
 # install everything needed to build mbsim-env tools from centos7
-RUN yum install -y http://www6.atomicorp.com/channels/atomic/centos/7/x86_64/RPMS/atomic-release-1.0-21.el7.art.noarch.rpm && \
-  yum --setopt=skip_missing_names_on_install=False -y install epel-release centos-release-scl && \
+RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release centos-release-scl && \
   yum --setopt=skip_missing_names_on_install=False -y install \
+  ca-certificates \
   xkeyboard-config \
   xorg-x11-fonts-Type1 \
   urw-fonts \
@@ -25,7 +25,7 @@ RUN yum install -y http://www6.atomicorp.com/channels/atomic/centos/7/x86_64/RPM
   libxslt \
   lcov \
   tigervnc-server \
-  git \
+  rh-git227-git \
   make \
   devtoolset-7-gcc devtoolset-7-gcc-c++ devtoolset-7-gcc-gfortran \
   libtool \
@@ -68,14 +68,13 @@ RUN yum install -y http://www6.atomicorp.com/channels/atomic/centos/7/x86_64/RPM
   qt5-qtstyleplugins \
   cmake3 \
   ninja-build \
-  atomic-sqlite \
-  ca-certificates \
   && yum clean all
-# config devtoolset-7 and atomic SCL
-ENV PATH=/opt/atomicorp/atomic/root/usr/bin:/opt/atomicorp/atomic/root/usr/sbin:/opt/rh/devtoolset-7/root/usr/bin:$PATH \
-    LD_LIBRARY_PATH=/opt/atomicorp/atomic/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib:/opt/rh/devtoolset-7/root/usr/lib64/dyninst:/opt/rh/devtoolset-7/root/usr/lib/dyninst:/opt/rh/devtoolset-7/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib:$LD_LIBRARY_PATH
-#RUN npm install mathjax-node
-RUN pip3 install h5py==2.9.0 sympy django==3.1 django-octicons==1.0
+# config devtoolset-7 and SCL and git2.27
+ENV PATH=/opt/rh/rh-git227/root/usr/bin:/opt/rh/devtoolset-7/root/usr/bin:$PATH \
+    LD_LIBRARY_PATH=/opt/rh/httpd24/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib:/opt/rh/devtoolset-7/root/usr/lib64/dyninst:/opt/rh/devtoolset-7/root/usr/lib/dyninst:/opt/rh/devtoolset-7/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib:$LD_LIBRARY_PATH \
+    NODE_PATH=/3rdparty/local/node_modules
+RUN mkdir -p /3rdparty/local && cd /3rdparty/local && npm install mathjax-node@2.1
+RUN python3 -m pip install --upgrade pip && pip3 install h5py==2.9.0 sympy==1.9 django==3.2 django-octicons==1.0 paramiko==2.9
 
 
 
@@ -107,7 +106,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   && yum clean all
 
 # configure path and envvar for the 3rd party tools
-RUN mkdir /3rdparty /osupdate /osupdate/local
+RUN mkdir /osupdate /osupdate/local
 
 # get tools to build
 
@@ -212,6 +211,17 @@ RUN cmake3 -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=
 RUN make -j $JOBS
 RUN make install
 
+# sqlite3 (a quite newer version is needed as provided by centos)
+ARG SQLITEVERSION=3380200
+RUN mkdir /osupdate/sqlite3
+WORKDIR /osupdate/sqlite3
+RUN wget -q https://www.sqlite.org/2022/sqlite-autoconf-$SQLITEVERSION.tar.gz
+RUN tar -xzf sqlite-autoconf-$SQLITEVERSION.tar.gz
+WORKDIR /osupdate/sqlite3/sqlite-autoconf-$SQLITEVERSION
+RUN ./configure --enable-shared --disable-static --prefix=/osupdate/local
+RUN make
+RUN make install
+
 
 
 
@@ -264,18 +274,14 @@ ENV PATH=/usr/lib64/ccache:/mbsim-env/build/misc:$PATH \
 # - set permissions of volume mount dirs
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
   groupadd -g 48 apache && \
-  mkdir /mbsim-env /mbsim-ccache /databasemedia /webserverstatic && \
-  chown dockeruser:dockeruser /mbsim-env /mbsim-ccache /webserverstatic && \
-  chown dockeruser:apache /databasemedia && chmod ug+rwx /databasemedia
+  mkdir /mbsim-env /mbsim-ccache /webserverstatic && \
+  chown dockeruser:dockeruser /mbsim-env /mbsim-ccache /webserverstatic
 
 # add g++/c++ to cache dir (its not added automatically since g++ is not installed since scl is used
 RUN ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/g++ && ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/c++
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser
-
-# ccache config
-RUN ccache -M 20G
 
 # these are the default arguments when running the container
 CMD []

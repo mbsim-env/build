@@ -5,21 +5,58 @@
 
 {% block title %}MBSim runexamples Results: {{run.buildType}}{% endblock %}
 
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+{% endblock %}
+
 {% block body %}
 <script src="{% static 'runexamples/scripts.js' %}"> </script>
 <script>
   "use strict";
   $(document).ready(function() {
     initExampleTable("{% url 'runexamples:datatable_example' run.id %}");
+    $(".TABLEROWHREF").click(function() {
+      window.document.location=$(this).data("href");
+    });
   });
 </script>
-<h1>MBSim runexamples Results: <small>{{run.buildType}}</small></h1>
+<h1>MBSim runexamples Results</h1>
 <dl style="margin-right:0em;" class="row">
-  <dt class="col-2">Called Command</dt>
+  <dt class="col-2">Build type</dt>
+  <dd class="col-10">
+    {% if allBuildTypes %}
+      <div class="dropdown">
+        <button class="btn btn-secondary btn-xs" type="button" data-toggle="dropdown">{%autoescape off%}{{runBuildTypeIcon}}{%endautoescape%} {{run.buildType}} {% octicon "triangle-down" %}</button>
+        <div class="dropdown-menu" style="padding:1.5em;">
+          <p><b>Switch to current build of build-type:</b></p>
+          <table class="table table-hover table-bordered table-sm">
+            <thead>
+              <tr>
+                <th>Build Type</th>
+              </tr>
+            </thead>
+              {% for buildType in allBuildTypes %}
+                <tr class="TABLEROWHREF" style="cursor:pointer;"
+                    data-href="{% url "runexamples:current_buildtype_branch" buildType.buildType run.build_run.fmatvecBranch run.build_run.hdf5serieBranch run.build_run.openmbvBranch run.build_run.mbsimBranch %}">
+                  <td>{%autoescape off%}{{buildType.icon}}{%endautoescape%}&nbsp;{{buildType.buildType}}</td>
+                </tr>
+              {% endfor %}
+            <tbody>
+            </tbody>
+          </table>
+        </div>
+      </div>
+    {% else %}
+      {%autoescape off%}{{runBuildTypeIcon}}{%endautoescape%} {{run.buildType}}
+    {% endif %}
+  </dd>
+  <dt class="col-2">Executor</dt>
+  <dd class="col-10">{%autoescape off%}{{run.executor}}{%endautoescape%}</dd>
+  <dt class="col-2">Called command</dt>
   <dd class="col-10">
     <div class="dropdown">
       <button class="btn btn-secondary btn-xs" type="button" id="calledCommandID" data-toggle="dropdown">show {% octicon "triangle-down" %}</button>
-      <code class="dropdown-menu" style="padding-left: 0.5em; padding-right: 0.5em;">
+      <code class="dropdown-menu" style="padding:1.5em;">
         {{run.command}}
       </code>
     </div>

@@ -62,9 +62,6 @@ if [ ${#RUNEXAMPLEARGS[*]} -gt 0 ]; then
   RUNEXAMPLEARGS=(--passToRunexamples "${RUNEXAMPLEARGS[@]}")
 fi
 
-# config ccache
-CCACHE_DIR=$MBSIMENVDIR/.ccache ccache -M 10G
-
 # config home
 mkdir -p $MBSIMENVDIR/.home
 
@@ -95,7 +92,9 @@ while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1
 
 # run using mbsbd with all required args all all user args appended
 "$SCRIPTDIR"/mbsbd "$MBSIMENVDIR"/build/django/mbsimenv/build.py \
-  --buildType localDockerWin64 \
+  --buildType win64-docker \
+  --executor '<span class="MBSIMENV_EXECUTOR_LOCALDOCKER">Local Docker</span>' \
+  --disableUpdate \
   --sourceDir "$MBSIMENVDIR" \
   --binSuffix=-dockerwin64 \
   --prefix "$MBSIMENVDIR"/local-dockerwin64 \

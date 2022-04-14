@@ -13,13 +13,9 @@ import datetime
 from octicons.templatetags.octicons import octicon
 
 # maps the current url to the proper run id url (without forwarding to keep the URL in the browser)
-def currentBuildtype(request, buildtype):
-  run=builds.models.Run.objects.getCurrent(buildtype)
+def currentBuildtypeBranch(request, buildtype, fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch):
+  run=builds.models.Run.objects.getCurrent(buildtype, fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch)
   return Run.as_view()(request, id=run.id)
-def currentBuildtypePostfix(request, buildtype, postfix):
-  run=builds.models.Run.objects.getCurrent(buildtype)
-  resm=django.urls.resolve(django.urls.reverse('builds:run', args=[run.id])+postfix+"/")
-  return resm.func(request, *resm.args, **resm.kwargs)
 
 # the build page
 class Run(base.views.Base):
@@ -35,7 +31,8 @@ class Run(base.views.Base):
     if "previous" in self.request.GET:
       return django.shortcuts.redirect('builds:run', self.run.getPrevious().id)
     if "current" in self.request.GET:
-      return django.shortcuts.redirect('builds:current_buildtype', self.run.buildType) # use the special current URL in browser
+      return django.shortcuts.redirect('builds:current_buildtype_branch', self.run.buildType,
+               self.run.fmatvecBranch, self.run.hdf5serieBranch, self.run.openmbvBranch, self.run.mbsimBranch)
     return super().dispatch(request, *args, **kwargs)
 
   def get_context_data(self, **kwargs):
@@ -52,12 +49,33 @@ class Run(base.views.Base):
       if not ok: examplesAllOK=False
 
     context['run']=self.run
+    context['runBuildTypeIcon']=base.helper.buildTypeIcon(self.run.buildType)
     # just a list which can be used to loop over in the template
     context['repoList']=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
     context['examples']=examples
     context['examplesAllOK']=examplesAllOK
     context['releaseFileSuffix']="linux64.tar.bz2" if self.run.buildType=="linux64-dailyrelease" else "win64.zip"
     context['releaseTagSuffix']="linux64" if self.run.buildType=="linux64-dailyrelease" else "win64"
+
+    allBranches=builds.models.Run.objects.filter(buildType=self.run.buildType).\
+                  values("fmatvecBranch", "hdf5serieBranch", "openmbvBranch", "mbsimBranch").distinct()
+    context["allBranches"]=list(allBranches)
+
+    allBuildTypes=builds.models.Run.objects.filter(fmatvecBranch=self.run.fmatvecBranch, hdf5serieBranch=self.run.hdf5serieBranch,
+                                                   openmbvBranch=self.run.openmbvBranch, mbsimBranch=self.run.mbsimBranch).\
+                    values("buildType").distinct()
+    context["allBuildTypes"]=list(allBuildTypes)
+    for bt in context["allBuildTypes"]:
+      bt["icon"]=base.helper.buildTypeIcon(bt["buildType"])
+
+    newest=None
+    for r in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
+      cur=getattr(self.run, r+"UpdateDate")
+      if newest is None or cur>newest:
+        newest=cur
+        newestRepo=r
+    context['newestRepo']=newestRepo
+
     return context
 
 # response to ajax requests of the build tool datatable
@@ -79,13 +97,20 @@ class DataTableTool(base.views.DataTable):
 
   # column visibility (all columns but be defined)
   def columnsVisibility(self):
+    query=self.queryset().aggregate(
+      configure=django.db.models.Count("configureOK"),
+      make=django.db.models.Count("makeOK"),
+      makeCheck=django.db.models.Count("makeCheckOK"),
+      doc=django.db.models.Count("docOK"),
+      xmldoc=django.db.models.Count("xmldocOK"),
+    )
     vis={}
     vis["tool"]=True
-    vis["configure"]=self.queryset().filter(configureOK__isnull=False).count()>0
-    vis["make"]=self.queryset().filter(makeOK__isnull=False).count()>0
-    vis["makeCheck"]=self.queryset().filter(makeCheckOK__isnull=False).count()>0
-    vis["doc"]=self.queryset().filter(docOK__isnull=False).count()>0
-    vis["xmldoc"]=self.queryset().filter(xmldocOK__isnull=False).count()>0
+    vis["configure"]=query["configure"]>0
+    vis["make"]=query["make"]>0
+    vis["makeCheck"]=query["makeCheck"]>0
+    vis["doc"]=query["doc"]>0
+    vis["xmldoc"]=query["xmldoc"]>0
     return vis
 
   # return the "data", "sort key" and "class" for columns ["data":required; "sort key" and "class":optional]
@@ -264,10 +289,10 @@ def releaseDistribution(request, run_id):
   r.save()
   with r.releaseFile.open("wb") as fo:
     with run.distributionFile.open("rb") as fi:
-      fo.write(fi.read())
+      base.helper.copyFile(fi, fo)
   with r.releaseDebugFile.open("wb") as fo:
     with run.distributionDebugFile.open("rb") as fi:
-      fo.write(fi.read())
+      base.helper.copyFile(fi, fo)
   return django.http.HttpResponse()
 
 def runDistributionFile(request, id):

@@ -85,8 +85,8 @@ mainOpts.add_argument("directories", nargs="*", default=os.curdir,
 mainOpts.add_argument("--action", default="report", type=str,
   help='''The action of this script: [default: %(default)s]
 - 'report'          Run examples and report results
-- 'copyToReference' Copy current results to reference directory
-- 'updateReference' Update references from URL, use the build system if not given
+- 'copyToReference' Copy results in current directories to reference
+- 'updateReference' Update references from build system
 - 'list'            List directories to be run''')
 mainOpts.add_argument("-j", default=multiprocessing.cpu_count(), type=int,
   help="Number of jobs to run in parallel (applies only to the action 'report') [default: %(default)s]")
@@ -119,6 +119,7 @@ cfgOpts.add_argument("--disableCompare", action="store_true", help="disable comp
 cfgOpts.add_argument("--disableValidate", action="store_true", help="disable validating the XML files on action 'report'")
 cfgOpts.add_argument("--printToConsole", action='store_const', const=sys.stdout, help="print all output also to the console")
 cfgOpts.add_argument("--buildType", default="local", type=str, help="Description of the build type (e.g: linux64-dailydebug) [default: %(default)s]")
+cfgOpts.add_argument("--executor", default='<span class="MBSIMENV_EXECUTOR_LOCAL">local</span>', type=str, help="The executor of this run (can contain simple HTML a-elements)")
 cfgOpts.add_argument("--prefixSimulation", default=None, type=str,
   help="prefix the simulation command (./main, mbsimflatxml, mbsimxml) with this string: e.g. 'valgrind --tool=callgrind'")
 cfgOpts.add_argument("--prefixSimulationKeyword", default=None, type=str,
@@ -136,16 +137,22 @@ cfgOpts.add_argument("--updateURL", type=str, default="https://www.mbsim-env.de"
 
 outOpts=argparser.add_argument_group('Output Options')
 outOpts.add_argument("--removeOlderThan", default=3 if os.environ.get("MBSIMENVTAGNAME", "")=="staging" else 30,
-                     type=int, help="Remove all examples reports older than X days.")
+                     type=int, help="Remove all examples reports older than X days but keep at least the last X.")
 
 debugOpts=argparser.add_argument_group('Debugging and other Options')
 debugOpts.add_argument("--debugDisableMultiprocessing", action="store_true",
   help="disable the -j option and run always in a single process/thread")
-debugOpts.add_argument("--webapp", action="store_true", help="Add buttons for mbsimwebapp.")
 debugOpts.add_argument("--buildRunID", default=None, type=int, help="The id of the builds.model.Run dataset this example run belongs to.")
+
+partitionGroup=argparser.add_mutually_exclusive_group()
+partitionGroup.add_argument("--pre", action="store_true", help="Init a partitioned runExamples run")
+partitionGroup.add_argument("--partition", action="store_true", help="Run a partitioned runExamples run")
+partitionGroup.add_argument("--post", action="store_true", help="Finalize a partitioned runExamples run")
+debugOpts.add_argument("--runID", default=None, type=int, help="The id of the runexamples.model.Run dataset.")
 
 # parse command line options
 args = argparser.parse_args()
+normalRun=not args.pre and not args.post and not args.partition
 
 mbsimenvSecrets.getSecrets()
 if args.buildSystemRun:
@@ -157,6 +164,14 @@ else:
     os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_local"
 django.setup()
 
+# close old connections before model save(); CONN_MAX_AGE is used
+# (to avoid connection failures between two save() on the same model when a large time is in-between;
+#  e.g. firewalls may drop such TCP connections)
+def closeOldConnections(**kwargs):
+  if not django.db.connections[kwargs["using"]].in_atomic_block:
+    django.db.close_old_connections()
+django.db.models.signals.pre_save.connect(closeOldConnections)
+
 if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
   s=base.helper.startLocalServer(args.localServerPort, django.conf.settings.MBSIMENV_TYPE=="localdocker")
   print("Runexample info is avaiable at: http://%s:%d%s"%(s["hostname"], s["port"],
@@ -166,7 +181,8 @@ if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_
 
 def removeOldBuilds():
   olderThan=django.utils.timezone.now()-datetime.timedelta(days=args.removeOlderThan)
-  nrDeleted=runexamples.models.Run.objects.filter(buildType=args.buildType, startTime__lt=olderThan).delete()[0]
+  keep=runexamples.models.Run.objects.filter(buildType=args.buildType).order_by('-startTime')[0:args.removeOlderThan].values("id")
+  nrDeleted=runexamples.models.Run.objects.filter(buildType=args.buildType, startTime__lt=olderThan).exclude(id__in=keep).delete()[0]
   if nrDeleted>0:
     print("Deleted %d example runs being older than %d days!"%(nrDeleted, args.removeOlderThan))
     sys.stdout.flush()
@@ -181,7 +197,8 @@ def main():
     print("error: unknown argument --action "+args.action+" (see -h)")
     return 1
 
-  removeOldBuilds()
+  if normalRun or args.pre:
+    removeOldBuilds()
 
   # fix arguments
   if args.prefixSimulation is not None:
@@ -200,22 +217,6 @@ def main():
     sys.stdout.flush()
     global canCompare
     canCompare=False
-  # get mbxmlutilsvalidate program
-  global mbxmlutilsvalidate
-  mbxmlutilsvalidate=pj(pkgconfig("mbxmlutils", ["--variable=BINDIR"]), "mbxmlutilsvalidate"+args.exeExt)
-  if not os.path.isfile(mbxmlutilsvalidate):
-    mbxmlutilsvalidate="mbxmlutilsvalidate"+args.exeExt
-  # set global dirs
-  global mbsimBinDir
-  mbsimBinDir=pkgconfig("mbsim", ["--variable=bindir"])
-  # get schema files
-  schemaDir=pkgconfig("mbxmlutils", ["--variable=SCHEMADIR"])
-  global ombvSchema, mbsimXMLSchemas
-  # create mbsimxml schema
-  mbsimXMLSchemas=subprocess.check_output(exePrefix()+[pj(mbsimBinDir, "mbsimxml"+args.exeExt), "--onlyListSchemas"]).\
-    decode("utf-8").split()
-  ombvSchemaRE=re.compile(".http___www_mbsim-env_de_OpenMBV.openmbv.xsd$")
-  ombvSchema=list(filter(lambda x: ombvSchemaRE.search(x) is not None, mbsimXMLSchemas))[0]
 
   # check args.directories
   for d in args.directories:
@@ -253,70 +254,143 @@ def main():
 
   # args.action = "report"
 
-  # create example run
-  exRun=runexamples.models.Run()
-  if args.buildRunID is not None:
-    exRun.build_run=builds.models.Run.objects.get(id=args.buildRunID)
-  exRun.buildType=args.buildType
-  exRun.command=" ".join(sys.argv)
-  exRun.startTime=django.utils.timezone.now()
-  exRun.save()
+  if normalRun or args.pre:
+    # create example run
+    exRun=runexamples.models.Run()
+    if args.buildRunID is not None:
+      exRun.build_run=builds.models.Run.objects.get(id=args.buildRunID)
+    exRun.buildType=args.buildType
+    exRun.executor=args.executor
+    exRun.command=" ".join(sys.argv)
+    exRun.startTime=django.utils.timezone.now()
+    exRun.save()
+    if args.prefix is not None:
+      os.makedirs(args.prefix, exist_ok=True)
+      with open(args.prefix+"/.runexamplesInfo.json", "w") as f:
+        json.dump({"runID": exRun.id}, f)
 
-  # update status on commitid
-  setGithubStatus(exRun, "pending")
+    # update status on commitid
+    setGithubStatus(exRun, "pending")
+  else:
+    exRun=runexamples.models.Run.objects.filter(id=args.runID).select_related("build_run").get()
 
   mainRet=0
   failedExamples=[]
 
+  # enable coverage
   if args.coverage:
-    # backup the coverage files in the build directories
-    coverageBackupRestore('backup')
-    # remove all "*.gcno", "*.gcda" files in ALL the examples
-    for d,_,files in os.walk(args.baseExampleDir):
-      for f in files:
-        if os.path.splitext(f)[1]==".gcno": os.remove(pj(d, f))
-        if os.path.splitext(f)[1]==".gcda": os.remove(pj(d, f))
+    if not "CFLAGS" in os.environ: os.environ["CFLAGS"]=""
+    if not "CXXFLAGS" in os.environ: os.environ["CXXFLAGS"]=""
+    if not "LDFLAGS"  in os.environ: os.environ["LDFLAGS" ]=""
+    os.environ["CFLAGS"]=os.environ["CFLAGS"]+" --coverage"
+    os.environ["CXXFLAGS"]=os.environ["CXXFLAGS"]+" --coverage"
+    os.environ["LDFLAGS" ]=os.environ["LDFLAGS" ]+" --coverage -lgcov"
 
-  if args.checkGUIs:
-    # start vnc server on a free display
-    global displayNR
-    displayNR=3
-    while subprocess.call(["vncserver", ":"+str(displayNR), "-noxstartup", "-SecurityTypes", "None"], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))!=0:
-      displayNR=displayNR+1
-      if displayNR>100:
-        raise RuntimeError("Cannot find a free DISPLAY for vnc server.")
+    if normalRun:
+      # backup the coverage files in the build directories
+      coverageBackupRestore('backup')
+      # remove all "*.gcno", "*.gcda" files in ALL the examples
+      for d,_,files in os.walk(args.baseExampleDir):
+        for f in files:
+          if os.path.splitext(f)[1]==".gcno": os.remove(pj(d, f))
+          if os.path.splitext(f)[1]==".gcda": os.remove(pj(d, f))
 
-  try:
+  if args.pre:
+    # create all examples in ExampleStatic
+    esl=[]
+    for example in directories:
+      es=runexamples.models.ExampleStatic(exampleName=example)
+      esl.append(es)
+    # update "queued" flag to True
+    django.db.close_old_connections() # needes since django.db.models.signals.pre_save.connect(...) is not called by bulk_create
+    esl=runexamples.models.ExampleStatic.objects.bulk_create(esl, ignore_conflicts=True)
+    for es in esl:
+      es.queued=True
+    django.db.close_old_connections() # needes since django.db.models.signals.pre_save.connect(...) is not called by bulk_update
+    runexamples.models.ExampleStatic.objects.bulk_update(esl, ["queued"])
+    # exit pre step
+    sys.exit(mainRet)
 
-    if not args.debugDisableMultiprocessing:
-      # init mulitprocessing handling and run in parallel
-      django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
-      lock=multiprocessing.Manager().Lock()
-      poolResult=multiprocessing.Pool(args.j).map_async(functools.partial(runExample, exRun, lock), directories, 1)
-    else: # debugging
-      import queue
-      poolResult=queue.Queue()
-      poolResult.put(list(map(functools.partial(runExample, exRun, None), directories)))
+  if normalRun or args.partition:
+    # get mbxmlutilsvalidate program
+    global mbxmlutilsvalidate
+    mbxmlutilsvalidate=pj(pkgconfig("mbxmlutils", ["--variable=BINDIR"]), "mbxmlutilsvalidate"+args.exeExt)
+    if not os.path.isfile(mbxmlutilsvalidate):
+      mbxmlutilsvalidate="mbxmlutilsvalidate"+args.exeExt
+    # set global dirs
+    global mbsimBinDir
+    mbsimBinDir=pkgconfig("mbsim", ["--variable=bindir"])
+    # get schema files
+    global ombvSchema, mbsimXMLSchemas
+    # create mbsimxml schema
+    mbsimXMLSchemas=subprocess.check_output(exePrefix()+[pj(mbsimBinDir, "mbsimxml"+args.exeExt), "--onlyListSchemas"]).\
+      decode("utf-8").split()
+    ombvSchemaRE=re.compile(".http___www_mbsim-env_de_OpenMBV.openmbv.xsd$")
+    ombvSchema=list(filter(lambda x: ombvSchemaRE.search(x) is not None, mbsimXMLSchemas))[0]
 
-    # wait for pool to finish and get result
-    retAll=poolResult.get()
+    if args.checkGUIs:
+      # start vnc server on a free display
+      global displayNR
+      displayNR=3
+      while subprocess.call(["vncserver", ":"+str(displayNR), "-noxstartup", "-SecurityTypes", "None"], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))!=0:
+        displayNR=displayNR+1
+        if displayNR>100:
+          raise RuntimeError("Cannot find a free DISPLAY for vnc server.")
+
+    try:
+      if args.partition:
+        def runExampleOuter(lock):
+          dirs=ExampleServerQueue("totalTimeValgrind" if args.prefixSimulationKeyword=='VALGRIND' else "totalTimeNormal")
+          for d in dirs:
+            runExample(exRun, lock, d)
+        django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
+        lock=multiprocessing.Manager().Lock()
+        pList=[]
+        for i in range(0,args.j):
+          p=multiprocessing.Process(target=runExampleOuter, args=(lock,))
+          p.start()
+          pList.append(p)
+        for p in pList:
+          p.join()
+      elif not args.debugDisableMultiprocessing:
+        # init mulitprocessing handling and run in parallel
+        django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
+        lock=multiprocessing.Manager().Lock()
+        poolResult=multiprocessing.Pool(args.j).map_async(functools.partial(runExample, exRun, lock), directories, 1)
+        # wait for pool to finish and get result
+        retAll=poolResult.get()
+      else: # debugging
+        import queue
+        poolResult=queue.Queue()
+        poolResult.put(list(map(functools.partial(runExample, exRun, None), directories)))
+        # wait for pool to finish and get result
+        retAll=poolResult.get()
+
+    finally:
+      exRun.examplesFailed=exRun.examples.filterFailed().count()
+      exRun.save()
+      if args.checkGUIs:
+        # kill vnc server
+        if subprocess.call(["vncserver", "-kill", ":"+str(displayNR)], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))!=0:
+          print("Cannot close vnc server on :%d but continue."%(displayNR))
+
+  if args.partition:
+    import uuid
+    mainRet=mainRet+abs(coverage(None, args.prefix+"/cov.trace.final.part."+args.buildType+"."+str(uuid.uuid4())))
+    sys.exit(mainRet)
+  if args.post:
     exRun.examplesFailed=exRun.examples.filterFailed().count()
     exRun.save()
 
-  finally:
-    if args.checkGUIs:
-      # kill vnc server
-      if subprocess.call(["vncserver", "-kill", ":"+str(displayNR)], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))!=0:
-        print("Cannot close vnc server on :%d but continue."%(displayNR))
-
-  # set global result and add failedExamples
-  for index in range(len(retAll)):
-    willFail=False
-    if os.path.isfile(pj(directories[index], "labels")):
-      willFail='willfail' in codecs.open(pj(directories[index], "labels"), "r", encoding="utf-8").read().rstrip().split(' ')
-    if retAll[index]!=0 and not willFail:
-      mainRet=1
-      failedExamples.append(directories[index])
+  if normalRun:
+    # set global result and add failedExamples
+    for index in range(len(retAll)):
+      willFail=False
+      if os.path.isfile(pj(directories[index], "labels")):
+        willFail='willfail' in codecs.open(pj(directories[index], "labels"), "r", encoding="utf-8").read().rstrip().split(' ')
+      if retAll[index]!=0 and not willFail:
+        mainRet=1
+        failedExamples.append(directories[index])
 
   # coverage analyzis (postpare)
   coverageAll=0
@@ -326,24 +400,26 @@ def main():
     print("Create coverage analyzis")
     sys.stdout.flush()
     coverageFailed=coverage(exRun)
-    # restore the coverage files in the build directories
-    coverageBackupRestore('restore')
+    if normalRun:
+      # restore the coverage files in the build directories
+      coverageBackupRestore('restore')
 
   # set end time
   exRun.endTime=django.utils.timezone.now()
   exRun.save()
 
   # update status on commitid
-  setGithubStatus(exRun, "success" if len(failedExamples)==0 and coverageFailed==0 else "failure")
+  setGithubStatus(exRun, "success" if exRun.examplesFailed==0 and coverageFailed==0 else "failure")
 
-  # print result summary to console
-  if len(failedExamples)>0:
-    print('\nERROR: '+str(len(failedExamples))+' of '+str(len(retAll))+' examples have failed.')
-    sys.stdout.flush()
-  if coverageFailed!=0:
-    mainRet=1
-    print('\nERROR: Coverage analyzis generation failed.')
-    sys.stdout.flush()
+  if normalRun:
+    # print result summary to console
+    if len(failedExamples)>0:
+      print('\nERROR: '+str(len(failedExamples))+' of '+str(len(retAll))+' examples have failed.')
+      sys.stdout.flush()
+    if coverageFailed!=0:
+      mainRet=1
+      print('\nERROR: Coverage analyzis generation failed.')
+      sys.stdout.flush()
 
   return mainRet
 
@@ -359,9 +435,6 @@ def setGithubStatus(run, state):
   # skip for none build system runs
   if not args.buildSystemRun:
     return
-  # skip for -nonedefbranches buildTypes
-  if run.buildType.find("-nonedefbranches")>=0:
-    return
 
   import github
   if state=="pending":
@@ -373,10 +446,11 @@ def setGithubStatus(run, state):
   else:
     raise RuntimeError("Unknown state "+state+" provided")
   try:
-    gh=github.Github(mbsimenvSecrets.getSecrets()["githubStatusAccessToken"])
+    gh=github.Github(mbsimenvSecrets.getSecrets("githubAccessToken"))
     for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
       if os.environ["MBSIMENVTAGNAME"]=="latest":
         commit=gh.get_repo("mbsim-env/"+repo).get_commit(getattr(run.build_run, repo+"UpdateCommitID"))
+        django.db.close_old_connections() # needed since run.build_run may create a new DB query
         commit.create_status(state, "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[run.id]),
           description, "runexamples/%s/%s/%s/%s/%s"%(run.buildType, run.build_run.fmatvecBranch, run.build_run.hdf5serieBranch,
                                                                     run.build_run.openmbvBranch, run.build_run.mbsimBranch))
@@ -502,9 +576,9 @@ def runExample(exRun, lock, example):
     ex.run=exRun
     ex.exampleName=example
     ex.willFail=willFail
-    ex.webappHdf5serie=args.webapp
-    ex.webappOpenmbv=args.webapp
-    ex.webappMbsimgui=args.webapp
+    ex.webappHdf5serie=False
+    ex.webappOpenmbv=False
+    ex.webappMbsimgui=False
     ex.save()
 
     # execute the example
@@ -570,11 +644,13 @@ def runExample(exRun, lock, example):
         outFD=base.helper.MultiFile(args.printToConsole)
         comm=[pj(mbsimBinDir, tool+args.exeExt), "--autoExit"]+files
         allTimedOut=True
+        # if this string is found in the output (wine output) then stop the execution immediately
+        windowsOutputStopRE=re.compile("Application tried to create a window, but no driver could be loaded")
         for t in range(0, tries):
           print("Starting (try %d/%d):\n"%(t+1, tries)+"\n\n", file=outFD)
           if lock is not None and args.exeExt==".exe":
             lock.acquire() # for Windows (wine) run only one GUI program in parallel (wine often failes with DISPLAY error otherwise)
-          ret=base.helper.subprocessCall(prefixSimulation(tool)+exePrefix()+comm, outFD, env=denv, maxExecutionTime=(20 if args.prefixSimulationKeyword=='VALGRIND' else 5))
+          ret=base.helper.subprocessCall(prefixSimulation(tool)+exePrefix()+comm, outFD, env=denv, maxExecutionTime=(20 if args.prefixSimulationKeyword=='VALGRIND' else 5), stopRE=windowsOutputStopRE)
           if lock is not None and args.exeExt==".exe":
             lock.release()
           print("\n\nReturned with "+str(ret), file=outFD)
@@ -747,9 +823,10 @@ def valgrindOutputAndAdaptRet(programType, ex):
             fr.file=os.path.basename(newPath)
       os.remove(xmlFile)
     # now save all new datasets at once
-    runexamples.models.Valgrind.objects.bulk_create(vgs)
-    runexamples.models.ValgrindError.objects.bulk_create(ers)
-    runexamples.models.ValgrindWhatAndStack.objects.bulk_create(wss)
+    django.db.close_old_connections() # needes since django.db.models.signals.pre_save.connect(...) is not called by bulk_create
+    base.helper.bulk_create(runexamples.models.Valgrind.objects, vgs) # bulk_create fix for none postgres DB
+    base.helper.bulk_create(runexamples.models.ValgrindError.objects, ers) # bulk_create fix for none postgres DB
+    base.helper.bulk_create(runexamples.models.ValgrindWhatAndStack.objects, wss) # bulk_create fix for none postgres DB
     runexamples.models.ValgrindFrame.objects.bulk_create(frs)
   return ret
 
@@ -760,6 +837,8 @@ def executeSrcExample(ex, executeFD):
   print("make clean && make && "+pj(os.curdir, "main"), file=executeFD)
   print("", file=executeFD)
   executeFD.flush()
+  ex.webappHdf5serie=True
+  ex.webappOpenmbv=True
   if not args.disableMakeClean:
     if base.helper.subprocessCall(["make", "clean"], executeFD)!=0: return 1, 0
   if base.helper.subprocessCall(["make"], executeFD)!=0: return 1, 0
@@ -801,6 +880,9 @@ def executeXMLExample(ex, executeFD, env=os.environ):
   print("Running command:", file=executeFD)
   list(map(lambda x: print(x, end=" ", file=executeFD), [pj(mbsimBinDir, "mbsimxml")]+[prjFile]))
   print("\n", file=executeFD)
+  ex.webappHdf5serie=True
+  ex.webappOpenmbv=True
+  ex.webappMbsimgui=True
   executeFD.flush()
   t0=datetime.datetime.now()
   ret=abs(base.helper.subprocessCall(prefixSimulation('mbsimxml')+exePrefix()+[pj(mbsimBinDir, "mbsimxml"+args.exeExt)]+
@@ -825,6 +907,9 @@ def executeFlatXMLExample(ex, executeFD):
   print("Running command:", file=executeFD)
   list(map(lambda x: print(x, end=" ", file=executeFD), [pj(mbsimBinDir, "mbsimflatxml"), "MBS.flat.mbsx"]))
   print("\n", file=executeFD)
+  ex.webappHdf5serie=True
+  ex.webappOpenmbv=True
+  ex.webappMbsimgui=True
   executeFD.flush()
   t0=datetime.datetime.now()
   ret2=abs(base.helper.subprocessCall(prefixSimulation('mbsimflatxml')+exePrefix()+[pj(mbsimBinDir, "mbsimflatxml"+args.exeExt),
@@ -845,6 +930,8 @@ def executeFlatXMLExample(ex, executeFD):
 
 # helper function for executeFMIXMLExample and executeFMISrcExample
 def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
+  ex.webappHdf5serie=True
+  ex.webappOpenmbv=True
   ### create the FMU
   # run mbsimCreateFMU to export the model as a FMU
   # use option --nocompress, just to speed up mbsimCreateFMU
@@ -875,7 +962,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
     endTime=['-s', '0.01']
   if os.path.isdir("tmp_fmuCheck"): shutil.rmtree("tmp_fmuCheck")
   os.mkdir("tmp_fmuCheck")
-  comm=exePrefix()+[pj(mbsimBinDir, fmuCheck)]+endTime+["-f", "-l", "5", "-o", "fmuCheck.result.csv", "-z", "tmp_fmuCheck", "mbsim.fmu"]
+  comm=exePrefix()+[pj(mbsimBinDir, fmuCheck)]+endTime+["-f", "-l", "4", "-o", "fmuCheck.result.csv", "-z", "tmp_fmuCheck", "mbsim.fmu"]
   t0=datetime.datetime.now()
   ret2=abs(base.helper.subprocessCall(prefixSimulation('fmuCheck')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
@@ -939,6 +1026,9 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
 
 # execute the FMI XML export example in the current directory (write everything to fd executeFD)
 def executeFMIXMLExample(ex, executeFD):
+  ex.webappHdf5serie=True
+  ex.webappOpenmbv=True
+  ex.webappMbsimgui=True
   # first simple run the example as a preprocessing xml example
   minimalTEndEnv=os.environ.copy()
   minimalTEndEnv["MBSIM_SET_MINIMAL_TEND"]="1"
@@ -990,9 +1080,19 @@ def getColumn(arr, col, asColumnVector=True):
       return arr[:][:,None]
   else:
     raise IndexError("Only HDF5 datasets of shape vector and matrix can be handled.")
-def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFilesAppend, cmpResFile, cmpRess, datasetName, refObj):
+def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, cmpRess, datasetName, refObj):
   import numpy
   import h5py
+
+  def saveFileIfNotAlreadyDone(cmpResFile, h5CurFile):
+    if cmpResFile.h5File.name is None:
+      # save the file only the first time
+      cmpResFile.h5FileName=cmpResFile.h5Filename # this calls save on the dataset cmpResFile -> it will be skipped for bulk_create later on 
+      fw=cmpResFile.h5File.open("wb")
+      with open(h5CurFile.filename, "rb") as fr:
+        base.helper.copyFile(fr, fw)
+      fw.close()
+      cmpResFile.save()
 
   if isinstance(refObj, h5py.Dataset):
     # add to refMemberNames
@@ -1002,11 +1102,11 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFilesAp
       curObj=h5CurFile[datasetName]
     except KeyError:
       cmpRes=runexamples.models.CompareResult()
-      cmpResFilesAppend[0]=True
       cmpRess.append(cmpRes)
       cmpRes.compareResultFile=cmpResFile
       cmpRes.dataset=datasetName
       cmpRes.result=runexamples.models.CompareResult.Result.DATASETNOTINCUR
+      saveFileIfNotAlreadyDone(cmpResFile, h5CurFile)
       nrFailed[0]+=1
       return
     # get shape
@@ -1035,7 +1135,6 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFilesAp
     # loop over all columns
     for column in range(refObjCols):
       cmpRes=runexamples.models.CompareResult()
-      cmpResFilesAppend[0]=True
       cmpRess.append(cmpRes)
       cmpRes.compareResultFile=cmpResFile
       cmpRes.dataset=datasetName
@@ -1044,12 +1143,16 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFilesAp
       # if if curObj[:,column] does not exitst
       if column>=curObjCols:
         cmpRes.result=runexamples.models.CompareResult.Result.LABELNOTINCUR
+        saveFileIfNotAlreadyDone(cmpResFile, h5CurFile)
         nrFailed[0]+=1
       if not column<curObjCols or refLabels[column]!=curLabels[column]:
         cmpRes.result=runexamples.models.CompareResult.Result.LABELDIFFER
+        saveFileIfNotAlreadyDone(cmpResFile, h5CurFile)
         nrFailed[0]+=1
       if column>=curObjCols or curObj.shape[0]<=0 or curObj.shape[0]<=0: # not row in curObj or refObj
         cmpRes.result=runexamples.models.CompareResult.Result.LABELMISSING
+        saveFileIfNotAlreadyDone(cmpResFile, h5CurFile)
+        nrFailed[0]+=1
       else: # only if curObj and refObj contains data (rows)
         # check for difference
         refObjCol=getColumn(refObj,column)
@@ -1058,22 +1161,15 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFilesAp
                          atol=args.atol, equal_nan=True)):
           nrFailed[0]+=1
           cmpRes.result=runexamples.models.CompareResult.Result.FAILED
-          if cmpResFile.h5File.name is None:
-            # save the file only the first time
-            cmpResFile.h5FileName=cmpResFile.h5Filename # this calls save on the dataset cmpResFile -> it will be skipped for bulk_create later on 
-            fw=cmpResFile.h5File.open("wb")
-            with open(h5CurFile.filename, "rb") as fr:
-              fw.write(fr.read())
-            fw.close()
-            cmpResFile.save()
+          saveFileIfNotAlreadyDone(cmpResFile, h5CurFile)
     # check for labels/columns in current but not in reference
     for label in curLabels[len(refLabels):]:
       cmpRes=runexamples.models.CompareResult()
-      cmpResFilesAppend[0]=True
       cmpRess.append(cmpRes)
       cmpRes.compareResultFile=cmpResFile
       cmpRes.dataset=datasetName
       cmpRes.result=runexamples.models.CompareResult.Result.LABELNOTINREF
+      saveFileIfNotAlreadyDone(cmpResFile, h5CurFile)
       nrFailed[0]+=1
 
 def appendDatasetName(curMemberNames, datasetName, curObj):
@@ -1098,18 +1194,17 @@ def compareExample(ex):
     with refFile.h5File.open("rb") as djangoF:
       try:
         tempF=tempfile.NamedTemporaryFile(mode='wb', delete=False)
-        tempF.write(djangoF.read())
+        base.helper.copyFile(djangoF, tempF)
         tempF.close()
         h5RefFile=h5py.File(tempF.name, "r")
         cmpResFile=runexamples.models.CompareResultFile()
-        cmpResFilesAppend=False
+        cmpResFiles.append(cmpResFile) # -> append to bulk_create later on
         cmpResFile.example=ex
         cmpResFile.h5Filename=refFile.h5FileName
         try:
           h5CurFile=h5py.File(refFile.h5FileName, "r")
         except IOError:
           cmpRes=runexamples.models.CompareResult()
-          cmpResFilesAppend=True
           cmpRess.append(cmpRes)
           cmpRes.compareResultFile=cmpResFile
           cmpRes.result=runexamples.models.CompareResult.Result.FILENOTINCUR
@@ -1118,17 +1213,14 @@ def compareExample(ex):
           # process h5 file
           refMemberNames=set()
           # bind arguments h5CurFile, ex, example, nrFailed in order (nrFailed as lists to pass by reference)
-          dummyReferenceArg=[cmpResFilesAppend]
           dummyFctPtr = functools.partial(compareDatasetVisitor, h5CurFile, ex,
-                                          nrFailed, refMemberNames, dummyReferenceArg, cmpResFile, cmpRess)
+                                          nrFailed, refMemberNames, cmpResFile, cmpRess)
           h5RefFile.visititems(dummyFctPtr) # visit all dataset
-          cmpResFilesAppend=dummyReferenceArg[0]
           # check for datasets in current but not in reference
           curMemberNames=set()
           h5CurFile.visititems(functools.partial(appendDatasetName, curMemberNames)) # get all dataset names in cur
           for datasetName in curMemberNames-refMemberNames:
             cmpRes=runexamples.models.CompareResult()
-            cmpResFilesAppend=True
             cmpRess.append(cmpRes)
             cmpRes.compareResultFile=cmpResFile
             cmpRes.dataset=datasetName
@@ -1136,8 +1228,6 @@ def compareExample(ex):
             nrFailed[0]+=1
           # close h5 files
           h5CurFile.close()
-        if cmpResFilesAppend and cmpResFile.id is None: # cmpResFile dataset is needed but not already saved to the database
-          cmpResFiles.append(cmpResFile) # -> append to bulk_create later on
       finally:
         os.unlink(tempF.name)
   # files in current but not in reference
@@ -1148,15 +1238,23 @@ def compareExample(ex):
   for curFile in curFiles:
     if not any(map(lambda x: x.h5FileName==curFile, refFiles)):
       cmpResFile=runexamples.models.CompareResultFile()
-      cmpResFiles.append(cmpResFile)
       cmpResFile.example=ex
       cmpResFile.h5Filename=curFile
+      # save file
+      cmpResFile.h5FileName=curFile # this calls save on the dataset cmpResFile -> no bulk_create possible
+      fw=cmpResFile.h5File.open("wb")
+      with open(curFile, "rb") as fr:
+        base.helper.copyFile(fr, fw)
+      fw.close()
+      cmpResFile.save()
+
       cmpRes=runexamples.models.CompareResult()
       cmpRess.append(cmpRes)
       cmpRes.compareResultFile=cmpResFile
       cmpRes.result=runexamples.models.CompareResult.Result.FILENOTINREF
       nrFailed[0]+=1
-  runexamples.models.CompareResultFile.objects.bulk_create(cmpResFiles)
+  django.db.close_old_connections() # needes since django.db.models.signals.pre_save.connect(...) is not called by bulk_create
+  base.helper.bulk_create(runexamples.models.CompareResultFile.objects, cmpResFiles, ignore_conflicts=True) # bulk_create fix for none postgres DB
   runexamples.models.CompareResult.objects.bulk_create(cmpRess)
   ex.resultsFailed=0
   for rf in ex.resultFiles.all():
@@ -1167,14 +1265,18 @@ def compareExample(ex):
 
 def copyToReference():
   for example in directories:
-    print("Copy to reference: "+example)
     sys.stdout.flush()
     try:
       exSt=runexamples.models.ExampleStatic.objects.get(exampleName=example)
     except runexamples.models.ExampleStatic.DoesNotExist:
       exSt=runexamples.models.ExampleStatic()
       exSt.exampleName=example
-    ex=runexamples.models.Run.objects.getCurrent(args.buildType).examples.get(exampleName=example)
+    try:
+      ex=runexamples.models.Run.objects.getCurrent(args.buildType).examples.get(exampleName=example)
+      print("Copy to reference: "+example)
+    except:
+      print("Skipping: "+example)
+      continue
     exSt.references.all().delete()
     exSt.refTime=ex.time
     exSt.save()
@@ -1188,7 +1290,9 @@ def copyToReference():
         ref.h5FileSHA1=hashlib.sha1(data).hexdigest()
         ref.save()
         with ref.h5File.open("wb") as f:
-          f.write(data)
+          with open(fn, "rb") as l:
+            base.helper.copyFile(l, f)
+        ref.save()
 
 def updateReference():
   import requests
@@ -1241,7 +1345,8 @@ def updateReference():
       if response.status_code!=200:
         raise RuntimeError("Download of reference file failed.")
       with localReference.h5File.open("wb") as f:
-        f.write(response.content);
+        base.helper.copyFile(response.content, f)
+      localReference.save()
     # save local example
     localExampleStatic.save()
     # search for local reference files not on server -> delete these
@@ -1319,7 +1424,7 @@ def coverageBackupRestore(variant):
             os.remove(pj(root, f))
           if f.endswith(".gcda.beforeRunexamples"): # is processed after .gcda: files is sotred
             shutil.move(pj(root, f), pj(root, os.path.splitext(f)[0]))
-def coverage(exRun):
+def coverage(exRun, lcovResultFile=None):
   import requests
 
   ret=0
@@ -1343,13 +1448,19 @@ def coverage(exRun):
   tempDir=tempfile.mkdtemp()
   try:
     # run lcov: init counters
-    ret=ret+abs(base.helper.subprocessCall(["lcov", "-c", "--no-external", "-i", "--ignore-errors", "graph", "-o", pj(tempDir, "cov.trace.base")]+dirs, lcovFD))
+    ret=ret+abs(base.helper.subprocessCall(["lcov", "-q", "-c", "--no-external", "-i", "--ignore-errors", "graph", "-o", pj(tempDir, "cov.trace.base")]+dirs, lcovFD))
     lcovAdjustFileNames(pj(tempDir, "cov.trace.base"))
     # run lcov: count
-    ret=ret+abs(base.helper.subprocessCall(["lcov", "-c", "--no-external", "-o", pj(tempDir, "cov.trace.test")]+dirs, lcovFD))
+    ret=ret+abs(base.helper.subprocessCall(["lcov", "-q", "-c", "--no-external", "-o", pj(tempDir, "cov.trace.test")]+dirs, lcovFD))
     lcovAdjustFileNames(pj(tempDir, "cov.trace.test"))
     # run lcov: combine counters
-    ret=ret+abs(base.helper.subprocessCall(["lcov", "-a", pj(tempDir, "cov.trace.base"), "-a", pj(tempDir, "cov.trace.test"), "-o", pj(tempDir, "cov.trace.total")], lcovFD))
+    ret=ret+abs(base.helper.subprocessCall(["lcov", "-q", "-a", pj(tempDir, "cov.trace.base"), "-a", pj(tempDir, "cov.trace.test"), "-o", pj(tempDir, "cov.trace.total")], lcovFD))
+    # add coverage date from partitioned run
+    if args.post:
+      for covPartFinal in glob.glob(pj(args.prefix, "cov.trace.final.part."+args.buildType+".*")):
+        shutil.move(pj(tempDir, "cov.trace.total"), pj(tempDir, "cov.trace.total-part"))
+        ret=ret+abs(base.helper.subprocessCall(["lcov", "-q", "-a", pj(tempDir, "cov.trace.total-part"), "-a",
+                    covPartFinal, "-o", pj(tempDir, "cov.trace.total")], lcovFD))
     # run lcov: remove counters
     ret=ret+abs(base.helper.subprocessCall(["lcov", "-r", pj(tempDir, "cov.trace.total"),
       "/mbsim-env/mbsim-*/kernel/swig/*", "/mbsim-env/openmbv-*/openmbvcppinterface/swig/java/*", # SWIG generated
@@ -1362,20 +1473,24 @@ def coverage(exRun):
       "/mbsim-env/hdf5serie*/h5plotserie/h5plotserie/*", "/mbsim-env/openmbv*/openmbv/openmbv/*", "/mbsim-env/mbsim*/mbsimgui/mbsimgui/*", # GUI (untested)
       "/mbsim-env/mbsim*/modules/mbsimInterface/mbsimInterface/*", # other untested features
       "-o", pj(tempDir, "cov.trace.final")], lcovFD))
+    if lcovResultFile is not None:
+      shutil.copyfile(pj(tempDir, "cov.trace.final"), lcovResultFile)
+      return 0
 
     # get coverage rate
     covRate=0
     linesRE=re.compile("^ *lines\.*: *([0-9]+\.[0-9]+)% ")
-    for line in lcovFD.getData().splitlines():
+    for line in reversed(lcovFD.getData().splitlines()):
       m=linesRE.match(line)
       if m is not None:
         covRate=float(m.group(1))
+        break
 
     # upload to codecov v4
     repos=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
     for repo in repos:
       # run lcov: remove all counters except one repo
-      ret=ret+abs(base.helper.subprocessCall(["lcov", "-r", pj(tempDir, "cov.trace.final")]+\
+      ret=ret+abs(base.helper.subprocessCall(["lcov", "-q", "-r", pj(tempDir, "cov.trace.final")]+\
         list(map(lambda x: "/mbsim-env/"+x+"/*", filter(lambda x: x!=repo, repos)))+\
         ["-o", pj(tempDir, "cov.trace.final."+repo)], lcovFD))
       # replace file names in lcov trace file
@@ -1385,7 +1500,9 @@ def coverage(exRun):
         print(line, end="")
       # upload (v4)
       commitID=getattr(exRun.build_run, repo+"UpdateCommitID")
-      if os.environ["MBSIMENVTAGNAME"]=="latest" and "-nonedefbranches" not in args.buildType:
+      if os.environ["MBSIMENVTAGNAME"]=="latest" and \
+         exRun.build_run.fmatvecBranch=="master" and exRun.build_run.hdf5serieBranch=="master" and \
+         exRun.build_run.openmbvBranch=="master" and exRun.build_run.mbsimBranch=="master":
         nrTry=1
         tries=3
         while nrTry<=tries:
@@ -1394,7 +1511,7 @@ def coverage(exRun):
           codecovError=False
           try:
             response=requests.post("https://codecov.io/upload/v4?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
-              (commitID, mbsimenvSecrets.getSecrets()["codecovUploadToken"][repo], exRun.build_run.id, exRun.id,
+              (commitID, mbsimenvSecrets.getSecrets("codecovUploadToken", repo), exRun.build_run.id, exRun.id,
                urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
                "valgrind" if "valgrind" in args.buildType else "normal"),
               headers={"Accept": "text/plain"})
@@ -1437,6 +1554,28 @@ def coverage(exRun):
     if not os.path.isfile("/.dockerenv"): # keep the temp dir when running in docker
       shutil.rmtree(tempDir)
 
+# An iterable of all examples using server side dynamic queueing.
+class ExampleServerQueue:
+  def __init__(self, field):
+    self.field=field
+  def __iter__(self):
+    self.startTime=None
+    return self
+  def __next__(self):
+    if self.startTime is not None:
+      endTime=datetime.datetime.now()
+      setattr(self.es, self.field, endTime-self.startTime)
+      self.es.save()
+    with django.db.transaction.atomic():
+      self.es=runexamples.models.ExampleStatic.objects.filter(exampleName__in=directories, queued=True).select_for_update().\
+          order_by(django.db.models.F(self.field).desc(nulls_first=True)).first()
+      if self.es is None:
+        raise StopIteration
+      self.es.queued=False
+      self.es.save()
+    self.startTime=datetime.datetime.now()
+    return self.es.exampleName
+
 
 
 #####################################################################################
@@ -1445,4 +1584,5 @@ def coverage(exRun):
 
 if __name__=="__main__":
   mainRet=main()
-  sys.exit(mainRet)
+  print("Exit Value: "+str(mainRet))
+  sys.exit(0)

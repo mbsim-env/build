@@ -1,11 +1,44 @@
 import django
+import functools
+import base
 
 # admin model
-class MBSimEnvModelAdmin(django.contrib.admin.ModelAdmin):
-  raw_id_fields = ()
-  def __init__(self, model, admin_site, *args, **kwargs):
-    self.raw_id_fields = tuple( f.name for f in model._meta.get_fields() if isinstance(f, django.db.models.ForeignKey) )
+
+class _MBSimEnvInlineModelAdmin(django.contrib.admin.TabularInline):
+  show_change_link=True
+  can_delete=False
+  extra=0
+  def __init__(self, model, admin_site, relatedModel, *args, **kwargs):
+    self.model=relatedModel
+    self.fields=[]
+    for f in relatedModel._meta.get_fields():
+      if hasattr(f, "help_text") and base.helper.inlineAdmin in f.help_text:
+        self.fields.append(f.name)
+    # pull in at least one field to avoid that all fields are used
+    if len(self.fields)==0:
+      self.fields=[relatedModel._meta.pk.name]
+    self.readonly_fields=self.fields # all fields are read only
     super().__init__(model, admin_site, *args, **kwargs)
+  def has_add_permission(self, request, obj):
+    return False
+
+class MBSimEnvModelAdmin(django.contrib.admin.ModelAdmin):
+  def __init__(self, model, admin_site, *args, **kwargs):
+    # mark all ForeignKey fields as raw_id_fields
+    self.raw_id_fields=[]
+    for f in model._meta.get_fields():
+      if isinstance(f, django.db.models.ForeignKey):
+        self.raw_id_fields.append(f.name)
+    super().__init__(model, admin_site, *args, **kwargs)
+  def get_inlines(self, request, obj):
+    # mark all related ManyToOneRel fields (reverse ForeignKey's) as inlines
+    inlines=[]
+    for f in self.model._meta.get_fields():
+      if isinstance(f, django.db.models.fields.reverse_related.ManyToOneRel):
+        inlines.append(functools.partial(_MBSimEnvInlineModelAdmin, relatedModel=f.related_model))
+    return inlines
+
+
 
 class SessionAdmin(django.contrib.admin.ModelAdmin):
   def decoded_session_data(self, obj):

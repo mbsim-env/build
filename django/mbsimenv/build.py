@@ -78,20 +78,20 @@ def parseArguments():
   cfgOpts.add_argument("--disableRunExamples", action="store_true", help="Do not run examples")
   cfgOpts.add_argument("--enableDistribution", action="store_true", help="Create a release distribution archive (only usefull on the buildsystem)")
   cfgOpts.add_argument("--binSuffix", default="", help='base tool name suffix for the binary (build) dir in --sourceDir (default: "" = no VPATH build)')
-  cfgOpts.add_argument("--fmatvecBranch", default="", help='In the fmatvec repo checkout the branch FMATVECBRANCH')
-  cfgOpts.add_argument("--hdf5serieBranch", default="", help='In the hdf5serierepo checkout the branch HDF5SERIEBRANCH')
-  cfgOpts.add_argument("--openmbvBranch", default="", help='In the openmbv repo checkout the branch OPENMBVBRANCH')
-  cfgOpts.add_argument("--mbsimBranch", default="", help='In the mbsim repo checkout the branch MBSIMBRANCH')
+  cfgOpts.add_argument("--fmatvecBranch", default="", help='In the fmatvec repo checkout the branch/sha FMATVECBRANCH (can be <branch>*<sha>')
+  cfgOpts.add_argument("--hdf5serieBranch", default="", help='In the hdf5serierepo checkout the branch/sha HDF5SERIEBRANCH (can be <branch>*<sha>')
+  cfgOpts.add_argument("--openmbvBranch", default="", help='In the openmbv repo checkout the branch/sha OPENMBVBRANCH (can be <branch>*<sha>')
+  cfgOpts.add_argument("--mbsimBranch", default="", help='In the mbsim repo checkout the branch/sha MBSIMBRANCH (can be <branch>*<sha>')
   cfgOpts.add_argument("--buildSystemRun", action="store_true", help='Run in build system mode: generate build system state files.')
   cfgOpts.add_argument("--localServerPort", type=int, default=27583, help='Port for local server, if started automatically.')
   cfgOpts.add_argument("--coverage", action="store_true", help='Enable coverage analyzis using gcov/lcov.')
-  cfgOpts.add_argument("--webapp", action="store_true", help='Just passed to run examples.')
   cfgOpts.add_argument("--buildFailedExit", default=None, type=int, help='Define the exit code when the build fails - e.g. use --buildFailedExit 125 to skip a failed build when running as "git bisect run".')
   
   outOpts=argparser.add_argument_group('Output Options')
   outOpts.add_argument("--buildType", default="local", type=str, help="A description of the build type (e.g: linux64-dailydebug)")
+  outOpts.add_argument("--executor", default='<span class="MBSIMENV_EXECUTOR_LOCAL">local</span>', type=str, help="The executor of this run (can contain simple HTML a-elements)")
   outOpts.add_argument("--removeOlderThan", default=3 if os.environ.get("MBSIMENVTAGNAME", "")=="staging" else 30,
-                       type=int, help="Remove all build reports older than X days.")
+                       type=int, help="Remove all build reports older than X days but keep at least the last X.")
   
   passOpts=argparser.add_argument_group('Options beeing passed to other commands')
   passOpts.add_argument("--passToRunexamples", default=list(), nargs=argparse.REMAINDER,
@@ -112,6 +112,9 @@ def parseArguments():
   # parse all options before --passToConfigure, --passToCMake, --passToRunexamples by argparser. 
   global args
   args=argparser.parse_args(args=sys.argv[1:firstPassToIndex(sys.argv)])
+  if base.helper.getExecutorID(args.executor)=="LOCAL" and args.disableUpdate==False:
+    print("Adding --disableUpdate to arguments: git update is not supported for local builds.")
+    args.disableUpdate=True
   restArgs=sys.argv[firstPassToIndex(sys.argv):]
   # extract --passTo* args
   while True:
@@ -145,9 +148,6 @@ def setGithubStatus(run, state):
   # skip for none build system runs
   if not args.buildSystemRun:
     return
-  # skip for -nonedefbranches buildTypes
-  if run.buildType.find("-nonedefbranches")>=0:
-    return
 
   import github
   if state=="pending":
@@ -159,7 +159,7 @@ def setGithubStatus(run, state):
   else:
     raise RuntimeError("Unknown state "+state+" provided")
   try:
-    gh=github.Github(mbsimenvSecrets.getSecrets()["githubStatusAccessToken"])
+    gh=github.Github(mbsimenvSecrets.getSecrets("githubAccessToken"))
     for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
       if os.environ["MBSIMENVTAGNAME"]=="latest":
         commit=gh.get_repo("mbsim-env/"+repo).get_commit(getattr(run, repo+"UpdateCommitID"))
@@ -175,7 +175,8 @@ def setGithubStatus(run, state):
 
 def removeOldBuilds():
   olderThan=django.utils.timezone.now()-datetime.timedelta(days=args.removeOlderThan)
-  nrDeleted=builds.models.Run.objects.filter(buildType=args.buildType, startTime__lt=olderThan).delete()[0]
+  keep=builds.models.Run.objects.filter(buildType=args.buildType).order_by('-startTime')[0:args.removeOlderThan].values("id")
+  nrDeleted=builds.models.Run.objects.filter(buildType=args.buildType, startTime__lt=olderThan).exclude(id__in=keep).delete()[0]
   if nrDeleted>0:
     print("Deleted %d build runs being older than %d days!"%(nrDeleted, args.removeOlderThan))
 
@@ -193,12 +194,14 @@ def main():
     else:
       os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_local"
   django.setup()
- 
-  if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
-    s=base.helper.startLocalServer(args.localServerPort, django.conf.settings.MBSIMENV_TYPE=="localdocker")
-    print("Build info is avaiable at: http://%s:%d%s"%(s["hostname"], s["port"],
-          django.urls.reverse("builds:current_buildtype", args=[args.buildType])))
-    print("")
+
+  # close old connections before model save(); CONN_MAX_AGE is used
+  # (to avoid connection failures between two save() on the same model when a large time is in-between;
+  #  e.g. firewalls may drop such TCP connections)
+  def closeOldConnections(**kwargs):
+    if not django.db.connections[kwargs["using"]].in_atomic_block:
+      django.db.close_old_connections()
+  django.db.models.signals.pre_save.connect(closeOldConnections)
 
   removeOldBuilds()
 
@@ -304,33 +307,66 @@ def main():
   print("Started build process.")
   sys.stdout.flush()
 
+  # clean prefix dir
+  if args.enableCleanPrefix and os.path.isdir(args.prefix if args.prefix is not None else args.prefixAuto):
+    shutil.rmtree(args.prefix if args.prefix is not None else args.prefixAuto)
+  os.makedirs(args.prefix if args.prefix is not None else args.prefixAuto, exist_ok=True)
+
   run=builds.models.Run()
   run.buildType=args.buildType
+  run.executor=args.executor
   run.command=" ".join(sys.argv)
   run.startTime=django.utils.timezone.now()
   run.save()
+  # write build info (only build.run.id)
+  buildInfo={"buildRunID": run.id, "skipped": False}
+  with open((args.prefix if args.prefix is not None else args.prefixAuto)+"/.buildInfo.json", "w") as f:
+    json.dump(buildInfo, f, indent=2)
 
   nrFailed=0
   nrRun=0
   # update all repositories
   if not args.disableUpdate:
     nrRun+=1
-  localRet, commitidfull=repoUpdate(run)
+  localRet, commitidfull=repoUpdate(run, buildInfo)
   if localRet!=0: nrFailed+=1
+  # rewrite build info (build.run.id + repo-sha1)
+  with open((args.prefix if args.prefix is not None else args.prefixAuto)+"/.buildInfo.json", "w") as f:
+    json.dump(buildInfo, f, indent=2)
+ 
+  if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
+    s=base.helper.startLocalServer(args.localServerPort, django.conf.settings.MBSIMENV_TYPE=="localdocker")
+    print("Build info is avaiable at: http://%s:%d%s"%(s["hostname"], s["port"],
+          django.urls.reverse("builds:current_buildtype_branch", args=[run.buildType,
+            run.fmatvecBranch, run.hdf5serieBranch, run.openmbvBranch, run.mbsimBranch])))
+    print("")
 
-#  # check if last build was the same as this build
-#  if not args.forceBuild and args.buildSystemRun and lastcommitidfull==commitidfull:
-#    print('Skipping this build: the last build was exactly the same.')
-#    sys.stdout.flush()
-#    return 255 # build skipped, same as last build
+  # check if last build was the same as this build
+  if not args.forceBuild:
+    curExecutorID=base.helper.getExecutorID(args.executor)
+    if curExecutorID is not None and curExecutorID!="LOCAL" and curExecutorID!="LOCALDOCKER":
+      skip=False
+      with django.db.transaction.atomic():
+        oldRunExecutors=builds.models.Run.objects.filter(buildType=args.buildType,
+                  fmatvecUpdateCommitID=commitidfull["fmatvec"], hdf5serieUpdateCommitID=commitidfull["hdf5serie"],
+                  openmbvUpdateCommitID=commitidfull["openmbv"], mbsimUpdateCommitID=commitidfull["mbsim"]).\
+                  select_for_update().exclude(id=run.id).values_list("executor", flat=True)
+        for oldRunExecutor in oldRunExecutors:
+          if base.helper.getExecutorID(oldRunExecutor)==curExecutorID:
+            run.delete()
+            skip=True
+            break
+      if skip:
+        print('Skipping this build: the last build was exactly the same.')
+        sys.stdout.flush()
+        # rewrite build info (updated skipped)
+        buildInfo["skipped"]=True
+        with open((args.prefix if args.prefix is not None else args.prefixAuto)+"/.buildInfo.json", "w") as f:
+          json.dump(buildInfo, f, indent=2)
+        return 0
 
   # set status on commit
   setGithubStatus(run, "pending")
-
-  # clean prefix dir
-  if args.enableCleanPrefix and os.path.isdir(args.prefix if args.prefix is not None else args.prefixAuto):
-    shutil.rmtree(args.prefix if args.prefix is not None else args.prefixAuto)
-    os.makedirs(args.prefix if args.prefix is not None else args.prefixAuto)
 
   # a sorted list of all tools te be build (in the correct order according the dependencies)
   orderedBuildTools=list()
@@ -380,6 +416,13 @@ def main():
   run.endTime=django.utils.timezone.now()
   run.save()
 
+  # update status on commitid
+  setGithubStatus(run, "success" if nrFailed==0 else "failure")
+
+  if nrFailed>0:
+    print("\nERROR: %d of %d build parts failed!!!!!"%(nrFailed, nrRun));
+    sys.stdout.flush()
+
   # run examples
   runExamplesErrorCode=0
   if not args.disableRunExamples:
@@ -389,13 +432,6 @@ def main():
     sys.stdout.flush()
     runExamplesErrorCode=runexamples(run)
     os.chdir(savedDir)
-
-  # update status on commitid
-  setGithubStatus(run, "success" if nrFailed==0 else "failure")
-
-  if nrFailed>0:
-    print("\nERROR: %d of %d build parts failed!!!!!"%(nrFailed, nrRun));
-    sys.stdout.flush()
 
   if nrFailed>0:
     return 1 # build failed
@@ -446,7 +482,7 @@ def buildTool(toolName):
   t[0]=t[0]+args.binSuffix
   return os.path.sep.join(t)
 
-def repoUpdate(run):
+def repoUpdate(run, buildInfo):
   ret=0
   savedDir=os.getcwd()
   if not args.disableUpdate:
@@ -454,6 +490,7 @@ def repoUpdate(run):
     sys.stdout.flush()
 
   commitidfull={}
+  buildInfo["repo"]={}
   for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
     os.chdir(pj(args.sourceDir, repo))
     # update
@@ -468,32 +505,37 @@ def repoUpdate(run):
       # write repUpd output to report dir
       print('Fetch remote repository '+repo+":", file=repoUpdFD)
       repoUpdFD.flush()
-      retlocal+=abs(base.helper.subprocessCall(["git", "fetch"], repoUpdFD))
+      branch=getattr(args, repo+"Branch").split("*")[0]
+      sha=getattr(args, repo+"Branch").split("*")[-1]
+      retlocal+=abs(base.helper.subprocessCall(["git", "checkout", "-q", "HEAD~0"], repoUpdFD))
+      base.helper.subprocessCall(["git", "branch", "-q", "-D", branch], repoUpdFD)
+      retlocal+=abs(base.helper.subprocessCall(["git", "fetch", "-q", "--depth", "1", "origin", sha+":"+branch], repoUpdFD))
     # set branch based on args
     if getattr(args, repo+'Branch')!="":
+      branch=getattr(args, repo+"Branch").split("*")[0]
       print('Checkout branch '+getattr(args, repo+'Branch')+' in repository '+repo+":", file=repoUpdFD)
-      retlocal+=abs(base.helper.subprocessCall(["git", "checkout", getattr(args, repo+'Branch')], repoUpdFD))
+      retlocal+=abs(base.helper.subprocessCall(["git", "checkout", "-q", branch], repoUpdFD))
       repoUpdFD.flush()
-    if not args.disableUpdate:
-      print('Pull current branch', file=repoUpdFD)
-      repoUpdFD.flush()
-      retlocal+=abs(base.helper.subprocessCall(["git", "pull"], repoUpdFD))
     # get branch and commit
     branch=base.helper.subprocessCheckOutput(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], repoUpdFD).decode('utf-8').rstrip()
     commitidfull[repo]=base.helper.subprocessCheckOutput(['git', 'log', '-n', '1', '--format=%H', 'HEAD'], repoUpdFD).decode('utf-8').rstrip()
     commitsub=base.helper.subprocessCheckOutput(['git', 'log', '-n', '1', '--format=%s', 'HEAD'], repoUpdFD).decode('utf-8').rstrip()
-    commitlong=base.helper.subprocessCheckOutput(['git', 'log', '-n', '1', '--format=Commit: %H%nAuthor: %an%nDate:   %ad%n%s%n%b', 'HEAD'], repoUpdFD).decode('utf-8')
+    authorName=base.helper.subprocessCheckOutput(['git', 'log', '-n', '1', '--format=%an', 'HEAD'], repoUpdFD).decode('utf-8').rstrip()
+    authorDate=base.helper.subprocessCheckOutput(['git', 'log', '-n', '1', '--format=%aI', 'HEAD'], repoUpdFD).decode('utf-8').rstrip()
     ret+=retlocal
     # save
     setattr(run, repo+"Branch", branch)
     if not args.disableUpdate:
       setattr(run, repo+"UpdateOK", retlocal==0)
     setattr(run, repo+"UpdateOutput", repoUpdFD.getvalue())
-    setattr(run, repo+"UpdateTooltip", commitlong)
     setattr(run, repo+"UpdateCommitID", commitidfull[repo])
     setattr(run, repo+"UpdateMsg", commitsub[:builds.models.Run._meta.get_field(repo+"UpdateMsg").max_length])
+    setattr(run, repo+"UpdateAuthor", authorName)
+    authorDatePy36=re.sub("(:[0-9][0-9][+-][0-9][0-9]):([0-9][0-9])$", "\\1\\2", authorDate) # fix authorDate for Python 3.6
+    setattr(run, repo+"UpdateDate", datetime.datetime.strptime(authorDatePy36, '%Y-%m-%dT%H:%M:%S%z'))
     run.save()
     repoUpdFD.close()
+    buildInfo["repo"][repo]=commitidfull[repo]
 
   if not args.disableUpdate:
     if ret>0:
@@ -804,14 +846,13 @@ def runexamples(run):
   if args.coverage:
     command.extend(["--coverage", "--sourceDir", args.sourceDir]+(["--binSuffix="+args.binSuffix] if args.binSuffix!="" else [])+\
                    ["--prefix", args.prefix, "--baseExampleDir", pj(args.sourceDir, "mbsim", "examples")])
-  if args.webapp:
-    command.extend(["--webapp"])
   if args.buildSystemRun:
     command.extend(["--buildSystemRun"])
   if args.localServerPort:
     command.extend(["--localServerPort", str(args.localServerPort)])
   command.extend(["--buildRunID", str(run.id)])
   command.extend(["--buildType", args.buildType])
+  command.extend(["--executor", args.executor])
   command.extend(args.passToRunexamples)
 
   print("")
@@ -842,10 +883,10 @@ def createDistribution(run):
       run.save()
       with run.distributionFile.open("wb") as fo:
         with open(tempDir+"/"+run.distributionFileName, "rb") as fi:
-          fo.write(fi.read())
+          base.helper.copyFile(fi, fo)
       with run.distributionDebugFile.open("wb") as fo:
         with open(tempDir+"/"+run.distributionDebugFileName, "rb") as fi:
-          fo.write(fi.read())
+          base.helper.copyFile(fi, fo)
     return distributeErrorCode
 
 
@@ -859,7 +900,7 @@ if __name__=="__main__":
   # 0 -> all passed
   # 1 -> build failed
   # 2 -> examples failed
-  # 255 -> build skipped, same as last build
   if args.buildFailedExit and mainRet==1:
     mainRet=args.buildFailedExit
-  sys.exit(mainRet)
+  print("Exit Value: "+str(mainRet))
+  sys.exit(0)

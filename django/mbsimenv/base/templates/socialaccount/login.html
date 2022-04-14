@@ -1,0 +1,26 @@
+{% extends "base/base.html" %}
+
+<!-- This template overrides the allauth social account login page -->
+
+{% load static %}
+{% load octicons %}
+
+{% block title %}Login with Github Account{% endblock %}
+
+{% block body %}
+
+<h1>{% octicon "sign-in" height="38" %} Login with
+    {% octicon "mark-github" height="38" %} {% octicon "logo-github" height="38" %} Account</h1>
+
+<p>You are about to login using a third party account from Github</p>
+<p>When logged-in this side will store basic information provided by GitHub. It will also store an access token to interact with GitHub on your behalf.</p>
+<p>You will be able to <a href="https://github.com/settings/connections/applications/{{ clientID }}">view and revoke</a> this
+access token on GitHub at any time. Revoking this access token will revoke any access of this service on your GitHub account.
+Your GitHub password is not known or checked by this server.</p>
+
+<form method="post">
+  {% csrf_token %}
+  <button type="submit" class="btn btn-success">Continue</button>
+</form>
+
+{% endblock %}

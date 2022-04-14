@@ -7,6 +7,7 @@ import subprocess
 import sys
 import django
 sys.path.append("/context/mbsimenv")
+import service
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -14,12 +15,15 @@ argparser=argparse.ArgumentParser(
   description="Entrypoint for container mbsimenv/buildwin64.")
   
 argparser.add_argument("--buildType", type=str, required=True, help="The build type")
+argparser.add_argument("--executor", type=str, required=True, help="The executor of this build")
+argparser.add_argument("--enforceConfigure", action="store_true", help="Enforce the configure step")
 argparser.add_argument("--fmatvecBranch", type=str, default="master", help="fmatvec branch")
 argparser.add_argument("--hdf5serieBranch", type=str, default="master", help="hdf5serie branch")
 argparser.add_argument("--openmbvBranch", type=str, default="master", help="openmbv branch")
 argparser.add_argument("--mbsimBranch", type=str, default="master", help="mbsim branch")
 argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs to run in parallel")
 argparser.add_argument('--forceBuild', action="store_true", help="Passed to buily.py if existing")
+argparser.add_argument("--ccacheSize", default=10, type=int, help="Maximal ccache size in GB.")
 
 args=argparser.parse_args()
 
@@ -28,7 +32,7 @@ if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="
   raise RuntimeError("Envvar MBSIMENVSERVERNAME is not defined.")
 
 # check buildtype
-if not args.buildType.startswith("win64-dailyrelease"):
+if args.buildType != "win64-ci" and not args.buildType.startswith("win64-dailyrelease"):
   raise RuntimeError("Unknown build type "+args.buildType+".")
 
 os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
@@ -42,35 +46,64 @@ while True:
   except django.db.utils.OperationalError:
     print("Waiting for database to startup. Retry in 0.5s")
     time.sleep(0.5)
+django.db.connections.close_all()
 
 # run
 
 # clone repos if needed
 if not os.path.isdir("/mbsim-env/fmatvec"):
-  subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/fmatvec.git"], cwd="/mbsim-env",
+  subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/fmatvec.git"], cwd="/mbsim-env",
     stdout=sys.stdout, stderr=sys.stderr)
 if not os.path.isdir("/mbsim-env/hdf5serie"):
-  subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/hdf5serie.git"], cwd="/mbsim-env",
+  subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/hdf5serie.git"], cwd="/mbsim-env",
     stdout=sys.stdout, stderr=sys.stderr)
 if not os.path.isdir("/mbsim-env/openmbv"):
-  subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/openmbv.git"], cwd="/mbsim-env",
+  subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/openmbv.git"], cwd="/mbsim-env",
     stdout=sys.stdout, stderr=sys.stderr)
 if not os.path.isdir("/mbsim-env/mbsim"):
-  subprocess.check_call(["git", "clone", "https://github.com/mbsim-env/mbsim.git"], cwd="/mbsim-env",
+  subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/mbsim.git"], cwd="/mbsim-env",
     stdout=sys.stdout, stderr=sys.stderr)
 
-# args
-ARGS=["--enableDistribution"]
-RUNEXAMPLES=["--disableCompare", "--disableValidate", "--checkGUIs", "--exeExt", ".exe", "--filter", "'basic' in labels"]
+os.environ['WINEPATH']=((os.environ['WINEPATH']+";") if 'WINEPATH' in os.environ else "")+"/mbsim-env/local/bin"
 
+# args
+if args.buildType.startswith("win64-dailyrelease"):
+  BUILDTYPE="Release"
+  os.environ['CXXFLAGS']=os.environ.get('CXXFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
+  os.environ['CFLAGS']=os.environ.get('CFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
+  os.environ['FFLAGS']=os.environ.get('FFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
+  ARGS=["--enableDistribution"]
+  RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--exeExt", ".exe", "--filter", "'basic' in labels"]
+  
+elif args.buildType == "win64-ci":
+  BUILDTYPE="Debug"
+  os.environ['CXXFLAGS']=os.environ.get('CXXFLAGS', '')+" -O0 -g -gdwarf-2"
+  os.environ['CFLAGS']=os.environ.get('CFLAGS', '')+" -O0 -g -gdwarf-2"
+  os.environ['FFLAGS']=os.environ.get('FFLAGS', '')+" -O0 -g -gdwarf-2"
+  ARGS=["--forceBuild", "--disableDoxygen", "--disableXMLDoc"]
+  RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--disableMakeClean", "--exeExt", ".exe", "--filter", "'basic' in labels"]
+
+  # get current/last image ID
+  curImageID=os.environ.get("MBSIMENVIMAGEID", None)
+  if curImageID is not None:
+    info=service.models.Info.objects.all().first()
+    lastImageID=info.buildwin64ImageID if info is not None else ""
+    # configure needed?
+    if lastImageID==curImageID and not args.enforceConfigure:
+      ARGS.append("--disableConfigure")
+    # save build image id
+    info.buildwin64ImageID=curImageID
+    info.save()
+else:
+  raise RuntimeError("Unknown build type "+args.buildType)
+  
 # pass arguments to build.py
 if args.forceBuild:
   ARGS.append('--forceBuild')
 
-os.environ['WINEPATH']=((os.environ['WINEPATH']+";") if 'WINEPATH' in os.environ else "")+"/mbsim-env/local/bin"
-os.environ['CXXFLAGS']=os.environ.get('CXXFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
-os.environ['CFLAGS']=os.environ.get('CFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
-os.environ['FFLAGS']=os.environ.get('FFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
+subprocess.call(["ccache", "-M", str(args.ccacheSize)+"G"])
+print("Zeroing ccache statistics.")
+subprocess.call(["ccache", "-z"])
 
 # run build
 subprocess.check_call(["wineserver", "-p"], stdout=sys.stdout, stderr=sys.stderr) # start wine server
@@ -82,6 +115,7 @@ ret=subprocess.call(
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
   "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix",
   "--buildType", args.buildType,
+  "--executor", args.executor,
   "--passToConfigure", "--enable-shared", "--disable-static", "--enable-python",
   "--build=x86_64-redhat-linux", "--host=x86_64-w64-mingw32",
   "--with-lapack-lib-prefix=/3rdparty/local/lib",
@@ -112,14 +146,19 @@ ret=subprocess.call(
   "-DLAPACK_LIBRARIES=/3rdparty/local/lib/liblapack.dll.a", "-DLAPACK=1",
   "-DBOOST_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw",
   "-DBoost_ARCHITECTURE=-x64",
-  "-DCMAKE_BUILD_TYPE=Release",
-  "-DCMAKE_CXX_FLAGS_RELEASE=-g -O2 -gdwarf-2 -DNDEBUG",
-  "-DCMAKE_C_FLAGS_RELEASE=-g -O2 -gdwarf-2 -DNDEBUG",
-  "-DCMAKE_Fortran_FLAGS_RELEASE=-g -O2 -gdwarf-2 -DNDEBUG",
-  "--passToRunexamples"]+RUNEXAMPLES,
+  "-DCMAKE_BUILD_TYPE="+BUILDTYPE,
+  "-DCMAKE_CXX_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["CXXFLAGS"],
+  "-DCMAKE_C_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["CFLAGS"],
+  "-DCMAKE_Fortran_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["FFLAGS"],
+  "--passToRunexamples"]+RUNEXAMPLESARGS,
   stdout=sys.stdout, stderr=sys.stderr)
 subprocess.check_call(["wineserver", "-k"], stdout=sys.stdout, stderr=sys.stderr) # kill wine server
-if ret!=255:
+
+print("Dump ccache statistics:")
+subprocess.call(["ccache", "-s"])
+sys.stdout.flush()
+
+if ret==255:
   sys.exit(0)
 if ret!=0:
   print("build.py failed.")

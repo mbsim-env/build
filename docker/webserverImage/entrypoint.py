@@ -6,17 +6,10 @@ import sys
 import os
 import fileinput
 import time
-import django
-import django.core.management
-import allauth
 import argparse
 import requests
-import docker
 sys.path.append("/context")
 import setup
-sys.path.append("/context/mbsimenv")
-import mbsimenvSecrets
-import service
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -33,67 +26,6 @@ if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="
 if "MBSIMENVTAGNAME" not in os.environ or os.environ["MBSIMENVTAGNAME"]=="":
   raise RuntimeError("Envvar MBSIMENVTAGNAME is not defined.")
 
-os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
-django.setup()
-
-# wait for database server
-while True:
-  try:
-    django.db.connections['default'].cursor()
-    break
-  except django.db.utils.OperationalError:
-    print("Waiting for database to startup. Retry in 0.5s")
-    time.sleep(0.5)
-
-# database migrations
-django.core.management.call_command("migrate", interactive=False, traceback=True, no_color=True)
-
-# create superuser (may fail if already exists)
-try:
-  django.core.management.call_command("createsuperuser", interactive=False, username="admin", email="dummy@dummy.org")
-except django.core.management.base.CommandError:
-  pass
-# set superuser password
-user=django.contrib.auth.models.User.objects.get(username='admin')
-user.set_password(mbsimenvSecrets.getSecrets()["djangoAdminPassword"])
-user.save()
-
-# set site-name
-site=django.contrib.sites.models.Site.objects.get(id=1)
-site.domain=os.environ["MBSIMENVSERVERNAME"]
-site.name=os.environ["MBSIMENVSERVERNAME"]
-site.save()
-
-# create github app
-sa, _=allauth.socialaccount.models.SocialApp.objects.get_or_create(provider="github")
-sa.name="MBSim-Environment Build Service"
-sa.client_id=mbsimenvSecrets.getSecrets()["githubAppClientID"]
-sa.secret=mbsimenvSecrets.getSecrets()["githubAppSecret"]
-sa.save()
-sa.sites.add(django.contrib.sites.models.Site.objects.get(id=1))
-sa.save()
-
-# add master, master, master, master in CIBranches and DailyBranches, if the branch combi is empty
-for model in ["CIBranches", "DailyBranches"]:
-  if getattr(service.models, model).objects.count()==0:
-    bc=getattr(service.models, model)()
-    bc.fmatvecBranch="master"
-    bc.hdf5serieBranch="master"
-    bc.openmbvBranch="master"
-    bc.mbsimBranch="master"
-    bc.save()
-
-# service Info
-with open('/proc/1/cpuset', "r") as fid:
-  containerID=fid.read().rstrip().split("/")[-1]
-dockerClient=docker.from_env()
-image=dockerClient.containers.get(containerID).image
-gitCommitID=image.labels["gitCommitID"]
-info, _=service.models.Info.objects.get_or_create(id=gitCommitID)
-info.shortInfo="Container ID: %s\nImage ID: %s\ngit Commit ID: %s"%(containerID, image.id, gitCommitID)
-info.save()
-service.models.Info.objects.exclude(id=gitCommitID).delete() # remove everything except the current runnig Info object
-
 # add daily build to crontab (starting at 01:00)
 crontab=\
   "MBSIMENVSERVERNAME=%s\n"%(os.environ["MBSIMENVSERVERNAME"])+\
@@ -101,7 +33,6 @@ crontab=\
   subprocess.check_output(["crontab", "-l"]).decode("UTF-8")+\
   "0 %d * * * /context/cron-daily.py -j %d 2> >(sed -re 's/^/DAILY: /' > /proc/1/fd/2) > >(sed -re 's/^/DAILY: /' > /proc/1/fd/1)\n"%(23 if os.environ["MBSIMENVTAGNAME"]!="staging" else 11, args.jobs)+\
   "* * * * * /context/cron-ci.py -j %d 2> >(sed -re 's/^/CI: /' > /proc/1/fd/2) > >(sed -re 's/^/CI: /' > /proc/1/fd/1)\n"%(args.jobs)
-subprocess.check_call(["crontab", "/dev/stdin"], )
 p=subprocess.Popen(['crontab', '/dev/stdin'], stdin=subprocess.PIPE)    
 p.communicate(input=crontab.encode("UTF-8"))
 p.wait()
@@ -123,9 +54,11 @@ def waitForWWW(timeout):
 # start httpd
 httpd=subprocess.Popen(["httpd", "-DFOREGROUND"])
 waitForWWW(10)
+print("Started webserver, not allowing connections.")
+sys.stdout.flush()
 
 # create cert if not existing or renew if already existing
-subprocess.check_call(["/usr/bin/certbot-2",
+subprocess.check_call(["sudo", "-u", "dockeruser", "/usr/bin/certbot-2", "--work-dir", "/tmp/certbotwork", "--logs-dir", "/tmp/certbotlog",
   "--agree-tos", "--email", "friedrich.at.gc@gmail.com", "certonly", "-n", "--webroot", "-w", "/var/www/html/certbot",
   "--cert-name", "mbsim-env", "-d", os.environ["MBSIMENVSERVERNAME"]])
 
@@ -139,13 +72,20 @@ for line in fileinput.FileInput("/etc/httpd/conf.d/ssl.conf", inplace=1):
   print(line, end="")
 # reload web server config
 subprocess.check_call(["httpd", "-k", "graceful"])
-
-if os.environ["MBSIMENVTAGNAME"]=="staging":
-  # for staging service run the CI at service startup (just for testing a build)
-  print("Starting linux-ci build.")
-  setup.run("build-linux64-ci", args.jobs, printLog=False, detach=True, addCommands=["--forceBuild"],
-            fmatvecBranch="master", hdf5serieBranch="master",
-            openmbvBranch="master", mbsimBranch="master")
+# now allow all connections
+replaceNext=False
+for line in fileinput.FileInput("/etc/httpd/conf/httpd.conf", inplace=1):
+  if line.find("MBSIMENV_ALLOW")>=0:
+    replaceNext=True
+  elif replaceNext:
+    print("  Require all granted")
+    replaceNext=False
+  else:
+    print(line, end="")
+# reload web server config
+subprocess.check_call(["httpd", "-k", "graceful"])
+print("Reloaded webserver, allowing now all connections.")
+sys.stdout.flush()
 
 # wait for the web server to finish (will never happen) and return its return code
 print("Service up and running.")

@@ -4,7 +4,7 @@
 {% load octicons %}
 
 {% block head %}
-<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/font-awesome/4.5.0/css/font-awesome.min.css"/>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
 {% endblock %}
 
 {% block title %}MBSim-Env Official Downloads{% endblock %}
@@ -30,7 +30,7 @@
     {% for r in currentReleases %}
       <tr>
         <td data-toggle="tooltip" data-placement="bottom" title="service/Release: id={{r.id}}">
-          {% if r.platform == "linux64" or r.platform == "linux32" %}<i class="fa fa-linux"></i>{% else %}<i class="fa fa-windows"></i>{% endif %}
+          {% if r.platform == "linux64" or r.platform == "linux32" %}<i class="fa-brands fa-linux"></i>{% else %}<i class="fa-brands fa-windows"></i>{% endif %}
           &nbsp;{{ r.platform }}
         </td>
         <td>{{ r.versionMajor }}.{{ r.versionMinor }}</td>
@@ -53,12 +53,12 @@
 <p>The nightly build system of MBSim-Env generates each night a full build of MBSim using the current development state. Each offizial release is just a release of such an nightly build which is validated and done at a stable state. You can download the latest build here.
 <ul class="list-group list-group-flush">
   <li class="list-group-item">
-    <a href="{% url 'builds:current_buildtype' 'linux64-dailyrelease' %}distributionFile/">Latest Nightly Linux Build</a>
-    <small> (<a href="{% url 'builds:current_buildtype' 'linux64-dailyrelease' %}distributionDebugFile/">debug-info</a>)</small>
+    <a href="{% url 'builds:current_buildtype_branch' 'linux64-dailyrelease' 'master' 'master' 'master' 'master' %}distributionFile/">Latest Nightly Linux Build</a>
+    <small> (<a href="{% url 'builds:current_buildtype_branch' 'linux64-dailyrelease' 'master' 'master' 'master' 'master' %}distributionDebugFile/">debug-info</a>)</small>
   </li>
   <li class="list-group-item">
-    <a href="{% url 'builds:current_buildtype' 'win64-dailyrelease' %}distributionFile/">Latest Nightly Windows Build</a>
-    <small> (<a href="{% url 'builds:current_buildtype' 'win64-dailyrelease' %}distributionDebugFile/">debug-info</a>)</small>
+    <a href="{% url 'builds:current_buildtype_branch' 'win64-dailyrelease' 'master' 'master' 'master' 'master' %}distributionFile/">Latest Nightly Windows Build</a>
+    <small> (<a href="{% url 'builds:current_buildtype_branch' 'win64-dailyrelease' 'master' 'master' 'master' 'master' %}distributionDebugFile/">debug-info</a>)</small>
   </li>
 </ul>
 
@@ -81,7 +81,7 @@
     {% for r in olderReleases %}
       <tr>
         <td data-toggle="tooltip" data-placement="bottom" title="service/Release: id={{r.id}}">
-          {% if r.platform == "linux64" or r.platform == "linux32" %}<i class="fa fa-linux"></i>{% else %}<i class="fa fa-windows"></i>{% endif %}
+          {% if r.platform == "linux64" or r.platform == "linux32" %}<i class="fa-brands fa-linux"></i>{% else %}<i class="fa-brands fa-windows"></i>{% endif %}
           &nbsp;{{ r.platform }}
         </td>
         <td>{{ r.versionMajor }}.{{ r.versionMinor }}</td>

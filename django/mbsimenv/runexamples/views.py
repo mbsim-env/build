@@ -2,6 +2,7 @@ import django
 import django.shortcuts
 import runexamples
 import base.views
+import base.helper
 import functools
 import json
 import urllib
@@ -13,6 +14,9 @@ from octicons.templatetags.octicons import octicon
 # maps the current url to the proper run id url (without forwarding to keep the URL in the browser)
 def currentBuildtype(request, buildtype):
   run=runexamples.models.Run.objects.getCurrent(buildtype)
+  return Run.as_view()(request, id=run.id)
+def currentBuildtypeBranch(request, buildtype, fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch):
+  run=runexamples.models.Run.objects.getCurrent(buildtype, fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch)
   return Run.as_view()(request, id=run.id)
 
 # the examples page
@@ -31,7 +35,12 @@ class Run(base.views.Base):
     if "previous" in self.request.GET:
       return django.shortcuts.redirect('runexamples:run', self.run.getPrevious().id)
     if "current" in self.request.GET:
-      return django.shortcuts.redirect('runexamples:current_buildtype', self.run.buildType) # use the special current URL in browser
+      if self.run.build_run:
+        return django.shortcuts.redirect('runexamples:current_buildtype_branch', self.run.buildType,
+                 self.run.build_run.fmatvecBranch, self.run.build_run.hdf5serieBranch,
+                 self.run.build_run.openmbvBranch, self.run.build_run.mbsimBranch)
+      else:
+        return django.shortcuts.redirect('runexamples:current_buildtype', self.run.buildType)
     return super().dispatch(request, *args, **kwargs)
 
   def get_context_data(self, **kwargs):
@@ -42,10 +51,26 @@ class Run(base.views.Base):
     isCurrent=self.run.getCurrent().id==self.run.id
 
     context['run']=self.run
+    context['runBuildTypeIcon']=base.helper.buildTypeIcon(self.run.buildType)
     context['repoList']=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
     # the checkboxes for refernece update are enabled for the current runexample and when the logged in user has the rights to do so
     context["enableUpdate"]=isCurrent and self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout) and \
-                            self.run.buildType=="linux64-dailydebug"
+                            self.run.buildType=="linux64-dailydebug" and \
+                            self.run.build_run is not None and \
+                            self.run.build_run.fmatvecBranch=="master" and self.run.build_run.hdf5serieBranch=="master" and \
+                            self.run.build_run.openmbvBranch=="master" and self.run.build_run.mbsimBranch=="master"
+
+    if self.run.build_run is not None:
+      allBuildTypes=runexamples.models.Run.objects.filter(
+        build_run__fmatvecBranch=self.run.build_run.fmatvecBranch, build_run__hdf5serieBranch=self.run.build_run.hdf5serieBranch,
+        build_run__openmbvBranch=self.run.build_run.openmbvBranch, build_run__mbsimBranch=self.run.build_run.mbsimBranch).\
+        values("buildType").distinct()
+      context["allBuildTypes"]=list(allBuildTypes)
+      for bt in context["allBuildTypes"]:
+        bt["icon"]=base.helper.buildTypeIcon(bt["buildType"])
+    else:
+      context["allBuildTypes"]=None
+
     return context
 
 # handle ajax request to set example reference updates
@@ -113,7 +138,9 @@ class DataTableExample(base.views.DataTable):
                    exampleName__in=self.queryset().values_list('exampleName', flat=True)).count()>0
     vis["guiTest"]=query["guiTestHdf5serie"]+query["guiTestOpenmbv"]+query["guiTestMbsimgui"]>0
     vis["ref"]=query["ref"]>0
-    vis["webApp"]=query["webAppHdf5serie"]+query["webAppOpenmbv"]+query["webAppMbsimgui"]>0
+    vis["webApp"]=query["webAppHdf5serie"]+query["webAppOpenmbv"]+query["webAppMbsimgui"]>0 and \
+                  self.run.build_run is not None and self.run.build_run.distributionFile is not None and \
+                  self.run.build_run.distributionFile.name!="" and self.run.build_run.buildType.startswith("linux64")
     vis["dep"]=query["dep"]>0
     vis["xmlOut"]=query["xmlOut"]>0
     return vis
@@ -245,7 +272,10 @@ class DataTableExample(base.views.DataTable):
     checked='checked="checked"' if dsStatic is not None and dsStatic.update else ""
     refCheckbox='<span class="float-right">[<input type="checkbox" onClick="changeRefUpdate($(this), \'%s\', \'%s\');" %s/>]</span>'%\
                 (updateUrl, ds.exampleName, checked) \
-                if self.isCurrent and self.allowedUser and self.run.buildType=="linux64-dailydebug" else ""
+                if self.isCurrent and self.allowedUser and \
+                   self.run.buildType=="linux64-dailydebug" and \
+                   self.run.build_run.fmatvecBranch=="master" and self.run.build_run.hdf5serieBranch=="master" and \
+                   self.run.build_run.openmbvBranch=="master" and self.run.build_run.mbsimBranch=="master" else ""
     if ds.resultFiles.count()==0:
       ret='<span class="float-left"><span class="text-warning">%s</span>&nbsp;no reference</span>%s'%\
           (octicon("alert"), refCheckbox)
@@ -273,27 +303,33 @@ class DataTableExample(base.views.DataTable):
       return -2
 
   def colData_webApp(self, ds):
+    if self.run.build_run is None:
+      return ""
     ret=""
-    addLink=True if self.isCurrent and self.allowedUser else False
+    addLink=True if self.allowedUser else False
     enabled="" if addLink else 'disabled="disabled"'
     notLoggedInTooltipAttr=' data-toggle="tooltip" data-placement="bottom" title="You need to be logged in to start the web app!"' \
                            if not addLink else ""
 
-    url=django.urls.reverse('service:webapp', args=["openmbv", self.run.buildType, ds.exampleName])
+    def webappArgs(prog):
+      return {"buildRunID": self.run.build_run.id, "buildRunStartTime": self.run.build_run.startTime.strftime('%Y-%m-%dT%H:%M:%S%z'),
+              "mbsimBranch": self.run.build_run.mbsimUpdateCommitID,
+              "exampleName": ds.exampleName, "prog": prog}
+    url=django.urls.reverse('service:webapp')+"?"+urllib.parse.urlencode(webappArgs("openmbv"))
     vis="visible" if ds.webappOpenmbv else "hidden"
     img=django.templatetags.static.static("base/openmbv.svg")
     ret+=('<a href="%s">'%(url) if addLink else "") +\
          '<button %s type="button" class="btn btn-outline-primary btn-xs" style="visibility:%s;"%s>'\
          '<img src="%s" alt="ombv"/></button>'%(enabled, vis, notLoggedInTooltipAttr, img)+('</a>' if addLink else "")+'&nbsp;'
 
-    url=django.urls.reverse('service:webapp', args=["h5plotserie", self.run.buildType, ds.exampleName])
+    url=django.urls.reverse('service:webapp')+"?"+urllib.parse.urlencode(webappArgs("h5plotserie"))
     vis="visible" if ds.webappHdf5serie else "hidden"
     img=django.templatetags.static.static("base/h5plotserie.svg")
     ret+=('<a href="%s">'%(url) if addLink else "")+\
          '<button %s type="button" class="btn btn-outline-primary btn-xs" style="visibility:%s;"%s>'\
          '<img src="%s" alt="h5p"/></button>'%(enabled, vis, notLoggedInTooltipAttr, img)+('</a>' if addLink else "")+'&nbsp;'
 
-    url=django.urls.reverse('service:webapp', args=["mbsimgui", self.run.buildType, ds.exampleName])
+    url=django.urls.reverse('service:webapp')+"?"+urllib.parse.urlencode(webappArgs("mbsimgui"))
     vis="visible" if ds.webappMbsimgui else "hidden"
     img=django.templatetags.static.static("base/mbsimgui.svg")
     ret+=('<a href="%s">'%(url) if addLink else "")+\
@@ -432,7 +468,7 @@ class DataTableValgrindStack(base.views.DataTable):
 
   # return the queryset to display [required]
   def queryset(self):
-    return self.stacks
+    return self.stacks.select_related("whatAndStack")
 
   # return the field name in the dataset using for search/filter [required]
   def searchField(self):
@@ -448,6 +484,7 @@ class DataTableValgrindStack(base.views.DataTable):
     if text=="": text="-"
     repo=next(filter(lambda r: path.startswith("/mbsim-env/%s/"%(r)), ["fmatvec", "hdf5serie", "openmbv", "mbsim"]), None)
     if repo is not None:
+      django.db.close_old_connections() # needed since the next line may create a new DB query
       buildRun=ds.whatAndStack.valgrindError.valgrind.example.run.build_run
       if buildRun is None:
         return base.helper.tooltip(text, "runexamples/ValgrindWhatAndStack: id=%d"%(ds.id))
@@ -553,7 +590,8 @@ class CompareResult(base.views.Base):
 class DataTableCompareResult(base.views.DataTable):
   def setup(self, request, *args, **kwargs):
     super().setup(request, *args, **kwargs)
-    self.allResults=runexamples.models.CompareResult.objects.filter(compareResultFile__example__id=self.kwargs["id"])
+    self.allResults=runexamples.models.CompareResult.objects.\
+                      filter(compareResultFile__example__id=self.kwargs["id"]).select_related("compareResultFile")
 
   # return the queryset to display [required]
   def queryset(self):
@@ -676,11 +714,11 @@ def chartDifferencePlot(request, id):
   import numpy
 
   # get current result
-  compareResult=runexamples.models.CompareResult.objects.get(id=id)
+  compareResult=runexamples.models.CompareResult.objects.filter(id=id).select_related("compareResultFile").get()
   with compareResult.compareResultFile.h5File.open("rb") as djangoF:
     try:
       tempF=tempfile.NamedTemporaryFile(mode='wb', delete=False)
-      tempF.write(djangoF.read())
+      base.helper.copyFile(djangoF, tempF)
       tempF.close()
       h5F=h5py.File(tempF.name, "r")
       dataset=h5F[compareResult.dataset]
@@ -694,6 +732,7 @@ def chartDifferencePlot(request, id):
     return list(map(lambda x: [x[0],0] if math.isnan(x[1]) else x, np.tolist()))
   # get reference result
   try:
+    django.db.close_old_connections() # needed since the next line may create a new DB query
     exampleStatic=runexamples.models.ExampleStatic.objects.get(exampleName=compareResult.compareResultFile.example.exampleName)
     for r in exampleStatic.references.all():
       if r.h5FileName==compareResult.compareResultFile.h5FileName:
@@ -701,7 +740,7 @@ def chartDifferencePlot(request, id):
     with r.h5File.open("rb") as djangoF:
       try:
         tempF=tempfile.NamedTemporaryFile(mode='wb', delete=False)
-        tempF.write(djangoF.read())
+        base.helper.copyFile(djangoF, tempF)
         tempF.close()
         h5F=h5py.File(tempF.name, "r")
         dataset=h5F[compareResult.dataset]

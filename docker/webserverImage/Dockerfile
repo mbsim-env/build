@@ -1,12 +1,20 @@
 # get noVNC
 FROM centos:centos7 AS temp
 ARG NOVNCBRANCH=v0.6.2
-RUN yum --setopt=skip_missing_names_on_install=False -y install git && yum clean all
+RUN yum --setopt=skip_missing_names_on_install=False -y install \
+  git \
+  inkscape \
+  python3-pip \
+  && yum clean all
+RUN pip3 install django-octicons==1.0
 # install noVNC (the package from yum is to old)
 WORKDIR /tmp
 RUN git clone https://github.com/novnc/noVNC.git
 WORKDIR /tmp/noVNC
 RUN git checkout $NOVNCBRANCH
+# build png icons
+COPY docker/webserverImage/generatepng.py /tmp/generatepng.py
+RUN python3 /tmp/generatepng.py
 
 
 
@@ -26,8 +34,10 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   python36-pytz \
   python36-defusedxml \
   python3-psycopg2 \
+  python3-humanize \
+  sudo \
   && yum clean all
-RUN pip3 install django==3.1 django-allauth==0.43 django-octicons==1.0 h5py==2.9.0 cryptography==2.3
+RUN python3 -m pip install --upgrade pip && pip3 install django==3.2 django-allauth==0.48 django-octicons==1.0 h5py==2.9.0 paramiko==2.9
 
 # a webserver is running on port 80
 EXPOSE 80/tcp 443/tcp
@@ -71,6 +81,7 @@ COPY docker/webserverImage/conf/le-redirect-mbsim-env.conf /etc/httpd/conf.d/
 # static django files
 RUN mkdir /var/www/html/static
 RUN DJANGO_SETTINGS_MODULE=mbsimenv.settings_buildsystem python3 /context/mbsimenv/manage.py collectstatic --noinput
+COPY --from=temp /tmp/generatepng/*.png /var/www/html/static/octiconpng/
 
 # set crontab for
 # - cert updates (once a day at arbitary time)
@@ -78,7 +89,7 @@ RUN DJANGO_SETTINGS_MODULE=mbsimenv.settings_buildsystem python3 /context/mbsime
 RUN mkdir /var/www/html/certbot
 RUN echo -e 'SHELL=/bin/bash\n\
 1 0 * * * python3 -c "import time; import random; time.sleep(random.randint(0,24*60*60-100))"; \
-/usr/bin/certbot-2 renew --webroot -w /var/www/html/certbot --post-hook "httpd -k graceful" \
+sudo -u dockeruser /usr/bin/certbot-2 renew --work-dir /tmp/certbotwork --logs-dir /tmp/certbotlog --webroot -w /var/www/html/certbot --post-hook "httpd -k graceful" \
 2> >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/2) > >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/1)\n\
 39 7 * * * DJANGO_SETTINGS_MODULE=mbsimenv.settings_buildsystem python3 /context/mbsimenv/manage.py clearsessions' \
 | crontab /dev/stdin
@@ -97,9 +108,8 @@ LABEL org.label-schema.schema-version="1.0" \
 # - set permissions of volume mount dirs
 RUN test $(id -u apache) -eq 48 && test $(id -g apache) -eq 48 && \
   useradd --no-log-init -u 1065 dockeruser && \
-  mkdir /etc/letsencrypt /databasemedia /webserverstatic && \
-  chown apache:apache /etc/letsencrypt && \
-  chown dockeruser:apache /databasemedia && chmod ug+rwx /databasemedia
+  mkdir /etc/letsencrypt /var/www/html/certbot/.well-known /webserverstatic && \
+  chown dockeruser:dockeruser /etc/letsencrypt /var/www/html/certbot/.well-known
 
 HEALTHCHECK --interval=60s --timeout=30s --start-period=30s --retries=3 \
   CMD curl -f https://${MBSIMENVSERVERNAME} || exit 1

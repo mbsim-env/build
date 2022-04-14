@@ -1,0 +1,44 @@
+{% extends "base/base.html" %}
+
+{% load static %}
+{% load octicons %}
+
+{% block title %}Latest {{modelHuman|title}} Builds{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+{% endblock %}
+
+{% block body %}
+
+<script src="{% static 'service/scripts.js' %}"> </script>
+<script>
+  "use strict";
+  $(document).ready(function() {
+    initLatestBranchCombiBuilds("{% url 'service:datatable_latestbranchcombibuilds' model %}");
+  });
+</script>
+
+<h1>Latest {{modelHuman|title}} Builds</h1>
+
+<p>Cronologic list of the latest builds</p>
+
+<table id="latestBranchCombiBuilds" class="table table-striped table-hover table-bordered table-sm w-100">
+  <thead>
+    <tr>
+      <th>{% octicon "clock" %} Started</th>
+      <th><nobr><i class="fa-brands fa-linux"></i><i class="fa-brands fa-windows"></i> Build Type</nobr><br/>
+          <nobr>{% octicon "terminal" %} Executor</nobr></th>
+      <th><a href="https://github.com/mbsim-env/fmatvec"><span class="badge badge-success">{% octicon "repo" %}&nbsp;fmatvec</span></a></th>
+      <th><a href="https://github.com/mbsim-env/hdf5serie"><span class="badge badge-success">{% octicon "repo" %}&nbsp;hdf5serie</span></a></th>
+      <th><a href="https://github.com/mbsim-env/openmbv"><span class="badge badge-success">{% octicon "repo" %}&nbsp;openmbv</span></a></th>
+      <th><a href="https://github.com/mbsim-env/mbsim"><span class="badge badge-success">{% octicon "repo" %}&nbsp;mbsim</span></a></th>
+      <th><nobr>{% octicon "gear" %} Build</nobr><br/>
+          <nobr>{% octicon "beaker" %} Ex.</nobr></th>
+    </tr>
+  </thead>
+  <tbody>
+  </tbody>
+</table>
+
+{% endblock %}

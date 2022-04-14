@@ -65,7 +65,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
   done
   
   # run in mbsimenv/buildwin docker image
-  # -e PATH= is the PATH in the container appended by :/mbsim-env/local-dockerwin64/bin
+  # -e PATH= is the PATH in the container appended by :/mbsim-env/local-dockerwin64/bin and prefixed by .:
   # -e PKG_CONFIG_PATH= is the PKG_CONFIG_PATH in the container appended by :/mbsim-env/local-dockerwin64/lib/pkgconfig:/mbsim-env/local-dockerwin64/lib64/pkgconfig
   # -e WINEPATH= is the WINEPATH in the container appended by ;/mbsim-env/local-dockerwin64/bin
   exePrefix=""
@@ -79,7 +79,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
       -v "$MBSIMENVDIR/.home":/tmp/home \
       -e GIT_COMMITTER_NAME=dummy -e GIT_COMMITTER_EMAIL=dummy \
       -e HOME=/tmp/home \
-      -e PATH="/home/dockeruser/.local/bin:/home/dockeruser/bin:/usr/lib64/ccache:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/mbsim-env/local-dockerwin64/bin" \
+      -e PATH=".:/home/dockeruser/.local/bin:/home/dockeruser/bin:/usr/lib64/ccache:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/mbsim-env/local-dockerwin64/bin" \
       -e PKG_CONFIG_PATH="/3rdparty/local/lib/pkgconfig:/usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig:/mbsim-env/local-dockerwin64/lib/pkgconfig:/mbsim-env/local-dockerwin64/lib64/pkgconfig" \
       -e WINEPATH="/usr/x86_64-w64-mingw32/sys-root/mingw/bin;/3rdparty/local/bin;/3rdparty/local/lib;/3rdparty/local/python-win64;/3rdparty/local/python-win64/Lib/site-packages/numpy/core;/3rdparty/local/python-win64/Lib/site-packages/numpy/.libs;/mbsim-env/local-dockerwin64/bin" \
       -e MBSIM_SET_MINIMAL_TEND \
