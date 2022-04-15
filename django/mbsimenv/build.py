@@ -161,8 +161,9 @@ def setGithubStatus(run, state):
   try:
     gh=github.Github(mbsimenvSecrets.getSecrets("githubAccessToken"))
     for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
+      commit=gh.get_repo("mbsim-env/"+repo).get_commit(getattr(run, repo+"UpdateCommitID"))
+      django.db.close_old_connections()
       if os.environ["MBSIMENVTAGNAME"]=="latest":
-        commit=gh.get_repo("mbsim-env/"+repo).get_commit(getattr(run, repo+"UpdateCommitID"))
         commit.create_status(state, "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("builds:run", args=[run.id]),
           description, "builds/%s/%s/%s/%s/%s"%(run.buildType, run.fmatvecBranch, run.hdf5serieBranch, run.openmbvBranch, run.mbsimBranch))
       else:
