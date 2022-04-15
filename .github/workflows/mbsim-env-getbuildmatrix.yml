@@ -78,7 +78,7 @@ jobs:
             # print repo, branch and sha
             repo="${{fromJson(inputs.pushSource).repository}}".split("/")[1]
             branch="${{fromJson(inputs.pushSource).ref_name}}"
-            sha=${{fromJson(inputs.pushSource).sha}}
+            sha="${{fromJson(inputs.pushSource).sha}}"
             print("Got action for repo="+repo+" branch="+branch+" sha="+sha)
             # all branch combinations to build
             branches=list(filter(lambda x: x[repo+"Branch"]==branch, branchCombination))
