@@ -1,0 +1,292 @@
+name: Daily (Schedule)
+on:
+  schedule:
+    - cron: '36 23 * * *'
+concurrency: 
+  group: mbsim-env-daily
+  cancel-in-progress: true
+env:
+  # tagname and servername of remote mbsimenv server
+  MBSIMENVTAGNAME: staging
+  MBSIMENVSERVERNAME: wwwstaging.mbsim-env.de
+  # connect to this server:port for www, database and filestorage
+  MBSIMENVWWW: www.mbsim-env.de:10443
+  MBSIMENVDATABASE: www.mbsim-env.de:15432
+  MBSIMENVFILESTORAGE: www.mbsim-env.de:11122
+  # get secrets
+  mbsimenvsec_githubAccessToken: ${{secrets.githubAccessToken}}
+  mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
+  mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
+  mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
+  mbsimenvsec_codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+  mbsimenvsec_codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+  mbsimenvsec_codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+  mbsimenvsec_codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+jobs:
+
+
+
+  getBuildMatrix:
+    name: Get build matrix
+    uses: ./.github/workflows/mbsim-env-getbuildmatrix.yml
+    with:
+      dailyRun: true
+    secrets:
+      githubAccessToken: ${{secrets.githubAccessToken}}
+      djangoSecretKey: ${{secrets.djangoSecretKey}}
+      postgresPassword: ${{secrets.postgresPassword}}
+      filestoragePassword: ${{secrets.filestoragePassword}}
+      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+  buildMatrix:
+    name: B&e
+    uses: ./.github/workflows/mbsim-env-build.yml
+    needs: getBuildMatrix
+    with:
+      matrix: ${{needs.getBuildMatrix.outputs.matrix}}
+      uploadArtifactLocalLcov: false
+    secrets:
+      githubAccessToken: ${{secrets.githubAccessToken}}
+      djangoSecretKey: ${{secrets.djangoSecretKey}}
+      postgresPassword: ${{secrets.postgresPassword}}
+      filestoragePassword: ${{secrets.filestoragePassword}}
+      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+
+
+
+  buildPartitionedExamples:
+    name: B
+    uses: ./.github/workflows/mbsim-env-build.yml
+    with:
+      matrix: |
+        {"data":
+          [{
+            "branches": 
+              {"fmatvecBranch": "master", "hdf5serieBranch": "master", "openmbvBranch": "master", "mbsimBranch": "master"},
+            "os":
+              {"buildType": "linux64-dailydebug", "image": "mbsimenv/build",  "args": "--disableRunExamples"},
+          }]
+        }
+      uploadArtifactLocalLcov: true
+    secrets:
+      githubAccessToken: ${{secrets.githubAccessToken}}
+      djangoSecretKey: ${{secrets.djangoSecretKey}}
+      postgresPassword: ${{secrets.postgresPassword}}
+      filestoragePassword: ${{secrets.filestoragePassword}}
+      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+
+
+
+  examplesPre:
+    name: "E pre"
+    uses: ./.github/workflows/mbsim-env-runexamples.yml
+    needs: buildPartitionedExamples
+    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.buildInfo).skipped}}
+    with:
+      matrix: |
+        {"data": [
+          {"args": "--runExamplesPre"}
+        ]}
+      buildInfo: ${{needs.buildPartitionedExamples.outputs.buildInfo}}
+      runexamplesInfo: '{"runID": -1}'
+      downloadArtifactLocalLcov: false
+      uploadArtifactLcovdata: false
+      downloadArtifactLcovdata: false
+    secrets:
+      githubAccessToken: ${{secrets.githubAccessToken}}
+      djangoSecretKey: ${{secrets.djangoSecretKey}}
+      postgresPassword: ${{secrets.postgresPassword}}
+      filestoragePassword: ${{secrets.filestoragePassword}}
+      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+  examplesRun:
+    name: "E worker"
+    uses: ./.github/workflows/mbsim-env-runexamples.yml
+    needs: [buildPartitionedExamples, examplesPre]
+    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.buildInfo).skipped}}
+    with:
+      matrix: |
+        {"data": [
+          {"args": "--runExamplesPartition"},
+          {"args": "--runExamplesPartition"},
+          {"args": "--runExamplesPartition"},
+          {"args": "--runExamplesPartition"},
+          {"args": "--runExamplesPartition"},
+          {"args": "--runExamplesPartition"},
+          {"args": "--runExamplesPartition"},
+          {"args": "--runExamplesPartition"},
+          {"args": "--runExamplesPartition"},
+          {"args": "--runExamplesPartition"},
+          {"args": "--runExamplesPartition"},
+          {"args": "--runExamplesPartition"},
+          {"args": "--runExamplesPartition"},
+          {"args": "--runExamplesPartition"}
+        ]}
+      buildInfo: ${{needs.buildPartitionedExamples.outputs.buildInfo}}
+      runexamplesInfo: ${{needs.examplesPre.outputs.runexamplesInfo}}
+      downloadArtifactLocalLcov: true
+      uploadArtifactLcovdata: true
+      downloadArtifactLcovdata: false
+    secrets:
+      githubAccessToken: ${{secrets.githubAccessToken}}
+      djangoSecretKey: ${{secrets.djangoSecretKey}}
+      postgresPassword: ${{secrets.postgresPassword}}
+      filestoragePassword: ${{secrets.filestoragePassword}}
+      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+  examplesPost:
+    name: "E post"
+    uses: ./.github/workflows/mbsim-env-runexamples.yml
+    needs: [buildPartitionedExamples, examplesRun, examplesPre]
+    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.buildInfo).skipped}}
+    with:
+      matrix: |
+        {"data": [
+          {"args": "--runExamplesPost"}
+        ]}
+      buildInfo: ${{needs.buildPartitionedExamples.outputs.buildInfo}}
+      runexamplesInfo: ${{needs.examplesPre.outputs.runexamplesInfo}}
+      downloadArtifactLocalLcov: true
+      uploadArtifactLcovdata: false
+      downloadArtifactLcovdata: true
+    secrets:
+      githubAccessToken: ${{secrets.githubAccessToken}}
+      djangoSecretKey: ${{secrets.djangoSecretKey}}
+      postgresPassword: ${{secrets.postgresPassword}}
+      filestoragePassword: ${{secrets.filestoragePassword}}
+      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+
+
+
+  examplesPreValgrind:
+    name: "E valgrind pre"
+    uses: ./.github/workflows/mbsim-env-runexamples.yml
+    needs: [buildPartitionedExamples, examplesRun] # needs only buildPartitionedExamples;
+             # exampleRun is just added to priorize the normal runs over the valgrind run;
+             # moreover the dynamic scheduling does not work for parallel --runExamplesPartition jobs;
+             # (examplesPreValgrind is not stared before to ensure correct startTime recording in the MBSim-Env database)
+    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.buildInfo).skipped}}
+    with:
+      matrix: |
+        {"data": [
+          {"args": "--runExamplesPre --valgrindExamples"}
+        ]}
+      buildInfo: ${{needs.buildPartitionedExamples.outputs.buildInfo}}
+      runexamplesInfo: '{"runID": -1}'
+      downloadArtifactLocalLcov: false
+      uploadArtifactLcovdata: false
+      downloadArtifactLcovdata: false
+    secrets:
+      githubAccessToken: ${{secrets.githubAccessToken}}
+      djangoSecretKey: ${{secrets.djangoSecretKey}}
+      postgresPassword: ${{secrets.postgresPassword}}
+      filestoragePassword: ${{secrets.filestoragePassword}}
+      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+  examplesRunValgrind:
+    name: "E valgrind worker"
+    uses: ./.github/workflows/mbsim-env-runexamples.yml
+    needs: [buildPartitionedExamples, examplesPreValgrind]
+    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.buildInfo).skipped}}
+    with:
+      matrix: |
+        {"data": [
+          {"args": "--runExamplesPartition --valgrindExamples"},
+          {"args": "--runExamplesPartition --valgrindExamples"},
+          {"args": "--runExamplesPartition --valgrindExamples"},
+          {"args": "--runExamplesPartition --valgrindExamples"},
+          {"args": "--runExamplesPartition --valgrindExamples"},
+          {"args": "--runExamplesPartition --valgrindExamples"},
+          {"args": "--runExamplesPartition --valgrindExamples"},
+          {"args": "--runExamplesPartition --valgrindExamples"},
+          {"args": "--runExamplesPartition --valgrindExamples"},
+          {"args": "--runExamplesPartition --valgrindExamples"},
+          {"args": "--runExamplesPartition --valgrindExamples"},
+          {"args": "--runExamplesPartition --valgrindExamples"},
+          {"args": "--runExamplesPartition --valgrindExamples"},
+          {"args": "--runExamplesPartition --valgrindExamples"}
+        ]}
+      buildInfo: ${{needs.buildPartitionedExamples.outputs.buildInfo}}
+      runexamplesInfo: ${{needs.examplesPreValgrind.outputs.runexamplesInfo}}
+      downloadArtifactLocalLcov: true
+      uploadArtifactLcovdata: true
+      downloadArtifactLcovdata: false
+    secrets:
+      githubAccessToken: ${{secrets.githubAccessToken}}
+      djangoSecretKey: ${{secrets.djangoSecretKey}}
+      postgresPassword: ${{secrets.postgresPassword}}
+      filestoragePassword: ${{secrets.filestoragePassword}}
+      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+  examplesPostValgrind:
+    name: "E valgrind post"
+    uses: ./.github/workflows/mbsim-env-runexamples.yml
+    needs: [buildPartitionedExamples, examplesRunValgrind, examplesPreValgrind]
+    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.buildInfo).skipped}}
+    with:
+      matrix: |
+        {"data": [
+          {"args": "--runExamplesPost --valgrindExamples"}
+        ]}
+      buildInfo: ${{needs.buildPartitionedExamples.outputs.buildInfo}}
+      runexamplesInfo: ${{needs.examplesPreValgrind.outputs.runexamplesInfo}}
+      downloadArtifactLocalLcov: true
+      uploadArtifactLcovdata: false
+      downloadArtifactLcovdata: true
+    secrets:
+      githubAccessToken: ${{secrets.githubAccessToken}}
+      djangoSecretKey: ${{secrets.djangoSecretKey}}
+      postgresPassword: ${{secrets.postgresPassword}}
+      filestoragePassword: ${{secrets.filestoragePassword}}
+      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+
+
+
+  buildDoc:
+    name: "Build manuals"
+    runs-on: ubuntu-latest
+    needs: buildPartitionedExamples
+    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.buildInfo).skipped}}
+    steps:
+      - name: "Docker: pull image"
+        run: docker image pull mbsimenv/builddoc:${{env.MBSIMENVTAGNAME}}
+      - name: "Docker: run container"
+        run: >
+          docker run
+          --init
+          --env MBSIMENVDATABASE
+          --env MBSIMENVFILESTORAGE
+          --env MBSIMENVSERVERNAME
+          --env MBSIMENVTAGNAME
+          --env mbsimenvsec_githubAccessToken
+          --env mbsimenvsec_djangoSecretKey
+          --env mbsimenvsec_postgresPassword
+          --env mbsimenvsec_filestoragePassword
+          --env mbsimenvsec_codecovUploadToken_fmatvec
+          --env mbsimenvsec_codecovUploadToken_hdf5serie
+          --env mbsimenvsec_codecovUploadToken_openmbv
+          --env mbsimenvsec_codecovUploadToken_mbsim
+          mbsimenv/builddoc:${{env.MBSIMENVTAGNAME}}
+          --mbsimBranch ${{fromJson(needs.buildPartitionedExamples.outputs.buildInfo).repo.mbsim}}

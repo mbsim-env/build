@@ -1,0 +1,86 @@
+name: Branch Combi Added (Repo-Dispatch)
+on:
+  repository_dispatch:
+    types: [branchCombiAdded]
+env:
+  # tagname and servername of remote mbsimenv server
+  MBSIMENVTAGNAME: staging
+  MBSIMENVSERVERNAME: wwwstaging.mbsim-env.de
+  # connect to this server:port for www, database and filestorage
+  MBSIMENVWWW: www.mbsim-env.de:10443
+  MBSIMENVDATABASE: www.mbsim-env.de:15432
+  MBSIMENVFILESTORAGE: www.mbsim-env.de:11122
+  # get secrets
+  mbsimenvsec_githubAccessToken: ${{secrets.githubAccessToken}}
+  mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
+  mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
+  mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
+  mbsimenvsec_codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+  mbsimenvsec_codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+  mbsimenvsec_codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+  mbsimenvsec_codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+jobs:
+
+
+
+  buildNewCIBranchCombi:
+    name: B&e
+    uses: ./.github/workflows/mbsim-env-build.yml
+    if: ${{github.event.client_payload.model=='CIBranches'}}
+    with:
+      matrix: |
+        {"data":
+          [{
+            "branches": ${{toJson(github.event.client_payload.branches)}},
+            "os":
+              {"buildType": "linux64-ci", "image": "mbsimenv/build", "args": ""}
+          }, {
+            "branches": ${{toJson(github.event.client_payload.branches)}},
+            "os":
+              {"buildType": "win64-ci", "image": "mbsimenv/buildwin64", "args": ""}
+          }]
+        }
+      uploadArtifactLocalLcov: false
+    secrets:
+      githubAccessToken: ${{secrets.githubAccessToken}}
+      djangoSecretKey: ${{secrets.djangoSecretKey}}
+      postgresPassword: ${{secrets.postgresPassword}}
+      filestoragePassword: ${{secrets.filestoragePassword}}
+      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+
+
+
+#  buildNewDailyBranchCombi:
+#    name: B&e
+#    uses: ./.github/workflows/mbsim-env-build.yml
+#    if: ${{github.event.client_payload.model=='DailyBranches'}}
+#    with:
+#      matrix: |
+#        {"data":
+#          [{
+#            "branches": ${{toJson(github.event.client_payload.branches)}},
+#            "os":
+#              {"buildType": "linux64-dailydebug", "image": "mbsimenv/build", "args": ""}
+#          }, {
+#            "branches": ${{toJson(github.event.client_payload.branches)}},
+#            "os":
+#              {"buildType": "linux64-dailyrelease", "image": "mbsimenv/build", "args": ""}
+#          }, {
+#            "branches": ${{toJson(github.event.client_payload.branches)}},
+#            "os":
+#              {"buildType": "win64-dailyrelease", "image": "mbsimenv/buildwin64", "args": ""}
+#          }]
+#        }
+#      uploadArtifactLocalLcov: false
+#    secrets:
+#      githubAccessToken: ${{secrets.githubAccessToken}}
+#      djangoSecretKey: ${{secrets.djangoSecretKey}}
+#      postgresPassword: ${{secrets.postgresPassword}}
+#      filestoragePassword: ${{secrets.filestoragePassword}}
+#      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+#      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+#      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+#      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}

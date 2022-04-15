@@ -1,0 +1,56 @@
+name: CI (Repo-Dispatch)
+on:
+  repository_dispatch:
+    types: [ci]
+env:
+  # tagname and servername of remote mbsimenv server
+  MBSIMENVTAGNAME: staging
+  MBSIMENVSERVERNAME: wwwstaging.mbsim-env.de
+  # connect to this server:port for www, database and filestorage
+  MBSIMENVWWW: www.mbsim-env.de:10443
+  MBSIMENVDATABASE: www.mbsim-env.de:15432
+  MBSIMENVFILESTORAGE: www.mbsim-env.de:11122
+  # get secrets
+  mbsimenvsec_githubAccessToken: ${{secrets.githubAccessToken}}
+  mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
+  mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
+  mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
+  mbsimenvsec_codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+  mbsimenvsec_codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+  mbsimenvsec_codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+  mbsimenvsec_codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+jobs:
+
+
+
+  getBuildMatrix:
+    name: Get build matrix
+    uses: ./.github/workflows/mbsim-env-getbuildmatrix.yml
+    with:
+      dailyRun: false
+      pushSource: ${{toJson(github.event.client_payload)}}
+    secrets:
+      githubAccessToken: ${{secrets.githubAccessToken}}
+      djangoSecretKey: ${{secrets.djangoSecretKey}}
+      postgresPassword: ${{secrets.postgresPassword}}
+      filestoragePassword: ${{secrets.filestoragePassword}}
+      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+  buildMatrix:
+    name: B&e
+    uses: ./.github/workflows/mbsim-env-build.yml
+    needs: getBuildMatrix
+    with:
+      matrix: ${{needs.getBuildMatrix.outputs.matrix}}
+      uploadArtifactLocalLcov: false
+    secrets:
+      githubAccessToken: ${{secrets.githubAccessToken}}
+      djangoSecretKey: ${{secrets.djangoSecretKey}}
+      postgresPassword: ${{secrets.postgresPassword}}
+      filestoragePassword: ${{secrets.filestoragePassword}}
+      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
+      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
+      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
+      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
