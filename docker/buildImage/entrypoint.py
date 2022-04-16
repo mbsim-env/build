@@ -106,7 +106,7 @@ else:
 if build:
   # args
   if args.buildType == "linux64-ci":
-    ARGS=["--forceBuild", "--disableDoxygen", "--disableXMLDoc"]
+    ARGS=["--disableDoxygen", "--disableXMLDoc"]
     RUNEXAMPLESARGS=["--disableCompare", "--disableMakeClean"]
     RUNEXAMPLESFILTER=["--filter", "'basic' in labels"]
   

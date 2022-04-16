@@ -11,6 +11,7 @@ import json
 import glob
 import requests
 import datetime
+import shutil
 import concurrent.futures
 
 argparser=argparse.ArgumentParser(
@@ -70,8 +71,9 @@ def installDistribution():
     with open(filename, "r") as f:
       webappruninfo=json.load(f)
     distDate=datetime.datetime.strptime(webappruninfo["buildRunStartTime"], '%Y-%m-%dT%H:%M:%S%z')
-    installDate=datetime.datetime.strptime(webappruninfo["installDate"], '%Y-%m-%dT%H:%M:%S')
-    if installDate+datetime.timedelta(days=1)<datetime.datetime.now() and distDate+datetime.timedelta(days=5)<datetime.datetime.now():
+    installDate=datetime.datetime.strptime(webappruninfo["installDate"], '%Y-%m-%dT%H:%M:%S%z')
+    now=datetime.datetime.now(tz=datetime.timezone.utc)
+    if installDate+datetime.timedelta(days=2)<now and distDate+datetime.timedelta(days=6)<now:
       shutil.rmtree(os.path.dirname(filename))
   # check if current distribution exist
   if os.path.isdir("/mbsim-env/distribution/"+data["buildRunID"]):
@@ -79,7 +81,8 @@ def installDistribution():
   # install distribution
   os.makedirs("/mbsim-env/distribution/"+data["buildRunID"], exist_ok=True)
   with open("/mbsim-env/distribution/"+data["buildRunID"]+"/.webappruninfo.json", "w") as f:
-    json.dump({"buildRunStartTime": data["buildRunStartTime"], "installDate": datetime.datetime.now().strftime('%Y-%m-%dT%H:%M:%S')}, f)
+    now=datetime.datetime.now(tz=datetime.timezone.utc)
+    json.dump({"buildRunStartTime": data["buildRunStartTime"], "installDate": now.strftime('%Y-%m-%dT%H:%M:%S%z')}, f)
   url="https://webserver/builds/run/{ID}/distributionFile/".format(ID=data["buildRunID"])
   # we connect to webserver instead of MBSIMENVSERVERNAME to avoid IPv6 problems.
   # this requires to skip cert verification since the hostname is different.

@@ -121,9 +121,9 @@ class DataTable(django.views.View):
     # return the visibility state of the columns if the http query contains "columnsVisible"
     if "columnsVisible" in request.GET:
       if hasattr(self, "columnsVisibility"):
-        return django.http.JsonResponse({"columnsVisibility": self.columnsVisibility()})
+        return django.http.JsonResponse({"columnsVisibility": self.columnsVisibility()}, json_dumps_params={"indent": 2})
       else:
-        return django.http.JsonResponse({"columnsVisibility": None})
+        return django.http.JsonResponse({"columnsVisibility": None}, json_dumps_params={"indent": 2})
 
     # else return the table data
     try:
@@ -182,7 +182,7 @@ class DataTable(django.views.View):
         data.append(dtds)
       res["data"]=data
       # return the json response
-      return django.http.JsonResponse(res)
+      return django.http.JsonResponse(res, json_dumps_params={"indent": 2})
     except:
       # error handling
       import traceback
@@ -203,4 +203,4 @@ class DataTable(django.views.View):
         else:
           dtds[col["data"]]=""
       res["data"]=[dtds]
-      return django.http.JsonResponse(res)
+      return django.http.JsonResponse(res, json_dumps_params={"indent": 2})

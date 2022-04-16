@@ -80,7 +80,7 @@ elif args.buildType == "win64-ci":
   os.environ['CXXFLAGS']=os.environ.get('CXXFLAGS', '')+" -O0 -g -gdwarf-2"
   os.environ['CFLAGS']=os.environ.get('CFLAGS', '')+" -O0 -g -gdwarf-2"
   os.environ['FFLAGS']=os.environ.get('FFLAGS', '')+" -O0 -g -gdwarf-2"
-  ARGS=["--forceBuild", "--disableDoxygen", "--disableXMLDoc"]
+  ARGS=["--disableDoxygen", "--disableXMLDoc"]
   RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--disableMakeClean", "--exeExt", ".exe", "--filter", "'basic' in labels"]
 
   # get current/last image ID

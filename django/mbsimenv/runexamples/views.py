@@ -780,4 +780,4 @@ def allExampleStatic(request):
       "refTime": ex.refTime.total_seconds() if ex.refTime is not None else None,
       "references": references,
     }
-  return django.http.JsonResponse(allEx)
+  return django.http.JsonResponse(allEx, json_dumps_params={"indent": 2})

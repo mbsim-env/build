@@ -174,7 +174,7 @@ def repoBranches(request):
     exe=concurrent.futures.ThreadPoolExecutor(max_workers=len(repoList))
     res=dict(exe.map(getBranchesWorker, repoList))
     res["enable"]=True
-  return django.http.JsonResponse(res)
+  return django.http.JsonResponse(res, json_dumps_params={"indent": 2})
 
 # return all current branch combinations as json
 def getBranchCombination(request, model):
@@ -185,7 +185,7 @@ def getBranchCombination(request, model):
                 "hdf5serieBranch": b.hdf5serieBranch,
                 "openmbvBranch": b.openmbvBranch,
                 "mbsimBranch": b.mbsimBranch})
-  return django.http.JsonResponse({"data": res})
+  return django.http.JsonResponse({"data": res}, json_dumps_params={"indent": 2})
 
 # response to ajax request to add a new branch combination
 def addBranchCombination(request, model):
@@ -458,7 +458,7 @@ def webhook(request):
         res["skipNoneStagingBranch"]=res["commitID"]
     else:
       return django.http.HttpResponseBadRequest("Unknown repo.")
-    return django.http.JsonResponse(res)
+    return django.http.JsonResponse(res, json_dumps_params={"indent": 2})
   else:
     return django.http.HttpResponseBadRequest("Unhandled webhook event.")
 

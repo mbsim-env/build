@@ -24,16 +24,16 @@ django.setup()
 
 def dailyBuild(fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch):
   # linux64-dailydebug
-  contldd=setup.run("build-linux64-dailydebug", 6, printLog=False, detach=True, addCommands=["--forceBuild"],
+  contldd=setup.run("build-linux64-dailydebug", 6, printLog=False, detach=True, addCommands=[],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
   
   # win64-dailyrelease
-  contwdr=setup.run("build-win64-dailyrelease", 3, printLog=False, detach=True, addCommands=["--forceBuild"],
+  contwdr=setup.run("build-win64-dailyrelease", 3, printLog=False, detach=True, addCommands=[],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
   retwdr=setup.waitContainer(contwdr)
   
   # linux64-dailyrelease
-  contldr=setup.run("build-linux64-dailyrelease", 3, printLog=False, detach=True, addCommands=["--forceBuild"],
+  contldr=setup.run("build-linux64-dailyrelease", 3, printLog=False, detach=True, addCommands=[],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
   retldr=setup.waitContainer(contldr)
   
@@ -49,7 +49,7 @@ if service.models.DailyBranches.objects.filter(fmatvecBranch="master", hdf5serie
   ret=ret+dailyBuild("master", "master", "master", "master")
   
 # build doc
-contd=setup.run("builddoc", 2, printLog=False, detach=True, addCommands=["--forceBuild"])
+contd=setup.run("builddoc", 2, printLog=False, detach=True, addCommands=[])
 ret=ret+abs(setup.waitContainer(contd))
 
 # now build all others
