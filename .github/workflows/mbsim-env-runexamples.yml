@@ -2,13 +2,15 @@ name: Runexamples
 on:
   workflow_call:
     inputs:
-      matrix:
+      matrix: # JSON string: {"data":
+              #  [{"os": {"buildType": ?, "image": ?, "args": ?},
+              #    "branches": {"fmatvecBranch": ?, "hdf5serieBranch": ?, "openmbvBranch": ?, "mbsimBranch": ?, }, }, ...]}
         required: true
         type: string
-      buildInfo:
+      buildInfo: # JSON string: {"repo": {"fmatvec": ?, "hdf5serie": ?, "openmbv": ?, "mbsim": ?, }, "buildRunID": ?}
         required: true
         type: string
-      runexamplesInfo:
+      runexamplesInfo: # JSON string: {"runID": ?}
         required: true
         type: string
       downloadArtifactLocalLcov:

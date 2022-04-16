@@ -2,7 +2,9 @@ name: Build
 on:
   workflow_call:
     inputs:
-      matrix:
+      matrix: # JSON string: {"data":
+              #  [{"os": {"buildType": ?, "image": ?, "args": ?},
+              #    "branches": {"fmatvecBranch": ?, "hdf5serieBranch": ?, "openmbvBranch": ?, "mbsimBranch": ?, }, }, ...]}
         required: true
         type: string
       uploadArtifactLocalLcov:
@@ -63,6 +65,7 @@ jobs:
                     hdf5serieBranch = ${{matrix.data.branches.hdf5serieBranch}}
                     openmbvBranch   = ${{matrix.data.branches.openmbvBranch}}
                     mbsimBranch     = ${{matrix.data.branches.mbsimBranch}}
+                    args            = ${{matrix.data.os.args}}
                     Triggered by repo = ${{github.repository}}
                                  branch = ${{github.ref_name}}
                                  sha = ${{github.sha}}
