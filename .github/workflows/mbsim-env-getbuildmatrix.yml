@@ -5,8 +5,8 @@ on:
       dailyRun:
         required: true
         type: boolean
-      pushSource:
-        required: false # only required for dailyRun==False
+      pushSource: # JSON string: {"repository": ?, "ref_name": ?, sha: ?}
+        required: true # only required for dailyRun==False, but fromJson is evaluated in all cases and needs to be valid
         type: string
     outputs:
       matrix:

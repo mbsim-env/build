@@ -31,6 +31,7 @@ jobs:
     uses: ./.github/workflows/mbsim-env-getbuildmatrix.yml
     with:
       dailyRun: true
+      pushSource: '{"repository": "dummy", "ref_name": "dummy", "sha": "dummy"}'
     secrets:
       githubAccessToken: ${{secrets.githubAccessToken}}
       djangoSecretKey: ${{secrets.djangoSecretKey}}
