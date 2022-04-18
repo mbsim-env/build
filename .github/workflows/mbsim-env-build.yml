@@ -178,7 +178,6 @@ jobs:
           except:
             print("No buildInfo file found")
             print("::set-output name=buildInfo::{}")
-#mfmf compress all artifact uploads
       - name: "Artifact: tar/compress prefix and coverage-files"
         if: inputs.uploadArtifactLocalLcov && !fromJson(steps.buildDetails.outputs.buildInfo).skipped && !fromJson(steps.whatToDo.outputs.data).skip
         run: >
