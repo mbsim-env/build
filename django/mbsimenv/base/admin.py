@@ -26,9 +26,12 @@ class MBSimEnvModelAdmin(django.contrib.admin.ModelAdmin):
   def __init__(self, model, admin_site, *args, **kwargs):
     # mark all ForeignKey fields as raw_id_fields
     self.raw_id_fields=[]
+    self.readonly_fields=[]
     for f in model._meta.get_fields():
       if isinstance(f, django.db.models.ForeignKey):
         self.raw_id_fields.append(f.name)
+      if isinstance(f, django.db.models.UUIDField):
+        self.readonly_fields.append(f.name)
     super().__init__(model, admin_site, *args, **kwargs)
   def get_inlines(self, request, obj):
     # mark all related ManyToOneRel fields (reverse ForeignKey's) as inlines

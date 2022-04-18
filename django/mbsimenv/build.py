@@ -151,7 +151,7 @@ def setGithubStatus(run, state):
 
   import github
   if state=="pending":
-    description="Build started at %s"%(run.startTime.isoformat()+"Z")
+    description="Build started at %s"%(run.startTime.isoformat())
   elif state=="failure":
     description="Build failed after %.1f min"%((run.endTime-run.startTime).total_seconds()/60)
   elif state=="success":

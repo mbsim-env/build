@@ -5,6 +5,7 @@ import glob
 import datetime
 import io
 import django
+import django.utils.timezone
 import base.helper
 import service
 import argparse
@@ -53,7 +54,7 @@ for texMain in glob.glob("*/main.tex"):
   os.chdir(idName)
 
   f=io.StringIO()
-  print("Logfile of the build process of manual "+os.path.dirname(texMain)+". Generated on "+datetime.datetime.utcnow().isoformat()+"Z", file=f)
+  print("Logfile of the build process of manual "+os.path.dirname(texMain)+". Generated on "+django.utils.timezone.now().isoformat(), file=f)
   print("", file=f)
 
   ret=buildLatex(f)

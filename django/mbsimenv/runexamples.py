@@ -438,7 +438,7 @@ def setGithubStatus(run, state):
 
   import github
   if state=="pending":
-    description="Runexamples started at %s"%(run.startTime.isoformat()+"Z")
+    description="Runexamples started at %s"%(run.startTime.isoformat())
   elif state=="failure":
     description="Runexamples failed after %.1f min"%((run.endTime-run.startTime).total_seconds()/60)
   elif state=="success":
@@ -824,9 +824,9 @@ def valgrindOutputAndAdaptRet(programType, ex):
       os.remove(xmlFile)
     # now save all new datasets at once
     django.db.close_old_connections() # needes since django.db.models.signals.pre_save.connect(...) is not called by bulk_create
-    base.helper.bulk_create(runexamples.models.Valgrind.objects, vgs) # bulk_create fix for none postgres DB
-    base.helper.bulk_create(runexamples.models.ValgrindError.objects, ers) # bulk_create fix for none postgres DB
-    base.helper.bulk_create(runexamples.models.ValgrindWhatAndStack.objects, wss) # bulk_create fix for none postgres DB
+    runexamples.models.Valgrind.objects.bulk_create(vgs)
+    runexamples.models.ValgrindError.objects.bulk_create(ers)
+    runexamples.models.ValgrindWhatAndStack.objects.bulk_create(wss)
     runexamples.models.ValgrindFrame.objects.bulk_create(frs)
   return ret
 
@@ -1238,6 +1238,7 @@ def compareExample(ex):
   for curFile in curFiles:
     if not any(map(lambda x: x.h5FileName==curFile, refFiles)):
       cmpResFile=runexamples.models.CompareResultFile()
+      cmpResFiles.append(cmpResFile) # -> append to bulk_create later on
       cmpResFile.example=ex
       cmpResFile.h5Filename=curFile
       # save file
@@ -1254,7 +1255,12 @@ def compareExample(ex):
       cmpRes.result=runexamples.models.CompareResult.Result.FILENOTINREF
       nrFailed[0]+=1
   django.db.close_old_connections() # needes since django.db.models.signals.pre_save.connect(...) is not called by bulk_create
-  base.helper.bulk_create(runexamples.models.CompareResultFile.objects, cmpResFiles, ignore_conflicts=True) # bulk_create fix for none postgres DB
+
+  # bugfix for django>=3.2 (ignore_conflicts is not working propably)
+  cmpResFiles=filter(lambda x: x.id is None, cmpResFiles)
+  runexamples.models.CompareResultFile.objects.bulk_create(cmpResFiles)
+  #runexamples.models.CompareResultFile.objects.bulk_create(cmpResFiles, ignore_conflicts=True)
+
   runexamples.models.CompareResult.objects.bulk_create(cmpRess)
   ex.resultsFailed=0
   for rf in ex.resultFiles.all():
@@ -1510,11 +1516,11 @@ def coverage(exRun, lcovResultFile=None):
           print("Upload to codecov v4 try %d/%d"%(nrTry, tries), file=lcovFD)
           codecovError=False
           try:
-            response=requests.post("https://codecov.io/upload/v4?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
-              (commitID, mbsimenvSecrets.getSecrets("codecovUploadToken", repo), exRun.build_run.id, exRun.id,
+            response=requests.post("https://codecov.io/upload/v4?commit=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
+              (commitID, exRun.build_run.id, exRun.id,
                urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
                "valgrind" if "valgrind" in args.buildType else "normal"),
-              headers={"Accept": "text/plain"})
+              headers={"Accept": "text/plain", "Authorization": mbsimenvSecrets.getSecrets("codecovUploadToken", repo)})
           except:
             codecovError=True
           if not codecovError and response.status_code==200:

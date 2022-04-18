@@ -377,13 +377,5 @@ def buildTypeIcon(buildType):
     ret+='<i class="fa-brands fa-docker"></i>'
   return ret
 
-def bulk_create(objects, objs, ignore_conflicts=False):
-  if django.conf.settings.DATABASES["default"]["ENGINE"]=='django.db.backends.sqlite3':
-    # for sqlite bulk_create with related objects does not work -> use save on each object as a workaround
-    for o in objs:
-      o.save()
-  else:
-    objects.bulk_create(objs, ignore_conflicts=ignore_conflicts)
-
 # add this to the Field's help_text option to show this field in MBSimEnvModelAdmin inlines (as read only)
 inlineAdmin='<span class="inlineadmin"/>'
