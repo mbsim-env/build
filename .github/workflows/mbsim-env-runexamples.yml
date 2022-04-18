@@ -70,25 +70,25 @@ jobs:
       matrix: ${{fromJson(inputs.matrix)}}
     steps:
       - name: "Artifact: download prefix and coverage-files"
-        if: inputs.downloadArtifactLocalLcov
+        if: ${{inputs.downloadArtifactLocalLcov}}
         uses: actions/download-artifact@v3
         with:
           name: mbsim-env-local-cov
           path: ${{github.workspace}}
       - name: "Artifact: untar/uncompress prefix and coverage-files"
-        if: inputs.downloadArtifactLocalLcov
+        if: ${{inputs.downloadArtifactLocalLcov}}
         run: >
           mkdir -m 777 -p ${{github.workspace}}/mbsim-env/ &&
           tar -xzf ${{github.workspace}}/local-cov.tar.gz -C ${{github.workspace}}/mbsim-env/ &&
           chmod -R 777 ${{github.workspace}}/mbsim-env # the docker user id is different than the current user id
       - name: "Artifact: download lcov-files"
-        if: inputs.downloadArtifactLcovdata
+        if: ${{inputs.downloadArtifactLcovdata}}
         uses: actions/download-artifact@v3
         with:
           name: mbsim-env-covdata
           path: ${{github.workspace}}/mbsim-env/local
       - name: "Artifact: uncompress lcov-files"
-        if: inputs.downloadArtifactLcovdata
+        if: ${{inputs.downloadArtifactLcovdata}}
         run: gunzip ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*.gz
       - name: "Docker: pull image"
         run: >
@@ -140,10 +140,10 @@ jobs:
             print("No runexamplesInfo file found")
             print("::set-output name=runexamplesInfo::{}")
       - name: "Artifact: compress lcov-files"
-        if: inputs.uploadArtifactLcovdata
+        if: ${{inputs.uploadArtifactLcovdata}}
         run: gzip ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*
       - name: "Artifact: upload lcov-files"
-        if: inputs.uploadArtifactLcovdata
+        if: ${{inputs.uploadArtifactLcovdata}}
         uses: actions/upload-artifact@v3
         with:
           name: mbsim-env-covdata

@@ -106,19 +106,19 @@ jobs:
           print("The following build is done:\n"+json.dumps(data, indent=2))
           print("::set-output name=data::"+json.dumps(data))
       - name: "Docker: pull image"
-        if: !fromJson(steps.whatToDo.outputs.data).skip
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         run: >
           docker image pull ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}} &&
           mkdir -m 777 -p ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
       - name: "Create build matrix UUID"
-        if: !fromJson(steps.whatToDo.outputs.data).skip
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         shell: python
         id: matrixUUID
         run: |
           import uuid
           print("::set-output name=matrixUUID::"+str(uuid.uuid4()))
       - name: "Cache: ccache"
-        if: !fromJson(steps.whatToDo.outputs.data).skip
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         uses: actions/cache@v2
         with:
           path: ${{github.workspace}}/mbsim-ccache
@@ -126,10 +126,10 @@ jobs:
           restore-keys: |
             ccache-${{matrix.data.os.buildType}}--
       - name: "Cache: fix ccache file permissions"
-        if: !fromJson(steps.whatToDo.outputs.data).skip
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         run: chmod -R 777 ${{github.workspace}}/mbsim-ccache # the docker user id is different than the current user id
       - name: "Docker: run container"
-        if: !fromJson(steps.whatToDo.outputs.data).skip
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         run: >
           docker run
           --init
@@ -162,7 +162,7 @@ jobs:
           --buildRunID ${{fromJson(steps.whatToDo.outputs.data).runID}}
           ${{matrix.data.os.args}}
       - name: "Dump link to MBSim-Env server"
-        if: !fromJson(steps.whatToDo.outputs.data).skip
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         id: buildDetails
         shell: python
         run: |
@@ -179,7 +179,7 @@ jobs:
             print("No buildInfo file found")
             print("::set-output name=buildInfo::{}")
       - name: "Artifact: tar/compress prefix and coverage-files"
-        if: inputs.uploadArtifactLocalLcov && !fromJson(steps.buildDetails.outputs.buildInfo).skipped && !fromJson(steps.whatToDo.outputs.data).skip
+        if: ${{inputs.uploadArtifactLocalLcov && !fromJson(steps.buildDetails.outputs.buildInfo).skipped && !fromJson(steps.whatToDo.outputs.data).skip}}
         run: >
           (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcda" >  ${{github.workspace}}/local-cov.files) &&
           (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcno" >> ${{github.workspace}}/local-cov.files) &&
@@ -187,7 +187,7 @@ jobs:
           local/ -T ${{github.workspace}}/local-cov.files;
           rm -f ${{github.workspace}}/local-cov.files
       - name: "Artifact: upload prefix and coverage-files"
-        if: inputs.uploadArtifactLocalLcov && !fromJson(steps.buildDetails.outputs.buildInfo).skipped && !fromJson(steps.whatToDo.outputs.data).skip
+        if: ${{inputs.uploadArtifactLocalLcov && !fromJson(steps.buildDetails.outputs.buildInfo).skipped && !fromJson(steps.whatToDo.outputs.data).skip}}
         uses: actions/upload-artifact@v3
         with:
           name: mbsim-env-local-cov
