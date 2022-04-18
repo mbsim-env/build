@@ -14,6 +14,8 @@ on:
     secrets:
       githubAccessToken:
         required: true
+      mbsimenvAccessToken:
+        required: true
       djangoSecretKey:
         required: true
       postgresPassword:
@@ -38,6 +40,7 @@ env:
   MBSIMENVFILESTORAGE: www.mbsim-env.de:11122
   # get secrets
   mbsimenvsec_githubAccessToken: ${{secrets.githubAccessToken}}
+  mbsimenvsec_mbsimenvAccessToken: ${{secrets.mbsimenvAccessToken}}
   mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
   mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
   mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}

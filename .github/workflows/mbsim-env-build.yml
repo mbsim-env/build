@@ -16,6 +16,8 @@ on:
     secrets:
       githubAccessToken:
         required: true
+      mbsimenvAccessToken:
+        required: true
       djangoSecretKey:
         required: true
       postgresPassword:
@@ -40,6 +42,7 @@ env:
   MBSIMENVFILESTORAGE: www.mbsim-env.de:11122
   # get secrets
   mbsimenvsec_githubAccessToken: ${{secrets.githubAccessToken}}
+  mbsimenvsec_mbsimenvAccessToken: ${{secrets.mbsimenvAccessToken}}
   mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
   mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
   mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
@@ -98,7 +101,8 @@ jobs:
             for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
               if len(branches[repo].split("*"))==2:
                 continue
-              response=rs.get("https://api.github.com/repos/mbsim-env/"+repo+"/branches/"+branches[repo])
+              response=rs.get("https://api.github.com/repos/mbsim-env/"+repo+"/branches/"+branches[repo],
+                              headers={"Authorization": "token ${{secrets.githubAccessToken}}"})
               if response.status_code==200:
                 branches[repo]+="*"+response.json()["commit"]["sha"]
             # check if a new build is done with this
@@ -152,6 +156,7 @@ jobs:
           --env MBSIMENVTAGNAME
           --env MBSIMENVIMAGEID=$(docker image inspect -f "{{.Id}}" ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}})
           --env mbsimenvsec_githubAccessToken
+          --env mbsimenvsec_mbsimenvAccessToken
           --env mbsimenvsec_djangoSecretKey
           --env mbsimenvsec_postgresPassword
           --env mbsimenvsec_filestoragePassword
@@ -205,4 +210,3 @@ jobs:
           name: mbsim-env-local-cov
           retention-days: 1
           path: ${{github.workspace}}/local-cov.tar.gz
-      #MISSING skip cache upload if ${{fromJson(steps.buildDetails.outputs.buildInfo).skipped}}
