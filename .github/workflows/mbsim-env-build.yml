@@ -70,17 +70,55 @@ jobs:
                                  branch = ${{github.ref_name}}
                                  sha = ${{github.sha}}
                                  event = ${{github.event_name}}" | tr -s ' '
+      - name: "Check what to do"
+        id: whatToDo
+        shell: python
+        run: |
+          import requests
+          import json
+          # get current branches SHA (if not SHA is specified explicitly)
+          branches={}
+          branches["fmatvec"]="${{matrix.data.branches.fmatvecBranch}}"
+          branches["hdf5serie"]="${{matrix.data.branches.hdf5serieBranch}}"
+          branches["openmbv"]="${{matrix.data.branches.openmbvBranch}}"
+          branches["mbsim"]="${{matrix.data.branches.mbsimBranch}}"
+          rs=requests.Session()
+          for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
+            if len(branches[repo].split("*"))==2:
+              continue
+            response=rs.get("https://api.github.com/repos/mbsim-env/"+repo+"/branches/"+branches[repo])
+            if response.status_code==200:
+              branches[repo]+="*"+response.json()["commit"]["sha"]
+          # check if a new build is done with this
+          response=requests.get("https://{HOST}/builds/createUniqueRunID/{BT}/GITHUBACTION/{FMATVEC}/{HDF5SERIE}/{OPENMBV}/{MBSIM}/".\
+                                format(HOST="${{env.MBSIMENVWWW}}", BT="${{matrix.data.os.buildType}}",
+                                       FMATVEC=branches["fmatvec"].split("*")[1], HDF5SERIE=branches["hdf5serie"].split("*")[1],
+                                       OPENMBV=branches["openmbv"].split("*")[1], MBSIM=branches["mbsim"].split("*")[1]),
+                                verify=False,
+                                headers={"Authorization": "token ${{secrets.mbsimenvAccessToken}}"})
+          skip=False
+          runID=None
+          if response.status_code==200:
+            runID=response.json()["runID"]
+            if runID is None:
+              skip=True
+          data={"skip": skip, "runID": runID, "branches": branches}
+          print("The following build is done:\n"+json.dumps(data, indent=2))
+          print("::set-output name=data::"+json.dumps(data))
       - name: "Docker: pull image"
+        if: !fromJson(steps.whatToDo.outputs.data).skip
         run: >
           docker image pull ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}} &&
           mkdir -m 777 -p ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
       - name: "Create build matrix UUID"
+        if: !fromJson(steps.whatToDo.outputs.data).skip
         shell: python
         id: matrixUUID
         run: |
           import uuid
           print("::set-output name=matrixUUID::"+str(uuid.uuid4()))
       - name: "Cache: ccache"
+        if: !fromJson(steps.whatToDo.outputs.data).skip
         uses: actions/cache@v2
         with:
           path: ${{github.workspace}}/mbsim-ccache
@@ -88,8 +126,10 @@ jobs:
           restore-keys: |
             ccache-${{matrix.data.os.buildType}}--
       - name: "Cache: fix ccache file permissions"
+        if: !fromJson(steps.whatToDo.outputs.data).skip
         run: chmod -R 777 ${{github.workspace}}/mbsim-ccache # the docker user id is different than the current user id
       - name: "Docker: run container"
+        if: !fromJson(steps.whatToDo.outputs.data).skip
         run: >
           docker run
           --init
@@ -115,12 +155,14 @@ jobs:
           -j $(nproc)
           ${{github.run_attempt>1 && '--forceBuild' || ''}}
           --ccacheSize 5
-          --fmatvecBranch ${{matrix.data.branches.fmatvecBranch}}
-          --hdf5serieBranch ${{matrix.data.branches.hdf5serieBranch}}
-          --openmbvBranch ${{matrix.data.branches.openmbvBranch}}
-          --mbsimBranch ${{matrix.data.branches.mbsimBranch}}
+          --fmatvecBranch ${{fromJson(steps.whatToDo.outputs.data).branches.fmatvec}}
+          --hdf5serieBranch ${{fromJson(steps.whatToDo.outputs.data).branches.hdf5serie}}
+          --openmbvBranch ${{fromJson(steps.whatToDo.outputs.data).branches.openmbv}}
+          --mbsimBranch ${{fromJson(steps.whatToDo.outputs.data).branches.mbsim}}
+          --buildRunID ${{fromJson(steps.whatToDo.outputs.data).runID}}
           ${{matrix.data.os.args}}
       - name: "Dump link to MBSim-Env server"
+        if: !fromJson(steps.whatToDo.outputs.data).skip
         id: buildDetails
         shell: python
         run: |
@@ -136,8 +178,9 @@ jobs:
           except:
             print("No buildInfo file found")
             print("::set-output name=buildInfo::{}")
+#mfmf compress all artifact uploads
       - name: "Artifact: tar/compress prefix and coverage-files"
-        if: inputs.uploadArtifactLocalLcov && !fromJson(steps.buildDetails.outputs.buildInfo).skipped
+        if: inputs.uploadArtifactLocalLcov && !fromJson(steps.buildDetails.outputs.buildInfo).skipped && !fromJson(steps.whatToDo.outputs.data).skip
         run: >
           (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcda" >  ${{github.workspace}}/local-cov.files) &&
           (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcno" >> ${{github.workspace}}/local-cov.files) &&
@@ -145,7 +188,7 @@ jobs:
           local/ -T ${{github.workspace}}/local-cov.files;
           rm -f ${{github.workspace}}/local-cov.files
       - name: "Artifact: upload prefix and coverage-files"
-        if: inputs.uploadArtifactLocalLcov && !fromJson(steps.buildDetails.outputs.buildInfo).skipped
+        if: inputs.uploadArtifactLocalLcov && !fromJson(steps.buildDetails.outputs.buildInfo).skipped && !fromJson(steps.whatToDo.outputs.data).skip
         uses: actions/upload-artifact@v3
         with:
           name: mbsim-env-local-cov
