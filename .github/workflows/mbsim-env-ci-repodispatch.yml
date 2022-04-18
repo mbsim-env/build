@@ -12,6 +12,7 @@ env:
   MBSIMENVFILESTORAGE: www.mbsim-env.de:11122
   # get secrets
   mbsimenvsec_githubAccessToken: ${{secrets.githubAccessToken}}
+  mbsimenvsec_mbsimenvAccessToken: ${{secrets.mbsimenvAccessToken}}
   mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
   mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
   mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
@@ -31,6 +32,7 @@ jobs:
       pushSource: ${{toJson(github.event.client_payload)}}
     secrets:
       githubAccessToken: ${{secrets.githubAccessToken}}
+      mbsimenvAccessToken: ${{secrets.mbsimenvAccessToken}}
       djangoSecretKey: ${{secrets.djangoSecretKey}}
       postgresPassword: ${{secrets.postgresPassword}}
       filestoragePassword: ${{secrets.filestoragePassword}}
@@ -47,6 +49,7 @@ jobs:
       uploadArtifactLocalLcov: false
     secrets:
       githubAccessToken: ${{secrets.githubAccessToken}}
+      mbsimenvAccessToken: ${{secrets.mbsimenvAccessToken}}
       djangoSecretKey: ${{secrets.djangoSecretKey}}
       postgresPassword: ${{secrets.postgresPassword}}
       filestoragePassword: ${{secrets.filestoragePassword}}
