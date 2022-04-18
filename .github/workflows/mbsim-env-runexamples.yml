@@ -87,6 +87,9 @@ jobs:
         with:
           name: mbsim-env-covdata
           path: ${{github.workspace}}/mbsim-env/local
+      - name: "Artifact: uncompress lcov-files"
+        if: inputs.downloadArtifactLcovdata
+        run: gunzip ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*.gz
       - name: "Docker: pull image"
         run: >
           docker image pull mbsimenv/build:${{env.MBSIMENVTAGNAME}} &&
@@ -136,10 +139,13 @@ jobs:
           except:
             print("No runexamplesInfo file found")
             print("::set-output name=runexamplesInfo::{}")
+      - name: "Artifact: compress lcov-files"
+        if: inputs.uploadArtifactLcovdata
+        run: gzip ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*
       - name: "Artifact: upload lcov-files"
         if: inputs.uploadArtifactLcovdata
         uses: actions/upload-artifact@v3
         with:
           name: mbsim-env-covdata
           retention-days: 1
-          path: ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*
+          path: ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*.gz
