@@ -10,6 +10,7 @@ import re
 import threading
 import os
 import datetime
+import mbsimenvSecrets
 from octicons.templatetags.octicons import octicon
 
 # maps the current url to the proper run id url (without forwarding to keep the URL in the browser)
@@ -59,7 +60,11 @@ class Run(base.views.Base):
 
     allBranches=builds.models.Run.objects.filter(buildType=self.run.buildType).\
                   values("fmatvecBranch", "hdf5serieBranch", "openmbvBranch", "mbsimBranch").distinct()
-    context["allBranches"]=list(allBranches)
+    ab=[]
+    for x in allBranches:
+      if x["fmatvecBranch"]!="" and x["hdf5serieBranch"]!="" and x["openmbvBranch"]!="" and x["mbsimBranch"]!="":
+        ab.append(x)
+    context["allBranches"]=ab
 
     allBuildTypes=builds.models.Run.objects.filter(fmatvecBranch=self.run.fmatvecBranch, hdf5serieBranch=self.run.hdf5serieBranch,
                                                    openmbvBranch=self.run.openmbvBranch, mbsimBranch=self.run.mbsimBranch).\
@@ -301,3 +306,34 @@ def runDistributionFile(request, id):
 def runDistributionDebugFile(request, id):
   run=builds.models.Run.objects.get(id=id)
   return django.http.FileResponse(run.distributionDebugFile, as_attachment=True, filename=run.distributionDebugFileName)
+
+# create a new Run object which is unique wrt buildtype, executorID and git SHA IDs
+# returns the integer runID of the new unique Run object or None as runID if no unique Run object could be created
+# This is only useful for early checked of skipped builds without the need for the mbsimenv/build docker image
+def createUniqueRunID(request, buildtype, executorID, fmatvecSHA, hdf5serieSHA, openmbvSHA, mbsimSHA):
+  # check access token
+  try: # catch all exceptions to avoid printing of any secrets
+    if request.headers.get("Authorization", "")!="token "+mbsimenvSecrets.getSecrets("mbsimenvAccessToken"):
+      return django.http.HttpResponseForbidden()
+  except:
+    return django.http.HttpResponseForbidden()
+
+  run=builds.models.Run()
+  run.buildType=buildtype
+  run.executor='<span class="MBSIMENV_EXECUTOR_'+executorID+'"></span>' # dummy value (except the "executorID") is updated later
+  run.startTime=django.utils.timezone.now() # dummy start time is updated later
+  run.fmatvecUpdateCommitID=fmatvecSHA
+  run.hdf5serieUpdateCommitID=hdf5serieSHA
+  run.openmbvUpdateCommitID=openmbvSHA
+  run.mbsimUpdateCommitID=mbsimSHA
+  run.save()
+  with django.db.transaction.atomic():
+    oldRunExecutors=builds.models.Run.objects.filter(buildType=buildtype,
+              fmatvecUpdateCommitID=fmatvecSHA, hdf5serieUpdateCommitID=hdf5serieSHA,
+              openmbvUpdateCommitID=openmbvSHA, mbsimUpdateCommitID=mbsimSHA).\
+              select_for_update().exclude(id=run.id).values_list("executor", flat=True)
+    for oldRunExecutor in oldRunExecutors:
+      if base.helper.getExecutorID(oldRunExecutor)==executorID:
+        run.delete()
+        return django.http.JsonResponse({"runID": None}, json_dumps_params={"indent": 2})
+    return django.http.JsonResponse({"runID": run.id}, json_dumps_params={"indent": 2})

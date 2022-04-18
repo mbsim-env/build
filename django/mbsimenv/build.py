@@ -86,6 +86,7 @@ def parseArguments():
   cfgOpts.add_argument("--localServerPort", type=int, default=27583, help='Port for local server, if started automatically.')
   cfgOpts.add_argument("--coverage", action="store_true", help='Enable coverage analyzis using gcov/lcov.')
   cfgOpts.add_argument("--buildFailedExit", default=None, type=int, help='Define the exit code when the build fails - e.g. use --buildFailedExit 125 to skip a failed build when running as "git bisect run".')
+  cfgOpts.add_argument("--buildRunID", default=None, type=int, help='Internal: use a already created Run ID.')
   
   outOpts=argparser.add_argument_group('Output Options')
   outOpts.add_argument("--buildType", default="local", type=str, help="A description of the build type (e.g: linux64-dailydebug)")
@@ -313,7 +314,16 @@ def main():
     shutil.rmtree(args.prefix if args.prefix is not None else args.prefixAuto)
   os.makedirs(args.prefix if args.prefix is not None else args.prefixAuto, exist_ok=True)
 
-  run=builds.models.Run()
+  if args.buildRunID is None:
+    run=builds.models.Run()
+  else:
+    run=builds.models.Run.objects.get(id=args.buildRunID)
+    if run.buildType!=args.buildType or base.helper.getExecutorID(run.executor)!=base.helper.getExecutorID(args.executor) or \
+       run.fmatvecUpdateCommitID!=args.fmatvecBranch.split("*")[1] or \
+       run.hdf5serieUpdateCommitID!=args.hdf5serieBranch.split("*")[1] or \
+       run.openmbvUpdateCommitID!=args.openmbvBranch.split("*")[1] or \
+       run.mbsimUpdateCommitID!=args.mbsimBranch.split("*")[1]:
+      raise RuntimeError("The externally created Run ID is not valid!")
   run.buildType=args.buildType
   run.executor=args.executor
   run.command=" ".join(sys.argv)

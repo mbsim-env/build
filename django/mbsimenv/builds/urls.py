@@ -9,6 +9,7 @@ urlpatterns = [
   django.urls.path('run/<int:id>/', builds.views.Run.as_view(), name='run'),
   django.urls.path('run/<int:id>/distributionFile/', builds.views.runDistributionFile), # relpath distributionFile is used (This URL is used hardcoded in webapprun!!!)
   django.urls.path('run/<int:id>/distributionDebugFile/', builds.views.runDistributionDebugFile), # relpath distributionDebugFile is used
+  django.urls.path('createUniqueRunID/<str:buildtype>/<str:executorID>/<str:fmatvecSHA>/<str:hdf5serieSHA>/<str:openmbvSHA>/<str:mbsimSHA>/', builds.views.createUniqueRunID, name='createUniqueRunID'),
   django.urls.path('datatable/tool/<int:run_id>/', builds.views.DataTableTool.as_view(), name='datatable_tool'),
   django.urls.path('releaseDistribution/<int:run_id>/', builds.views.releaseDistribution, name='releaseDistribution'),
 ]

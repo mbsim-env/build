@@ -103,6 +103,9 @@ elif args.buildType.startswith("linux64-dailyrelease"):
 else:
   raise RuntimeError("Unknown build type "+args.buildType)
 
+def isMaster(branch):
+  return branch=="master" or branch.startswith("master*")
+
 if build:
   # args
   if args.buildType == "linux64-ci":
@@ -126,7 +129,7 @@ if build:
     RUNEXAMPLESARGS=["--checkGUIs"]
     RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] \
       if os.environ["MBSIMENVTAGNAME"]=="staging" or \
-         args.fmatvecBranch!="master" or args.hdf5serieBranch!="master" or args.openmbvBranch!="master" or args.mbsimBranch!="master" \
+         not isMaster(args.fmatvecBranch) or not isMaster(args.hdf5serieBranch) or not isMaster(args.openmbvBranch) or not isMaster(args.mbsimBranch) \
          else ["--filter", "'nightly' in labels"])
   elif args.buildType.startswith("linux64-dailyrelease"):
     ARGS=["--enableDistribution"]
@@ -146,8 +149,8 @@ subprocess.call(["ccache", "-M", str(args.ccacheSize)+"G"])
 if build or args.runExamplesPre:
   # update references of examples
   if args.buildType=="linux64-dailydebug" and \
-     args.fmatvecBranch=="master" and args.hdf5serieBranch=="master" and \
-     args.openmbvBranch=="master" and args.mbsimBranch=="master":
+     isMaster(args.fmatvecBranch) and isMaster(args.hdf5serieBranch) and \
+     isMaster(args.openmbvBranch) and isMaster(args.mbsimBranch):
     runCur=runexamples.models.Run.objects.filter(buildType=args.buildType,
                                                        build_run__fmatvecBranch="master", build_run__hdf5serieBranch="master",
                                                        build_run__openmbvBranch="master", build_run__mbsimBranch="master").\
@@ -186,6 +189,10 @@ if build:
   
   print("Zeroing ccache statistics.")
   subprocess.call(["ccache", "-z"])
+
+  if args.buildRunID is not None:
+    ARGS.append("--buildRunID")
+    ARGS.append(str(args.buildRunID))
   
   # run build
   os.environ["LDFLAGS"]="-L/usr/lib64/boost169" # use boost 1.69 libraries (and includes, see --with-boost-inc)
@@ -256,7 +263,7 @@ if build:
     # build
     RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] \
       if os.environ["MBSIMENVTAGNAME"]=="staging" or
-         args.fmatvecBranch!="master" or args.hdf5serieBranch!="master" or args.openmbvBranch!="master" or args.mbsimBranch!="master" \
+         not isMaster(args.fmatvecBranch) or not isMaster(args.hdf5serieBranch) or not isMaster(args.openmbvBranch) or not isMaster(args.mbsimBranch) \
          else ["--filter", "'nightly' in labels"])
     localRet=subprocess.call(["python3", "/context/mbsimenv/runexamples.py", "--checkGUIs", "--disableCompare", "--disableValidate",
       "--buildType", args.buildType+"-valgrind", "--executor", args.executor, "--buildSystemRun", "-j", str(args.jobs),
@@ -315,7 +322,7 @@ def runExamplesPartition(ARGS, pullMbsim, pullAll):
   # build
   RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] \
     if os.environ["MBSIMENVTAGNAME"]=="staging" or \
-       args.fmatvecBranch!="master" or args.hdf5serieBranch!="master" or args.openmbvBranch!="master" or args.mbsimBranch!="master" \
+       not isMaster(args.fmatvecBranch) or not isMaster(args.hdf5serieBranch) or not isMaster(args.openmbvBranch) or not isMaster(args.mbsimBranch) \
        else ["--filter", "'nightly' in labels"])
   localRet=subprocess.call(["python3", "/context/mbsimenv/runexamples.py", "--checkGUIs",
     "--buildType", args.buildType+("-valgrind" if args.valgrindExamples else ""), "--executor", args.executor,
