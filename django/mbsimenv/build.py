@@ -330,7 +330,7 @@ def main():
   run.startTime=django.utils.timezone.now()
   run.save()
   # write build info (only build.run.id)
-  buildInfo={"buildRunID": run.id, "skipped": False}
+  buildInfo={"buildRunID": run.id}
   with open((args.prefix if args.prefix is not None else args.prefixAuto)+"/.buildInfo.json", "w") as f:
     json.dump(buildInfo, f, indent=2)
 
@@ -351,30 +351,6 @@ def main():
           django.urls.reverse("builds:current_buildtype_branch", args=[run.buildType,
             run.fmatvecBranch, run.hdf5serieBranch, run.openmbvBranch, run.mbsimBranch])))
     print("")
-
-  # check if last build was the same as this build
-  if not args.forceBuild:
-    curExecutorID=base.helper.getExecutorID(args.executor)
-    if curExecutorID is not None and curExecutorID!="LOCAL" and curExecutorID!="LOCALDOCKER":
-      skip=False
-      with django.db.transaction.atomic():
-        oldRunExecutors=builds.models.Run.objects.filter(buildType=args.buildType,
-                  fmatvecUpdateCommitID=commitidfull["fmatvec"], hdf5serieUpdateCommitID=commitidfull["hdf5serie"],
-                  openmbvUpdateCommitID=commitidfull["openmbv"], mbsimUpdateCommitID=commitidfull["mbsim"]).\
-                  select_for_update().exclude(id=run.id).values_list("executor", flat=True)
-        for oldRunExecutor in oldRunExecutors:
-          if base.helper.getExecutorID(oldRunExecutor)==curExecutorID:
-            run.delete()
-            skip=True
-            break
-      if skip:
-        print('Skipping this build: the last build was exactly the same.')
-        sys.stdout.flush()
-        # rewrite build info (updated skipped)
-        buildInfo["skipped"]=True
-        with open((args.prefix if args.prefix is not None else args.prefixAuto)+"/.buildInfo.json", "w") as f:
-          json.dump(buildInfo, f, indent=2)
-        return 0
 
   # set status on commit
   setGithubStatus(run, "pending")
