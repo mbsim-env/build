@@ -94,7 +94,7 @@ jobs:
     name: "E pre"
     uses: ./.github/workflows/mbsim-env-runexamples.yml
     needs: buildPartitionedExamples
-    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.buildInfo).skipped}}
+    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
       matrix: |
         {"data": [
@@ -119,7 +119,7 @@ jobs:
     name: "E worker"
     uses: ./.github/workflows/mbsim-env-runexamples.yml
     needs: [buildPartitionedExamples, examplesPre]
-    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.buildInfo).skipped}}
+    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
       matrix: |
         {"data": [
@@ -157,7 +157,7 @@ jobs:
     name: "E post"
     uses: ./.github/workflows/mbsim-env-runexamples.yml
     needs: [buildPartitionedExamples, examplesRun, examplesPre]
-    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.buildInfo).skipped}}
+    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
       matrix: |
         {"data": [
@@ -188,7 +188,7 @@ jobs:
              # exampleRun is just added to priorize the normal runs over the valgrind run;
              # moreover the dynamic scheduling does not work for parallel --runExamplesPartition jobs;
              # (examplesPreValgrind is not stared before to ensure correct startTime recording in the MBSim-Env database)
-    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.buildInfo).skipped}}
+    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
       matrix: |
         {"data": [
@@ -213,7 +213,7 @@ jobs:
     name: "E valgrind worker"
     uses: ./.github/workflows/mbsim-env-runexamples.yml
     needs: [buildPartitionedExamples, examplesPreValgrind]
-    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.buildInfo).skipped}}
+    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
       matrix: |
         {"data": [
@@ -251,7 +251,7 @@ jobs:
     name: "E valgrind post"
     uses: ./.github/workflows/mbsim-env-runexamples.yml
     needs: [buildPartitionedExamples, examplesRunValgrind, examplesPreValgrind]
-    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.buildInfo).skipped}}
+    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
       matrix: |
         {"data": [
@@ -279,7 +279,7 @@ jobs:
     name: "Build manuals"
     runs-on: ubuntu-latest
     needs: buildPartitionedExamples
-    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.buildInfo).skipped}}
+    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     steps:
       - name: "Docker: pull image"
         run: docker image pull mbsimenv/builddoc:${{env.MBSIMENVTAGNAME}}

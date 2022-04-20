@@ -108,5 +108,5 @@ jobs:
                                   x["branches"]["mbsimBranch"]!="master", matrix)
           matrix={"data": list(matrix)}
           # set output
-          print("Build matrix:\n"+json.dumps(matrix, indent=2))
+          print("jobs.getBuildMatrix.steps.matrix.outputs.matrix:\n"+json.dumps(matrix, indent=2))
           print("::set-output name=matrix::"+json.dumps(matrix))

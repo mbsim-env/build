@@ -11,6 +11,8 @@ on:
         required: true
         type: boolean
     outputs:
+      whatToDo:
+        value: ${{jobs.build.outputs.whatToDo}}
       buildInfo:
         value: ${{jobs.build.outputs.buildInfo}}
     secrets:
@@ -55,6 +57,7 @@ jobs:
     name: "${{matrix.data.os.buildType}}: ${{matrix.data.branches.fmatvecBranch}} ${{matrix.data.branches.hdf5serieBranch}} ${{matrix.data.branches.openmbvBranch}} ${{matrix.data.branches.mbsimBranch}}"
     runs-on: ubuntu-latest
     outputs:
+      whatToDo: ${{steps.whatToDo.outputs.data}}
       buildInfo: ${{steps.buildDetails.outputs.buildInfo}}
     strategy:
       fail-fast: false
@@ -119,7 +122,7 @@ jobs:
               if runID is not None:
                 skip=False
             data={"skip": skip, "runID": runID, "branches": branches}
-          print("The following build is done:\n"+json.dumps(data, indent=2))
+          print("jobs.build.steps.whatToDo.outputs.data:\n"+json.dumps(data, indent=2))
           print("::set-output name=data::"+json.dumps(data))
       - name: "Docker: pull image"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
@@ -132,6 +135,7 @@ jobs:
         id: matrixUUID
         run: |
           import uuid
+          print("jobs.build.steps.matrixUUID.outputs.matrixUUID:\n"+str(uuid.uuid4()))
           print("::set-output name=matrixUUID::"+str(uuid.uuid4()))
       - name: "Cache: ccache"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
@@ -187,16 +191,15 @@ jobs:
           try:
             with open("${{github.workspace}}/mbsim-env/local/.buildInfo.json", "r") as f:
               buildInfo=json.load(f)
-            if buildInfo["skipped"]:
-              print("This build was skipped since the same build was already done")
-            else:
-              print("https://${{env.MBSIMENVSERVERNAME}}/builds/run/"+str(buildInfo["buildRunID"])+"/")
+            print("https://${{env.MBSIMENVSERVERNAME}}/builds/run/"+str(buildInfo["buildRunID"])+"/")
+            print("jobs.build.steps.buildDetails.outputs.buildInfo:\n"+json.dumps(buildInfo, indent=2))
             print("::set-output name=buildInfo::"+json.dumps(buildInfo))
           except:
             print("No buildInfo file found")
+            print("jobs.build.steps.buildDetails.outputs.buildInfo:\n{}")
             print("::set-output name=buildInfo::{}")
       - name: "Artifact: tar/compress prefix and coverage-files"
-        if: ${{inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip && !fromJson(steps.buildDetails.outputs.buildInfo).skipped}}
+        if: ${{inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}
         run: >
           (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcda" >  ${{github.workspace}}/local-cov.files) &&
           (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcno" >> ${{github.workspace}}/local-cov.files) &&
@@ -204,7 +207,7 @@ jobs:
           local/ -T ${{github.workspace}}/local-cov.files;
           rm -f ${{github.workspace}}/local-cov.files
       - name: "Artifact: upload prefix and coverage-files"
-        if: ${{inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip && !fromJson(steps.buildDetails.outputs.buildInfo).skipped}}
+        if: ${{inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}
         uses: actions/upload-artifact@v3
         with:
           name: mbsim-env-local-cov
