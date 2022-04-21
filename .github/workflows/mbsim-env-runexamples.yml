@@ -72,6 +72,8 @@ jobs:
       fail-fast: false
       matrix: ${{fromJson(inputs.matrix)}}
     steps:
+      - name: "Dump resources"
+        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
       - name: "Artifact: download prefix and coverage-files"
         if: ${{inputs.downloadArtifactLocalLcov}}
         uses: actions/download-artifact@v3
@@ -155,3 +157,5 @@ jobs:
           name: mbsim-env-covdata
           retention-days: 1
           path: ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*.gz
+      - name: "Dump resources"
+        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
