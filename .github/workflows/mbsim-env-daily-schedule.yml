@@ -2,6 +2,7 @@ name: Daily (Schedule)
 on:
   schedule:
     - cron: '36 23 * * *'
+    - cron: '20 16 * * *' #mfmf remove
 concurrency: 
   group: mbsim-env-daily
   cancel-in-progress: true
