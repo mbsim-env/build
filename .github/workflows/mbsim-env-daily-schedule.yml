@@ -2,7 +2,6 @@ name: Daily (Schedule)
 on:
   schedule:
     - cron: '36 23 * * *'
-    - cron: '20 16 * * *' #mfmf remove
 concurrency: 
   group: mbsim-env-daily
   cancel-in-progress: true
@@ -282,6 +281,8 @@ jobs:
     needs: buildPartitionedExamples
     if: ${{!fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     steps:
+      - name: "Dump resources"
+        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
       - name: "Docker: pull image"
         run: docker image pull mbsimenv/builddoc:${{env.MBSIMENVTAGNAME}}
       - name: "Docker: run container"
@@ -303,3 +304,5 @@ jobs:
           --env mbsimenvsec_codecovUploadToken_mbsim
           mbsimenv/builddoc:${{env.MBSIMENVTAGNAME}}
           --mbsimBranch ${{fromJson(needs.buildPartitionedExamples.outputs.buildInfo).repo.mbsim}}
+      - name: "Dump resources"
+        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"

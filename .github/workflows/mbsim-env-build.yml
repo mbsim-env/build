@@ -63,6 +63,8 @@ jobs:
       fail-fast: false
       matrix: ${{fromJson(inputs.matrix)}}
     steps:
+      - name: "Dump resources"
+        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
       - name: "Dump build config"
         run: >
           echo -e " buildType       = ${{matrix.data.os.buildType}}
@@ -213,3 +215,5 @@ jobs:
           name: mbsim-env-local-cov
           retention-days: 1
           path: ${{github.workspace}}/local-cov.tar.gz
+      - name: "Dump resources"
+        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
