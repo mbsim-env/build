@@ -28,6 +28,7 @@ import mbsimenvSecrets
 import runexamples
 import builds
 import json
+import io
 
 if django.VERSION[0]!=3:
   print("Need django version 3. This is django version "+django.__version__)
@@ -195,7 +196,7 @@ def main():
           args.action=="list"):
     argparser.print_usage()
     print("error: unknown argument --action "+args.action+" (see -h)")
-    return 1
+    return -1
 
   if normalRun or args.pre:
     removeOldBuilds()
@@ -275,7 +276,6 @@ def main():
     exRun=runexamples.models.Run.objects.filter(id=args.runID).select_related("build_run").get()
 
   mainRet=0
-  failedExamples=[]
 
   # enable coverage
   if args.coverage:
@@ -309,7 +309,7 @@ def main():
     django.db.close_old_connections() # needes since django.db.models.signals.pre_save.connect(...) is not called by bulk_update
     runexamples.models.ExampleStatic.objects.bulk_update(esl, ["queued"])
     # exit pre step
-    sys.exit(mainRet)
+    sys.exit(0)
 
   if normalRun or args.partition:
     # get mbxmlutilsvalidate program
@@ -338,20 +338,22 @@ def main():
           raise RuntimeError("Cannot find a free DISPLAY for vnc server.")
 
     try:
-      if args.partition:
+      if args.partition:#mfmf check this
         def runExampleOuter(lock):
           dirs=ExampleServerQueue("totalTimeValgrind" if args.prefixSimulationKeyword=='VALGRIND' else "totalTimeNormal")
+          retAllPerThread=[]
           for d in dirs:
-            runExample(exRun, lock, d)
-        django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
+            retAllPerThread.append(runExample(exRun, lock, d))
+          return retAllPerThead
         lock=multiprocessing.Manager().Lock()
         pList=[]
+        django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
+        pool=multiprocessing.Pool(args.j)
         for i in range(0,args.j):
-          p=multiprocessing.Process(target=runExampleOuter, args=(lock,))
-          p.start()
-          pList.append(p)
+          pList.append(pool.apply_async(func=runExampleOuter, args=(lock,)))
+        retAll=[]
         for p in pList:
-          p.join()
+          retAll.extend(p.get())
       elif not args.debugDisableMultiprocessing:
         # init mulitprocessing handling and run in parallel
         django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
@@ -374,23 +376,31 @@ def main():
         if subprocess.call(["vncserver", "-kill", ":"+str(displayNR)], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))!=0:
           print("Cannot close vnc server on :%d but continue."%(displayNR))
 
+  # set global result and add failedExamples and print exception from examples
+  failedExamples=[]
+  for retAlli in retAll:
+    retAllInt, exampleName, excStr=retAlli
+    willFail=False
+    if os.path.isfile(pj(exampleName, "labels")):
+      willFail='willfail' in codecs.open(pj(exampleName, "labels"), "r", encoding="utf-8").read().rstrip().split(' ')
+    if retAllInt!=0 and not willFail:
+      if mainRet==0:
+        mainRet=1
+      failedExamples.append(exampleName)
+    if excStr is not None:
+      mainRet=-1
+      print("\n\n\nException from runExample "+exampleName)
+      print(excStr)
+
   if args.partition:
     import uuid
-    mainRet=mainRet+abs(coverage(None, args.prefix+"/cov.trace.final.part."+args.buildType+"."+str(uuid.uuid4())))
-    sys.exit(mainRet)
+    localRet=coverage(None, args.prefix+"/cov.trace.final.part."+args.buildType+"."+str(uuid.uuid4()))
+    if localRet!=0 or mainRet<0:
+      sys.exit(1)
+    sys.exit(0)
   if args.post:
     exRun.examplesFailed=exRun.examples.filterFailed().count()
     exRun.save()
-
-  if normalRun:
-    # set global result and add failedExamples
-    for index in range(len(retAll)):
-      willFail=False
-      if os.path.isfile(pj(directories[index], "labels")):
-        willFail='willfail' in codecs.open(pj(directories[index], "labels"), "r", encoding="utf-8").read().rstrip().split(' ')
-      if retAll[index]!=0 and not willFail:
-        mainRet=1
-        failedExamples.append(directories[index])
 
   # coverage analyzis (postpare)
   coverageAll=0
@@ -417,7 +427,8 @@ def main():
       print('\nERROR: '+str(len(failedExamples))+' of '+str(len(retAll))+' examples have failed.')
       sys.stdout.flush()
     if coverageFailed!=0:
-      mainRet=1
+      if mainRet==0:
+        mainRet=1
       print('\nERROR: Coverage analyzis generation failed.')
       sys.stdout.flush()
 
@@ -564,6 +575,7 @@ def runExample(exRun, lock, example):
   runExampleRet=0 # run ok
   executeFD=base.helper.MultiFile(args.printToConsole)
   exRunOutputWritten=False
+  excStr=None
   try:
     os.chdir(example)
 
@@ -690,17 +702,13 @@ def runExample(exRun, lock, example):
         runExampleRet=1
 
   except:
-    fatalScriptErrorFD=base.helper.MultiFile(args.printToConsole)
-    print("\n\n\n", file=fatalScriptErrorFD)
-    print("Fatal Test-Script Error! This may happen due to a previous error of the test or due to bugs in runexamples.py.",
-          file=fatalScriptErrorFD)
-    print("", file=fatalScriptErrorFD)
-    print(traceback.format_exc(), file=fatalScriptErrorFD)
-    fatalScriptErrorFD.close()
+    with io.StringIO() as excF:
+      traceback.print_exception(*sys.exc_info(), file=excF)
+      excStr=excF.getvalue().rstrip()
     if not exRunOutputWritten:
       executeFD.close()
       ex.runOutput=executeFD.getData().replace("\0", "&#00;");
-    ex.runOutput+=fatalScriptErrorFD.getData().replace("\0", "&#00;")
+    ex.runOutput+="\n\n\nFatal Test-Script Bug/Error! See console output!"
     ex.runResult=runexamples.models.Example.RunResult.FAILED
     ex.save()
     runExampleRet=1
@@ -711,7 +719,7 @@ def runExample(exRun, lock, example):
     else:
       print("Failed example "+example)
     sys.stdout.flush()
-    return runExampleRet
+    return runExampleRet, example, excStr
 
 
 
@@ -1590,5 +1598,6 @@ class ExampleServerQueue:
 
 if __name__=="__main__":
   mainRet=main()
-  print("Exit Value: "+str(mainRet))
+  if mainRet<0: # fatal error
+    sys.exit(1)
   sys.exit(0)

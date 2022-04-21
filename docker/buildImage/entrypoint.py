@@ -229,8 +229,6 @@ if build:
   with open("/mbsim-env/local/.buildInfo.json", "r") as f:
     buildInfo=json.load(f)
   
-  if localRet==255:
-    sys.exit(0)
   if localRet!=0:
     ret=ret+1
     print("build.py failed.")

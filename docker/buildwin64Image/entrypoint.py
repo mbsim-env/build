@@ -158,8 +158,6 @@ print("Dump ccache statistics:")
 subprocess.call(["ccache", "-s"])
 sys.stdout.flush()
 
-if ret==255:
-  sys.exit(0)
 if ret!=0:
   print("build.py failed.")
   sys.stdout.flush()

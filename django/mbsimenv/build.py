@@ -85,7 +85,7 @@ def parseArguments():
   cfgOpts.add_argument("--buildSystemRun", action="store_true", help='Run in build system mode: generate build system state files.')
   cfgOpts.add_argument("--localServerPort", type=int, default=27583, help='Port for local server, if started automatically.')
   cfgOpts.add_argument("--coverage", action="store_true", help='Enable coverage analyzis using gcov/lcov.')
-  cfgOpts.add_argument("--buildFailedExit", default=None, type=int, help='Define the exit code when the build fails - e.g. use --buildFailedExit 125 to skip a failed build when running as "git bisect run".')
+  cfgOpts.add_argument("--buildFailedExit", default=None, type=int, help='Define the exit code when the build fails.')
   cfgOpts.add_argument("--buildRunID", default=None, type=int, help='Internal: use a already created Run ID.')
   
   outOpts=argparser.add_argument_group('Output Options')
@@ -420,10 +420,10 @@ def main():
     runExamplesErrorCode=runexamples(run)
     os.chdir(savedDir)
 
+  if runExamplesErrorCode!=0: # fatal error
+    return -1
   if nrFailed>0:
     return 1 # build failed
-  if abs(runExamplesErrorCode)>0:
-    return 2 # examples failed
   return 0 # all passed
 
 
@@ -847,9 +847,7 @@ def runexamples(run):
   print("Output of run example")
   print("")
   sys.stdout.flush()
-  ret=abs(subprocess.call(command, stderr=subprocess.STDOUT))
-
-  return ret
+  return subprocess.call(command, stderr=subprocess.STDOUT)
 
 
 
@@ -884,10 +882,8 @@ def createDistribution(run):
 
 if __name__=="__main__":
   mainRet=main()
-  # 0 -> all passed
-  # 1 -> build failed
-  # 2 -> examples failed
-  if args.buildFailedExit and mainRet==1:
-    mainRet=args.buildFailedExit
-  print("Exit Value: "+str(mainRet))
-  sys.exit(0)
+  if mainRet<0: # fatal error -> exit with 1
+    sys.exit(1)
+  if args.buildFailedExit is not None and mainRet!=0: # build/example errors and buildFailedExit set -> exit with buildFailedExit
+    sys.exit(args.buildFailedExit)
+  sys.exit(0) # all OK or only build/example errors -> exit with 0
