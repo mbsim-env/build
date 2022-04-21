@@ -199,7 +199,7 @@ jobs:
             print("jobs.build.steps.buildDetails.outputs.buildInfo:\n{}")
             print("::set-output name=buildInfo::{}")
       - name: "Artifact: tar/compress prefix and coverage-files"
-        if: ${{inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}
+        if: ${{inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
         run: >
           (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcda" >  ${{github.workspace}}/local-cov.files) &&
           (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcno" >> ${{github.workspace}}/local-cov.files) &&
@@ -207,7 +207,7 @@ jobs:
           local/ -T ${{github.workspace}}/local-cov.files;
           rm -f ${{github.workspace}}/local-cov.files
       - name: "Artifact: upload prefix and coverage-files"
-        if: ${{inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}
+        if: ${{inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
         uses: actions/upload-artifact@v3
         with:
           name: mbsim-env-local-cov
