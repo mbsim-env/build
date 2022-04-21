@@ -338,19 +338,13 @@ def main():
           raise RuntimeError("Cannot find a free DISPLAY for vnc server.")
 
     try:
-      if args.partition:#mfmf check this
-        def runExampleOuter(lock):
-          dirs=ExampleServerQueue("totalTimeValgrind" if args.prefixSimulationKeyword=='VALGRIND' else "totalTimeNormal")
-          retAllPerThread=[]
-          for d in dirs:
-            retAllPerThread.append(runExample(exRun, lock, d))
-          return retAllPerThead
+      if args.partition:
         lock=multiprocessing.Manager().Lock()
         pList=[]
         django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
         pool=multiprocessing.Pool(args.j)
         for i in range(0,args.j):
-          pList.append(pool.apply_async(func=runExampleOuter, args=(lock,)))
+          pList.append(pool.apply_async(func=functools.partial(runExampleOuter, exRun, lock)))
         retAll=[]
         for p in pList:
           retAll.extend(p.get())
@@ -720,6 +714,15 @@ def runExample(exRun, lock, example):
       print("Failed example "+example)
     sys.stdout.flush()
     return runExampleRet, example, excStr
+
+# helper function for runExample for args.partition
+# this function must be at global scope
+def runExampleOuter(exRun, lock):
+  dirs=ExampleServerQueue("totalTimeValgrind" if args.prefixSimulationKeyword=='VALGRIND' else "totalTimeNormal")
+  retAllPerThread=[]
+  for d in dirs:
+    retAllPerThread.append(runExample(exRun, lock, d))
+  return retAllPerThread
 
 
 
