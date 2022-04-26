@@ -110,6 +110,8 @@ jobs:
                               headers={"Authorization": "token ${{secrets.githubAccessToken}}"})
               if response.status_code==200:
                 branches[repo]+="*"+response.json()["commit"]["sha"]
+              else:
+                raise RuntimeError("Failed to get SHA from github:\n"+response.text)
             # check if a new build is done with this
             response=requests.get("https://{HOST}/builds/createUniqueRunID/{BT}/GITHUBACTION/{FMATVEC}/{HDF5SERIE}/{OPENMBV}/{MBSIM}/".\
                                   format(HOST="${{env.MBSIMENVWWW}}", BT="${{matrix.data.os.buildType}}",
@@ -120,9 +122,13 @@ jobs:
             skip=True
             runID=None
             if response.status_code==200:
-              runID=response.json()["runID"]
+              createUniqueRunID=response.json()
+              print("createUniqueRunID:\n"+json.dumps(createUniqueRunID, indent=2))
+              runID=createUniqueRunID["runID"]
               if runID is not None:
                 skip=False
+            else:
+              raise RuntimeError("Failed to createUniqueRunID:\n"+response.text)
             data={"skip": skip, "runID": runID, "branches": branches}
           print("jobs.build.steps.whatToDo.outputs.data:\n"+json.dumps(data, indent=2))
           print("::set-output name=data::"+json.dumps(data))
