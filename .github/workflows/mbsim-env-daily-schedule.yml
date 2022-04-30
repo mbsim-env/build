@@ -7,12 +7,12 @@ concurrency:
   cancel-in-progress: true
 env:
   # tagname and servername of remote mbsimenv server
-  MBSIMENVTAGNAME: staging
-  MBSIMENVSERVERNAME: wwwstaging.mbsim-env.de
+  MBSIMENVTAGNAME: latest
+  MBSIMENVSERVERNAME: www.mbsim-env.de
   # connect to this server:port for www, database and filestorage
-  MBSIMENVWWW: www.mbsim-env.de:10443
-  MBSIMENVDATABASE: www.mbsim-env.de:15432
-  MBSIMENVFILESTORAGE: www.mbsim-env.de:11122
+  MBSIMENVWWW: www.mbsim-env.de:443
+  MBSIMENVDATABASE: www.mbsim-env.de:5432
+  MBSIMENVFILESTORAGE: www.mbsim-env.de:1122
   # get secrets
   mbsimenvsec_githubAccessToken: ${{secrets.githubAccessToken}}
   mbsimenvsec_mbsimenvAccessToken: ${{secrets.mbsimenvAccessToken}}
