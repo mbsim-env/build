@@ -24,6 +24,7 @@ argparser.add_argument("--mbsimBranch", type=str, default="master", help="mbsim 
 argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs to run in parallel")
 argparser.add_argument('--forceBuild', action="store_true", help="Passed to buily.py if existing")
 argparser.add_argument("--ccacheSize", default=10, type=int, help="Maximal ccache size in GB.")
+argparser.add_argument("--buildRunID", default=None, type=int, help="The id of the builds.model.Run dataset this example run belongs to.")
 
 args=argparser.parse_args()
 
@@ -104,6 +105,10 @@ if args.forceBuild:
 subprocess.call(["ccache", "-M", str(args.ccacheSize)+"G"])
 print("Zeroing ccache statistics.")
 subprocess.call(["ccache", "-z"])
+
+if args.buildRunID is not None:
+  ARGS.append("--buildRunID")
+  ARGS.append(str(args.buildRunID))
 
 # run build
 subprocess.check_call(["wineserver", "-p"], stdout=sys.stdout, stderr=sys.stderr) # start wine server

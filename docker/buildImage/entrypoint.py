@@ -110,7 +110,7 @@ if build:
   # args
   if args.buildType == "linux64-ci":
     ARGS=["--disableDoxygen", "--disableXMLDoc"]
-    RUNEXAMPLESARGS=["--disableCompare", "--disableMakeClean"]
+    RUNEXAMPLESARGS=["--disableMakeClean", "--checkGUIs"]
     RUNEXAMPLESFILTER=["--filter", "'basic' in labels"]
   
     # get current/last image ID
@@ -283,6 +283,7 @@ if build:
 
 
 def runExamplesPartition(ARGS, pullMbsim, pullAll):
+  ret=0
   CURDIR=os.getcwd()
 
   repos=set()
@@ -341,14 +342,15 @@ def runExamplesPartition(ARGS, pullMbsim, pullAll):
     print("running examples failed.")
     sys.stdout.flush()
   os.chdir(CURDIR)
+  return ret
 
 if args.runExamplesPre:
-  runExamplesPartition(["--pre"], pullMbsim=True, pullAll=False)
+  ret+=runExamplesPartition(["--pre"], pullMbsim=True, pullAll=False)
 
 if args.runExamplesPartition:
-  runExamplesPartition(["--partition"], pullMbsim=True, pullAll=True)
+  ret+=runExamplesPartition(["--partition"], pullMbsim=True, pullAll=True)
 
 if args.runExamplesPost:
-  runExamplesPartition(["--post"], pullMbsim=True, pullAll=True)
+  ret+=runExamplesPartition(["--post"], pullMbsim=True, pullAll=True)
 
 sys.exit(ret)

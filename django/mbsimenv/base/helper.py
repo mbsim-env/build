@@ -215,6 +215,23 @@ def subprocessCheckOutput(comm, f):
   f.write(p.stderr.decode('utf-8'))
   return p.stdout
 
+# decode the bytes b to utf-8 replacing invalid bytes with {{0x??}}
+# returns a tuple containing the utf-8 decoded string and none processed bytes
+# (none processed bytes can happen if the input b ends in the middle of a utf-8 multi-byte char)
+def decodeUTF8(b):
+  try:
+    u=b.decode("utf-8")
+    return u, b""
+  except UnicodeDecodeError as ex:
+    if ex.reason=="unexpected end of data":
+      return b[:ex.start].decode("utf-8"), b[ex.start:]
+    ustart=b[:ex.start].decode("utf-8")
+    uerr=""
+    for c in b[ex.start:ex.end]:
+      uerr+="{{"+hex(c)+"}}"
+    urest, brest=decodeUTF8(b[ex.end:])
+    return ustart+uerr+urest, brest
+
 # subprocess call with MultiFile output
 def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   # remove core dumps from previous runs
@@ -256,13 +273,9 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
     # remove carrige returns
     data=re.sub(b"\n.*\r", b"\n", data)
     data=re.sub(b"^.*\r", b"", data)
-    try:
-      dataLine=data.decode("utf-8")
-      print(dataLine, end="", file=f)
-    except UnicodeDecodeError as ex: # catch broken multibyte unicode characters and append it to next data
-      dataLine=data[0:ex.start].decode("utf-8")
-      print(dataLine, end="", file=f) # print up to first broken character
-      dataNP=ex.object[ex.start:] # add broken characters to next data
+    # decode all data possible
+    dataLine, dataNP=decodeUTF8(data)
+    print(dataLine, end="", file=f)
     # check stop regex
     if stopRE is not None and stopRE.search(dataLine) is not None:
       stopByRE=True
@@ -276,7 +289,8 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
     if proc.poll() is None:
       proc.kill()
   # print not yet processed data
-  print(dataNP.decode("utf-8"), end="", file=f)
+  dataLine, dataNP=decodeUTF8(dataNP+b" ")
+  print(dataLine, end="", file=f)
   # wait for the call program to exit
   ret=proc.wait()
   endTime=django.utils.timezone.now()

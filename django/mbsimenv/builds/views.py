@@ -66,9 +66,12 @@ class Run(base.views.Base):
         ab.append(x)
     context["allBranches"]=ab
 
-    allBuildTypes=builds.models.Run.objects.filter(fmatvecBranch=self.run.fmatvecBranch, hdf5serieBranch=self.run.hdf5serieBranch,
-                                                   openmbvBranch=self.run.openmbvBranch, mbsimBranch=self.run.mbsimBranch).\
-                    values("buildType").distinct()
+    if self.run.fmatvecBranch!="" and self.run.hdf5serieBranch!="" and self.run.openmbvBranch!="" and self.run.mbsimBranch!="":
+      allBuildTypes=builds.models.Run.objects.filter(fmatvecBranch=self.run.fmatvecBranch, hdf5serieBranch=self.run.hdf5serieBranch,
+                                                     openmbvBranch=self.run.openmbvBranch, mbsimBranch=self.run.mbsimBranch).\
+                      values("buildType").distinct()
+    else:
+      allBuildTypes=[]
     context["allBuildTypes"]=list(allBuildTypes)
     for bt in context["allBuildTypes"]:
       bt["icon"]=base.helper.buildTypeIcon(bt["buildType"])
@@ -328,12 +331,12 @@ def createUniqueRunID(request, buildtype, executorID, fmatvecSHA, hdf5serieSHA, 
   run.mbsimUpdateCommitID=mbsimSHA
   run.save()
   with django.db.transaction.atomic():
-    oldRunExecutors=builds.models.Run.objects.filter(buildType=buildtype,
+    oldRuns=builds.models.Run.objects.filter(buildType=buildtype,
               fmatvecUpdateCommitID=fmatvecSHA, hdf5serieUpdateCommitID=hdf5serieSHA,
               openmbvUpdateCommitID=openmbvSHA, mbsimUpdateCommitID=mbsimSHA).\
-              select_for_update().exclude(id=run.id).values_list("executor", flat=True)
-    for oldRunExecutor in oldRunExecutors:
-      if base.helper.getExecutorID(oldRunExecutor)==executorID:
+              select_for_update().exclude(id=run.id).values("id", "executor")
+    for oldRun in oldRuns:
+      if base.helper.getExecutorID(oldRun["executor"])==executorID:
         run.delete()
-        return django.http.JsonResponse({"runID": None}, json_dumps_params={"indent": 2})
+        return django.http.JsonResponse({"runID": None, "existingRunID": oldRun["id"]}, json_dumps_params={"indent": 2})
     return django.http.JsonResponse({"runID": run.id}, json_dumps_params={"indent": 2})

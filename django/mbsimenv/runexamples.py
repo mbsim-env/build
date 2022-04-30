@@ -370,21 +370,21 @@ def main():
         if subprocess.call(["vncserver", "-kill", ":"+str(displayNR)], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))!=0:
           print("Cannot close vnc server on :%d but continue."%(displayNR))
 
-  # set global result and add failedExamples and print exception from examples
-  failedExamples=[]
-  for retAlli in retAll:
-    retAllInt, exampleName, excStr=retAlli
-    willFail=False
-    if os.path.isfile(pj(exampleName, "labels")):
-      willFail='willfail' in codecs.open(pj(exampleName, "labels"), "r", encoding="utf-8").read().rstrip().split(' ')
-    if retAllInt!=0 and not willFail:
-      if mainRet==0:
-        mainRet=1
-      failedExamples.append(exampleName)
-    if excStr is not None:
-      mainRet=-1
-      print("\n\n\nException from runExample "+exampleName)
-      print(excStr)
+    # set global result and add failedExamples and print exception from examples
+    failedExamples=[]
+    for retAlli in retAll:
+      retAllInt, exampleName, excStr=retAlli
+      willFail=False
+      if os.path.isfile(pj(exampleName, "labels")):
+        willFail='willfail' in codecs.open(pj(exampleName, "labels"), "r", encoding="utf-8").read().rstrip().split(' ')
+      if retAllInt!=0 and not willFail:
+        if mainRet==0:
+          mainRet=1
+        failedExamples.append(exampleName)
+      if excStr is not None:
+        mainRet=-1
+        print("\n\n\nException from runExample "+exampleName)
+        print(excStr)
 
   if args.partition:
     import uuid
