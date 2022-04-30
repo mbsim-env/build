@@ -13,7 +13,7 @@ class Migration(migrations.Migration):
         migrations.AddField(
             model_name='run',
             name='executor',
-            field=models.TextField(default='MBSim-Env'),
+            field=models.TextField(default='<span class="MBSIMENV_EXECUTOR_MBSIMENV">MBSim-Env</span>'),
             preserve_default=False,
         ),
     ]
