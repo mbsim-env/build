@@ -12,6 +12,7 @@ import os
 import datetime
 import mbsimenvSecrets
 from octicons.templatetags.octicons import octicon
+from django.db.models import Q
 
 # maps the current url to the proper run id url (without forwarding to keep the URL in the browser)
 def currentBuildtypeBranch(request, buildtype, fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch):
@@ -66,15 +67,29 @@ class Run(base.views.Base):
         ab.append(x)
     context["allBranches"]=ab
 
-    if self.run.fmatvecBranch!="" and self.run.hdf5serieBranch!="" and self.run.openmbvBranch!="" and self.run.mbsimBranch!="":
-      allBuildTypes=builds.models.Run.objects.filter(fmatvecBranch=self.run.fmatvecBranch, hdf5serieBranch=self.run.hdf5serieBranch,
-                                                     openmbvBranch=self.run.openmbvBranch, mbsimBranch=self.run.mbsimBranch).\
-                      values("buildType").distinct()
+    if self.run.fmatvecUpdateCommitID!="" and self.run.hdf5serieUpdateCommitID!="" and \
+       self.run.openmbvUpdateCommitID!="" and self.run.mbsimUpdateCommitID!="":
+      allBuildTypesPerSHA=list(builds.models.Run.objects.filter(fmatvecUpdateCommitID=self.run.fmatvecUpdateCommitID,
+                                                                hdf5serieUpdateCommitID=self.run.hdf5serieUpdateCommitID,
+                                                                openmbvUpdateCommitID=self.run.openmbvUpdateCommitID,
+                                                                mbsimUpdateCommitID=self.run.mbsimUpdateCommitID).\
+                                                                exclude(id=self.run.id).values("buildType", "id").distinct())
+      for bt in allBuildTypesPerSHA:
+        bt["icon"]=base.helper.buildTypeIcon(bt["buildType"])
     else:
-      allBuildTypes=[]
-    context["allBuildTypes"]=list(allBuildTypes)
-    for bt in context["allBuildTypes"]:
-      bt["icon"]=base.helper.buildTypeIcon(bt["buildType"])
+      allBuildTypesPerSHA=None
+    if self.run.fmatvecBranch!="" and self.run.hdf5serieBranch!="" and self.run.openmbvBranch!="" and self.run.mbsimBranch!="":
+      allBuildTypesPerBranch=list(builds.models.Run.objects.filter(fmatvecBranch=self.run.fmatvecBranch,
+                                                                   hdf5serieBranch=self.run.hdf5serieBranch,
+                                                                   openmbvBranch=self.run.openmbvBranch,
+                                                                   mbsimBranch=self.run.mbsimBranch).\
+                                                                   exclude(id=self.run.id).values("buildType").distinct())
+      for bt in allBuildTypesPerBranch:
+        bt["icon"]=base.helper.buildTypeIcon(bt["buildType"])
+    else:
+      allBuildTypesPerBranch=None
+    context["allBuildTypesPerSHA"]=allBuildTypesPerSHA
+    context["allBuildTypesPerBranch"]=allBuildTypesPerBranch
 
     newest=None
     for r in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
@@ -303,10 +318,16 @@ def releaseDistribution(request, run_id):
       base.helper.copyFile(fi, fo)
   return django.http.HttpResponse()
 
-def runDistributionFile(request, id):
+def runDistributionFileBuildtypeBranch(request, buildtype, fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch):
+  run=builds.models.Run.objects.getCurrent(buildtype, fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch)
+  return django.http.FileResponse(run.distributionFile, as_attachment=True, filename=run.distributionFileName)
+def runDistributionDebugFileBuildtypeBranch(request, buildtype, fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch):
+  run=builds.models.Run.objects.getCurrent(buildtype, fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch)
+  return django.http.FileResponse(run.distributionDebugFile, as_attachment=True, filename=run.distributionDebugFileName)
+def runDistributionFileID(request, id):
   run=builds.models.Run.objects.get(id=id)
   return django.http.FileResponse(run.distributionFile, as_attachment=True, filename=run.distributionFileName)
-def runDistributionDebugFile(request, id):
+def runDistributionDebugFileID(request, id):
   run=builds.models.Run.objects.get(id=id)
   return django.http.FileResponse(run.distributionDebugFile, as_attachment=True, filename=run.distributionDebugFileName)
 
@@ -331,7 +352,10 @@ def createUniqueRunID(request, buildtype, executorID, fmatvecSHA, hdf5serieSHA, 
   run.mbsimUpdateCommitID=mbsimSHA
   run.save()
   with django.db.transaction.atomic():
-    oldRuns=builds.models.Run.objects.filter(buildType=buildtype,
+    reasentlyStarted=django.utils.timezone.now()-django.utils.timezone.timedelta(hours=12)
+    oldRuns=builds.models.Run.objects.filter(
+              Q(endTime__isnull=False) | (Q(endTime__isnull=True) & Q(startTime__gt=reasentlyStarted)),
+              buildType=buildtype,
               fmatvecUpdateCommitID=fmatvecSHA, hdf5serieUpdateCommitID=hdf5serieSHA,
               openmbvUpdateCommitID=openmbvSHA, mbsimUpdateCommitID=mbsimSHA).\
               select_for_update().exclude(id=run.id).values("id", "executor")

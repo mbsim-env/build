@@ -11,9 +11,7 @@ class SimpleSFTPStorage(django.core.files.storage.Storage):
 
   def _connectOnDemandHandler(func):
     def wrapper(self, *args, **kwargs):
-      try:
-        return func(self, *args, **kwargs)
-      except:
+      def reconnect(self):
         # cleanup load connection (not error on failure)
         try:
           if self.sftp is not None:
@@ -32,9 +30,17 @@ class SimpleSFTPStorage(django.core.files.storage.Storage):
         self.client.set_missing_host_key_policy(paramiko.client.MissingHostKeyPolicy)
         self.client.connect(self.params["hostname"], port=self.params["port"],
                             username=self.params["username"], password=self.params["password"],
-                            allow_agent=False, look_for_keys=False, banner_timeout=60, auth_timeout=120)
+                            allow_agent=False, look_for_keys=False, timeout=60, banner_timeout=60, auth_timeout=60)
         self.sftp=self.client.open_sftp()
+      try:
         return func(self, *args, **kwargs)
+      except:
+        try:
+          reconnect(self)
+          return func(self, *args, **kwargs)
+        except:
+          reconnect(self)
+          return func(self, *args, **kwargs)
     return wrapper
 
   @_connectOnDemandHandler

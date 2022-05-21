@@ -1,6 +1,8 @@
 import django
 import re
-import base
+from base.helper import addFieldLabel as AL
+from base.helper import FieldLabel as L
+from django.db.models import Q
 
 class RunManager(django.db.models.Manager):
   # return the current Run object for buildType (the one with the newest id)
@@ -16,27 +18,27 @@ class RunManager(django.db.models.Manager):
   # return a queryset with all failed runs
   def filterFailed(self):
     return self.filter(
-      (django.db.models.Q(fmatvecUpdateOK__isnull=False)   & django.db.models.Q(fmatvecUpdateOK=False)) |
-      (django.db.models.Q(hdf5serieUpdateOK__isnull=False) & django.db.models.Q(hdf5serieUpdateOK=False)) |
-      (django.db.models.Q(openmbvUpdateOK__isnull=False)   & django.db.models.Q(openmbvUpdateOK=False)) |
-      (django.db.models.Q(mbsimUpdateOK__isnull=False)     & django.db.models.Q(mbsimUpdateOK=False)) |
-      (django.db.models.Q(distributionOK__isnull=False)    & django.db.models.Q(distributionOK=False)) |
-      django.db.models.Q(toolsFailed__gt=0)
+      (Q(fmatvecUpdateOK__isnull=False)   & Q(fmatvecUpdateOK=False)) |
+      (Q(hdf5serieUpdateOK__isnull=False) & Q(hdf5serieUpdateOK=False)) |
+      (Q(openmbvUpdateOK__isnull=False)   & Q(openmbvUpdateOK=False)) |
+      (Q(mbsimUpdateOK__isnull=False)     & Q(mbsimUpdateOK=False)) |
+      (Q(distributionOK__isnull=False)    & Q(distributionOK=False)) |
+      Q(toolsFailed__gt=0)
     ).distinct()
 
 class Run(django.db.models.Model):
   objects=RunManager()
 
   id=django.db.models.AutoField(primary_key=True)
-  buildType=django.db.models.CharField(max_length=50, help_text=base.helper.inlineAdmin)
-  executor=django.db.models.TextField(help_text=base.helper.inlineAdmin)
+  buildType=AL(django.db.models.CharField(max_length=50), L.inline, L.list)
+  executor=django.db.models.TextField()
   command=django.db.models.TextField()
-  startTime=django.db.models.DateTimeField(help_text=base.helper.inlineAdmin)
+  startTime=AL(django.db.models.DateTimeField(), L.inline, L.list)
   endTime=django.db.models.DateTimeField(null=True, blank=True)
-  fmatvecBranch=django.db.models.CharField(max_length=50, help_text=base.helper.inlineAdmin)
-  hdf5serieBranch=django.db.models.CharField(max_length=50, help_text=base.helper.inlineAdmin)
-  openmbvBranch=django.db.models.CharField(max_length=50, help_text=base.helper.inlineAdmin)
-  mbsimBranch=django.db.models.CharField(max_length=50, help_text=base.helper.inlineAdmin)
+  fmatvecBranch=AL(django.db.models.CharField(max_length=50), L.inline, L.list, L.search)
+  hdf5serieBranch=AL(django.db.models.CharField(max_length=50), L.inline, L.list, L.search)
+  openmbvBranch=AL(django.db.models.CharField(max_length=50), L.inline, L.list, L.search)
+  mbsimBranch=AL(django.db.models.CharField(max_length=50), L.inline, L.list, L.search)
   fmatvecUpdateOK=django.db.models.BooleanField(null=True, blank=True)
   hdf5serieUpdateOK=django.db.models.BooleanField(null=True, blank=True)
   openmbvUpdateOK=django.db.models.BooleanField(null=True, blank=True)
@@ -138,12 +140,12 @@ django.db.models.signals.pre_delete.connect(runDeleteHandler, sender=Run)
 class ToolManager(django.db.models.Manager):
   # return a queryset with all failed tools of the current queryset
   def filterFailed(self):
-    return self.filter(django.db.models.Q(willFail=False) & (
-      (django.db.models.Q(configureOK__isnull=False) & django.db.models.Q(configureOK=False)) |
-      (django.db.models.Q(makeOK__isnull=False)      & django.db.models.Q(makeOK=False)) |
-      (django.db.models.Q(makeCheckOK__isnull=False) & django.db.models.Q(makeCheckOK=False)) |
-      (django.db.models.Q(docOK__isnull=False)       & django.db.models.Q(docOK=False)) |
-      (django.db.models.Q(xmldocOK__isnull=False)    & django.db.models.Q(xmldocOK=False))
+    return self.filter(Q(willFail=False) & (
+      (Q(configureOK__isnull=False) & Q(configureOK=False)) |
+      (Q(makeOK__isnull=False)      & Q(makeOK=False)) |
+      (Q(makeCheckOK__isnull=False) & Q(makeCheckOK=False)) |
+      (Q(docOK__isnull=False)       & Q(docOK=False)) |
+      (Q(xmldocOK__isnull=False)    & Q(xmldocOK=False))
     ))
 
 class Tool(django.db.models.Model):
@@ -151,7 +153,7 @@ class Tool(django.db.models.Model):
 
   id=django.db.models.AutoField(primary_key=True)
   run=django.db.models.ForeignKey(Run, on_delete=django.db.models.CASCADE, related_name='tools')
-  toolName=django.db.models.CharField(max_length=200, help_text=base.helper.inlineAdmin)
+  toolName=AL(django.db.models.CharField(max_length=200), L.inline, L.list, L.search)
   willFail=django.db.models.BooleanField()
   configureOK=django.db.models.BooleanField(null=True, blank=True)
   configureOutput=django.db.models.TextField(blank=True)

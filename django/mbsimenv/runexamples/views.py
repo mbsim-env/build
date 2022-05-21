@@ -61,15 +61,35 @@ class Run(base.views.Base):
                             self.run.build_run.openmbvBranch=="master" and self.run.build_run.mbsimBranch=="master"
 
     if self.run.build_run is not None:
-      allBuildTypes=runexamples.models.Run.objects.filter(
-        build_run__fmatvecBranch=self.run.build_run.fmatvecBranch, build_run__hdf5serieBranch=self.run.build_run.hdf5serieBranch,
-        build_run__openmbvBranch=self.run.build_run.openmbvBranch, build_run__mbsimBranch=self.run.build_run.mbsimBranch).\
-        values("buildType").distinct()
-      context["allBuildTypes"]=list(allBuildTypes)
-      for bt in context["allBuildTypes"]:
-        bt["icon"]=base.helper.buildTypeIcon(bt["buildType"])
+      if self.run.build_run.fmatvecUpdateCommitID!="" and self.run.build_run.hdf5serieUpdateCommitID!="" and \
+         self.run.build_run.openmbvUpdateCommitID!="" and self.run.build_run.mbsimUpdateCommitID!="":
+        allBuildTypesPerSHA=list(runexamples.models.Run.objects.filter(
+              build_run__fmatvecUpdateCommitID=self.run.build_run.fmatvecUpdateCommitID,
+              build_run__hdf5serieUpdateCommitID=self.run.build_run.hdf5serieUpdateCommitID,
+              build_run__openmbvUpdateCommitID=self.run.build_run.openmbvUpdateCommitID,
+              build_run__mbsimUpdateCommitID=self.run.build_run.mbsimUpdateCommitID).\
+              exclude(id=self.run.id).values("buildType", "id").distinct())
+        for bt in allBuildTypesPerSHA:
+          bt["icon"]=base.helper.buildTypeIcon(bt["buildType"])
+      else:
+        allBuildTypesPerSHA=None
+      if self.run.build_run.fmatvecBranch!="" and self.run.build_run.hdf5serieBranch!="" and \
+         self.run.build_run.openmbvBranch!="" and self.run.build_run.mbsimBranch!="":
+        allBuildTypesPerBranch=list(runexamples.models.Run.objects.filter(
+              build_run__fmatvecBranch=self.run.build_run.fmatvecBranch,
+              build_run__hdf5serieBranch=self.run.build_run.hdf5serieBranch,
+              build_run__openmbvBranch=self.run.build_run.openmbvBranch,
+              build_run__mbsimBranch=self.run.build_run.mbsimBranch).\
+              exclude(id=self.run.id).values("buildType").distinct())
+        for bt in allBuildTypesPerBranch:
+          bt["icon"]=base.helper.buildTypeIcon(bt["buildType"])
+      else:
+        allBuildTypesPerBranch=None
+      context["allBuildTypesPerSHA"]=allBuildTypesPerSHA
+      context["allBuildTypesPerBranch"]=allBuildTypesPerBranch
     else:
-      context["allBuildTypes"]=None
+      context["allBuildTypesPerSHA"]=None
+      context["allBuildTypesPerBranch"]=None
 
     return context
 

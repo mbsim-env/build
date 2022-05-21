@@ -26,16 +26,16 @@ if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="
 if "MBSIMENVTAGNAME" not in os.environ or os.environ["MBSIMENVTAGNAME"]=="":
   raise RuntimeError("Envvar MBSIMENVTAGNAME is not defined.")
 
-# add daily build to crontab (starting at 01:00)
-crontab=\
-  "MBSIMENVSERVERNAME=%s\n"%(os.environ["MBSIMENVSERVERNAME"])+\
-  "MBSIMENVTAGNAME=%s\n"%(os.environ["MBSIMENVTAGNAME"])+\
-  subprocess.check_output(["crontab", "-l"]).decode("UTF-8")+\
-  "0 %d * * * /context/cron-daily.py -j %d 2> >(sed -re 's/^/DAILY: /' > /proc/1/fd/2) > >(sed -re 's/^/DAILY: /' > /proc/1/fd/1)\n"%(23 if os.environ["MBSIMENVTAGNAME"]!="staging" else 11, args.jobs)+\
-  "* * * * * /context/cron-ci.py -j %d 2> >(sed -re 's/^/CI: /' > /proc/1/fd/2) > >(sed -re 's/^/CI: /' > /proc/1/fd/1)\n"%(args.jobs)
-p=subprocess.Popen(['crontab', '/dev/stdin'], stdin=subprocess.PIPE)    
-p.communicate(input=crontab.encode("UTF-8"))
-p.wait()
+#mfmf# add daily build to crontab (starting at 01:00)
+#mfmfcrontab=\
+#mfmf  "MBSIMENVSERVERNAME=%s\n"%(os.environ["MBSIMENVSERVERNAME"])+\
+#mfmf  "MBSIMENVTAGNAME=%s\n"%(os.environ["MBSIMENVTAGNAME"])+\
+#mfmf  subprocess.check_output(["crontab", "-l"]).decode("UTF-8")+\
+#mfmf  "0 %d * * * /context/cron-daily.py -j %d 2> >(sed -re 's/^/DAILY: /' > /proc/1/fd/2) > >(sed -re 's/^/DAILY: /' > /proc/1/fd/1)\n"%(23 if os.environ["MBSIMENVTAGNAME"]!="staging" else 11, args.jobs)+\
+#mfmf  "* * * * * /context/cron-ci.py -j %d 2> >(sed -re 's/^/CI: /' > /proc/1/fd/2) > >(sed -re 's/^/CI: /' > /proc/1/fd/1)\n"%(args.jobs)
+#mfmfp=subprocess.Popen(['crontab', '/dev/stdin'], stdin=subprocess.PIPE)    
+#mfmfp.communicate(input=crontab.encode("UTF-8"))
+#mfmfp.wait()
 
 # run cron in background
 subprocess.check_call(["crond"])

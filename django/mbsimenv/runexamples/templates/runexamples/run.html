@@ -24,26 +24,44 @@
 <dl style="margin-right:0em;" class="row">
   <dt class="col-2">Build type</dt>
   <dd class="col-10">
-    {% if allBuildTypes %}
+    {% if allBuildTypesPerSHA or allBuildTypesPerBranch %}
       <div class="dropdown">
         <button class="btn btn-secondary btn-xs" type="button" data-toggle="dropdown">{%autoescape off%}{{runBuildTypeIcon}}{%endautoescape%} {{run.buildType}} {% octicon "triangle-down" %}</button>
         <div class="dropdown-menu" style="padding:1.5em;">
-          <p><b>Switch to current build of build-type:</b></p>
-          <table class="table table-hover table-bordered table-sm">
-            <thead>
-              <tr>
-                <th>Build Type</th>
-              </tr>
-            </thead>
-              {% for buildType in allBuildTypes %}
-                <tr class="TABLEROWHREF" style="cursor:pointer;"
-                    data-href="{% url "runexamples:current_buildtype_branch" buildType.buildType run.build_run.fmatvecBranch run.build_run.hdf5serieBranch run.build_run.openmbvBranch run.build_run.mbsimBranch %}">
-                  <td>{%autoescape off%}{{buildType.icon}}{%endautoescape%}&nbsp;{{buildType.buildType}}</td>
+          {% if allBuildTypesPerSHA %}
+            <table class="table table-hover table-bordered table-sm">
+              <thead>
+                <tr>
+                  <th>Switch to SAME build of build-type</th>
                 </tr>
-              {% endfor %}
-            <tbody>
-            </tbody>
-          </table>
+              </thead>
+              <tbody>
+                {% for buildType in allBuildTypesPerSHA %}
+                  <tr class="TABLEROWHREF" style="cursor:pointer;"
+                      data-href="{% url "runexamples:run" buildType.id %}">
+                    <td>{%autoescape off%}{{buildType.icon}}{%endautoescape%}&nbsp;{{buildType.buildType}}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% endif %}
+          {% if allBuildTypesPerBranch %}
+            <table class="table table-hover table-bordered table-sm">
+              <thead>
+                <tr>
+                  <th>Switch to CURRENT build of build-type</th>
+                </tr>
+              </thead>
+              <tbody>
+                {% for buildType in allBuildTypesPerBranch %}
+                  <tr class="TABLEROWHREF" style="cursor:pointer;"
+                      data-href="{% url "runexamples:current_buildtype_branch" buildType.buildType run.build_run.fmatvecBranch run.build_run.hdf5serieBranch run.build_run.openmbvBranch run.build_run.mbsimBranch %}">
+                    <td>{%autoescape off%}{{buildType.icon}}{%endautoescape%}&nbsp;{{buildType.buildType}}</td>
+                  </tr>
+                {% endfor %}
+              </tbody>
+            </table>
+          {% endif %}
         </div>
       </div>
     {% else %}

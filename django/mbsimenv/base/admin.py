@@ -12,7 +12,7 @@ class _MBSimEnvInlineModelAdmin(django.contrib.admin.TabularInline):
     self.model=relatedModel
     self.fields=[]
     for f in relatedModel._meta.get_fields():
-      if hasattr(f, "help_text") and base.helper.inlineAdmin in f.help_text:
+      if hasattr(f, "mbsimenv_labels") and base.helper.FieldLabel.inline in f.mbsimenv_labels:
         self.fields.append(f.name)
     # pull in at least one field to avoid that all fields are used
     if len(self.fields)==0:
@@ -27,11 +27,17 @@ class MBSimEnvModelAdmin(django.contrib.admin.ModelAdmin):
     # mark all ForeignKey fields as raw_id_fields
     self.raw_id_fields=[]
     self.readonly_fields=[]
+    self.list_display=[model._meta.pk.name]
+    self.search_fields=[]
     for f in model._meta.get_fields():
       if isinstance(f, django.db.models.ForeignKey):
         self.raw_id_fields.append(f.name)
       if isinstance(f, django.db.models.UUIDField):
         self.readonly_fields.append(f.name)
+      if hasattr(f, "mbsimenv_labels") and base.helper.FieldLabel.list in f.mbsimenv_labels:
+        self.list_display.append(f.name)
+      if hasattr(f, "mbsimenv_labels") and base.helper.FieldLabel.search in f.mbsimenv_labels:
+        self.search_fields.append(f.name)
     super().__init__(model, admin_site, *args, **kwargs)
   def get_inlines(self, request, obj):
     # mark all related ManyToOneRel fields (reverse ForeignKey's) as inlines

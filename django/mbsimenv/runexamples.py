@@ -182,8 +182,8 @@ if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_
 
 def removeOldBuilds():
   olderThan=django.utils.timezone.now()-datetime.timedelta(days=args.removeOlderThan)
-  keep=runexamples.models.Run.objects.filter(buildType=args.buildType).order_by('-startTime')[0:args.removeOlderThan].values("id")
-  nrDeleted=runexamples.models.Run.objects.filter(buildType=args.buildType, startTime__lt=olderThan).exclude(id__in=keep).delete()[0]
+  keep=runexamples.models.Run.objects.all().order_by('-startTime')[0:args.removeOlderThan].values("id")
+  nrDeleted=runexamples.models.Run.objects.filter(startTime__lt=olderThan).exclude(id__in=keep).delete()[0]
   if nrDeleted>0:
     print("Deleted %d example runs being older than %d days!"%(nrDeleted, args.removeOlderThan))
     sys.stdout.flush()
@@ -223,7 +223,7 @@ def main():
   for d in args.directories:
     if not os.path.isdir(d):
       print("The positional argument (directory) "+d+" does not exist.")
-      sys.exit(1)
+      return -1
 
   # if no directory is specified use the current dir (all examples) filter by --filter
   if len(args.directories)==0:
@@ -309,7 +309,7 @@ def main():
     django.db.close_old_connections() # needes since django.db.models.signals.pre_save.connect(...) is not called by bulk_update
     runexamples.models.ExampleStatic.objects.bulk_update(esl, ["queued"])
     # exit pre step
-    sys.exit(0)
+    return 0
 
   if normalRun or args.partition:
     # get mbxmlutilsvalidate program
@@ -342,19 +342,22 @@ def main():
         lock=multiprocessing.Manager().Lock()
         pList=[]
         django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
-        pool=multiprocessing.Pool(args.j)
-        for i in range(0,args.j):
-          pList.append(pool.apply_async(func=functools.partial(runExampleOuter, exRun, lock)))
-        retAll=[]
-        for p in pList:
-          retAll.extend(p.get())
+        with multiprocessing.Pool(args.j) as pool:
+          for i in range(0,args.j):
+            pList.append(pool.apply_async(func=functools.partial(runExampleOuter, exRun, lock)))
+          retAll=[]
+          for p in pList:
+            retAll.extend(p.get())
+        django.db.connections.close_all() # close connections before finishing a process
       elif not args.debugDisableMultiprocessing:
         # init mulitprocessing handling and run in parallel
         django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
         lock=multiprocessing.Manager().Lock()
-        poolResult=multiprocessing.Pool(args.j).map_async(functools.partial(runExample, exRun, lock), directories, 1)
-        # wait for pool to finish and get result
-        retAll=poolResult.get()
+        with multiprocessing.Pool(args.j) as pool:
+          poolResult=pool.map_async(functools.partial(runExample, exRun, lock), directories, 1)
+          # wait for pool to finish and get result
+          retAll=poolResult.get()
+        django.db.connections.close_all() # close connections before finishing a process
       else: # debugging
         import queue
         poolResult=queue.Queue()
@@ -390,8 +393,8 @@ def main():
     import uuid
     localRet=coverage(None, args.prefix+"/cov.trace.final.part."+args.buildType+"."+str(uuid.uuid4()))
     if localRet!=0 or mainRet<0:
-      sys.exit(1)
-    sys.exit(0)
+      return -1
+    return 0
   if args.post:
     exRun.examplesFailed=exRun.examples.filterFailed().count()
     exRun.save()
@@ -722,6 +725,7 @@ def runExampleOuter(exRun, lock):
   retAllPerThread=[]
   for d in dirs:
     retAllPerThread.append(runExample(exRun, lock, d))
+  django.db.connections.close_all() # close connections before finishing a process
   return retAllPerThread
 
 
@@ -1527,11 +1531,11 @@ def coverage(exRun, lcovResultFile=None):
           print("Upload to codecov v4 try %d/%d"%(nrTry, tries), file=lcovFD)
           codecovError=False
           try:
-            response=requests.post("https://codecov.io/upload/v4?commit=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
+            response=requests.post("https://codecov.io/upload/v4?commit=%s&build=%d&job=%d&build_url=%s&flags=%s&token=%s"% \
               (commitID, exRun.build_run.id, exRun.id,
                urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
-               "valgrind" if "valgrind" in args.buildType else "normal"),
-              headers={"Accept": "text/plain", "Authorization": mbsimenvSecrets.getSecrets("codecovUploadToken", repo)})
+               "valgrind" if "valgrind" in args.buildType else "normal", mbsimenvSecrets.getSecrets("codecovUploadToken", repo)),
+              headers={"Accept": "text/plain"})
           except:
             codecovError=True
           if not codecovError and response.status_code==200:
@@ -1601,6 +1605,7 @@ class ExampleServerQueue:
 
 if __name__=="__main__":
   mainRet=main()
+  django.db.connections.close_all()
   if mainRet<0: # fatal error
     sys.exit(1)
   sys.exit(0)

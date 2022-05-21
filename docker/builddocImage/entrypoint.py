@@ -18,15 +18,16 @@ if not os.path.isdir("/mbsim-env/mbsim"):
   subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/mbsim.git"], cwd="/mbsim-env",
     stdout=sys.stdout, stderr=sys.stderr)
 
-if args.mbsimBranch is not None:
+if args.mbsimBranch is not None and args.mbsimBranch!="":
+  sha=args.mbsimBranch.split("*")[-1]
   os.chdir("/mbsim-env/mbsim")
   if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
     ret=ret+1
     print("git checkout detached failed.")
-  if subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", args.mbsimBranch+":"+args.mbsimBranch])!=0:
+  if subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", sha+":"+sha])!=0:
     ret=ret+1
     print("git fetch failed.")
-  if subprocess.call(["git", "checkout", "-q", args.mbsimBranch])!=0:
+  if subprocess.call(["git", "checkout", "-q", sha])!=0:
     ret=ret+1
     print("git checkout of branch "+args.mbsimBranch+" failed.")
 

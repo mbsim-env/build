@@ -669,7 +669,7 @@ def run(s, jobs=4,
             c.stop()
             print("Container "+cn+getTagname()+" stopped (id="+c.id+")")
         except docker.errors.NotFound:
-          print("Container "+cn+getTagname()+" cannot be stopped (id="+c.id+")")
+          print("Container "+cn+getTagname()+" cannot be stopped")
       for n in dockerClient.networks.list(names=["mbsimenv_service_extern:"+getTagname(), "mbsimenv_service_intern:"+getTagname()]):
         try:
           n.remove()

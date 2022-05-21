@@ -38,7 +38,7 @@
    fun:_ZN4SoDB17createGlobalFieldERK6SbName6SoType
    fun:_ZN4SoDB4initEv
    fun:_ZN4SoQt4initEP7QWidget
-   fun:_ZN10OpenMBVGUI10MainWindowC1ERSt4listISsSaISsEE
+   fun:_ZN10OpenMBVGUI10MainWindowC1ERSt4listISsSaISsEEb
 }
 {
    xxx
@@ -646,7 +646,7 @@
    fun:_Znwm
    fun:_ZN10SoSFUInt3214createInstanceEv
    fun:_ZN4SoDB17createGlobalFieldERK6SbName6SoType
-   fun:_ZN10OpenMBVGUI10MainWindowC1ERSt4listISsSaISsEE
+   fun:_ZN10OpenMBVGUI10MainWindowC1ERSt4listISsSaISsEEb
 }
 {
    COIN

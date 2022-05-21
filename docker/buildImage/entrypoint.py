@@ -245,19 +245,20 @@ if build:
     CURDIR=os.getcwd()
     os.chdir("/mbsim-env/mbsim-valgrind/examples")
   
+    sha=args.mbsimBranch.split("*")[-1]
     if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
       ret=ret+1
       print("git checkout detached failed.")
-    if subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", args.mbsimBranch+":"+args.mbsimBranch])!=0:
+    if subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", sha+":"+sha])!=0:
       ret=ret+1
       print("git fetch failed.")
-    if subprocess.call(["git", "checkout", "-q", args.mbsimBranch])!=0:
+    if subprocess.call(["git", "checkout", "-q", sha])!=0:
       ret=ret+1
       print("git checkout of branch "+args.mbsimBranch+" failed.")
     sys.stdout.flush()
     valgrindEnv=os.environ.copy()
     valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
-    valgrindEnv["HDF5SERIE_NOCRASHFIX"]="1"
+    valgrindEnv["HDF5SERIE_FIXAFTER"]=str(10*60*1000)#10min
     # build
     RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] \
       if os.environ["MBSIMENVTAGNAME"]=="staging" or
@@ -300,16 +301,16 @@ def runExamplesPartition(ARGS, pullMbsim, pullAll):
     # update
     os.chdir("/mbsim-env/"+repo)
     
-    branch=getattr(args, repo+"Branch")
+    sha=getattr(args, repo+"Branch").split("*")[-1]
     if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
       ret=ret+1
       print("git checkout detached failed.")
-    if subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", branch+":"+branch])!=0:
+    if subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", sha+":"+sha])!=0:
       ret=ret+1
       print("git fetch failed.")
-    if subprocess.call(["git", "checkout", "-q", branch])!=0:
+    if subprocess.call(["git", "checkout", "-q", sha])!=0:
       ret=ret+1
-      print("git checkout of branch "+branch+" failed.")
+      print("git checkout of branch "+getattr(args, repo+"Branch")+" failed.")
     sys.stdout.flush()
 
   os.makedirs("/mbsim-env/mbsim/examples", exist_ok=True)
@@ -317,7 +318,7 @@ def runExamplesPartition(ARGS, pullMbsim, pullAll):
   runexamplesEnv=os.environ.copy()
   if args.valgrindExamples:
     runexamplesEnv["MBSIM_SET_MINIMAL_TEND"]="1"
-    runexamplesEnv["HDF5SERIE_NOCRASHFIX"]="1"
+    runexamplesEnv["HDF5SERIE_FIXAFTER"]=str(10*60*1000)#10min
   # build
   RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] \
     if os.environ["MBSIMENVTAGNAME"]=="staging" or \

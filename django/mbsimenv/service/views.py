@@ -15,6 +15,8 @@ import urllib.parse
 import requests
 import os
 import re
+import types
+import datetime
 from octicons.templatetags.octicons import octicon
 
 # the user profile page
@@ -250,9 +252,29 @@ def deleteBranchCombination(request, model, id):
   b.delete()
   return django.http.HttpResponse()
 
+# improve portability of Feed: use "Z" as timezone instead of "+01:00" as many feed readers do not understand "+01:00"
+class MyAtom1Feed(django.utils.feedgenerator.Atom1Feed):
+  def _override(self, handler):
+    if not hasattr(handler, "addQuickElement_org"):
+      setattr(handler, "addQuickElement_org", handler.addQuickElement)
+      def myAddQuickElement(self, name, contents=None, attrs=None):
+        if name=="updated" or name=="published":
+          contents=contents[0:-3]+contents[-2:]
+          dt=datetime.datetime.strptime(contents, "%Y-%m-%dT%H:%M:%S.%f%z")
+          dt=(dt+dt.utcoffset()).replace(microsecond=0, tzinfo=None)
+          contents=dt.isoformat()+"Z"
+        self.addQuickElement_org(name, contents, attrs)
+      handler.addQuickElement=types.MethodType(myAddQuickElement, handler)
+  def add_root_elements(self, handler):
+    self._override(handler)
+    super().add_root_elements(handler)
+  def add_item_elements(self, handler, item):
+    self._override(handler)
+    super().add_item_elements(handler, item)
+
 html2text=re.compile("<[^>]*>")
 class Feed(django.contrib.syndication.views.Feed):
-  feed_type=django.utils.feedgenerator.Atom1Feed
+  feed_type=MyAtom1Feed
   title="MBSim-Env Build System Feeds"
   subtitle="Failed builds and examples of the MBSim-Environment build system."
   link=django.urls.reverse_lazy("service:home")
@@ -262,10 +284,10 @@ class Feed(django.contrib.syndication.views.Feed):
     date=django.utils.timezone.now()-django.utils.timezone.timedelta(days=30)
     # get builds and examples newer than 30days
     buildTypes=["linux64-ci", "win64-ci", "linux64-dailydebug", "linux64-dailydebug-valgrind", "linux64-dailyrelease", "win64-dailyrelease"]
-    buildRun=builds.models.Run.objects.filterFailed().filter(startTime__gt=date, buildType__in=buildTypes)
-    exampleRun=runexamples.models.Run.objects.filterFailed().filter(startTime__gt=date, buildType__in=buildTypes)
-    # merge both lists and sort by startTime
-    return sorted(itertools.chain(buildRun, exampleRun), key=lambda x: x.startTime, reverse=True)
+    buildRun=builds.models.Run.objects.filterFailed().filter(endTime__gt=date, buildType__in=buildTypes)
+    exampleRun=runexamples.models.Run.objects.filterFailed().filter(endTime__gt=date, buildType__in=buildTypes)
+    # merge both lists and sort by endTime
+    return sorted(itertools.chain(buildRun, exampleRun), key=lambda x: x.endTime, reverse=True)
   
   # reutrn feed entry title, description, link and pubdate
   def item_title(self, run):
@@ -299,14 +321,14 @@ class Feed(django.contrib.syndication.views.Feed):
     isBuild=type(run) is builds.models.Run
     return django.urls.reverse("builds:run" if isBuild else "runexamples:run", args=[run.id])
   def item_pubdate(self, run):
-    return run.startTime
+    return run.endTime
   def item_updateddate(self, run):
-    return run.startTime
+    return run.endTime
   def item_enclosures(self, run):
     isBuild=type(run) is builds.models.Run
     OCTICON="gear" if isBuild else "beaker"
     return [django.utils.feedgenerator.Enclosure(
-      "https://"+os.environ['MBSIMENVSERVERNAME']+django.templatetags.static.static("octiconpng/"+OCTICON+".png"),
+      "https://"+os.environ['MBSIMENVSERVERNAME']+django.conf.settings.STATIC_URL+"octiconpng/"+OCTICON+".png",
       "0", "image/png")]
   def item_author_name(self, run):
     return "MBSim-Env"

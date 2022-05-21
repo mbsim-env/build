@@ -12,6 +12,7 @@ import re
 import string
 import socket
 import sys
+import enum
 import importlib.util
 import octicons.templatetags.octicons
 
@@ -294,7 +295,7 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   # wait for the call program to exit
   ret=proc.wait()
   endTime=django.utils.timezone.now()
-  print("\nEnded at %s after %s\n"%(endTime, endTime-startTime), file=f)
+  print("\nEnded at %s after %s with exit-code %d\n"%(endTime, endTime-startTime, ret), file=f)
   # stop the execution time guard thread
   if maxExecutionTime>0:
     if killed.isSet():
@@ -391,5 +392,11 @@ def buildTypeIcon(buildType):
     ret+='<i class="fa-brands fa-docker"></i>'
   return ret
 
-# add this to the Field's help_text option to show this field in MBSimEnvModelAdmin inlines (as read only)
-inlineAdmin='<span class="inlineadmin"/>'
+# add labels to fields
+class FieldLabel(enum.Enum):
+  inline = 1
+  list = 2
+  search = 3
+def addFieldLabel(field, *args):
+  setattr(field, "mbsimenv_labels", args)
+  return field

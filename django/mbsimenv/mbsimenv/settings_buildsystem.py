@@ -3,7 +3,7 @@ from .settings_base import *
 
 MBSIMENV_TYPE='buildsystem'
 
-DEBUG = True#mfmf
+DEBUG = False
 SECURE_SSL_REDIRECT = True
 CSRF_COOKIE_SECURE = True
 LOGGING['disable_existing_loggers'] = False

@@ -177,8 +177,8 @@ def setGithubStatus(run, state):
 
 def removeOldBuilds():
   olderThan=django.utils.timezone.now()-datetime.timedelta(days=args.removeOlderThan)
-  keep=builds.models.Run.objects.filter(buildType=args.buildType).order_by('-startTime')[0:args.removeOlderThan].values("id")
-  nrDeleted=builds.models.Run.objects.filter(buildType=args.buildType, startTime__lt=olderThan).exclude(id__in=keep).delete()[0]
+  keep=builds.models.Run.objects.all().order_by('-startTime')[0:args.removeOlderThan].values("id")
+  nrDeleted=builds.models.Run.objects.filter(startTime__lt=olderThan).exclude(id__in=keep).delete()[0]
   if nrDeleted>0:
     print("Deleted %d build runs being older than %d days!"%(nrDeleted, args.removeOlderThan))
 
@@ -522,7 +522,7 @@ def repoUpdate(run, buildInfo):
     setattr(run, repo+"UpdateDate", datetime.datetime.strptime(authorDatePy36, '%Y-%m-%dT%H:%M:%S%z'))
     run.save()
     repoUpdFD.close()
-    buildInfo["repo"][repo]=commitidfull[repo]
+    buildInfo["repo"][repo]=branch+"*"+commitidfull[repo]
 
   if not args.disableUpdate:
     if ret>0:

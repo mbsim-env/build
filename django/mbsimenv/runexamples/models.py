@@ -1,10 +1,12 @@
 import django
 import builds.models
-import base
 import django.contrib.contenttypes.models
 import django.contrib.contenttypes.fields
 import re
 import uuid
+from base.helper import addFieldLabel as AL
+from base.helper import FieldLabel as L
+from django.db.models import Q
 
 class RunManager(django.db.models.Manager):
   # return the current Run object for buildType (the one with the newest id)
@@ -20,8 +22,8 @@ class RunManager(django.db.models.Manager):
   # return a queryset with all failed runs
   def filterFailed(self):
     return self.filter(
-      (django.db.models.Q(coverageOK__isnull=False)   & django.db.models.Q(coverageOK=False)) |
-      django.db.models.Q(examplesFailed__gt=0)
+      (Q(coverageOK__isnull=False)   & Q(coverageOK=False)) |
+      Q(examplesFailed__gt=0)
     ).distinct()
 
 class Run(django.db.models.Model):
@@ -29,10 +31,10 @@ class Run(django.db.models.Model):
 
   id=django.db.models.AutoField(primary_key=True)
   build_run=django.db.models.ForeignKey(builds.models.Run, null=True, blank=True, on_delete=django.db.models.SET_NULL, related_name="examples")
-  buildType=django.db.models.CharField(max_length=50, help_text=base.helper.inlineAdmin)
-  executor=django.db.models.TextField(help_text=base.helper.inlineAdmin)
+  buildType=AL(django.db.models.CharField(max_length=50), L.inline, L.list)
+  executor=AL(django.db.models.TextField(), L.inline, L.list)
   command=django.db.models.TextField()
-  startTime=django.db.models.DateTimeField(help_text=base.helper.inlineAdmin)
+  startTime=AL(django.db.models.DateTimeField(), L.inline, L.list)
   endTime=django.db.models.DateTimeField(null=True, blank=True)
   # examples = related ForeignKey
   examplesFailed=django.db.models.PositiveIntegerField(default=0) # just a cached value for performance of filterFailed
@@ -91,14 +93,14 @@ class Run(django.db.models.Model):
 class ExampleManager(django.db.models.Manager):
   # return a queryset with all failed examples of the current queryset
   def filterFailed(self):
-    return self.filter(django.db.models.Q(willFail=False) & (
-      (django.db.models.Q(runResult__isnull=False)          & django.db.models.Q(runResult__in=[Example.RunResult.FAILED, Example.RunResult.TIMEDOUT])) |
-      (django.db.models.Q(guiTestHdf5serieOK__isnull=False) & django.db.models.Q(guiTestHdf5serieOK=Example.GUITestResult.FAILED)) |
-      (django.db.models.Q(guiTestOpenmbvOK__isnull=False)   & django.db.models.Q(guiTestOpenmbvOK=Example.GUITestResult.FAILED)) |
-      (django.db.models.Q(guiTestMbsimguiOK__isnull=False)  & django.db.models.Q(guiTestMbsimguiOK=Example.GUITestResult.FAILED)) |
-      (django.db.models.Q(deprecatedNr__isnull=False)       & django.db.models.Q(deprecatedNr__gt=0)) |
-      django.db.models.Q(resultsFailed__gt=0) |
-      django.db.models.Q(xmlOutputsFailed__gt=0)
+    return self.filter(Q(willFail=False) & (
+      (Q(runResult__isnull=False)          & Q(runResult__in=[Example.RunResult.FAILED, Example.RunResult.TIMEDOUT])) |
+      (Q(guiTestHdf5serieOK__isnull=False) & Q(guiTestHdf5serieOK=Example.GUITestResult.FAILED)) |
+      (Q(guiTestOpenmbvOK__isnull=False)   & Q(guiTestOpenmbvOK=Example.GUITestResult.FAILED)) |
+      (Q(guiTestMbsimguiOK__isnull=False)  & Q(guiTestMbsimguiOK=Example.GUITestResult.FAILED)) |
+      (Q(deprecatedNr__isnull=False)       & Q(deprecatedNr__gt=0)) |
+      Q(resultsFailed__gt=0) |
+      Q(xmlOutputsFailed__gt=0)
     )).distinct()
 
 class Example(django.db.models.Model):
@@ -115,7 +117,7 @@ class Example(django.db.models.Model):
 
   id=django.db.models.AutoField(primary_key=True)
   run=django.db.models.ForeignKey(Run, on_delete=django.db.models.CASCADE, related_name='examples')
-  exampleName=django.db.models.CharField(max_length=200, help_text=base.helper.inlineAdmin)
+  exampleName=AL(django.db.models.CharField(max_length=200), L.inline, L.list, L.search)
   willFail=django.db.models.BooleanField()
   runResult=django.db.models.IntegerField(null=True, blank=True, choices=RunResult.choices)
   runOutput=django.db.models.TextField(blank=True)
@@ -196,23 +198,23 @@ class XMLOutput(django.db.models.Model):
 
   id=django.db.models.AutoField(primary_key=True)
   example=django.db.models.ForeignKey(Example, on_delete=django.db.models.CASCADE, related_name='xmlOutputs')
-  filename=django.db.models.CharField(max_length=200, help_text=base.helper.inlineAdmin)
+  filename=AL(django.db.models.CharField(max_length=200), L.inline, L.list, L.search)
   resultOK=django.db.models.BooleanField()
   resultOutput=django.db.models.TextField()
 
 class ExampleStatic(django.db.models.Model):
-  exampleName=django.db.models.CharField(max_length=200, primary_key=True)
-  refTime=django.db.models.DurationField(null=True, blank=True)
-  update=django.db.models.BooleanField(default=False)
+  exampleName=AL(django.db.models.CharField(max_length=200, primary_key=True), L.search)
+  refTime=AL(django.db.models.DurationField(null=True, blank=True), L.list)
+  update=AL(django.db.models.BooleanField(default=False), L.list)
   # references = related ForeignKey
-  totalTimeNormal=django.db.models.DurationField(null=True, blank=True) # total time of example run (without valgrind)
-  totalTimeValgrind=django.db.models.DurationField(null=True, blank=True) # total time of example run (with valgrind)
+  totalTimeNormal=AL(django.db.models.DurationField(null=True, blank=True), L.list) # total time of example run (without valgrind)
+  totalTimeValgrind=AL(django.db.models.DurationField(null=True, blank=True), L.list) # total time of example run (with valgrind)
   queued=django.db.models.BooleanField(default=False)
 
 class ExampleStaticReference(django.db.models.Model):
   id=django.db.models.AutoField(primary_key=True)
   exampleStatic=django.db.models.ForeignKey(ExampleStatic, on_delete=django.db.models.CASCADE, related_name='references')
-  h5File=django.db.models.FileField(null=True, blank=True, max_length=200, help_text=base.helper.inlineAdmin)
+  h5File=AL(django.db.models.FileField(null=True, blank=True, max_length=200), L.inline, L.list, L.search)
   @property
   def h5FileName(self):
     if self.h5File is None: return None
@@ -234,7 +236,7 @@ django.db.models.signals.pre_delete.connect(exampleStaticReferenceDeleteHandler,
 class Valgrind(django.db.models.Model):
   id=django.db.models.AutoField(primary_key=True)
   uuid=django.db.models.UUIDField(unique=True, default=uuid.uuid4, editable=False) # used for ForeignKey to enable bulk_create
-  programType=django.db.models.CharField(max_length=50, help_text=base.helper.inlineAdmin)
+  programType=AL(django.db.models.CharField(max_length=50), L.inline, L.list)
   programCmd=django.db.models.TextField()
   valgrindCmd=django.db.models.TextField()
   example=django.db.models.ForeignKey(Example, on_delete=django.db.models.CASCADE, related_name="valgrinds")
@@ -245,7 +247,7 @@ class ValgrindError(django.db.models.Model):
   uuid=django.db.models.UUIDField(unique=True, default=uuid.uuid4, editable=False) # used for ForeignKey to enable bulk_create
 
   valgrind=django.db.models.ForeignKey(Valgrind, on_delete=django.db.models.CASCADE, related_name="errors", to_field="uuid")
-  kind=django.db.models.CharField(max_length=100, help_text=base.helper.inlineAdmin)
+  kind=AL(django.db.models.CharField(max_length=100), L.inline, L.list)
   # whatsAndStacks = related ForeignKey
   suppressionRawText=django.db.models.TextField()
 
@@ -254,7 +256,7 @@ class ValgrindWhatAndStack(django.db.models.Model):
   uuid=django.db.models.UUIDField(unique=True, default=uuid.uuid4, editable=False) # used for ForeignKey to enable bulk_create
   valgrindError=django.db.models.ForeignKey(ValgrindError, on_delete=django.db.models.CASCADE, related_name="whatsAndStacks", to_field="uuid")
   nr=django.db.models.PositiveSmallIntegerField() # defines the order of the "what" (and stack) entries
-  what=django.db.models.CharField(max_length=200, help_text=base.helper.inlineAdmin)
+  what=AL(django.db.models.CharField(max_length=200), L.inline, L.list)
   # stacks = related ForeignKey
   class Meta:
     constraints=[
@@ -267,9 +269,9 @@ class ValgrindFrame(django.db.models.Model):
   nr=django.db.models.PositiveSmallIntegerField() # defines the order of the stack frame entries
   obj=django.db.models.CharField(max_length=250)
   fn=django.db.models.TextField() # a function name can be very long (templates)
-  dir=django.db.models.CharField(max_length=250, help_text=base.helper.inlineAdmin)
-  file=django.db.models.CharField(max_length=100, help_text=base.helper.inlineAdmin)
-  line=django.db.models.PositiveIntegerField(null=True, blank=True, help_text=base.helper.inlineAdmin)
+  dir=AL(django.db.models.CharField(max_length=250), L.inline, L.list)
+  file=AL(django.db.models.CharField(max_length=100), L.inline, L.list)
+  line=AL(django.db.models.PositiveIntegerField(null=True, blank=True), L.inline, L.list)
   class Meta:
     constraints=[
       django.db.models.UniqueConstraint(fields=['whatAndStack', 'nr'], name="unique_orderPerStack"),
@@ -280,7 +282,7 @@ class CompareResultFile(django.db.models.Model):
   uuid=django.db.models.UUIDField(unique=True, default=uuid.uuid4, editable=False) # used for ForeignKey to enable bulk_create
   example=django.db.models.ForeignKey(Example, on_delete=django.db.models.CASCADE, related_name='resultFiles')
   # results = related ForeignKey
-  h5Filename=django.db.models.CharField(max_length=100, help_text=base.helper.inlineAdmin) # must be consistent with h5FileName if set
+  h5Filename=AL(django.db.models.CharField(max_length=100), L.inline, L.list, L.search) # must be consistent with h5FileName if set
   h5File=django.db.models.FileField(null=True, blank=True, max_length=200)
   @property
   def h5FileName(self):
@@ -306,7 +308,7 @@ django.db.models.signals.pre_delete.connect(compareResultFileDeleteHandler, send
 
 class CompareResultManager(django.db.models.Manager):
   def filterFailed(self):
-    return self.filter(~django.db.models.Q(result=CompareResult.Result.PASSED))
+    return self.filter(~Q(result=CompareResult.Result.PASSED))
 
 class CompareResult(django.db.models.Model):
   class Result(django.db.models.IntegerChoices):
@@ -325,8 +327,8 @@ class CompareResult(django.db.models.Model):
 
   id=django.db.models.AutoField(primary_key=True)
   compareResultFile=django.db.models.ForeignKey(CompareResultFile, on_delete=django.db.models.CASCADE, related_name='results', to_field="uuid")
-  dataset=django.db.models.CharField(max_length=200, help_text=base.helper.inlineAdmin)
-  label=django.db.models.CharField(max_length=100, help_text=base.helper.inlineAdmin)
+  dataset=AL(django.db.models.CharField(max_length=200), L.inline, L.list, L.search)
+  label=AL(django.db.models.CharField(max_length=100), L.inline, L.list, L.search)
   result=django.db.models.IntegerField(choices=Result.choices)
 
   def getCurrent(self):

@@ -1,13 +1,15 @@
 import django
 import os
 import re
+from base.helper import addFieldLabel as AL
+from base.helper import FieldLabel as L
 
 class CIBranches(django.db.models.Model):
   id=django.db.models.AutoField(primary_key=True)
-  fmatvecBranch=django.db.models.CharField(max_length=50)
-  hdf5serieBranch=django.db.models.CharField(max_length=50)
-  openmbvBranch=django.db.models.CharField(max_length=50)
-  mbsimBranch=django.db.models.CharField(max_length=50)
+  fmatvecBranch=AL(django.db.models.CharField(max_length=50), L.list, L.search)
+  hdf5serieBranch=AL(django.db.models.CharField(max_length=50), L.list, L.search)
+  openmbvBranch=AL(django.db.models.CharField(max_length=50), L.list, L.search)
+  mbsimBranch=AL(django.db.models.CharField(max_length=50), L.list, L.search)
   class Meta:
     constraints=[
       django.db.models.UniqueConstraint(fields=['fmatvecBranch', 'hdf5serieBranch', 'openmbvBranch', 'mbsimBranch'],
@@ -17,18 +19,18 @@ class CIBranches(django.db.models.Model):
 class CIQueue(django.db.models.Model):
   id=django.db.models.AutoField(primary_key=True)
   recTime=django.db.models.DateTimeField()
-  fmatvecBranch=django.db.models.CharField(blank=True, max_length=50)
-  hdf5serieBranch=django.db.models.CharField(blank=True, max_length=50)
-  openmbvBranch=django.db.models.CharField(blank=True, max_length=50)
-  mbsimBranch=django.db.models.CharField(blank=True, max_length=50)
+  fmatvecBranch=AL(django.db.models.CharField(blank=True, max_length=50), L.list, L.search)
+  hdf5serieBranch=AL(django.db.models.CharField(blank=True, max_length=50), L.list, L.search)
+  openmbvBranch=AL(django.db.models.CharField(blank=True, max_length=50), L.list, L.search)
+  mbsimBranch=AL(django.db.models.CharField(blank=True, max_length=50), L.list, L.search)
   buildCommitID=django.db.models.CharField(blank=True, max_length=50)
 
 class DailyBranches(django.db.models.Model):
   id=django.db.models.AutoField(primary_key=True)
-  fmatvecBranch=django.db.models.CharField(max_length=50)
-  hdf5serieBranch=django.db.models.CharField(max_length=50)
-  openmbvBranch=django.db.models.CharField(max_length=50)
-  mbsimBranch=django.db.models.CharField(max_length=50)
+  fmatvecBranch=AL(django.db.models.CharField(max_length=50), L.list, L.search)
+  hdf5serieBranch=AL(django.db.models.CharField(max_length=50), L.list, L.search)
+  openmbvBranch=AL(django.db.models.CharField(max_length=50), L.list, L.search)
+  mbsimBranch=AL(django.db.models.CharField(max_length=50), L.list, L.search)
   class Meta:
     constraints=[
       django.db.models.UniqueConstraint(fields=['fmatvecBranch', 'hdf5serieBranch', 'openmbvBranch', 'mbsimBranch'],
@@ -37,10 +39,10 @@ class DailyBranches(django.db.models.Model):
 
 class Release(django.db.models.Model):
   id=django.db.models.AutoField(primary_key=True)
-  platform=django.db.models.CharField(max_length=50)
-  createDate=django.db.models.DateField()
-  versionMajor=django.db.models.PositiveSmallIntegerField()
-  versionMinor=django.db.models.PositiveSmallIntegerField()
+  platform=AL(django.db.models.CharField(max_length=50), L.list)
+  createDate=AL(django.db.models.DateField(), L.list)
+  versionMajor=AL(django.db.models.PositiveSmallIntegerField(), L.list)
+  versionMinor=AL(django.db.models.PositiveSmallIntegerField(), L.list)
 
   releaseFile=django.db.models.FileField(null=True, blank=True, max_length=100)
   @property
@@ -87,7 +89,7 @@ class Manual(django.db.models.Model):
   objects=ManualManager()
 
   id=django.db.models.CharField(primary_key=True, max_length=50)
-  manualName=django.db.models.CharField(max_length=100)
+  manualName=AL(django.db.models.CharField(max_length=100), L.list, L.search)
   resultOK=django.db.models.BooleanField()
   resultOutput=django.db.models.TextField(True)
   manualFile=django.db.models.FileField(max_length=100)
