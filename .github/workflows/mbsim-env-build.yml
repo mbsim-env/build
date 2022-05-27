@@ -191,7 +191,7 @@ jobs:
           ${{fromJson(steps.whatToDo.outputs.data).runID && '--buildRunID'}} ${{fromJson(steps.whatToDo.outputs.data).runID}}
           ${{matrix.data.os.args}}
       - name: "Dump link to MBSim-Env server"
-        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
+        if: ${{always() && !fromJson(steps.whatToDo.outputs.data).skip}}
         id: buildDetails
         shell: python
         run: |
@@ -207,7 +207,7 @@ jobs:
             print("jobs.build.steps.buildDetails.outputs.buildInfo:\n{}")
             print("::set-output name=buildInfo::{}")
       - name: "Artifact: tar/compress prefix and coverage-files"
-        if: ${{inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
+        if: ${{always() && inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
         run: >
           (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcda" >  ${{github.workspace}}/local-cov.files) &&
           (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcno" >> ${{github.workspace}}/local-cov.files) &&
@@ -215,11 +215,12 @@ jobs:
           local/ -T ${{github.workspace}}/local-cov.files;
           rm -f ${{github.workspace}}/local-cov.files
       - name: "Artifact: upload prefix and coverage-files"
-        if: ${{inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
+        if: ${{always() && inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
         uses: actions/upload-artifact@v3
         with:
           name: mbsim-env-local-cov
           retention-days: 1
           path: ${{github.workspace}}/local-cov.tar.gz
       - name: "Dump resources"
+        if: ${{always()}}
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"

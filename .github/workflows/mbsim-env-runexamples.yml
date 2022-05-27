@@ -64,6 +64,7 @@ env:
   mbsimenvsec_codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
 jobs:
   runexamples:
+    if: ${{always()}}
     name: "............................................................"
     runs-on: ubuntu-latest
     outputs:
@@ -133,6 +134,7 @@ jobs:
           --runID ${{fromJson(inputs.runexamplesInfo).runID}}
           ${{matrix.data.args}}
       - name: "Dump link to MBSim-Env server"
+        if: ${{always()}}
         id: runexamplesDetails
         shell: python
         run: |
@@ -148,14 +150,15 @@ jobs:
             print("jobs.runexamples.steps.runexamplesDetails.outputs.runexamplesInfo:{}\n")
             print("::set-output name=runexamplesInfo::{}")
       - name: "Artifact: compress lcov-files"
-        if: ${{inputs.uploadArtifactLcovdata}}
+        if: ${{always() && inputs.uploadArtifactLcovdata}}
         run: gzip ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*
       - name: "Artifact: upload lcov-files"
-        if: ${{inputs.uploadArtifactLcovdata}}
+        if: ${{always() && inputs.uploadArtifactLcovdata}}
         uses: actions/upload-artifact@v3
         with:
           name: mbsim-env-covdata
           retention-days: 1
           path: ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*.gz
       - name: "Dump resources"
+        if: ${{always()}}
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
