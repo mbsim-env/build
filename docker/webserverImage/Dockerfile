@@ -24,8 +24,8 @@ FROM centos:centos7
 # install software
 RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release centos-release-scl && \
   yum --setopt=skip_missing_names_on_install=False -y install \
-  httpd \
-  mod_ssl \
+  httpd24-httpd \
+  httpd24-mod_ssl \
   python2-certbot \
   rh-python36-mod_wsgi \
   cronie \
@@ -56,27 +56,28 @@ COPY docker/setup.py /context/setup.py
 # configure web server
 # add top level config (stored in docker/webserverImage/httpd_toplevel.conf)
 COPY docker/webserverImage/conf/httpd_toplevel.conf /tmp/httpd_toplevel.conf
-RUN cat /tmp/httpd_toplevel.conf /etc/httpd/conf/httpd.conf > /etc/httpd/conf/httpd.conf.new && \
-  mv /etc/httpd/conf/httpd.conf.new /etc/httpd/conf/httpd.conf && \
+RUN cat /tmp/httpd_toplevel.conf /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf > /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf.new && \
+  mv /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf.new /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf && \
   rm -f /tmp/httpd_toplevel.conf
 # replace <Directory "/var/www/html"> with docker/webserverImage/httpd_rootdir.conf
 COPY docker/webserverImage/conf/httpd_rootdir.conf /tmp/httpd_rootdir.conf
 RUN set -o pipefail && \
-  B=$(sed -rn '/^ *< *Directory +"\/var\/www\/html" *> *(#.*)?$/=' /etc/httpd/conf/httpd.conf | head -n 1); \
-  O=$(sed -rn "$[$B+1],\$p" /etc/httpd/conf/httpd.conf | sed -rn '/^ *< *\/ *Directory *> *(#.*)?/=' | head -n 1); \
-  sed -rn "1,$[$B-1]p;$[$B+$O+1],\$p" /etc/httpd/conf/httpd.conf > /etc/httpd/conf/httpd.conf.new && \
-  cat /etc/httpd/conf/httpd.conf.new /tmp/httpd_rootdir.conf > /etc/httpd/conf/httpd.conf && \
-  rm -f /etc/httpd/conf/httpd.conf.new /tmp/httpd_rootdir.conf
+  B=$(sed -rn '/^ *< *Directory +"\/opt\/rh\/httpd24\/root\/var\/www\/html" *> *(#.*)?$/=' /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf | head -n 1); \
+  O=$(sed -rn "$[$B+1],\$p" /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf | sed -rn '/^ *< *\/ *Directory *> *(#.*)?/=' | head -n 1); \
+  sed -rn "1,$[$B-1]p;$[$B+$O+1],\$p" /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf > /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf.new && \
+  cat /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf.new /tmp/httpd_rootdir.conf > /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf && \
+  rm -f /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf.new /tmp/httpd_rootdir.conf
+RUN mkdir -p /opt/rh/httpd24/root/var/log/httpd
 
-# configure wsgi
-RUN cp /opt/rh/httpd24/root/usr/lib64/httpd/modules/mod_rh-python36-wsgi.so /lib64/httpd/modules && \
-    cp /opt/rh/httpd24/root/etc/httpd/conf.modules.d/10-rh-python36-wsgi.conf /etc/httpd/conf.modules.d
+# configure MPM
+RUN sed -i -re "s/^.*LoadModule +mpm_prefork_module.*$/#/" /opt/rh/httpd24/root/etc/httpd/conf.modules.d/00-mpm.conf && \
+    sed -i -re "s/^.*LoadModule +mpm_event_module/LoadModule mpm_event_module/" /opt/rh/httpd24/root/etc/httpd/conf.modules.d/00-mpm.conf
 
 # webserver SSL
 RUN set -o pipefail && \
-  sed -i -r "s|^( *< *VirtualHost +_default_ *: *443 *> *(#.*)?)$|\1\nServerName \${MBSIMENVSERVERNAME}\n|" /etc/httpd/conf.d/ssl.conf
-COPY docker/webserverImage/conf/mpm_prefork.conf /etc/httpd/cond.d/
-COPY docker/webserverImage/conf/le-redirect-mbsim-env.conf /etc/httpd/conf.d/
+  sed -i -r "s|^( *< *VirtualHost +_default_ *: *443 *> *(#.*)?)$|\1\nServerName \${MBSIMENVSERVERNAME}\n|" /opt/rh/httpd24/root/etc/httpd/conf.d/ssl.conf
+COPY docker/webserverImage/conf/mpm_event.conf /opt/rh/httpd24/root/etc/httpd/conf.d/
+COPY docker/webserverImage/conf/le-redirect-mbsim-env.conf /opt/rh/httpd24/root/etc/httpd/conf.d/
 
 # static django files
 RUN mkdir /var/www/html/static

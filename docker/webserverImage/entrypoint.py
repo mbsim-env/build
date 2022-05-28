@@ -11,6 +11,10 @@ import requests
 sys.path.append("/context")
 import setup
 
+os.environ["PATH"]="/opt/rh/httpd24/root/usr/bin:/opt/rh/httpd24/root/usr/sbin:"+os.environ["PATH"]
+LD_LIBRARY_PATH=os.environ.get("LD_LIBRARY_PATH", "")
+os.environ["LD_LIBRARY_PATH"]="/opt/rh/httpd24/root/usr/lib64"+(":" if LD_LIBRARY_PATH!="" else "")+LD_LIBRARY_PATH
+
 # arguments
 argparser=argparse.ArgumentParser(
   formatter_class=argparse.ArgumentDefaultsHelpFormatter,
@@ -63,7 +67,7 @@ subprocess.check_call(["sudo", "-u", "dockeruser", "/usr/bin/certbot-2", "--work
   "--cert-name", "mbsim-env", "-d", os.environ["MBSIMENVSERVERNAME"]])
 
 # adapt web server config to use the letsencrypt certs
-for line in fileinput.FileInput("/etc/httpd/conf.d/ssl.conf", inplace=1):
+for line in fileinput.FileInput("/opt/rh/httpd24/root/etc/httpd/conf.d/ssl.conf", inplace=1):
   if line.lstrip().startswith("SSLCertificateFile "):
     line="SSLCertificateFile /etc/letsencrypt/live/mbsim-env/cert.pem\n"
   if line.lstrip().startswith("SSLCertificateKeyFile "):
@@ -74,7 +78,7 @@ for line in fileinput.FileInput("/etc/httpd/conf.d/ssl.conf", inplace=1):
 subprocess.check_call(["httpd", "-k", "graceful"])
 # now allow all connections
 replaceNext=False
-for line in fileinput.FileInput("/etc/httpd/conf/httpd.conf", inplace=1):
+for line in fileinput.FileInput("/opt/rh/httpd24/root/etc/httpd/conf/httpd.conf", inplace=1):
   if line.find("MBSIMENV_ALLOW")>=0:
     replaceNext=True
   elif replaceNext:
