@@ -73,9 +73,19 @@ class Run(base.views.Base):
                                                                 hdf5serieUpdateCommitID=self.run.hdf5serieUpdateCommitID,
                                                                 openmbvUpdateCommitID=self.run.openmbvUpdateCommitID,
                                                                 mbsimUpdateCommitID=self.run.mbsimUpdateCommitID).\
-                                                                exclude(id=self.run.id).values("buildType", "id").distinct())
-      for bt in allBuildTypesPerSHA:
-        bt["icon"]=base.helper.buildTypeIcon(bt["buildType"])
+                                                                exclude(id=self.run.id).\
+                                                                values("buildType", "id", "startTime").distinct())
+      allBuildTypesPerSHAMap={}
+      for cur in allBuildTypesPerSHA:
+        curBuildType=cur["buildType"]
+        curStartTime=cur["startTime"]
+        if curBuildType not in allBuildTypesPerSHAMap:
+          cur["icon"]=base.helper.buildTypeIcon(curBuildType)
+          allBuildTypesPerSHAMap[curBuildType]=cur
+        if curBuildType in allBuildTypesPerSHAMap and curStartTime>allBuildTypesPerSHAMap[curBuildType]["startTime"]:
+          allBuildTypesPerSHAMap[curBuildType]["startTime"]=curStartTime
+          allBuildTypesPerSHAMap[curBuildType]["id"]=cur["id"]
+      allBuildTypesPerSHA=list(map(lambda x: allBuildTypesPerSHAMap[x], allBuildTypesPerSHAMap))
     else:
       allBuildTypesPerSHA=None
     if self.run.fmatvecBranch!="" and self.run.hdf5serieBranch!="" and self.run.openmbvBranch!="" and self.run.mbsimBranch!="":
@@ -83,7 +93,8 @@ class Run(base.views.Base):
                                                                    hdf5serieBranch=self.run.hdf5serieBranch,
                                                                    openmbvBranch=self.run.openmbvBranch,
                                                                    mbsimBranch=self.run.mbsimBranch).\
-                                                                   exclude(id=self.run.id).values("buildType").distinct())
+                                                                   exclude(id=self.run.id).\
+                                                                   values("buildType").distinct())
       for bt in allBuildTypesPerBranch:
         bt["icon"]=base.helper.buildTypeIcon(bt["buildType"])
     else:

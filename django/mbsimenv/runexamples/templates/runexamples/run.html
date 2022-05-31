@@ -15,9 +15,6 @@
   "use strict";
   $(document).ready(function() {
     initExampleTable("{% url 'runexamples:datatable_example' run.id %}");
-    $(".TABLEROWHREF").click(function() {
-      window.document.location=$(this).data("href");
-    });
   });
 </script>
 <h1>MBSim runexamples Results</h1>
@@ -37,9 +34,8 @@
               </thead>
               <tbody>
                 {% for buildType in allBuildTypesPerSHA %}
-                  <tr class="TABLEROWHREF" style="cursor:pointer;"
-                      data-href="{% url "runexamples:run" buildType.id %}">
-                    <td>{%autoescape off%}{{buildType.icon}}{%endautoescape%}&nbsp;{{buildType.buildType}}</td>
+                  <tr>
+                    <td><a style="display: block;" href="{% url "runexamples:run" buildType.id %}">{%autoescape off%}{{buildType.icon}}{%endautoescape%}&nbsp;{{buildType.buildType}}</a></td>
                   </tr>
                 {% endfor %}
               </tbody>
@@ -54,9 +50,8 @@
               </thead>
               <tbody>
                 {% for buildType in allBuildTypesPerBranch %}
-                  <tr class="TABLEROWHREF" style="cursor:pointer;"
-                      data-href="{% url "runexamples:current_buildtype_branch" buildType.buildType run.build_run.fmatvecBranch run.build_run.hdf5serieBranch run.build_run.openmbvBranch run.build_run.mbsimBranch %}">
-                    <td>{%autoescape off%}{{buildType.icon}}{%endautoescape%}&nbsp;{{buildType.buildType}}</td>
+                  <tr>
+                    <td><a style="display: block;" href="{% url "runexamples:current_buildtype_branch" buildType.buildType run.build_run.fmatvecBranch run.build_run.hdf5serieBranch run.build_run.openmbvBranch run.build_run.mbsimBranch %}">{%autoescape off%}{{buildType.icon}}{%endautoescape%}&nbsp;{{buildType.buildType}}</a></td>
                   </tr>
                 {% endfor %}
               </tbody>

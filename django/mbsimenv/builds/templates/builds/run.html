@@ -17,9 +17,6 @@
   $(document).ready(function() {
     initToolTable("{% url 'builds:datatable_tool' run.id %}");
     releaseDistribution("{% url 'builds:releaseDistribution' run.id %}");
-    $(".TABLEROWHREF").click(function() {
-      window.document.location=$(this).data("href");
-    });
   });
 </script>
 <h1>Build Results of MBSim-Env</h1>
@@ -38,9 +35,8 @@
             </thead>
             <tbody>
               {% for buildType in allBuildTypesPerSHA %}
-                <tr class="TABLEROWHREF" style="cursor:pointer;"
-                    data-href="{% url "builds:run" buildType.id %}">
-                  <td>{%autoescape off%}{{buildType.icon}}{%endautoescape%}&nbsp;{{buildType.buildType}}</td>
+                <tr>
+                  <td><a style="display: block;" href="{% url "builds:run" buildType.id %}">{%autoescape off%}{{buildType.icon}}{%endautoescape%}&nbsp;{{buildType.buildType}}</a></td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -55,9 +51,8 @@
             </thead>
             <tbody>
               {% for buildType in allBuildTypesPerBranch %}
-                <tr class="TABLEROWHREF" style="cursor:pointer;"
-                    data-href="{% url "builds:current_buildtype_branch" buildType.buildType run.fmatvecBranch run.hdf5serieBranch run.openmbvBranch run.mbsimBranch %}">
-                  <td>{%autoescape off%}{{buildType.icon}}{%endautoescape%}&nbsp;{{buildType.buildType}}</td>
+                <tr>
+                  <td><a style="display: block;" href="{% url "builds:current_buildtype_branch" buildType.buildType run.fmatvecBranch run.hdf5serieBranch run.openmbvBranch run.mbsimBranch %}">{%autoescape off%}{{buildType.icon}}{%endautoescape%}&nbsp;{{buildType.buildType}}</a></td>
                 </tr>
               {% endfor %}
             </tbody>
@@ -124,12 +119,11 @@
                 </tr>
               </thead>
                 {% for branch in allBranches %}
-                  <tr class="TABLEROWHREF" style="cursor:pointer;"
-                      data-href="{% url "builds:current_buildtype_branch" run.buildType branch.fmatvecBranch branch.hdf5serieBranch branch.openmbvBranch branch.mbsimBranch %}">
-                    <td><span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{branch.fmatvecBranch}}</span></td>
-                    <td><span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{branch.hdf5serieBranch}}</span></td>
-                    <td><span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{branch.openmbvBranch}}</span></td>
-                    <td><span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{branch.mbsimBranch}}</span></td>
+                  <tr>
+                    <td><a style="display: block;" href="{% url "builds:current_buildtype_branch" run.buildType branch.fmatvecBranch branch.hdf5serieBranch branch.openmbvBranch branch.mbsimBranch %}"><span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{branch.fmatvecBranch}}</span></a></td>
+                    <td><a style="display: block;" href="{% url "builds:current_buildtype_branch" run.buildType branch.fmatvecBranch branch.hdf5serieBranch branch.openmbvBranch branch.mbsimBranch %}"><span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{branch.hdf5serieBranch}}</span></a></td>
+                    <td><a style="display: block;" href="{% url "builds:current_buildtype_branch" run.buildType branch.fmatvecBranch branch.hdf5serieBranch branch.openmbvBranch branch.mbsimBranch %}"><span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{branch.openmbvBranch}}</span></a></td>
+                    <td><a style="display: block;" href="{% url "builds:current_buildtype_branch" run.buildType branch.fmatvecBranch branch.hdf5serieBranch branch.openmbvBranch branch.mbsimBranch %}"><span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{branch.mbsimBranch}}</span></a></td>
                   </tr>
                 {% endfor %}
               <tbody>
