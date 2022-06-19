@@ -414,7 +414,9 @@ def webhook(request):
     if data['ref'][0:11]!="refs/heads/":
       return django.http.HttpResponseBadRequest("Illegal data in 'ref'.")
     res["branch"]=data['ref'][11:]
-    res["commitID"]=data["after"]
+    if data["head_commit"] is None:
+      return django.http.HttpResponseBadRequest("No new commit at current head of 'ref'.")
+    res["commitID"]=data["head_commit"]["id"]
     if res["repo"]=="fmatvec" or res["repo"]=="hdf5serie" or res["repo"]=="openmbv" or res["repo"]=="mbsim":
       res["addedBranchCombinations"]=[]
 
@@ -612,14 +614,7 @@ class DataTableLatestBranchCombiBuilds(base.views.DataTable):
     return self._colData_Branch(ds, "mbsim")
 
   def _colClass_Branch(self, ds, repo):
-    newest=None
-    newestRepo=""
-    for r in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
-      cur=getattr(ds, r+"UpdateDate")
-      if cur is not None and (newest is None or cur>newest):
-        newest=cur
-        newestRepo=r
-    return "table-info" if repo==newestRepo else ""
+    return "table-info" if getattr(ds, repo+"Triggered") else ""
   def colClass_fmatvecBranch(self, ds):
     return self._colClass_Branch(ds, "fmatvec")
   def colClass_hdf5serieBranch(self, ds):

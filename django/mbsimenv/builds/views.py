@@ -102,14 +102,6 @@ class Run(base.views.Base):
     context["allBuildTypesPerSHA"]=allBuildTypesPerSHA
     context["allBuildTypesPerBranch"]=allBuildTypesPerBranch
 
-    newest=None
-    for r in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
-      cur=getattr(self.run, r+"UpdateDate")
-      if newest is None or cur>newest:
-        newest=cur
-        newestRepo=r
-    context['newestRepo']=newestRepo
-
     return context
 
 # response to ajax requests of the build tool datatable

@@ -88,11 +88,11 @@ jobs:
             # if no branch combination is found build this branch with "master" of all other repos
             if len(branches)==0:
               branches=[{"fmatvecBranch": "master", "hdf5serieBranch": "master", "openmbvBranch": "master", "mbsimBranch": "master"}]
-              branches[0][repo+"Branch"]=branch+"*"+sha
+              branches[0][repo+"Branch"]=branch+"*"+sha+"*T"
             else:
               # override repo branch with sha
               for b in branches:
-                b[repo+"Branch"]+="*"+sha
+                b[repo+"Branch"]+="*"+sha+"*T"
             matrix={"branches": branches,
               "os": [
                 {"buildType": "linux64-ci", "image": "mbsimenv/build"     , "args": ""},

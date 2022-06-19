@@ -301,7 +301,8 @@ def runExamplesPartition(ARGS, pullMbsim, pullAll):
     # update
     os.chdir("/mbsim-env/"+repo)
     
-    sha=getattr(args, repo+"Branch").split("*")[-1]
+    branchSplit=getattr(args, repo+"Branch").split("*")
+    sha=branchSplit[1 if len(branchSplit)>=2 else 0]
     if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
       ret=ret+1
       print("git checkout detached failed.")

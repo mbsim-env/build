@@ -145,6 +145,7 @@
     {% for repo in repoList %}
       {% cycle "fmatvecUpdateOutput" "hdf5serieUpdateOutput" "openmbvUpdateOutput" "mbsimUpdateOutput" as repoUpdateOutput silent %}
       {% cycle run.fmatvecBranch run.hdf5serieBranch run.openmbvBranch run.mbsimBranch as repoBranch silent %}
+      {% cycle run.fmatvecTriggered run.hdf5serieTriggered run.openmbvTriggered run.mbsimTriggered as repoTriggered silent %}
       {% cycle run.fmatvecUpdateOK run.hdf5serieUpdateOK run.openmbvUpdateOK run.mbsimUpdateOK as repoUpdateOK silent %}
       {% cycle run.fmatvecUpdateAuthor run.hdf5serieUpdateAuthor run.openmbvUpdateAuthor run.mbsimUpdateAuthor as repoUpdateAuthor silent %}
       {% cycle run.fmatvecUpdateDate run.hdf5serieUpdateDate run.openmbvUpdateDate run.mbsimUpdateDate as repoUpdateDate silent %}
@@ -169,18 +170,18 @@
             {% endif %}
           </td>
         {% endif %}
-        <td>
+        <td {% if repoTriggered %}class="table-info"{%endif%}>
           <a href="https://github.com/mbsim-env/{{ repo }}/commit/{{ repoUpdateCommitID }}">
             <code>{{ repoUpdateCommitID|truncatechars:8 }}</code>
           </a>
         </td>
-        <td>
+        <td {% if repoTriggered %}class="table-info"{%endif%}>
           <i>{{repoUpdateAuthor}}</i>
         </td>
-        <td {% if newestRepo == repo %}class="table-info"{%endif%}>
+        <td {% if repoTriggered %}class="table-info"{%endif%}>
           <span class="DATETIME">{{repoUpdateDate|date:'c'}}</span>
         </td>
-        <td class="text-break">
+        <td class="text-break {% if repoTriggered %}table-info{%endif%}">
           {{repoUpdateMsg}}
         </td>
       </tr>

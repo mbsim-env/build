@@ -171,6 +171,7 @@ django.setup()
 def closeOldConnections(**kwargs):
   if not django.db.connections[kwargs["using"]].in_atomic_block:
     django.db.close_old_connections()
+  print("mfmf pre_save time="+str(django.utils.timezone.now()))
 django.db.models.signals.pre_save.connect(closeOldConnections)
 
 if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":

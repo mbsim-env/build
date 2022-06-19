@@ -78,10 +78,10 @@ def parseArguments():
   cfgOpts.add_argument("--disableRunExamples", action="store_true", help="Do not run examples")
   cfgOpts.add_argument("--enableDistribution", action="store_true", help="Create a release distribution archive (only usefull on the buildsystem)")
   cfgOpts.add_argument("--binSuffix", default="", help='base tool name suffix for the binary (build) dir in --sourceDir (default: "" = no VPATH build)')
-  cfgOpts.add_argument("--fmatvecBranch", default="", help='In the fmatvec repo checkout the branch/sha FMATVECBRANCH (can be <branch>*<sha>')
-  cfgOpts.add_argument("--hdf5serieBranch", default="", help='In the hdf5serierepo checkout the branch/sha HDF5SERIEBRANCH (can be <branch>*<sha>')
-  cfgOpts.add_argument("--openmbvBranch", default="", help='In the openmbv repo checkout the branch/sha OPENMBVBRANCH (can be <branch>*<sha>')
-  cfgOpts.add_argument("--mbsimBranch", default="", help='In the mbsim repo checkout the branch/sha MBSIMBRANCH (can be <branch>*<sha>')
+  cfgOpts.add_argument("--fmatvecBranch", default="", help='fmatvec branch[*SHA[*T]] to use (T:Triggered this build; F:not triggered)')
+  cfgOpts.add_argument("--hdf5serieBranch", default="", help='hdf5serierepo branch[*SHA[*T]] to use (T:Triggered this build; F:not triggered)')
+  cfgOpts.add_argument("--openmbvBranch", default="", help='openmbv branch[*SHA[*T]] to use (T:Triggered this build; F:not triggered)')
+  cfgOpts.add_argument("--mbsimBranch", default="", help='mbsim branch[*SHA[*T]] to use (T:Triggered this build; F:not triggered)')
   cfgOpts.add_argument("--buildSystemRun", action="store_true", help='Run in build system mode: generate build system state files.')
   cfgOpts.add_argument("--localServerPort", type=int, default=27583, help='Port for local server, if started automatically.')
   cfgOpts.add_argument("--coverage", action="store_true", help='Enable coverage analyzis using gcov/lcov.')
@@ -203,6 +203,7 @@ def main():
   def closeOldConnections(**kwargs):
     if not django.db.connections[kwargs["using"]].in_atomic_block:
       django.db.close_old_connections()
+    print("mfmf pre_save time="+str(django.utils.timezone.now()))
   django.db.models.signals.pre_save.connect(closeOldConnections)
 
   removeOldBuilds()
@@ -488,18 +489,19 @@ def repoUpdate(run, buildInfo):
     os.environ["GIT_COMMITTER_NAME"]="dummy"
     os.environ["GIT_COMMITTER_EMAIL"]="dummy"
 
+    branchSplit=getattr(args, repo+"Branch").split("*")
     if not args.disableUpdate:
       # write repUpd output to report dir
       print('Fetch remote repository '+repo+":", file=repoUpdFD)
       repoUpdFD.flush()
-      branch=getattr(args, repo+"Branch").split("*")[0]
-      sha=getattr(args, repo+"Branch").split("*")[-1]
+      branch=branchSplit[0]
+      sha=branchSplit[1 if len()>=2 else 0]
       retlocal+=abs(base.helper.subprocessCall(["git", "checkout", "-q", "HEAD~0"], repoUpdFD))
       base.helper.subprocessCall(["git", "branch", "-q", "-D", branch], repoUpdFD)
       retlocal+=abs(base.helper.subprocessCall(["git", "fetch", "-q", "--depth", "1", "origin", sha+":"+branch], repoUpdFD))
     # set branch based on args
     if getattr(args, repo+'Branch')!="":
-      branch=getattr(args, repo+"Branch").split("*")[0]
+      branch=branchSplit[0]
       print('Checkout branch '+getattr(args, repo+'Branch')+' in repository '+repo+":", file=repoUpdFD)
       retlocal+=abs(base.helper.subprocessCall(["git", "checkout", "-q", branch], repoUpdFD))
       repoUpdFD.flush()
@@ -512,6 +514,7 @@ def repoUpdate(run, buildInfo):
     ret+=retlocal
     # save
     setattr(run, repo+"Branch", branch)
+    setattr(run, repo+"Triggered", len(branchSplit)>2)
     if not args.disableUpdate:
       setattr(run, repo+"UpdateOK", retlocal==0)
     setattr(run, repo+"UpdateOutput", repoUpdFD.getvalue())
