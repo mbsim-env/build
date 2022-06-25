@@ -95,7 +95,9 @@ jobs:
           path: ${{github.workspace}}/mbsim-env/local
       - name: "Artifact: uncompress lcov-files"
         if: ${{inputs.downloadArtifactLcovdata}}
-        run: gunzip ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*.gz
+        run: >
+          shopt -s nullglob &&
+          gunzip ${{github.workspace}}/mbsim-env/local/dummylcov.gz ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*.gz
       - name: "Docker: pull image"
         run: >
           docker image pull mbsimenv/build:${{env.MBSIMENVTAGNAME}} &&
@@ -151,7 +153,10 @@ jobs:
             print("::set-output name=runexamplesInfo::{}")
       - name: "Artifact: compress lcov-files"
         if: ${{always() && inputs.uploadArtifactLcovdata}}
-        run: gzip ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*
+        run: >
+          shopt -s nullglob &&
+          touch ${{github.workspace}}/mbsim-env/local/dummylcov &&
+          gzip ${{github.workspace}}/mbsim-env/local/dummylcov ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*
       - name: "Artifact: upload lcov-files"
         if: ${{always() && inputs.uploadArtifactLcovdata}}
         uses: actions/upload-artifact@v3

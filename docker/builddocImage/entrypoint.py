@@ -19,7 +19,8 @@ if not os.path.isdir("/mbsim-env/mbsim"):
     stdout=sys.stdout, stderr=sys.stderr)
 
 if args.mbsimBranch is not None and args.mbsimBranch!="":
-  sha=args.mbsimBranch.split("*")[-1]
+  mbsimBranchSplit=args.mbsimBranch.split("*")
+  sha=mbsimBranchSplit[1 if len(mbsimBranchSplit)>=2 and mbsimBranchSplit[1]!="" else 0]
   os.chdir("/mbsim-env/mbsim")
   if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
     ret=ret+1

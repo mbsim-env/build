@@ -324,8 +324,12 @@ def main():
     # get schema files
     global ombvSchema, mbsimXMLSchemas
     # create mbsimxml schema
-    mbsimXMLSchemas=subprocess.check_output(exePrefix()+[pj(mbsimBinDir, "mbsimxml"+args.exeExt), "--onlyListSchemas"]).\
-      decode("utf-8").split()
+    try:
+      mbsimXMLSchemas=subprocess.check_output(exePrefix()+[pj(mbsimBinDir, "mbsimxml"+args.exeExt), "--onlyListSchemas"]).\
+        decode("utf-8").split()
+    except:
+      print("Error: 'mbsimxml --onlyListSchemas' failed. Trying to continue without schema files.", file=sys.stderr)
+      mbsimXMLSchemas=[]
     ombvSchemaRE=re.compile(".http___www_mbsim-env_de_OpenMBV.openmbv.xsd$")
     ombvSchema=list(filter(lambda x: ombvSchemaRE.search(x) is not None, mbsimXMLSchemas))[0]
 

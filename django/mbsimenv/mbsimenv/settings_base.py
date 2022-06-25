@@ -80,19 +80,19 @@ MIDDLEWARE = [
 ROOT_URLCONF = 'mbsimenv.urls'
 
 TEMPLATES = [
-    {
-        'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
-        'APP_DIRS': True,
-        'OPTIONS': {
-            'context_processors': [
-                'django.template.context_processors.debug',
-                'django.template.context_processors.request',
-                'django.contrib.auth.context_processors.auth',
-                'django.contrib.messages.context_processors.messages',
-            ],
-        },
+  {
+    'BACKEND': 'django.template.backends.django.DjangoTemplates',
+    'DIRS': [],
+    'APP_DIRS': True,
+    'OPTIONS': {
+      'context_processors': [
+        'django.template.context_processors.debug',
+        'django.template.context_processors.request',
+        'django.contrib.auth.context_processors.auth',
+        'django.contrib.messages.context_processors.messages',
+      ],
     },
+  },
 ]
 
 WSGI_APPLICATION = 'mbsimenv.wsgi.application'
@@ -136,25 +136,25 @@ def databases(mbsimenv_type):
 # https://docs.djangoproject.com/en/3.0/ref/settings/#auth-password-validators
 
 AUTH_PASSWORD_VALIDATORS = [
-    {
-        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
-    },
-    {
-        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
-    },
+  {
+    'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+  },
+  {
+    'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+  },
+  {
+    'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+  },
+  {
+    'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+  },
 ]
 
 AUTHENTICATION_BACKENDS = (
-    # Needed to login by username in Django admin, regardless of `allauth`
-    'django.contrib.auth.backends.ModelBackend',
-    # `allauth` specific authentication methods, such as login by e-mail
-    'allauth.account.auth_backends.AuthenticationBackend',
+  # Needed to login by username in Django admin, regardless of `allauth`
+  'django.contrib.auth.backends.ModelBackend',
+  # `allauth` specific authentication methods, such as login by e-mail
+  'allauth.account.auth_backends.AuthenticationBackend',
 )
 
 SITE_ID = 1
@@ -165,13 +165,13 @@ SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_EMAIL_REQUIRED = True
 SOCIALACCOUNT_STORE_TOKENS = True
 SOCIALACCOUNT_PROVIDERS = {
-    'github': {
-        'SCOPE': [
-            'read:org',
-            'public_repo',
-            'user:email',
-        ],
-    }
+  'github': {
+    'SCOPE': [
+      'read:org',
+      'public_repo',
+      'user:email',
+    ],
+  }
 }
 
 SESSION_SERIALIZER = "base.helper.SessionSerializer"
@@ -201,7 +201,7 @@ STATICFILES_DIRS = [
 class PartialManifestStaticFilesStorage(django.contrib.staticfiles.storage.ManifestStaticFilesStorage):
   manifest_strict = False # required to enable hashed_name
   def hashed_name(self, name, content=None, filename=None):
-    if django.conf.settings.MBSIMENV_TYPE=="localdocker": # localdocker does not collect static files -> dont use the hash
+    if django.conf.settings.MBSIMENV_TYPE=="localdocker" or django.conf.settings.MBSIMENV_TYPE=="local": # localdocker does not collect static files -> dont use the hash
       return name
     # everything in runtime/ does not use a hash in the filename -> use the name as it
     if name.startswith("runtime/"):
@@ -213,14 +213,14 @@ SESSION_COOKIE_SECURE = True
 SECURE_REFERRER_POLICY = "origin"
 
 LOGGING = {
-    'version': 1,
-    'handlers': {
-        'console': {
-            'class': 'logging.StreamHandler',
-        },
+  'version': 1,
+  'handlers': {
+    'console': {
+      'class': 'logging.StreamHandler',
     },
-    'root': {
-        'handlers': ['console'],
-        'level': 'WARNING',
-    },
+  },
+  'root': {
+    'handlers': ['console'],
+    'level': 'WARNING',
+  },
 }

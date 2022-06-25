@@ -479,6 +479,8 @@ def repoUpdate(run, buildInfo):
 
   commitidfull={}
   buildInfo["repo"]={}
+  if "daily" in args.buildType:
+    previousRun=run.getPrevious()
   for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
     os.chdir(pj(args.sourceDir, repo))
     # update
@@ -495,7 +497,7 @@ def repoUpdate(run, buildInfo):
       print('Fetch remote repository '+repo+":", file=repoUpdFD)
       repoUpdFD.flush()
       branch=branchSplit[0]
-      sha=branchSplit[1 if len()>=2 else 0]
+      sha=branchSplit[1 if len(branchSplit)>=2 and branchSplit[1]!="" else 0]
       retlocal+=abs(base.helper.subprocessCall(["git", "checkout", "-q", "HEAD~0"], repoUpdFD))
       base.helper.subprocessCall(["git", "branch", "-q", "-D", branch], repoUpdFD)
       retlocal+=abs(base.helper.subprocessCall(["git", "fetch", "-q", "--depth", "1", "origin", sha+":"+branch], repoUpdFD))
@@ -514,7 +516,11 @@ def repoUpdate(run, buildInfo):
     ret+=retlocal
     # save
     setattr(run, repo+"Branch", branch)
-    setattr(run, repo+"Triggered", len(branchSplit)>2)
+    # for daily builds set the triggered flag for every repo with a change wrt the last daily build
+    dailyTriggered=False
+    if "daily" in args.buildType and getattr(previousRun, repo+"UpdateCommitID")!=commitidfull[repo]:
+      dailyTriggered=True
+    setattr(run, repo+"Triggered", len(branchSplit)>2 or dailyTriggered)
     if not args.disableUpdate:
       setattr(run, repo+"UpdateOK", retlocal==0)
     setattr(run, repo+"UpdateOutput", repoUpdFD.getvalue())

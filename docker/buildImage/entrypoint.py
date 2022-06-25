@@ -245,7 +245,8 @@ if build:
     CURDIR=os.getcwd()
     os.chdir("/mbsim-env/mbsim-valgrind/examples")
   
-    sha=args.mbsimBranch.split("*")[-1]
+    mbsimBranchSplit=args.mbsimBranch.split("*")
+    sha=mbsimBranchSplit[1 if len(mbsimBranchSplit)>=2 and mbsimBranchSplit[1]!="" else 0]
     if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
       ret=ret+1
       print("git checkout detached failed.")
@@ -302,7 +303,7 @@ def runExamplesPartition(ARGS, pullMbsim, pullAll):
     os.chdir("/mbsim-env/"+repo)
     
     branchSplit=getattr(args, repo+"Branch").split("*")
-    sha=branchSplit[1 if len(branchSplit)>=2 else 0]
+    sha=branchSplit[1 if len(branchSplit)>=2 and branchSplit[1]!="" else 0]
     if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
       ret=ret+1
       print("git checkout detached failed.")
