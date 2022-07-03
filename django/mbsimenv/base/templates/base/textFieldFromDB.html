@@ -1,0 +1,23 @@
+{% extends "base/base.html" %}
+{% load octicons %}
+
+{% block title %}Text Output{% endblock %}
+
+{% block body %}
+<h1>Text Output</h1>
+<dl style="margin-right:0em;" class="row">
+  <dt class="col-2">Field</dt>
+  <dd class="col-10"><a href="{% url 'base:textFieldFromDBDownload' app model id field %}">{% octicon "desktop-download" %} {{app}}/{{model}}/{{id}}/{{field}}/</a></dd>
+  <dt class="col-2">Navigate</dt>
+  <dd class="col-10">
+    <span class="btn btn-info btn-xs" onclick="history.back()">
+      {% octicon "chevron-left" %} back
+    </span>
+  </dd>
+</dl>
+<hr/>
+
+<pre style="white-space: pre-wrap;">
+{{data}}
+</pre>
+{% endblock %}

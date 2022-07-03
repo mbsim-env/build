@@ -34,10 +34,22 @@ class Base(django.views.generic.base.TemplateView):
     context['userAvatarEle']=userAvatarEle
     return context
 
-# displays a TextField of a build dataset as text html site
-def textFieldFromDB(request, app, model, id, field):
+# displays a TextField of a build dataset
+class TextFieldFromDB(Base):
+  template_name='base/textFieldFromDB.html'
+  def get_context_data(self, **kwargs):
+    context=super().get_context_data(**kwargs)
+    context["navbar"]["buildsystem"]=True
+    data=importlib.import_module(kwargs["app"]).models.__getattribute__(kwargs["model"]).\
+         objects.get(id=kwargs["id"]).__getattribute__(kwargs["field"])
+    context["data"]=data
+    return context
+# download a TextField of a build dataset
+def textFieldFromDBDownload(request, app, model, id, field):
   data=importlib.import_module(app).models.__getattribute__(model).objects.get(id=id).__getattribute__(field)
-  return django.http.HttpResponse(data, content_type="text/plain")
+  response=django.http.HttpResponse(data, content_type='text/plain')
+  response['Content-Disposition']='attachment; filename="'+app+"_"+model+"_"+str(id)+"_"+field+'.txt"'
+  return response
 
 # download a file from the db
 def fileDownloadFromDB(request, app, model, id, field):

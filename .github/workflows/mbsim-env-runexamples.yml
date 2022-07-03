@@ -97,6 +97,8 @@ jobs:
         if: ${{inputs.downloadArtifactLcovdata}}
         run: >
           shopt -s nullglob &&
+          touch ${{github.workspace}}/mbsim-env/local/dummylcov &&
+          gzip ${{github.workspace}}/mbsim-env/local/dummylcov &&
           gunzip ${{github.workspace}}/mbsim-env/local/dummylcov.gz ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*.gz
       - name: "Docker: pull image"
         run: >
