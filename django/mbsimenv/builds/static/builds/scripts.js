@@ -12,6 +12,9 @@ function initToolTable(url) {
   ], {
     "paging": false,
     "order": [],
+    "language": {
+      "search": "Filter 'Tool':",
+    },
   });
 }
 

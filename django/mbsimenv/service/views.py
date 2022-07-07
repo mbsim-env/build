@@ -565,7 +565,7 @@ class DataTableLatestBranchCombiBuilds(base.views.DataTable):
 
   # return the field name in the dataset using for search/filter [required]
   def searchField(self):
-    return "id"
+    return "buildType"
 
   def colData_timedate(self, ds):
     import humanize

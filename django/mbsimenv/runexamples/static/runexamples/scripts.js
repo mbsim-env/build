@@ -16,6 +16,9 @@ function initExampleTable(url) {
     'lengthMenu': [ [10, 25, 50, 100, -1], [10, 25, 50, 100, 'All'] ],
     'pageLength': 25,
     "order": [],
+    "language": {
+      "search": "Filter 'Example':",
+    },
   });
 }
 
@@ -45,6 +48,9 @@ function initValgrindErrorTable(url) {
     'lengthMenu': [ [10, 25, 50, 100, 250, -1], [10, 25, 50, 100, 250, 'All'] ],
     'pageLength': 25,
     'order': [],
+    "language": {
+      "search": "Filter 'Kind':",
+    },
     'drawCallback': function() {
       $("#valgrindErrorTable").children("tbody").first().children("tr").each(function() {
         var id=$(this).children("td").first().next().children("table").attr("id");
@@ -80,6 +86,9 @@ function initXMLOutputTable(url) {
     'lengthMenu': [ [10, 25, 50, 100, -1], [10, 25, 50, 100, 'All'] ],
     'pageLength': 25,
     'order': [],
+    "language": {
+      "search": "Filter 'XML File':",
+    },
   });
 }
 
@@ -94,5 +103,8 @@ function initCompareResultTable(url) {
     'lengthMenu': [ [10, 25, 50, 100, -1], [10, 25, 50, 100, 'All'] ],
     'pageLength': 25,
     'order': [],
+    "language": {
+      "search": "Filter 'H5 File':",
+    },
   });
 }

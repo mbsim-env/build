@@ -100,6 +100,8 @@ function initLatestBranchCombiBuilds(url) {
   ], {
     "ordering": true,
     "orderFixed": [0, "desc"],
-    "searching": false,
+    "language": {
+      "search": "Filter 'Build Type':",
+    },
   });
 }
