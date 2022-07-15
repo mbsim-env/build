@@ -39,6 +39,7 @@ def parseArgs():
   argparser.add_argument("--daemon", "-d", type=str, choices=["start", "status", "stop"], help="Only for 'run service'")
   argparser.add_argument("--pushPullMultistageImage", action='store_true', help="Also push/pull multistage images")
   argparser.add_argument("--cacheFromSelf", action='store_true', help="Use existing image with same name as --cache_from")
+  argparser.add_argument("--enforceConfigure", action='store_true', help="Enforce configure run (only for building mbsimenv runs)")
   
   return argparser.parse_known_args()
 
@@ -149,7 +150,8 @@ def main():
   if args.command=="run":
     ret=0
     for s in args.service:
-      ret=run(s, args.jobs, addCommands=argsRest, interactive=args.interactive, daemon=args.daemon)
+      ret=run(s, args.jobs, addCommands=argsRest, interactive=args.interactive, daemon=args.daemon,
+              enforceConfigure=args.enforceConfigure)
       if ret!=0:
         break
     return ret

@@ -151,6 +151,8 @@ ret=subprocess.call(
   "-DLAPACK_LIBRARIES=/3rdparty/local/lib/liblapack.dll.a", "-DLAPACK=1",
   "-DBOOST_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw",
   "-DBoost_ARCHITECTURE=-x64",
+  "-DARPACK_INCLUDE_DIRS=/3rdparty/local/include/arpack", "-DARPACK_LIBRARIES=/3rdparty/local/lib/libarpack.dll.a",
+  "-DSPOOLES_INCLUDE_DIRS=/3rdparty/local/include/spooles", "-DSPOOLES_LIBRARIES=/3rdparty/local/lib/spooles.a",
   "-DCMAKE_BUILD_TYPE="+BUILDTYPE,
   "-DCMAKE_CXX_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["CXXFLAGS"],
   "-DCMAKE_C_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["CFLAGS"],

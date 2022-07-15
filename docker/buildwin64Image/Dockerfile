@@ -176,6 +176,30 @@ RUN cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DCMAKE_CXX_FLAGS="-g -O2 -fper
 RUN make -j $JOBS
 RUN make install
 
+# spooles
+WORKDIR /3rdparty
+RUN wget http://www.netlib.org/linalg/spooles/spooles.2.2.tgz
+RUN mkdir /3rdparty/spooles-build
+WORKDIR /3rdparty/spooles-build
+RUN tar -xzf ../spooles.2.2.tgz
+RUN sed -i -re "s/^ *CC *=.*$/CC=x86_64-w64-mingw32-gcc/;s/^ *OPTLEVEL *=.*$/OPTLEVEL=-O2/;s/^ *AR *=.*$/AR=x86_64-w64-mingw32-ar/" Make.inc
+RUN make -j $JOBS lib
+RUN cp spooles.a /3rdparty/local/lib
+RUN mkdir /3rdparty/local/include/spooles
+RUN find -name "*.h" | xargs tar -c | tar -x -C /3rdparty/local/include/spooles
+
+# arpack
+WORKDIR /3rdparty
+RUN git clone https://github.com/opencollab/arpack-ng.git
+WORKDIR /3rdparty/arpack-ng
+ARG ARPACKBRANCH=3.8.0
+RUN git checkout $ARPACKBRANCH
+RUN mkdir /3rdparty/arpack-build
+WORKDIR /3rdparty/arpack-build
+RUN cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DCMAKE_CXX_FLAGS="-g -O2" -DICB=1 -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DBLAS_LIBRARIES=/3rdparty/local/lib/libblas.dll.a -DLAPACK_LIBRARIES=/3rdparty/local/lib/liblapack.dll.a ../arpack-ng
+RUN make -j $JOBS
+RUN make install
+
 
 ##################################################################################
 

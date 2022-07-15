@@ -43,7 +43,6 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   which \
   dos2unix \
   xerces-c-devel \
-  arpack-devel \
   fontconfig-devel \
   freetype-devel \
   gl2ps-devel \
@@ -219,7 +218,31 @@ RUN wget -q https://www.sqlite.org/2022/sqlite-autoconf-$SQLITEVERSION.tar.gz
 RUN tar -xzf sqlite-autoconf-$SQLITEVERSION.tar.gz
 WORKDIR /osupdate/sqlite3/sqlite-autoconf-$SQLITEVERSION
 RUN ./configure --enable-shared --disable-static --prefix=/osupdate/local
-RUN make
+RUN make -j $JOBS
+RUN make install
+
+# spooles
+WORKDIR /3rdparty
+RUN wget http://www.netlib.org/linalg/spooles/spooles.2.2.tgz
+RUN mkdir /3rdparty/spooles-build
+WORKDIR /3rdparty/spooles-build
+RUN tar -xzf ../spooles.2.2.tgz
+RUN sed -i -re "s/^ *CC *=.*$/CC=gcc/;s/^ *OPTLEVEL *=.*$/OPTLEVEL=-O2 -fPIC/" Make.inc
+RUN make -j $JOBS lib
+RUN cp spooles.a /3rdparty/local/lib
+RUN mkdir /3rdparty/local/include/spooles
+RUN find -name "*.h" | xargs tar -c | tar -x -C /3rdparty/local/include/spooles
+
+# arpack
+WORKDIR /3rdparty
+RUN git clone https://github.com/opencollab/arpack-ng.git
+WORKDIR /3rdparty/arpack-ng
+ARG ARPACKBRANCH=3.8.0
+RUN git checkout $ARPACKBRANCH
+RUN mkdir /3rdparty/arpack-build
+WORKDIR /3rdparty/arpack-build
+RUN cmake3 -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DCMAKE_CXX_FLAGS="-g -O2" -DICB=1 ../arpack-ng
+RUN make -j $JOBS
 RUN make install
 
 

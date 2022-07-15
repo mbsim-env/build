@@ -217,6 +217,8 @@ if build:
     "-DCMAKE_CXX_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["CXXFLAGS"],
     "-DCMAKE_C_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["CFLAGS"],
     "-DCMAKE_Fortran_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["FFLAGS"],
+    "-DARPACK_INCLUDE_DIRS=/3rdparty/local/include/arpack", "-DARPACK_LIBRARIES=/3rdparty/local/lib64/libarpack.so",
+    "-DSPOOLES_INCLUDE_DIRS=/3rdparty/local/include/spooles", "-DSPOOLES_LIBRARIES=/3rdparty/local/lib/spooles.a",
     "--passToRunexamples", "--buildType", args.buildType]+\
     RUNEXAMPLESARGS+RUNEXAMPLESFILTER,
     stdout=sys.stdout, stderr=sys.stderr)
