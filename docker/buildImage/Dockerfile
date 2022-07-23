@@ -84,11 +84,6 @@ FROM centosBaseImage AS thirdpartyBuildImage
 
 # configuration
 ARG JOBS=4
-ARG MESAVERSION=18.1.3
-ARG OCTAVEVERSION=4.4.1
-ARG SWIGVERSION=4.0.1
-ARG QWTVERSION=6.1.3
-ARG NUHTMLVERSION=18.8.29
 
 # install additional packaged needed to build the tools not part of centos7
 RUN yum --setopt=skip_missing_names_on_install=False -y install \
@@ -102,64 +97,34 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   unzip \
   qt5-qttools-devel \
   patch \
+  meson \
+  flex \
+  libXrandr-devel \
+  bison \
   && yum clean all
+RUN pip3 install mako
 
 # configure path and envvar for the 3rd party tools
 RUN mkdir /osupdate /osupdate/local
 
-# get tools to build
-
 # mesa
 WORKDIR /osupdate
+ARG MESAVERSION=22.1.4
 RUN set -o pipefail && \
-  wget -q -O - https://mesa.freedesktop.org/archive/mesa-$MESAVERSION.tar.gz | tar -xz
+  wget -q -O - https://mesa.freedesktop.org/archive/mesa-$MESAVERSION.tar.xz | tar -xJ
+WORKDIR /osupdate/mesa-$MESAVERSION
 RUN mkdir /osupdate/mesa-build
-
-WORKDIR /3rdparty
+RUN meson /osupdate/mesa-build --prefix=/osupdate/local --buildtype release --optimization 2 --strip -D dri3=disabled -D glx=xlib -D glx-direct=false -D dri-drivers= -D vulkan-drivers= -D gallium-drivers=swrast -D platforms=x11
+WORKDIR /osupdate/mesa-build
+RUN ninja -j $JOBS
+RUN ninja install
 
 # octave
+ARG OCTAVEVERSION=4.4.1
+WORKDIR /3rdparty
 RUN set -o pipefail && \
   wget -q -O - https://ftp.gnu.org/gnu/octave/octave-$OCTAVEVERSION.tar.gz | tar -xz
 RUN mkdir /3rdparty/octave-build
-
-# swig
-RUN set -o pipefail && \
-  wget -q -O - https://netcologne.dl.sourceforge.net/project/swig/swig/swig-4.0.1/swig-4.0.1.tar.gz | tar -xz
-RUN mkdir /3rdparty/swig-build
-
-# qwt
-RUN set -o pipefail && \
-  wget -q -O - https://sourceforge.net/projects/qwt/files/qwt/$QWTVERSION/qwt-$QWTVERSION.tar.bz2 | tar -xj
-# fix the install dir (this cannot be done via options in qwt)
-RUN sed -i -re "s~^( *QWT_INSTALL_PREFIX *= *).*~\1/3rdparty/local~" qwt-$QWTVERSION/qwtconfig.pri
-RUN mkdir /3rdparty/qwt-build
-
-# coin
-RUN git clone https://github.com/coin3d/coin.git
-ARG COINBRANCH=CI-builds
-RUN (cd coin; git checkout $COINBRANCH)
-RUN mkdir /3rdparty/coin-build
-
-# soqt
-RUN git clone https://github.com/coin3d/soqt.git
-ARG SOQTBRANCH=CI-builds
-RUN (cd soqt; git checkout $SOQTBRANCH)
-RUN mkdir /3rdparty/soqt-build
-
-# nu-html
-WORKDIR /3rdparty/nuhtml
-RUN wget -q https://github.com/validator/validator/releases/download/$NUHTMLVERSION/vnu.jar_$NUHTMLVERSION.zip
-RUN unzip vnu.jar_$NUHTMLVERSION.zip
-
-# compile/install
-
-# meas
-WORKDIR /osupdate/mesa-build
-RUN ../mesa-$MESAVERSION/configure --prefix=/osupdate/local --with-platforms=x11 --disable-driglx-direct --with-dri-drivers=swrast --with-gallium-drivers=swrast --disable-dri --disable-dri3 --enable-glx=xlib --disable-driglx-direct --disable-gbm --disable-egl CXXFLAGS="-O2" CFLAGS="-O2"
-RUN make -j $JOBS
-RUN make install
-
-# octave
 WORKDIR /3rdparty/octave-build
 RUN ../octave-$OCTAVEVERSION/configure --enable-shared --disable-static --prefix=/3rdparty/local --disable-java --disable-gui --without-opengl --disable-readline
 RUN make -j $JOBS
@@ -171,6 +136,11 @@ RUN sed -i -re "s/^ *if *\((.*)&& *have_window_system *\( *\)(.*)$/if(have_windo
   /3rdparty/local/lib/octave/4.4.1/oct/x86_64-pc-linux-gnu/PKG_ADD
 
 # swig
+WORKDIR /3rdparty
+RUN set -o pipefail && \
+  wget -q -O - https://netcologne.dl.sourceforge.net/project/swig/swig/swig-4.0.1/swig-4.0.1.tar.gz | tar -xz
+RUN mkdir /3rdparty/swig-build
+ARG SWIGVERSION=4.0.1
 WORKDIR /3rdparty/swig-build
 RUN ../swig-$SWIGVERSION/configure --enable-shared --disable-static --prefix=/3rdparty/local
 RUN make -j $JOBS
@@ -179,25 +149,48 @@ RUN make install
 COPY docker/buildwin64Image/swig.patch /context/swig.patch
 RUN patch -d /3rdparty/local/share/swig/4.0.1 -p0 < /context/swig.patch
 
-# qwt6 for Qt5 (centos only provides qwt6 for Qt4)
+# qwt
+WORKDIR /3rdparty
+ARG QWTVERSION=6.1.3
+RUN set -o pipefail && \
+  wget -q -O - https://sourceforge.net/projects/qwt/files/qwt/$QWTVERSION/qwt-$QWTVERSION.tar.bz2 | tar -xj
+# fix the install dir (this cannot be done via options in qwt)
+RUN sed -i -re "s~^( *QWT_INSTALL_PREFIX *= *).*~\1/3rdparty/local~" qwt-$QWTVERSION/qwtconfig.pri
+RUN mkdir /3rdparty/qwt-build
 WORKDIR /3rdparty/qwt-build
 RUN qmake-qt5 ../qwt-$QWTVERSION
 RUN make -j $JOBS
 RUN make install
 
-# Coin3D
+# coin
+WORKDIR /3rdparty
+RUN git clone https://github.com/coin3d/coin.git
+ARG COINBRANCH=CI-builds
+RUN (cd coin; git checkout $COINBRANCH)
+RUN mkdir /3rdparty/coin-build
 WORKDIR /3rdparty/coin-build
 RUN (cd ../coin && git submodule init && git submodule update)
 RUN cmake3 -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DBoost_INCLUDE_DIR=/usr/include/boost169 -DCMAKE_INSTALL_PREFIX=/3rdparty/local ../coin
 RUN make -j $JOBS
 RUN make install
 
-# SoQt
+# soqt
+WORKDIR /3rdparty
+RUN git clone https://github.com/coin3d/soqt.git
+ARG SOQTBRANCH=CI-builds
+RUN (cd soqt; git checkout $SOQTBRANCH)
+RUN mkdir /3rdparty/soqt-build
 WORKDIR /3rdparty/soqt-build
 RUN (cd ../soqt && git submodule init && git submodule update)
 RUN cmake3 -DCMAKE_CXX_FLAGS="-O2" -DCMAKE_C_FLAGS="-O2" -DCMAKE_INSTALL_PREFIX=/3rdparty/local ../soqt
 RUN make -j $JOBS
 RUN make install
+
+# nu-html
+ARG NUHTMLVERSION=18.8.29
+WORKDIR /3rdparty/nuhtml
+RUN wget -q https://github.com/validator/validator/releases/download/$NUHTMLVERSION/vnu.jar_$NUHTMLVERSION.zip
+RUN unzip vnu.jar_$NUHTMLVERSION.zip
 
 # HDF5
 WORKDIR /3rdparty

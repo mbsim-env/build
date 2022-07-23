@@ -556,6 +556,7 @@ def build(toolName, run):
   tool.save()
 
   savedDir=os.getcwd()
+  if not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName))): os.makedirs(pj(args.sourceDir, buildTool(tool.toolName)))
 
   # configure
   print("configure", end="")
@@ -566,7 +567,7 @@ def build(toolName, run):
 
   # cd to build dir
   os.chdir(savedDir)
-  os.chdir(pj(args.sourceDir, buildTool(toolName)))
+  os.chdir(pj(args.sourceDir, buildTool(tool.toolName)))
 
   # make
   print(", make", end="")
@@ -615,6 +616,7 @@ def configure(tool):
       run=1
       # pre configure
       if not args.disablePreConfigure or not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName), "config.status")):
+        os.chdir(savedDir)
         os.chdir(pj(args.sourceDir, tool.toolName))
         print("\n\nRUNNING aclocal\n", file=configureFD); configureFD.flush()
         if base.helper.subprocessCall(["aclocal", "--force"], configureFD)!=0:
@@ -636,7 +638,6 @@ def configure(tool):
           raise RuntimeError("autoreconf failed")
       # configure
       os.chdir(savedDir)
-      if not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName))): os.makedirs(pj(args.sourceDir, buildTool(tool.toolName)))
       os.chdir(pj(args.sourceDir, buildTool(tool.toolName)))
       print("\n\nRUNNING configure\n", file=configureFD); configureFD.flush()
       if args.prefix is None:
@@ -649,7 +650,7 @@ def configure(tool):
           raise RuntimeError("configure failed")
     elif cmake and (not args.disableConfigure or not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName), "CMakeCache.txt"))):
       run=1
-      if not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName))): os.makedirs(pj(args.sourceDir, buildTool(tool.toolName)))
+      os.chdir(savedDir)
       os.chdir(pj(args.sourceDir, buildTool(tool.toolName)))
       # run cmake
       print("\n\nRUNNING cmake\n", file=configureFD); configureFD.flush()
