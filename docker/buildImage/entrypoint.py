@@ -275,7 +275,7 @@ if build:
       ["--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
       "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh "+\
       "--child-silent-after-fork=yes --num-callers=24 --gen-suppressions=all "+\
-      "--suppressions=/mbsim-build/build/misc/valgrind-mbsim.supp "+\
+      "--suppressions=/mbsim-env/mbsim/thirdparty/valgrind/valgrind-mbsim.supp "+\
       "--suppressions=/mbsim-build/build/misc/valgrind-python.supp --leak-check=full"]+RUNEXAMPLESFILTER
       , env=valgrindEnv)
     if localRet!=0:
@@ -338,7 +338,7 @@ def runExamplesPartition(ARGS, pullMbsim, pullAll):
     "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
     "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh "+\
     "--child-silent-after-fork=yes --num-callers=24 --gen-suppressions=all "+\
-    "--suppressions=/mbsim-build/build/misc/valgrind-mbsim.supp "+\
+    "--suppressions=/mbsim-env/mbsim/thirdparty/valgrind/valgrind-mbsim.supp "+\
     "--suppressions=/mbsim-build/build/misc/valgrind-python.supp --leak-check=full"] if args.valgrindExamples else [])+\
     ARGS+RUNEXAMPLESFILTER,
     env=runexamplesEnv)

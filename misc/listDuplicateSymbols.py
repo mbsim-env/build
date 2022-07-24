@@ -16,7 +16,7 @@ def printDup(title, allsym):
   titlePrinted=False
   for sym in allsym:
     # skip these symbols
-    if sym in ['_fini', '_init', '_ZN4PLib16triangularNumberEi']:
+    if sym in ['_fini', '_init', '_ZN4PLib16triangularNumberEi', '__bss_start', "_edata", "_end"]:
       continue
     if len(allsym[sym])>1:
       for f in allsym[sym]:
