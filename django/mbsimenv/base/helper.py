@@ -404,9 +404,9 @@ def addFieldLabel(field, *args):
 def bulk_create(model, objs, refresh=True):
   # workaround for  django>=3.2 issue https://code.djangoproject.com/ticket/33649
   # (this issue is considered a feature since django>=3.2)
-  # remove objects where the PK (id) is already set
+  # remove objects where the PK is already set
   # (ignore_conflicts on bulk_create is no longer working)
-  objs=list(filter(lambda o: o.id is None, objs))
+  objs=list(filter(lambda o: o.pk is None, objs))
   if len(objs)==0:
     return
   # needed since django.db.models.signals.pre_save.connect(...) is not called by bulk_create
@@ -416,7 +416,7 @@ def bulk_create(model, objs, refresh=True):
   # if a refresh (update of the PK of the python objects) is requested and the PK is not set ...
   # (note: this will never happen e.g. for postgres since it supports the update already on
   #  bulk_create; but e.g. sqlite does not update and needs this code)
-  if refresh and objs[0].id is None:
+  if refresh and objs[0].pk is None:
     # ... reload the created objects from the DB and set the PK of the corresponding python objects
-    for idUUID in model.objects.filter(uuid__in=[o.uuid for o in objs]).values_list("id", "uuid"):
-      next(filter(lambda o: o.uuid==idUUID[1], objs)).id=idUUID[0]
+    for idUUID in model.objects.filter(uuid__in=[o.uuid for o in objs]).values_list("pk", "uuid"):
+      next(filter(lambda o: o.uuid==idUUID[1], objs)).pk=idUUID[0]
