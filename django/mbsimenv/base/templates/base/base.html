@@ -52,11 +52,14 @@
           <li class="nav-item {{navbar.download|yesno:"active,"}}">
             <a class="nav-link" href="{% url 'service:releases' %}">{% octicon "cloud-download" %} Download</a>
           </li>
+          <li class="nav-item {{navbar.docu|yesno:"active,"}}">
+            <a class="nav-link" href="{% url 'service:docu' %}">{% octicon "question" %} Documentation</a>
+          </li>
           <li class="nav-item {{navbar.videos|yesno:"active,"}}">
             <a class="nav-link" href="{% url 'home:videos' %}">{% octicon "device-camera-video" %} Videos</a>
           </li>
           <li class="nav-item {{navbar.sourcecode|yesno:"active,"}}">
-            <a class="nav-link" href="https://github.com/mbsim-env/">{% octicon "file-code" %} Source Code {% octicon "link-external" %}</a>
+            <a class="nav-link" href="https://github.com/mbsim-env/">{% octicon "file-code" %} Source Code&nbsp;{% octicon "link-external" %}</a>
           </li>
           <li class="nav-item {{navbar.buildsystem|yesno:"active,"}}">
             <a class="nav-link" href="{% url "service:home" %}">{% octicon "checklist" %} Build System</a>

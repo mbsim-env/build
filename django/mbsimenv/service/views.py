@@ -142,19 +142,19 @@ class DataTableEditBranches(base.views.DataTable):
 
   def colData_fmatvecBranch(self, ds):
     return '<a href="https://github.com/mbsim-env/fmatvec/tree/'+ds.fmatvecBranch+'">'\
-           '<span class="badge badge-primary">'+octicon("git-branch")+'&nbsp;'+ds.fmatvecBranch+'</span></a>'
+           '<span class="badge badge-primary">'+octicon("git-branch")+'&nbsp;'+ds.fmatvecBranch+'&nbsp;'+octicon("link-external")+'</span></a>'
 
   def colData_hdf5serieBranch(self, ds):
     return '<a href="https://github.com/mbsim-env/hdf5serie/tree/'+ds.hdf5serieBranch+'">'\
-           '<span class="badge badge-primary">'+octicon("git-branch")+'&nbsp;'+ds.hdf5serieBranch+'</span></a>'
+           '<span class="badge badge-primary">'+octicon("git-branch")+'&nbsp;'+ds.hdf5serieBranch+'&nbsp;'+octicon("link-external")+'</span></a>'
 
   def colData_openmbvBranch(self, ds):
     return '<a href="https://github.com/mbsim-env/openmbv/tree/'+ds.openmbvBranch+'">'\
-           '<span class="badge badge-primary">'+octicon("git-branch")+'&nbsp;'+ds.openmbvBranch+'</span></a>'
+           '<span class="badge badge-primary">'+octicon("git-branch")+'&nbsp;'+ds.openmbvBranch+'&nbsp;'+octicon("link-external")+'</span></a>'
 
   def colData_mbsimBranch(self, ds):
     return '<a href="https://github.com/mbsim-env/mbsim/tree/'+ds.mbsimBranch+'">'\
-           '<span class="badge badge-primary">'+octicon("git-branch")+'&nbsp;'+ds.mbsimBranch+'</span></a>'
+           '<span class="badge badge-primary">'+octicon("git-branch")+'&nbsp;'+ds.mbsimBranch+'&nbsp;'+octicon("link-external")+'</span></a>'
 
 # response to ajax requests -> output repository branches
 def repoBranches(request):
@@ -581,10 +581,10 @@ class DataTableLatestBranchCombiBuilds(base.views.DataTable):
     import humanize
     return '''<nobr>
                 <a href="https://github.com/mbsim-env/{REPO}/tree/{BRANCH}">
-                  <span class="badge badge-primary">{OCTICONBRANCH}&nbsp;{BRANCH}</span>
+                  <span class="badge badge-primary">{OCTICONBRANCH}&nbsp;{BRANCH}&nbsp;{LINKEXTERNAL}</span>
                 </a>
                 <a href="https://github.com/mbsim-env/{REPO}/commit/{COMMITID}">
-                  {OCTICONCOMMIT}{COMMITIDSHORT}…
+                  {OCTICONCOMMIT}{COMMITIDSHORT}…&nbsp;{LINKEXTERNAL}
                 </a>
               </nobr><br/>
               <nobr>
@@ -594,7 +594,7 @@ class DataTableLatestBranchCombiBuilds(base.views.DataTable):
                 {DATE_WITHTOOLTIP}
               </nobr><br/>
               {MSG}'''.\
-           format(REPO=repo, BRANCH=getattr(ds, repo+"Branch"),
+           format(REPO=repo, BRANCH=getattr(ds, repo+"Branch"), LINKEXTERNAL=octicon("link-external"),
                   OCTICONBRANCH=octicon("git-branch"), OCTICONCOMMIT=octicon("git-commit"),
                   COMMITID=getattr(ds, repo+"UpdateCommitID"), COMMITIDSHORT=getattr(ds, repo+"UpdateCommitID")[0:7],
                   MSG=getattr(ds, repo+"UpdateMsg"), OCTICONPERSON=octicon("person"), AUTHOR=getattr(ds, repo+"UpdateAuthor"),
@@ -665,3 +665,11 @@ class DataTableLatestBranchCombiBuilds(base.views.DataTable):
         break
     return "table-danger" if examplesFailed or ds.nrFailed()>0 else \
            ("table-success" if buildFinished and examplesFinished else "table-wanring")
+
+class Docu(base.views.Base):
+  template_name='service/docu.html'
+  def get_context_data(self, **kwargs):
+    context=super().get_context_data(**kwargs)
+    context["navbar"]["docu"]=True
+    context['manuals']=service.models.Manual.objects.exclude(manualName="mbsimgui_first_steps")
+    return context

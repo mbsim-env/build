@@ -518,8 +518,8 @@ class DataTableValgrindStack(base.views.DataTable):
       if buildRun is None:
         return base.helper.tooltip(text, "runexamples/ValgrindWhatAndStack: id=%d"%(ds.id))
       commitID=getattr(buildRun, repo+"UpdateCommitID")
-      return base.helper.tooltip('<a href="https://github.com/mbsim-env/%s/blob/%s/%s#L%d">%s</a>'%\
-        (repo, commitID, path[len("/mbsim-env/"+repo+"/"):], ds.line if ds.line is not None else 0, text),
+      return base.helper.tooltip('<a href="https://github.com/mbsim-env/%s/blob/%s/%s#L%d">%s&nbsp;%s</a>'%\
+        (repo, commitID, path[len("/mbsim-env/"+repo+"/"):], ds.line if ds.line is not None else 0, text, octicon("link-external")),
         "runexamples/ValgrindWhatAndStack: id=%d"%(ds.id))
     else:
       return base.helper.tooltip(text, "runexamples/ValgrindWhatAndStack: id=%d"%(ds.id))

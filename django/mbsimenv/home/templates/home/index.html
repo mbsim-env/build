@@ -1,5 +1,6 @@
 {% extends "base/base.html" %}
 {% load static %}
+{% load octicons %}
 
 {% block title %}The Homepage{% endblock %}
 
@@ -28,49 +29,49 @@
   <p>The history of MBSim and its accompanying tools goes back to the year 2007. It is continuously improved and extended since then.</p>
   <dl class="row" style="margin-right:0em;">
     <dt class="col-sm-1">2007</dt>
-    <dd class="col-sm-11">Start of the <a href="https://www.mw.tum.de/am/forschung/am-softwarepakete/archiv/">MBSim project</a> at the <a href="https://www.mw.tum.de/am/home/">Institute of Applied Mechanics</a> at the <a href="https://www.tum.de">Technical University of Munich</a>. Initial commit of MBSim and fmatvec as internal subversion repositories.</dd>
+    <dd class="col-sm-11">Start of the <a href="https://www.mw.tum.de/am/forschung/am-softwarepakete/archiv/">MBSim project&nbsp;{% octicon "link-external" %}</a> at the <a href="https://www.mw.tum.de/am/home/">Institute of Applied Mechanics&nbsp;{% octicon "link-external" %}</a> at the <a href="https://www.tum.de">Technical University of Munich&nbsp;{% octicon "link-external" %}</a>. Initial commit of MBSim and fmatvec as internal subversion repositories.</dd>
     <dt class="col-sm-1">2008</dt>
     <dd class="col-sm-11">Birth of HDF5Serie as an internal subversion repository. Switching of the MBSim output files from ASCII to HDF5.</dd>
     <dt class="col-sm-1">2009</dt>
-    <dd class="col-sm-11">Release of MBSim, HDF5Serie and fmatvec as an open source project on the hosting platform <a href="https://en.wikipedia.org/wiki/BerliOS">BerliOS</a>.</dd>
+    <dd class="col-sm-11">Release of MBSim, HDF5Serie and fmatvec as an open source project on the hosting platform <a href="https://en.wikipedia.org/wiki/BerliOS">BerliOS&nbsp;{% octicon "link-external" %}</a>.</dd>
     <dt class="col-sm-1">2009</dt>
-    <dd class="col-sm-11">Birth of <a href="https://www.mw.tum.de/am/forschung/am-softwarepakete/archiv/">OpenMBV</a> as an internal subversion repository as an improved and modernized successor of <a href="https://www.mw.tum.de/am/forschung/am-softwarepakete/archiv/">AMVis</a>.</dd>
+    <dd class="col-sm-11">Birth of <a href="https://www.mw.tum.de/am/forschung/am-softwarepakete/archiv/">OpenMBV&nbsp;{% octicon "link-external" %}</a> as an internal subversion repository as an improved and modernized successor of <a href="https://www.mw.tum.de/am/forschung/am-softwarepakete/archiv/">AMVis&nbsp;{% octicon "link-external" %}</a>.</dd>
     <dt class="col-sm-1">2009</dt>
     <dd class="col-sm-11">Birth of h5plotserie, the GUI for time-series post-processing of MBSim.</dd>
     <dt class="col-sm-1">2009</dt>
     <dd class="col-sm-11">Birth of MBSimXML, the XML based model format of MBSim.</dd>
     <dt class="col-sm-1">2011</dt>
-    <dd class="col-sm-11">The hosting platform <a href="https://en.wikipedia.org/wiki/BerliOS">BerliOS</a> closes. Move of MBSim, OpenMBV, HDF5Serie and fmatvec to the hosting platform <a href="https://en.wikipedia.org/wiki/Google_Developers">Google-Code</a>.</dd>
+    <dd class="col-sm-11">The hosting platform <a href="https://en.wikipedia.org/wiki/BerliOS">BerliOS&nbsp;{% octicon "link-external" %}</a> closes. Move of MBSim, OpenMBV, HDF5Serie and fmatvec to the hosting platform <a href="https://en.wikipedia.org/wiki/Google_Developers">Google-Code&nbsp;{% octicon "link-external" %}</a>.</dd>
     <dt class="col-sm-1">2012</dt>
     <dd class="col-sm-11">Birth of MBSimGUI, the GUI of MBSim.</dd>
     <dt class="col-sm-1">2015</dt>
-    <dd class="col-sm-11">The hosting platform <a href="https://en.wikipedia.org/wiki/Google_Developers">Google-Code</a> closes in 2016. Birth of the <a href="https://github.com/">GitHub</a> organization <a href="https://github.com/mbsim-env">mbsim-env</a>. Move of MBSim, OpenMBV, HDF5Serie and fmatvec to the hosting platform <a href="https://github.com">GitHub</a>.</dd>
+    <dd class="col-sm-11">The hosting platform <a href="https://en.wikipedia.org/wiki/Google_Developers">Google-Code&nbsp;{% octicon "link-external" %}</a> closes in 2016. Birth of the <a href="https://github.com/">GitHub&nbsp;{% octicon "link-external" %}</a> organization <a href="https://github.com/mbsim-env">mbsim-env&nbsp;{% octicon "link-external" %}</a>. Move of MBSim, OpenMBV, HDF5Serie and fmatvec to the hosting platform <a href="https://github.com">GitHub&nbsp;{% octicon "link-external" %}</a>.</dd>
     <dt class="col-sm-1">2016</dt>
     <dd class="col-sm-11">Birth of the continous integration (CI) and nightly <a href="https://www.mbsim-env.de/service/home/">build system</a> of MBSim-Env on a commercial vServer.</dd>
     <dt class="col-sm-1">2019</dt>
-    <dd class="col-sm-11">Switched the CI and nightly <a href="https://www.mbsim-env.de/service/home/">build system</a> to <a href="https://www.docker.com/">Docker</a> containers and switched the vServer hosting provider.</dd>
+    <dd class="col-sm-11">Switched the CI and nightly <a href="https://www.mbsim-env.de/service/home/">build system</a> to <a href="https://www.docker.com/">Docker&nbsp;{% octicon "link-external" %}</a> containers and switched the vServer hosting provider.</dd>
     <dt class="col-sm-1">2020</dt>
-    <dd class="col-sm-11">Redesign of the CI and nightly <a href="https://www.mbsim-env.de/service/home/">build system</a> based on <a href="https://www.djangoproject.com/">Django</a>.</dd>
+    <dd class="col-sm-11">Redesign of the CI and nightly <a href="https://www.mbsim-env.de/service/home/">build system</a> based on <a href="https://www.djangoproject.com/">Django&nbsp;{% octicon "link-external" %}</a>.</dd>
   </dl>
 
   <h2 style="margin-top: 1em;">Dependent Tools and Libraries</h2>
 
   <p>MBSim and its tools and libraries make use of a lot of other 3rd-party tools and libraries during build and runtime. As MBSim itself, all these tools are free open-source tools. Special thanks goes to the following, none exclusive, alphabetical list of such tools:</p>
-  <a class="d-inline-flex p-2 border rounded" href="http://www.netlib.org/blas/">BLAS</a>
-  <a class="d-inline-flex p-2 border rounded" href="https://www.boost.org/">Boost</a>
-  <a class="d-inline-flex p-2 border rounded" href="https://github.com/coin3d">Coin</a>
-  <a class="d-inline-flex p-2 border rounded" href="https://www.djangoproject.com/">Django</a>
-  <a class="d-inline-flex p-2 border rounded" href="https://www.doxygen.nl/">Doxygen</a>
-  <a class="d-inline-flex p-2 border rounded" href="https://www.hdfgroup.org/">HDF5</a>
-  <a class="d-inline-flex p-2 border rounded" href="http://www.netlib.org/lapack/">Lapack</a>
-  <a class="d-inline-flex p-2 border rounded" href="http://www.mingw.org/">MinGW</a>
-  <a class="d-inline-flex p-2 border rounded" href="https://novnc.com/">noVNC</a>
-  <a class="d-inline-flex p-2 border rounded" href="https://www.gnu.org/software/octave/index">Octave</a>
-  <a class="d-inline-flex p-2 border rounded" href="https://www.python.org/">Python</a>
-  <a class="d-inline-flex p-2 border rounded" href="https://www.qt.io/">Qt</a>
-  <a class="d-inline-flex p-2 border rounded" href="https://qwt.sourceforge.io/">qwt</a>
-  <a class="d-inline-flex p-2 border rounded" href="http://www.swig.org/">SWIG</a>
-  <a class="d-inline-flex p-2 border rounded" href="https://xerces.apache.org/xerces-c/">Xerces</a>
+  <a class="d-inline-flex p-2 border rounded" href="http://www.netlib.org/blas/">BLAS&nbsp;{% octicon "link-external" %}</a>
+  <a class="d-inline-flex p-2 border rounded" href="https://www.boost.org/">Boost&nbsp;{% octicon "link-external" %}</a>
+  <a class="d-inline-flex p-2 border rounded" href="https://github.com/coin3d">Coin&nbsp;{% octicon "link-external" %}</a>
+  <a class="d-inline-flex p-2 border rounded" href="https://www.djangoproject.com/">Django&nbsp;{% octicon "link-external" %}</a>
+  <a class="d-inline-flex p-2 border rounded" href="https://www.doxygen.nl/">Doxygen&nbsp;{% octicon "link-external" %}</a>
+  <a class="d-inline-flex p-2 border rounded" href="https://www.hdfgroup.org/">HDF5&nbsp;{% octicon "link-external" %}</a>
+  <a class="d-inline-flex p-2 border rounded" href="http://www.netlib.org/lapack/">Lapack&nbsp;{% octicon "link-external" %}</a>
+  <a class="d-inline-flex p-2 border rounded" href="http://www.mingw.org/">MinGW&nbsp;{% octicon "link-external" %}</a>
+  <a class="d-inline-flex p-2 border rounded" href="https://novnc.com/">noVNC&nbsp;{% octicon "link-external" %}</a>
+  <a class="d-inline-flex p-2 border rounded" href="https://www.gnu.org/software/octave/index">Octave&nbsp;{% octicon "link-external" %}</a>
+  <a class="d-inline-flex p-2 border rounded" href="https://www.python.org/">Python&nbsp;{% octicon "link-external" %}</a>
+  <a class="d-inline-flex p-2 border rounded" href="https://www.qt.io/">Qt&nbsp;{% octicon "link-external" %}</a>
+  <a class="d-inline-flex p-2 border rounded" href="https://qwt.sourceforge.io/">qwt&nbsp;{% octicon "link-external" %}</a>
+  <a class="d-inline-flex p-2 border rounded" href="http://www.swig.org/">SWIG&nbsp;{% octicon "link-external" %}</a>
+  <a class="d-inline-flex p-2 border rounded" href="https://xerces.apache.org/xerces-c/">Xerces&nbsp;{% octicon "link-external" %}</a>
 
   <h2 style="margin-top: 1em;">References and Users</h2>
 
@@ -84,87 +85,79 @@
     </thead>
     <tbody>
       <tr>
-        <td><i>Bachmayer, M.</i> - <a href="https://www.tum.de">Technische Universität München</a></td>
-        <td><a href="http://mediatum.ub.tum.de/doc/1109010/531527.pdf">Effizientes Positionieren am Beispiel Regalbediengerät</a></td>
+        <td><i>Bachmayer, M.</i> - <a href="https://www.tum.de">Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="http://mediatum.ub.tum.de/doc/1109010/531527.pdf">Effizientes Positionieren am Beispiel Regalbediengerät&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
       <tr>
-        <td><i>Baruffaldi, L.B.</i> - <a href="https://www.ifsp.edu.br/">Federal Institute of São Paulo</a></td>
-        <td><a href="http://www.sistema.abcm.org.br/articleFiles/download/11893">Effects of Coil Spring Three Dimensional Stiffness on Freight Wagon Lateral Behavior</a></td>
+        <td><i>Baruffaldi, L.B.</i> - <a href="https://www.ifsp.edu.br/">Federal Institute of São Paulo&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="http://www.sistema.abcm.org.br/articleFiles/download/11893">Effects of Coil Spring Three Dimensional Stiffness on Freight Wagon Lateral Behavior&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
       <tr>
-        <td><i>Cebulla, T.</i> - <a href="https://www.tum.de">Technische Universität München</a></td>
-        <td><a href="http://mediatum.ub.tum.de/doc/1173126/636182.pdf">Spatial Dynamics of Pushbelt CVTs: Model Enhancements to a Non-smooth Flexible Multibody System</a></td>
+        <td><i>Cebulla, T.</i> - <a href="https://www.tum.de">Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="http://mediatum.ub.tum.de/doc/1173126/636182.pdf">Spatial Dynamics of Pushbelt CVTs: Model Enhancements to a Non-smooth Flexible Multibody System&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
       <tr>
-        <td><i>Clauberg, J.</i> - <a href="https://www.tum.de">Technische Universität München</a></td>
-        <td><a href="http://mediatum.ub.tum.de/doc/1111045/193742.pdf">Methoden zur parallelen Berechnung von nicht-glatten dynamischen Systemen</a></td>
+        <td><i>Clauberg, J.</i> - <a href="https://www.tum.de">Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="http://mediatum.ub.tum.de/doc/1111045/193742.pdf">Methoden zur parallelen Berechnung von nicht-glatten dynamischen Systemen&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
       <tr>
-        <td><i>Förg, D.</i> - <a href="https://www.tum.de">Technische Universität München</a></td>
-        <td><a href="http://mediatum.ub.tum.de/node?id=1063478">Stabilitäts- und Energiebetrachtungen für zweibeinige Laufmaschinen mit passiven Elementen</a></td>
+        <td><i>Förg, D.</i> - <a href="https://www.tum.de">Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="http://mediatum.ub.tum.de/node?id=1063478">Stabilitäts- und Energiebetrachtungen für zweibeinige Laufmaschinen mit passiven Elementen&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
       <tr>
-        <td><i>Förg, M.</i> - <a href="https://www.tum.de">Technische Universität München</a></td>
-        <td><a href="http://mediatum.ub.tum.de/?id=619195">Multi-Body Systems with Set-Valued Force Laws - Theory and Numerics</a></td>
+        <td><i>Förg, M.</i> - <a href="https://www.tum.de">Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="http://mediatum.ub.tum.de/?id=619195">Multi-Body Systems with Set-Valued Force Laws - Theory and Numerics&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
       <tr>
-        <td><i>Friedrich, M.</i> - <a href="https://www.tum.de">Technische Universität München</a></td>
-        <td><a href="http://mediatum.ub.tum.de/doc/1063436/856010.pdf">Parallel Co-Simulation for Mechatronic Systems</a></td>
+        <td><i>Friedrich, M.</i> - <a href="https://www.tum.de">Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="http://mediatum.ub.tum.de/doc/1063436/856010.pdf">Parallel Co-Simulation for Mechatronic Systems&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
       <tr>
-        <td><i>Ginzinger, L.</i> - <a href="https://www.tum.de">Technische Universität München</a></td>
-        <td><a href="http://mediatum.ub.tum.de/doc/796825/18108.pdf">Control of a Rubbing Rotor using an Active Auxiliary Bearing</a></td>
+        <td><i>Ginzinger, L.</i> - <a href="https://www.tum.de">Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="http://mediatum.ub.tum.de/doc/796825/18108.pdf">Control of a Rubbing Rotor using an Active Auxiliary Bearing&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
       <tr>
-        <td><i>Ginzinger, L.</i> - <a href="https://www.bath.ac.uk/departments/department-of-mechanical-engineering/">University of Bath</a></td>
-        <td><a href="https://purehost.bath.ac.uk/ws/portalfiles/portal/108225154/Paper.pdf">Model-Based Condition Monitoring of an Auxiliary Bearing following Contact Events</a></td>
+        <td><i>Ginzinger, L.</i> - <a href="https://www.bath.ac.uk/departments/department-of-mechanical-engineering/">University of Bath&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="https://purehost.bath.ac.uk/ws/portalfiles/portal/108225154/Paper.pdf">Model-Based Condition Monitoring of an Auxiliary Bearing following Contact Events&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
       <tr>
-        <td><i>Grundl, K.</i> - <a href="https://www.tum.de">Technische Universität München</a></td>
-        <td><a href="http://mediatum.ub.tum.de/doc/1253831/408549.pdf">Validation of a Pushbelt Variator Model - Insights into a non-smooth Multibody System</a></td>
+        <td><i>Grundl, K.</i> - <a href="https://www.tum.de">Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="http://mediatum.ub.tum.de/doc/1253831/408549.pdf">Validation of a Pushbelt Variator Model - Insights into a non-smooth Multibody System&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
       <tr>
-        <td><a href="https://www.haw-landshut.de/">Hochschule Landshut</a></td>
-        <td><a href="https://www.haw-landshut.de/kooperationen/institute/leichtbau-llk/news/detailansicht/article/open-source-software-zur-simulation-von-bewegungen-entwickelt.html">Education</a></td>
+        <td><a href="https://www.haw-landshut.de/">Hochschule Landshut&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="https://www.haw-landshut.de/kooperationen/institute/leichtbau-llk/news/detailansicht/article/open-source-software-zur-simulation-von-bewegungen-entwickelt.html">Education&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
       <tr>
-        <td><i>Huber, R.</i> - <a href="https://www.tum.de">Technische Universität München</a></td>
-        <td><a href="http://mediatum.ub.tum.de/doc/1097604/505624.pdf">Dynamics of Variable Valve Trains and Extrapolation Methods for Time-Stepping Schemes</a></td>
+        <td><i>Huber, R.</i> - <a href="https://www.tum.de">Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="http://mediatum.ub.tum.de/doc/1097604/505624.pdf">Dynamics of Variable Valve Trains and Extrapolation Methods for Time-Stepping Schemes&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
       <tr>
-        <td><a href="https://www.mw.tum.de/am/home/">Lehrstuhl für Angewandte Mechanik - Technische Universität München</a></td>
+        <td><a href="https://www.mw.tum.de/am/home/">Lehrstuhl für Angewandte Mechanik - Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
         <td><a href="{% static 'home/IMSD10Paper.pdf' %}">Analysing Dynamical Phenomenons: Introduction to MBSim</a></td>
       </tr>
       <tr>
-        <td><a href="https://www.mw.tum.de/am/home/">Lehrstuhl für Angewandte Mechanik - Technische Universität München</a></td>
-        <td><a href="https://www.mw.tum.de/am/forschung/am-softwarepakete/archiv/">Education, Projects</a>: valvetrain, hydraulic camshaft adjuster, rotordynamics, ...</td>
+        <td><a href="https://www.mw.tum.de/am/home/">Lehrstuhl für Angewandte Mechanik - Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="https://www.mw.tum.de/am/forschung/am-softwarepakete/archiv/">Education, Projects&nbsp;{% octicon "link-external" %}</a>: valvetrain, hydraulic camshaft adjuster, rotordynamics, ...</td>
       </tr>
       <tr>
-        <td><a href="https://www.mw.tum.de/ftm/startseite/">Lehrstuhl für Fahrzeugtechnik - Technische Universität München</a></td>
-        <td><a href="https://github.com/TUMFTM/motorcycle_model">Motorcycle</a> model</td>
+        <td><a href="https://www.mw.tum.de/ftm/startseite/">Lehrstuhl für Fahrzeugtechnik - Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="https://github.com/TUMFTM/motorcycle_model">Motorcycle&nbsp;{% octicon "link-external" %}</a> model</td>
       </tr>
       <tr>
-        <td><i>Schindler, T.</i> - <a href="https://www.tum.de">Technische Universität München</a></td>
-        <td><a href="http://mediatum.ub.tum.de/doc/981870/573289.pdf">Spatial Dynamics of Pushbelt CVTs</a></td>
+        <td><i>Schindler, T.</i> - <a href="https://www.tum.de">Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="http://mediatum.ub.tum.de/doc/981870/573289.pdf">Spatial Dynamics of Pushbelt CVTs&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
       <tr>
-        <td><i>Schneider, M.</i> - <a href="https://www.tum.de">Technische Universität München</a></td>
-        <td><a href="http://mediatum.ub.tum.de/doc/1108946/614515.pdf">Interdisziplinäre Simulation am Beispiel hydraulischer Nockenwellenversteller</a></td>
+        <td><i>Schneider, M.</i> - <a href="https://www.tum.de">Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="http://mediatum.ub.tum.de/doc/1108946/614515.pdf">Interdisziplinäre Simulation am Beispiel hydraulischer Nockenwellenversteller&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
       <tr>
-        <td><i>Zander, R.</i> - <a href="https://www.tum.de">Technische Universität München</a></td>
-        <td><a href="http://mediatum.ub.tum.de/doc/654788/482270.pdf">Flexible Multi-Body Systems with Set-Valued Force Laws</a></td>
+        <td><i>Zander, R.</i> - <a href="https://www.tum.de">Technische Universität München&nbsp;{% octicon "link-external" %}</a></td>
+        <td><a href="http://mediatum.ub.tum.de/doc/654788/482270.pdf">Flexible Multi-Body Systems with Set-Valued Force Laws&nbsp;{% octicon "link-external" %}</a></td>
       </tr>
     </tbody>
   </table>
-
-  <h2 style="margin-top: 1em;">Documentation</h2>
-  <ul class="list-group list-group-flush">
-    <li class="list-group-item">First steps using the MBSim Environment (<a href="{% url 'base:fileDownloadFromDB' 'service' 'Manual' 'mbsimgui_first_steps' 'manualFile' %}">Tutorial</a>)</li>
-    <li class="list-group-item">Analysing Dynamical Phenomenons: Introduction to MBSim (<a href="{% static 'home/IMSD10Paper.pdf' %}">Paper</a>)</li>
-    <li class="list-group-item">MBSim-Env XML Reference Manual (<a href="{% static "runtime/xmlReference/http___www_mbsim-env_de_MBSimXML/mbsimxml.html" %}">Reference</a>)</li>
-  </ul>
-  <p>More documents including the C++ API References can be found <a href="{% url 'service:home' %}#CppAPI">here</a>.</p>
 
 </div>
 

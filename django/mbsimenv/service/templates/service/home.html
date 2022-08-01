@@ -28,7 +28,7 @@
 <h1>Official Build System of the <i>MBSim-Environment</i></h1>
 
 <h2 style="margin-top: 1em;">{% octicon "dashboard" height="38" %}&nbsp;Dashboard</h2>
-<p>The following table lists the build results of the last daily build and manual.
+<p style="margin-top: 2em;">The following table lists the build results of the last daily build and manual.
    These builds are all done using the
    <span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;master</span> branch of all
    <span class="badge badge-success">{% octicon "repo" %}&nbsp;repos</span>.
@@ -135,7 +135,7 @@
   </tbody>
 </table>
 
-<p>The following links provide a chronologic list of the latest builds.
+<p style="margin-top: 2em;">The following links provide a chronologic list of the latest builds.
    This also includes builds of branches other then
    <span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;master</span>.
 </p>
@@ -148,13 +148,11 @@
   </li>
 </ul>
 
-<h2 style="margin-top: 1em;">{% octicon "question" height="38" %}</span>&nbsp;Documentation</h2>
-
-<h3 id="manuals">Manuals</h3>
+<p style="margin-top: 2em;">The following list provides the build status of all generated PDFs</p>
 <ul class="list-group">
   {% for manual in manuals %}
     <li class="list-group-item">
-      <a href="{% url "base:fileDownloadFromDB" "service" "Manual" manual.id "manualFile" %}"><span class="font-italic">{{manual.manualName}}</span></a>
+      <a href="{% url "base:fileDownloadFromDB" "service" "Manual" manual.id "manualFile" %}"><i class="fa-solid fa-file-pdf"></i> {{manual.manualName}}</a>
       <a href="{% url "base:textFieldFromDB" "service" "Manual" manual.id "resultOutput" %}">
         <span class="text-{{manual.resultOK|yesno:"success,danger"}}">
           {% if manual.resultOK %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}build
@@ -163,28 +161,6 @@
       </a>
     </li>
   {% endfor %}
-</ul>
-
-<h3>XML Reference</h3>
-<ul class="list-group">
-  <li class="list-group-item">
-    <a href="{% static "runtime/xmlReference/http___www_mbsim-env_de_MBSimXML/mbsimxml.html" %}"><span class="font-italic">MBSim-Env XML Reference Manual</span></a>
-  </li>
-</ul>
-
-<h3 id="CppAPI">C++ API Reference</h3>
-<ul class="list-group">
-  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/fmatvec/index.html" %}">fmatvec</a></li>
-  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/hdf5serie/index.html" %}">HDF5Serie</a></li>
-  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsim/index.html" %}">MBSim (kernel)</a></li>
-  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsimcontrol/index.html" %}">MBSim Control module</a></li>
-  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsimelectronics/index.html" %}">MBSim Electronics module</a></li>
-  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsimflexiblebody/index.html" %}">MBSim Flexible Body module</a></li>
-  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsimhydraulics/index.html" %}">MBSim Hydraulics module</a></li>
-  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsiminterface/index.html" %}">MBSim Interface module</a></li>
-  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsimphysics/index.html" %}">MBSim Physics module</a></li>
-  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbxmlutils/index.html" %}">MBXMLUtils</a></li>
-  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/openmbvcppinterface/index.html" %}">OpenMBV C++ Interface</a></li>
 </ul>
 
 <h2 style="margin-top: 1em;">{% octicon "three-bars" height="38" %}&nbsp;Build configuration</h2>

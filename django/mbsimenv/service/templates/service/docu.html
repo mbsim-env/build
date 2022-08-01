@@ -1,0 +1,65 @@
+{% extends "base/base.html" %}
+{% load static %}
+{% load octicons %}
+
+{% block title %}MBSim Documentation{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+{% endblock %}
+
+{% block body %}
+
+<h1>Documentation</h1>
+
+<p>The documentation for MBSim is quite limited, sorry!</p>
+<p>There are a few hand written documents and a lot of automatically generated reference documentation.</p>
+
+
+
+<h2>Documents</h2>
+
+<ul class="list-group list-group-flush">
+  <li class="list-group-item">First steps using the MBSim Environment (<a href="{% url 'base:fileDownloadFromDB' 'service' 'Manual' 'mbsimgui_first_steps' 'manualFile' %}"><i class="fa-solid fa-file-pdf"></i> Tutorial</a>)</li>
+  <li class="list-group-item">Analysing Dynamical Phenomenons: Introduction to MBSim (<a href="{% static 'home/IMSD10Paper.pdf' %}"><i class="fa-solid fa-file-pdf"></i> Paper</a>)</li>
+</ul>
+
+
+
+<h2 id="manuals">Technical Manuals</h2>
+<ul class="list-group">
+  {% for manual in manuals %}
+    <li class="list-group-item">
+      <a href="{% url "base:fileDownloadFromDB" "service" "Manual" manual.id "manualFile" %}"><i class="fa-solid fa-file-pdf"></i> {{manual.manualName}}</a>
+    </li>
+  {% endfor %}
+</ul>
+
+
+
+<h2>XML Reference</h2>
+<ul class="list-group">
+  <li class="list-group-item">
+    <a href="{% static "runtime/xmlReference/http___www_mbsim-env_de_MBSimXML/mbsimxml.html" %}"><i class="fa-solid fa-file-code"></i> MBSim-Env XML Reference Manual</a>
+  </li>
+</ul>
+
+
+
+<h2>C++ API Reference</h2>
+<ul class="list-group">
+  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/fmatvec/index.html" %}"><i class="fa-solid fa-file-code"></i> fmatvec</a></li>
+  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/hdf5serie/index.html" %}"><i class="fa-solid fa-file-code"></i> HDF5Serie</a></li>
+  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsim/index.html" %}"><i class="fa-solid fa-file-code"></i> MBSim (kernel)</a></li>
+  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsimcontrol/index.html" %}"><i class="fa-solid fa-file-code"></i> MBSim Control module</a></li>
+  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsimelectronics/index.html" %}"><i class="fa-solid fa-file-code"></i> MBSim Electronics module</a></li>
+  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsimflexiblebody/index.html" %}"><i class="fa-solid fa-file-code"></i> MBSim Flexible Body module</a></li>
+  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsimhydraulics/index.html" %}"><i class="fa-solid fa-file-code"></i> MBSim Hydraulics module</a></li>
+  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsiminterface/index.html" %}"><i class="fa-solid fa-file-code"></i> MBSim Interface module</a></li>
+  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbsimphysics/index.html" %}"><i class="fa-solid fa-file-code"></i> MBSim Physics module</a></li>
+  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbxmlutils/index.html" %}"><i class="fa-solid fa-file-code"></i> MBXMLUtils</a></li>
+  <li class="list-group-item"><a href="{% static "runtime/doxygenReference/openmbvcppinterface/index.html" %}"><i class="fa-solid fa-file-code"></i> OpenMBV C++ Interface</a></li>
+</ul>
+
+
+{% endblock %}

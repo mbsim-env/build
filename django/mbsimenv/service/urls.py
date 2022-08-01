@@ -5,6 +5,7 @@ app_name="service"
 
 urlpatterns = [
   django.urls.path('home/', service.views.Home.as_view(), name='home'),
+  django.urls.path('docu/', service.views.Docu.as_view(), name='docu'),
   django.urls.path('editbranches/<str:model>/', service.views.EditBranches.as_view(), name='editbranches'),
   django.urls.path('latestbranchcombibuilds/<str:model>/', service.views.LatestBranchCombiBuilds.as_view(), name='latestbranchcombibuilds'),
   django.urls.path('datatable/latestbranchcombibuilds/<str:model>/', service.views.DataTableLatestBranchCombiBuilds.as_view(), name='datatable_latestbranchcombibuilds'),
