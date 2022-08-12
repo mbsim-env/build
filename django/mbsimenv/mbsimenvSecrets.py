@@ -49,5 +49,5 @@ def getSecrets(*keys):
       getSecrets.secrets=json.load(f)
     return get(*keys)
   except ex:
-    raise RuntimeError("Original exception avoided in getSecrets to ensure that no secret is printed.")
+    raise RuntimeError("Original exception avoided in getSecrets to ensure that no secret is printed.") from None
 getSecrets.secrets=None

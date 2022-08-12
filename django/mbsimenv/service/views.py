@@ -404,7 +404,7 @@ def webhook(request):
     if django.conf.settings.DEBUG:
       raise ex
     else:
-      raise RuntimeError("Original exception avoided in webhook to ensure that no secret is printed.")
+      raise RuntimeError("Original exception avoided in webhook to ensure that no secret is printed.") from None
   event=request.headers['X-GitHub-Event']
   res={"event": event}
   if event=="push":
