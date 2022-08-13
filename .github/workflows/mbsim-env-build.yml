@@ -113,10 +113,21 @@ jobs:
               else:
                 raise RuntimeError("Failed to get SHA from github:\n"+response.text)
             # check if a new build is done with this
-            response=requests.get("https://{HOST}/builds/createUniqueRunID/{BT}/GITHUBACTION/{FMATVEC}/{HDF5SERIE}/{OPENMBV}/{MBSIM}/".\
+            def getTriggered(repo):
+              branchSplit=branches[repo].split("*")
+              if len(branchSplit)<3:
+                return 0
+              return 1 if branchSplit[2]=="T" else 0
+            response=requests.get("https://{HOST}/builds/createUniqueRunID/{BT}/GITHUBACTION/{FMATVECSHA}/{HDF5SERIESHA}/{OPENMBVSHA}/{MBSIMSHA}/{FMATVECTRIGGERED}/{HDF5SERIETRIGGERED}/{OPENMBVTRIGGERED}/{MBSIMTRIGGERED}/".\
                                   format(HOST="${{env.MBSIMENVWWW}}", BT="${{matrix.data.os.buildType}}",
-                                         FMATVEC=branches["fmatvec"].split("*")[1], HDF5SERIE=branches["hdf5serie"].split("*")[1],
-                                         OPENMBV=branches["openmbv"].split("*")[1], MBSIM=branches["mbsim"].split("*")[1]),
+                                         FMATVECSHA=branches["fmatvec"].split("*")[1],
+                                         HDF5SERIESHA=branches["hdf5serie"].split("*")[1],
+                                         OPENMBVSHA=branches["openmbv"].split("*")[1],
+                                         MBSIMSHA=branches["mbsim"].split("*")[1],
+                                         FMATVECTRIGGERED=getTriggered("fmatvec"),
+                                         HDF5SERIETRIGGERED=getTriggered("hdf5serie"),
+                                         OPENMBVTRIGGERED=getTriggered("openmbv"),
+                                         MBSIMTRIGGERED=getTriggered("mbsim")),
                                   verify=False,
                                   headers={"Authorization": "token ${{secrets.mbsimenvAccessToken}}"})
             skip=True

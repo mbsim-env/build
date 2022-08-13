@@ -78,10 +78,10 @@ def parseArguments():
   cfgOpts.add_argument("--disableRunExamples", action="store_true", help="Do not run examples")
   cfgOpts.add_argument("--enableDistribution", action="store_true", help="Create a release distribution archive (only usefull on the buildsystem)")
   cfgOpts.add_argument("--binSuffix", default="", help='base tool name suffix for the binary (build) dir in --sourceDir (default: "" = no VPATH build)')
-  cfgOpts.add_argument("--fmatvecBranch", default="", help='fmatvec branch[*SHA[*T]] to use (T:Triggered this build; F:not triggered)')
-  cfgOpts.add_argument("--hdf5serieBranch", default="", help='hdf5serierepo branch[*SHA[*T]] to use (T:Triggered this build; F:not triggered)')
-  cfgOpts.add_argument("--openmbvBranch", default="", help='openmbv branch[*SHA[*T]] to use (T:Triggered this build; F:not triggered)')
-  cfgOpts.add_argument("--mbsimBranch", default="", help='mbsim branch[*SHA[*T]] to use (T:Triggered this build; F:not triggered)')
+  cfgOpts.add_argument("--fmatvecBranch", default="", help='fmatvec branch[*SHA[*T]] to use (T:Triggered this build else not triggered)')
+  cfgOpts.add_argument("--hdf5serieBranch", default="", help='hdf5serierepo branch[*SHA[*T]] to use (T:Triggered this build else not triggered)')
+  cfgOpts.add_argument("--openmbvBranch", default="", help='openmbv branch[*SHA[*T]] to use (T:Triggered this build else not triggered)')
+  cfgOpts.add_argument("--mbsimBranch", default="", help='mbsim branch[*SHA[*T]] to use (T:Triggered this build else not triggered)')
   cfgOpts.add_argument("--buildSystemRun", action="store_true", help='Run in build system mode: generate build system state files.')
   cfgOpts.add_argument("--localServerPort", type=int, default=27583, help='Port for local server, if started automatically.')
   cfgOpts.add_argument("--coverage", action="store_true", help='Enable coverage analyzis using gcov/lcov.')
@@ -520,7 +520,7 @@ def repoUpdate(run, buildInfo):
     dailyTriggered=False
     if "daily" in args.buildType and getattr(previousRun, repo+"UpdateCommitID")!=commitidfull[repo]:
       dailyTriggered=True
-    setattr(run, repo+"Triggered", len(branchSplit)>2 or dailyTriggered)
+    setattr(run, repo+"Triggered", getattr(run, repo+"Triggered") or (len(branchSplit)>2 and branchSplit[2]=="T") or dailyTriggered)
     if not args.disableUpdate:
       setattr(run, repo+"UpdateOK", retlocal==0)
     setattr(run, repo+"UpdateOutput", repoUpdFD.getvalue())

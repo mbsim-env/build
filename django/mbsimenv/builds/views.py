@@ -337,7 +337,8 @@ def runDistributionDebugFileID(request, id):
 # create a new Run object which is unique wrt buildtype, executorID and git SHA IDs
 # returns the integer runID of the new unique Run object or None as runID if no unique Run object could be created
 # This is only useful for early checked of skipped builds without the need for the mbsimenv/build docker image
-def createUniqueRunID(request, buildtype, executorID, fmatvecSHA, hdf5serieSHA, openmbvSHA, mbsimSHA):
+def createUniqueRunID(request, buildtype, executorID, fmatvecSHA, hdf5serieSHA, openmbvSHA, mbsimSHA,
+                      fmatvecTriggered, hdf5serieTriggered, openmbvTriggered, mbsimTriggered):
   # check access token
   try: # catch all exceptions to avoid printing of any secrets
     if request.headers.get("Authorization", "")!="token "+mbsimenvSecrets.getSecrets("mbsimenvAccessToken"):
@@ -353,17 +354,31 @@ def createUniqueRunID(request, buildtype, executorID, fmatvecSHA, hdf5serieSHA, 
   run.hdf5serieUpdateCommitID=hdf5serieSHA
   run.openmbvUpdateCommitID=openmbvSHA
   run.mbsimUpdateCommitID=mbsimSHA
+  run.fmatvecTriggered=bool(fmatvecTriggered)
+  run.hdf5serieTriggered=bool(hdf5serieTriggered)
+  run.openmbvTriggered=bool(openmbvTriggered)
+  run.mbsimTriggered=bool(mbsimTriggered)
   run.save()
   with django.db.transaction.atomic():
     reasentlyStarted=django.utils.timezone.now()-django.utils.timezone.timedelta(hours=12)
-    oldRuns=builds.models.Run.objects.filter(
+    existingRuns=builds.models.Run.objects.filter(
               Q(endTime__isnull=False) | (Q(endTime__isnull=True) & Q(startTime__gt=reasentlyStarted)),
               buildType=buildtype,
               fmatvecUpdateCommitID=fmatvecSHA, hdf5serieUpdateCommitID=hdf5serieSHA,
               openmbvUpdateCommitID=openmbvSHA, mbsimUpdateCommitID=mbsimSHA).\
-              select_for_update().exclude(id=run.id).values("id", "executor")
-    for oldRun in oldRuns:
-      if base.helper.getExecutorID(oldRun["executor"])==executorID:
-        run.delete()
-        return django.http.JsonResponse({"runID": None, "existingRunID": oldRun["id"]}, json_dumps_params={"indent": 2})
+              select_for_update().exclude(id=run.id) # filter existingRuns
+    existingRuns2=[]
+    for existingRun in existingRuns: # further filter existingRuns (by executorID)
+      if base.helper.getExecutorID(existingRun.executor)==executorID:
+        existingRuns2.append(existingRun)
+    existingRuns=existingRuns2
+
+    if len(existingRuns)>0:
+      for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
+        triggered=functools.reduce(lambda a, b: a|b, [getattr(run, repo+"Triggered")]+[getattr(x, repo+"Triggered") for x in existingRuns])
+        for existingRun in existingRuns:
+          setattr(existingRun, repo+"Triggered", triggered)
+      builds.models.Run.objects.bulk_update(existingRuns, fields=["fmatvecTriggered", "hdf5serieTriggered", "openmbvTriggered", "mbsimTriggered"])
+      run.delete()
+      return django.http.JsonResponse({"runID": None, "existingRunIDs": [x.id for x in existingRuns]}, json_dumps_params={"indent": 2})
     return django.http.JsonResponse({"runID": run.id}, json_dumps_params={"indent": 2})
