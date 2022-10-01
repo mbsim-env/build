@@ -479,8 +479,6 @@ def repoUpdate(run, buildInfo):
 
   commitidfull={}
   buildInfo["repo"]={}
-  if "daily" in args.buildType:
-    previousRun=run.getPrevious()
   for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
     os.chdir(pj(args.sourceDir, repo))
     # update
@@ -516,11 +514,7 @@ def repoUpdate(run, buildInfo):
     ret+=retlocal
     # save
     setattr(run, repo+"Branch", branch)
-    # for daily builds set the triggered flag for every repo with a change wrt the last daily build
-    dailyTriggered=False
-    if "daily" in args.buildType and getattr(previousRun, repo+"UpdateCommitID")!=commitidfull[repo]:
-      dailyTriggered=True
-    setattr(run, repo+"Triggered", getattr(run, repo+"Triggered") or (len(branchSplit)>2 and branchSplit[2]=="T") or dailyTriggered)
+    setattr(run, repo+"Triggered", getattr(run, repo+"Triggered") or (len(branchSplit)>2 and branchSplit[2]=="T"))
     if not args.disableUpdate:
       setattr(run, repo+"UpdateOK", retlocal==0)
     setattr(run, repo+"UpdateOutput", repoUpdFD.getvalue())
@@ -532,6 +526,12 @@ def repoUpdate(run, buildInfo):
     run.save()
     repoUpdFD.close()
     buildInfo["repo"][repo]=branch+"*"+commitidfull[repo]
+  # for daily builds set the triggered flag for every repo with a change wrt the last daily build
+  if "daily" in args.buildType:
+    previousRun=run.getPrevious()
+    for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
+      if getattr(previousRun, repo+"UpdateCommitID")!=commitidfull[repo]:
+        setattr(run, repo+"Triggered", True)
 
   if not args.disableUpdate:
     if ret>0:

@@ -46,15 +46,19 @@ class SimpleSFTPStorage(django.core.files.storage.Storage):
   @_connectOnDemandHandler
   def _open(self, name, mode='rb'):
     remotePath=os.path.join(self.params["root"], name)
+    try:
+      fileSize=self.sftp.stat(remotePath).st_size
+    except FileNotFoundError:
+      fileSize=None
     f=self.sftp.open(remotePath, mode)
-    f.prefetch(self.sftp.stat(remotePath).st_size)
+    f.prefetch(fileSize)
     f.set_pipelined(True)
     return f
 
   @_connectOnDemandHandler
   def _save(self, name, content):
     remotePath=os.path.join(self.params["root"], name)
-    with self._open(name, "wb") as fo:
+    with self._open(remotePath, "wb") as fo:
       while True:
         data=content.read(32768)
         if len(data)==0:
