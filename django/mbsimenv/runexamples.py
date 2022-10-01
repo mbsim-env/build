@@ -969,8 +969,10 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   # get fmuChecker executable
   fmuCheck=glob.glob(pj(mbsimBinDir, "fmuCheck.*"))
   if len(fmuCheck)!=1:
-    raise RuntimeError("None or more than one fmuCheck.* executlabe found.")
-  fmuCheck=fmuCheck[0]
+    print("ERROR: None or more than one fmuCheck.* executlabe found!", file=executeFD)
+    fmuCheck="/bin/fmu_check_NOT_FOUND"
+  else:
+    fmuCheck=fmuCheck[0]
   # run fmuChecker
   print("\n\n\n", file=executeFD)
   print("Running command:", file=executeFD)

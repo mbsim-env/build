@@ -289,12 +289,12 @@ class CompareResultFile(django.db.models.Model):
     if self.h5File is None: return None
     fn=re.sub("^runexamples_CompareResultFile_[0-9]+_", "", self.h5File.name)
     if fn!=self.h5Filename:
-      raise RuntimeError("Filename missmatch in CompareResultFile")
+      raise RuntimeError("Filename missmatch in CompareResultFile.h5FileName[getter] ("+self.h5File.name+" != "+self.h5Filename+")")
     return fn
   @h5FileName.setter
   def h5FileName(self, filename):
     if filename!=self.h5Filename:
-      raise RuntimeError("Filename missmatch in CompareResultFile")
+      raise RuntimeError("Filename missmatch in CompareResultFile.h5FileName[setter] ("+self.h5File.name+" != "+self.h5Filename+")")
     if self.id is None:
       self.save()
     self.h5File.name="runexamples_CompareResultFile_"+str(self.id)+"_"+filename

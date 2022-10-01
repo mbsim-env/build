@@ -5,6 +5,7 @@ import base.helper
 import base.views
 import functools
 import service
+import runexamples
 import json
 import re
 import threading
@@ -373,7 +374,8 @@ def createUniqueRunID(request, buildtype, executorID, fmatvecSHA, hdf5serieSHA, 
         existingRuns2.append(existingRun)
     existingRuns=existingRuns2
 
-    if len(existingRuns)>0:
+    # if the same build already exits skip this build (return runID=None), except when references need to be updated
+    if len(existingRuns)>0 and runexamples.models.ExampleStatic.objects.filter(update=True).count()==0:
       for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
         triggered=functools.reduce(lambda a, b: a|b, [getattr(run, repo+"Triggered")]+[getattr(x, repo+"Triggered") for x in existingRuns])
         for existingRun in existingRuns:
