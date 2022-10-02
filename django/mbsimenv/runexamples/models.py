@@ -217,7 +217,7 @@ class ExampleStaticReference(django.db.models.Model):
   h5File=AL(django.db.models.FileField(null=True, blank=True, max_length=200), L.inline, L.list, L.search)
   @property
   def h5FileName(self):
-    if self.h5File is None: return None
+    if not self.h5File: return None
     return re.sub("^runexamples_ExampleStaticReference_[0-9]+_", "", self.h5File.name)
   @h5FileName.setter
   def h5FileName(self, filename):
@@ -229,7 +229,7 @@ class ExampleStaticReference(django.db.models.Model):
 # delete all files referenced in ExampleStaticReference when a ExampleStaticReference object is deleted
 def exampleStaticReferenceDeleteHandler(sender, **kwargs):
   esr=kwargs["instance"]
-  if esr.h5File is not None:
+  if esr.h5File:
     esr.h5File.delete(False)
 django.db.models.signals.pre_delete.connect(exampleStaticReferenceDeleteHandler, sender=ExampleStaticReference)
 
@@ -286,7 +286,7 @@ class CompareResultFile(django.db.models.Model):
   h5File=django.db.models.FileField(null=True, blank=True, max_length=200)
   @property
   def h5FileName(self):
-    if self.h5File is None: return None
+    if not self.h5File: return None
     fn=re.sub("^runexamples_CompareResultFile_[0-9]+_", "", self.h5File.name)
     if fn!=self.h5Filename:
       raise RuntimeError("Filename missmatch in CompareResultFile.h5FileName[getter] id="+str(self.id)+" ("+self.h5File.name+" != "+self.h5Filename+")")
@@ -302,7 +302,7 @@ class CompareResultFile(django.db.models.Model):
 # delete all files referenced in CompareResultFile when a CompareResultFile object is deleted
 def compareResultFileDeleteHandler(sender, **kwargs):
   crf=kwargs["instance"]
-  if crf.h5File is not None:
+  if crf.h5File:
     crf.h5File.delete(False)
 django.db.models.signals.pre_delete.connect(compareResultFileDeleteHandler, sender=CompareResultFile)
 

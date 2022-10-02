@@ -1105,7 +1105,7 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
   import h5py
 
   def saveFileIfNotAlreadyDone(cmpResFile, h5CurFile):
-    if cmpResFile.h5File.name is None:
+    if not cmpResFile.h5File:
       # save the file only the first time
       cmpResFile.h5FileName=cmpResFile.h5Filename # this calls save on the dataset cmpResFile -> it will be skipped for bulk_create later on 
       fw=cmpResFile.h5File.open("wb")

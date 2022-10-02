@@ -47,7 +47,7 @@ class Release(django.db.models.Model):
   releaseFile=django.db.models.FileField(null=True, blank=True, max_length=100)
   @property
   def releaseFileName(self):
-    if self.releaseFile is None: return None
+    if not self.releaseFile: return None
     return re.sub("^service_release_[0-9]+_", "", self.releaseFile.name)
   @releaseFileName.setter
   def releaseFileName(self, filename):
@@ -58,7 +58,7 @@ class Release(django.db.models.Model):
   releaseDebugFile=django.db.models.FileField(null=True, blank=True, max_length=100)
   @property
   def releaseDebugFileName(self):
-    if self.releaseDebugFile is None: return None
+    if not self.releaseDebugFile: return None
     return re.sub("^service_release_[0-9]+_", "", self.releaseDebugFile.name)
   @releaseDebugFileName.setter
   def releaseDebugFileName(self, filename):
@@ -74,9 +74,9 @@ class Release(django.db.models.Model):
 # delete all files referenced in Release when a Release object is deleted
 def releaseDeleteHandler(sender, **kwargs):
   rel=kwargs["instance"]
-  if rel.releaseFile is not None:
+  if rel.releaseFile:
     rel.releaseFile.delete(False)
-  if rel.releaseDebugFile is not None:
+  if rel.releaseDebugFile:
     rel.releaseDebugFile.delete(False)
 django.db.models.signals.pre_delete.connect(releaseDeleteHandler, sender=Release)
 
@@ -95,7 +95,7 @@ class Manual(django.db.models.Model):
   manualFile=django.db.models.FileField(max_length=100)
   @property
   def manualFileName(self):
-    if self.manualFile is None: return None
+    if not self.manualFile: return None
     return re.sub("^service_manual_[a-zA-Z0-9-_]+__", "", self.manualFile.name)
   @manualFileName.setter
   def manualFileName(self, filename):
@@ -106,7 +106,7 @@ class Manual(django.db.models.Model):
 # delete all files referenced in Manual when a Manual object is deleted
 def manualDeleteHandler(sender, **kwargs):
   man=kwargs["instance"]
-  if man.manualFile is not None:
+  if man.manualFile:
     man.manualFile.delete(False)
 django.db.models.signals.pre_delete.connect(manualDeleteHandler, sender=Manual)
 

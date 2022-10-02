@@ -75,7 +75,7 @@ class Run(django.db.models.Model):
   distributionFile=django.db.models.FileField(null=True, blank=True, max_length=100)
   @property
   def distributionFileName(self):
-    if self.distributionFile is None: return None
+    if not self.distributionFile: return None
     return re.sub("^builds_Run_[0-9]+_", "", self.distributionFile.name)
   @distributionFileName.setter
   def distributionFileName(self, filename):
@@ -85,7 +85,7 @@ class Run(django.db.models.Model):
   distributionDebugFile=django.db.models.FileField(null=True, blank=True, max_length=100)
   @property
   def distributionDebugFileName(self):
-    if self.distributionDebugFile is None: return None
+    if not self.distributionDebugFile: return None
     return re.sub("^builds_Run_[0-9]+_", "", self.distributionDebugFile.name)
   @distributionDebugFileName.setter
   def distributionDebugFileName(self, filename):
@@ -135,9 +135,9 @@ class Run(django.db.models.Model):
 # delete all files referenced in Run when a Run object is deleted
 def runDeleteHandler(sender, **kwargs):
   run=kwargs["instance"]
-  if run.distributionFile is not None:
+  if run.distributionFile:
     run.distributionFile.delete(False)
-  if run.distributionDebugFile is not None:
+  if run.distributionDebugFile:
     run.distributionDebugFile.delete(False)
 django.db.models.signals.pre_delete.connect(runDeleteHandler, sender=Run)
 
