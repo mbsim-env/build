@@ -50,7 +50,7 @@ env:
   mbsimenvsec_codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
 jobs:
   getBuildMatrix:
-    name: "............................................................"
+    name: "."
     runs-on: ubuntu-latest
     outputs:
       matrix: ${{steps.matrix.outputs.matrix}}

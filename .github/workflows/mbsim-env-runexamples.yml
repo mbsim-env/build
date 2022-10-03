@@ -65,7 +65,7 @@ env:
 jobs:
   runexamples:
     if: ${{always()}}
-    name: "............................................................"
+    name: "."
     runs-on: ubuntu-latest
     outputs:
       runexamplesInfo: ${{steps.runexamplesDetails.outputs.runexamplesInfo}}

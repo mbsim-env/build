@@ -161,14 +161,25 @@ if build or args.runExamplesPre:
         exCur=runCur.examples.get(exampleName=exStatic.exampleName)
         if exCur is None:
           continue
-        # delete all old references
-        exStatic.references.all().delete()
-        # add new references
-        for rf in exCur.resultFiles.all():
+        # delete references not in current
+        keepFilename=[]
+        rfCurs=exCur.resultFiles.all()
+        for rfCur in rfCurs:
+          if rfCur.h5FileName is None:
+            keepFilename.append(rfCur.h5Filename)
+        delete=[]
+        for rfStatic in exStatic.references.all():
+          if rfStatic.h5FileName not in keepFilename:
+            delete.append(rfStatic)
+        exStatic.references.filter(id__in=[d.id for d in delete]).delete()
+        # add/update new references
+        for rfCur in rfCurs:
+          if rfCur.h5FileName is None: # if nothing is different in a file the file is even not stored in rfCur! -> skip this rfCur
+            continue
           ref=runexamples.models.ExampleStaticReference()
           ref.exampleStatic=exStatic
-          ref.h5FileName=rf.h5FileName
-          with rf.h5File.open("rb") as fi:
+          ref.h5FileName=rfCur.h5FileName
+          with rfCur.h5File.open("rb") as fi:
             data=fi.read()
           ref.h5FileSHA1=hashlib.sha1(data).hexdigest()
           with ref.h5File.open("wb") as fo:

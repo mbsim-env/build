@@ -51,6 +51,7 @@ curdir=os.getcwd()
 curManualIDs=set()
 for texMain in glob.glob("*/main.tex"):
   idName=os.path.dirname(texMain)
+  print("Build Latex of "+idName)
   os.chdir(idName)
 
   f=io.StringIO()
