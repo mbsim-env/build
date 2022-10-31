@@ -28,7 +28,6 @@ class Home(base.views.Base):
     context['manuals']=service.models.Manual.objects.all()
     if service.models.Info.objects.all().count()==1:
       context['info']=service.models.Info.objects.all()[0]
-    context["currentRelease"]=service.models.Release.objects.order_by('-versionMajor', '-versionMinor').first()
     context["hostname"]=os.environ.get('MBSIMENVSERVERNAME', 'localhost')
     context["authenticated"]=self.request.user.is_authenticated
     return context
@@ -671,5 +670,5 @@ class Docu(base.views.Base):
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
     context["navbar"]["docu"]=True
-    context['manuals']=service.models.Manual.objects.exclude(manualName="mbsimgui_first_steps")
+    context['manualsSecondary']=service.models.Manual.objects.exclude(manualName="mbsimgui_first_steps")
     return context

@@ -1,9 +1,20 @@
 function loadDifferencePlot(url) {
   ajaxCall(url, {}, function(result) {
     // done
-    xMin=result.current[0][0];
-    xMax=result.current[result.current.length-1][0];
+
+    // get min/max
+    xMin=1e99;//mfmf xMin,xMax
+    xMax=-1e99;
+    if(result.current) {
+      xMin=Math.min(xMin, result.current[0][0]);
+      xMax=Math.max(xMax, result.current[result.current.length-1][0]);
+    }
+    if(result.reference) {
+      xMin=Math.min(xMin, result.reference[0][0]);
+      xMax=Math.max(xMax, result.reference[result.reference.length-1][0]);
+    }
     
+    // prepare signals
     signalSeries=[];
     if(result.reference) {
       signalSeries.push({
@@ -14,29 +25,38 @@ function loadDifferencePlot(url) {
         data: result.reference,
       });
     }
-    signalSeries.push({
-      name: 'Current',
-      lineWidth: 1.0,
-      color: "#00FF00",
-      marker: { enabled: false },
-      data: result.current,
-    });
-    Highcharts.chart('signal', {
-      boost: {
-        seriesThreshold: 1,
-      },
-      chart: {
-        zoomType: 'xy',
-        seriesBoostThreshold: 100,
-        panning: { enabled: true, type: 'xy' },
-        panKey: 'ctrl',
-      },
-      plotOptions: { series: { states: { inactive: { opacity: 1.0 }}}},
-      title: { text: 'Signal' },
-      xAxis: { title: { text: 'Time [s]' } },
-      yAxis: { title: { text: 'Value' } },
-      series: signalSeries,
-    });
+    if(result.current) {
+      signalSeries.push({
+        name: 'Current',
+        lineWidth: 1.0,
+        color: "#00FF00",
+        marker: { enabled: false },
+        data: result.current,
+      });
+    }
+    // plot signals
+    if(result.current || result.reference) {
+      Highcharts.chart('signal', {
+        boost: {
+          seriesThreshold: 1,
+        },
+        chart: {
+          zoomType: 'xy',
+          seriesBoostThreshold: 100,
+          panning: { enabled: true, type: 'xy' },
+          panKey: 'ctrl',
+        },
+        plotOptions: { series: { states: { inactive: { opacity: 1.0 }}}},
+        title: { text: 'Signal' },
+        xAxis: { title: { text: 'Time [s]' } },
+        yAxis: { title: { text: 'Value' } },
+        series: signalSeries,
+      });
+    }
+    else {
+      $("#signal").text("No signal plot available since neither a current nor a reference signal found.").
+                   addClass("alert alert-warning");
+    }
 
     if(result.abs) {
       Highcharts.chart('signalAbs', {
@@ -68,6 +88,10 @@ function loadDifferencePlot(url) {
         }],
       });
     }
+    else {
+      $("#signalAbs").text("No absolute tolerance plot available since not both signals found or the time data of both channels differ in size and/or datapoints.").
+                      addClass("alert alert-warning");
+    }
 
     if(result.rel) {
       Highcharts.chart('signalRel', {
@@ -98,6 +122,10 @@ function loadDifferencePlot(url) {
           data: [[xMin,2e-5],[xMax,2e-5]],
         }],
       });
+    }
+    else {
+      $("#signalRel").text("No relative tolerance plot available since not both signals found or the time data of both channels differ in size and/or datapoints.").
+                      addClass("alert alert-warning");
     }
   }, function(reason, msg) {
     //fail

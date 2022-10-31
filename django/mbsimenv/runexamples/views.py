@@ -669,18 +669,23 @@ class DataTableCompareResult(base.views.DataTable):
     if ds.result==runexamples.models.CompareResult.Result.FILENOTINCUR or ds.result==runexamples.models.CompareResult.Result.FILENOTINREF or \
        ds.result==runexamples.models.CompareResult.Result.DATASETNOTINCUR or ds.result==runexamples.models.CompareResult.Result.DATASETNOTINREF:
       return ''
-    if ds.result==runexamples.models.CompareResult.Result.LABELNOTINCUR:
-      return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;[label not in cur]'
-    if ds.result==runexamples.models.CompareResult.Result.LABELNOTINREF:
-      return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;[label not in ref]'
-    if ds.result==runexamples.models.CompareResult.Result.LABELDIFFER:
-      return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;[label differ]'
-    if ds.result==runexamples.models.CompareResult.Result.LABELMISSING:
-      return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;[label missing]'
-    if ds.result==runexamples.models.CompareResult.Result.PASSED:
-      return '<span class="text-success">'+octicon("check")+'</span>&nbsp;passed'
     url=django.urls.reverse('runexamples:differenceplot', args=[ds.id])
-    return '<span class="text-danger">'+octicon("stop")+'</span>&nbsp;<a href="%s">failed</a>'%(url)
+    prefixDanger ='<span class="text-danger">' +octicon("stop")+'</span>&nbsp;'
+    prefixSuccess='<span class="text-success">'+octicon("stop")+'</span>&nbsp;'
+    if ds.result==runexamples.models.CompareResult.Result.LABELNOTINCUR:
+      return prefixDanger+'<a href="%s">[label not in cur]</a>'%(url)
+    if ds.result==runexamples.models.CompareResult.Result.LABELNOTINREF:
+      return prefixDanger+'<a href="%s">[label not in ref]</a>'%(url)
+    if ds.result==runexamples.models.CompareResult.Result.LABELDIFFER:
+      return prefixDanger+'<a href="%s">[label differ]</a>'%(url)
+    if ds.result==runexamples.models.CompareResult.Result.LABELMISSING:
+      return prefixDanger+'<a href="%s">[label missing]</a>'%(url)
+    if ds.result==runexamples.models.CompareResult.Result.PASSED:
+      if ds.compareResultFile.h5File:
+        return prefixSuccess+'<a href="%s">passed</a>'%(url)
+      else:
+        return prefixSuccess+'passed'
+    return prefixDanger+'<a href="%s">failed</a>'%(url)
   def colSortKey_result(self, ds):
     if ds.result==runexamples.models.CompareResult.Result.FAILED:
       return -9
@@ -742,25 +747,30 @@ def chartDifferencePlot(request, id):
   import tempfile
   import numpy
 
-  # get current result
-  compareResult=runexamples.models.CompareResult.objects.filter(id=id).select_related("compareResultFile").get()
-  with compareResult.compareResultFile.h5File.open("rb") as djangoF:
-    try:
-      tempF=tempfile.NamedTemporaryFile(mode='wb', delete=False)
-      base.helper.copyFile(djangoF, tempF)
-      tempF.close()
-      h5F=h5py.File(tempF.name, "r")
-      dataset=h5F[compareResult.dataset]
-      colIdx=dataset.attrs["Column Label"].tolist().index(compareResult.label.encode("utf-8"))
-      timeCur=dataset[:,0].reshape((dataset.shape[0],1))
-      cur=dataset[:,colIdx]
-    finally:
-      os.unlink(tempF.name)
-
-  def np2Json(np):
-    return list(map(lambda x: [x[0],0] if math.isnan(x[1]) else x, np.tolist()))
-  # get reference result
+  ref=None
+  cur=None
+  absErr=None
+  relErr=None
   try:
+    # get current result
+    compareResult=runexamples.models.CompareResult.objects.filter(id=id).select_related("compareResultFile").get()
+    with compareResult.compareResultFile.h5File.open("rb") as djangoF:
+      try:
+        tempF=tempfile.NamedTemporaryFile(mode='wb', delete=False)
+        base.helper.copyFile(djangoF, tempF)
+        tempF.close()
+        h5F=h5py.File(tempF.name, "r")
+        dataset=h5F[compareResult.dataset]
+        timeCur=dataset[:,0].reshape((dataset.shape[0],1))
+        try:
+          colIdx=dataset.attrs["Column Label"].tolist().index(compareResult.label.encode("utf-8"))
+          cur=dataset[:,colIdx]
+        except ValueError:
+          pass
+      finally:
+        os.unlink(tempF.name)
+
+    # get reference result
     django.db.close_old_connections() # needed since the next line may create a new DB query
     exampleStatic=runexamples.models.ExampleStatic.objects.get(exampleName=compareResult.compareResultFile.example.exampleName)
     for r in exampleStatic.references.all():
@@ -773,30 +783,28 @@ def chartDifferencePlot(request, id):
         tempF.close()
         h5F=h5py.File(tempF.name, "r")
         dataset=h5F[compareResult.dataset]
-        colIdx=dataset.attrs["Column Label"].tolist().index(compareResult.label.encode("utf-8"))
         timeRef=dataset[:,0].reshape((dataset.shape[0],1))
-        ref=dataset[:,colIdx]
+        try:
+          colIdx=dataset.attrs["Column Label"].tolist().index(compareResult.label.encode("utf-8"))
+          ref=dataset[:,colIdx]
+        except ValueError:
+          pass
       finally:
         os.unlink(tempF.name)
 
-    if ref.shape==cur.shape and numpy.all(numpy.isclose(timeCur, timeRef, rtol=1e-12, atol=1e-12, equal_nan=True)):
+    def np2Json(np):
+      return list(map(lambda x: [x[0],0] if math.isnan(x[1]) else x, np.tolist()))
+
+    if cur is not None and ref is not None and ref.shape==cur.shape and \
+       numpy.all(numpy.isclose(timeCur, timeRef, rtol=1e-12, atol=1e-12, equal_nan=True)):
       absErr=abs(ref-cur)
       relErr=absErr/(abs(ref)+1.0e-14) # avoid diff my zero
-    else:
-      absErr=None
-      relErr=None
+  finally:
     return django.http.JsonResponse({
-      "reference": np2Json(numpy.concatenate((timeRef,ref.reshape((dataset.shape[0],1))), axis=1)),
-      "current": np2Json(numpy.concatenate((timeCur,cur.reshape((timeCur.shape[0],1))), axis=1)),
+      "reference": None if ref is None else np2Json(numpy.concatenate((timeRef,ref.reshape((dataset.shape[0],1))), axis=1)),
+      "current": None if cur is None else np2Json(numpy.concatenate((timeCur,cur.reshape((timeCur.shape[0],1))), axis=1)),
       "abs": None if absErr is None else np2Json(numpy.concatenate((timeCur,absErr.reshape((dataset.shape[0],1))), axis=1)),
       "rel": None if relErr is None else np2Json(numpy.concatenate((timeCur,relErr.reshape((dataset.shape[0],1))), axis=1)),
-    })
-  except:
-    return django.http.JsonResponse({
-      "reference": None,
-      "current": np2Json(numpy.concatenate((timeCur,cur.reshape((timeCur.shape[0],1))), axis=1)),
-      "abs": None,
-      "rel": None,
     })
 
 def allExampleStatic(request):

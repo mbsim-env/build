@@ -14,6 +14,7 @@ class Base(django.views.generic.base.TemplateView):
     context["navbar"]={
       "home": False,
       "download": False,
+      "documentation": False,
       "videos": False,
       "sourcecode": False,
       "buildsystem": False,

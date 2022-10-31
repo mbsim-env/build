@@ -338,21 +338,20 @@ def startLocalServer(port, onlyGetServerInfo=False):
     print("No table found in database. Run Django migration. (only done the first time)")
     django.core.management.call_command("migrate", interactive=False, traceback=True, no_color=True)
   # start server
-  sock=socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-  result=sock.connect_ex(('localhost',port))
-  if result!=0:
-    print("No server is running. Starting server. (only done the first time)")
-    env=os.environ.copy()
-    env['DJANGO_SETTINGS_MODULE']='mbsimenv.settings_'+django.conf.settings.MBSIMENV_TYPE
-    p=subprocess.Popen([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../manage.py",
-                        "runserver", "--insecure", "--noreload", "localhost:"+str(port)],
-                       preexec_fn=os.setpgrp, env=env)
-    with open(pidfile, "w") as f:
-      json.dump({"hostname": "localhost", "port": port}, f)
-  else:
-    p=None
-    print("A server is already running. Skipping starting another one.")
-  sock.close()
+  with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+    result=sock.connect_ex(('localhost',port))
+    if result!=0:
+      print("No server is running. Starting server. (only done the first time)")
+      env=os.environ.copy()
+      env['DJANGO_SETTINGS_MODULE']='mbsimenv.settings_'+django.conf.settings.MBSIMENV_TYPE
+      p=subprocess.Popen([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../manage.py",
+                          "runserver", "--insecure", "--noreload", "localhost:"+str(port)],
+                         preexec_fn=os.setpgrp, env=env)
+      with open(pidfile, "w") as f:
+        json.dump({"hostname": "localhost", "port": port}, f)
+    else:
+      p=None
+      print("A server is already running. Skipping starting another one.")
 
   with open(pidfile, "r") as f:
     localserver=json.load(f)

@@ -171,7 +171,6 @@ django.setup()
 def closeOldConnections(**kwargs):
   if not django.db.connections[kwargs["using"]].in_atomic_block:
     django.db.close_old_connections()
-  print("mfmf pre_save time="+str(django.utils.timezone.now()))
 django.db.models.signals.pre_save.connect(closeOldConnections)
 
 if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
@@ -998,10 +997,9 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
       data=numpy.genfromtxt("fmuCheck.result.csv", dtype=float, delimiter=",", skip_header=1) # get data from csv
       header=open("fmuCheck.result.csv", "r").readline().rstrip().split(',') # get header from csv
       header=list(map(lambda x: x[1:-1], header)) # remove leading/trailing " form each header
-      f=h5py.File("fmuCheck.result.fmuh5", "w") # create h5 file
-      d=f.create_dataset("fmuCheckResult", dtype='d', data=data) # create dataset with data
-      d.attrs.create("Column Label", dtype=h5py.special_dtype(vlen=bytes), data=header) # create Column Label attr with header
-      f.close() # close h5 file
+      with h5py.File("fmuCheck.result.fmuh5", "w") as f: # create h5 file
+        d=f.create_dataset("fmuCheckResult", dtype='d', data=data) # create dataset with data
+        d.attrs.create("Column Label", dtype=h5py.special_dtype(vlen=bytes), data=header) # create Column Label attr with header
     except:
       print(traceback.format_exc(), file=executeFD)
       print("Failed.\n", file=executeFD)
@@ -1108,10 +1106,9 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
     if not cmpResFile.h5File:
       # save the file only the first time
       cmpResFile.h5FileName=cmpResFile.h5Filename # this calls save on the dataset cmpResFile -> it will be skipped for bulk_create later on 
-      fw=cmpResFile.h5File.open("wb")
-      with open(h5CurFile.filename, "rb") as fr:
-        base.helper.copyFile(fr, fw)
-      fw.close()
+      with cmpResFile.h5File.open("wb") as fw:
+        with open(h5CurFile.filename, "rb") as fr:
+          base.helper.copyFile(fr, fw)
       cmpResFile.save()
 
   if isinstance(refObj, h5py.Dataset):
@@ -1126,7 +1123,6 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
       cmpRes.compareResultFile=cmpResFile
       cmpRes.dataset=datasetName
       cmpRes.result=runexamples.models.CompareResult.Result.DATASETNOTINCUR
-      saveFileIfNotAlreadyDone(cmpResFile, h5CurFile)
       nrFailed[0]+=1
       return
     # get shape
@@ -1188,6 +1184,7 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
       cmpRess.append(cmpRes)
       cmpRes.compareResultFile=cmpResFile
       cmpRes.dataset=datasetName
+      cmpRes.label=label
       cmpRes.result=runexamples.models.CompareResult.Result.LABELNOTINREF
       saveFileIfNotAlreadyDone(cmpResFile, h5CurFile)
       nrFailed[0]+=1
@@ -1261,13 +1258,6 @@ def compareExample(ex):
       cmpResFiles.append(cmpResFile) # -> append to bulk_create later on
       cmpResFile.example=ex
       cmpResFile.h5Filename=curFile
-      # save file
-      cmpResFile.h5FileName=curFile # this calls save on the dataset cmpResFile -> no bulk_create possible
-      fw=cmpResFile.h5File.open("wb")
-      with open(curFile, "rb") as fr:
-        base.helper.copyFile(fr, fw)
-      fw.close()
-      cmpResFile.save()
 
       cmpRes=runexamples.models.CompareResult()
       cmpRess.append(cmpRes)

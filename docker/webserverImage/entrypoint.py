@@ -64,7 +64,7 @@ sys.stdout.flush()
 
 # create cert if not existing or renew if already existing
 subprocess.check_call(["sudo", "-u", "dockeruser", "/usr/bin/certbot-2", "--work-dir", "/tmp/certbotwork", "--logs-dir", "/tmp/certbotlog",
-  "--agree-tos", "--email", "friedrich.at.gc@gmail.com", "certonly", "-n", "--webroot", "-w", "/var/www/html/certbot",
+  "--agree-tos", "--email", "fm12@freenet.de", "certonly", "-n", "--webroot", "-w", "/var/www/html/certbot",
   "--cert-name", "mbsim-env", "-d", os.environ["MBSIMENVSERVERNAME"]])
 
 # adapt web server config to use the letsencrypt certs

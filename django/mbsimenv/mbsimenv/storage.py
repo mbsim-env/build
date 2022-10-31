@@ -45,6 +45,8 @@ class SimpleSFTPStorage(django.core.files.storage.Storage):
 
   @_connectOnDemandHandler
   def _open(self, name, mode='rb'):
+    if "w" in mode:
+      self.delete(name) # needed since paramiko may fail if this is not done
     remotePath=os.path.join(self.params["root"], name)
     try:
       fileSize=self.sftp.stat(remotePath).st_size

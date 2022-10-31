@@ -26,17 +26,6 @@
 
 
 
-<h2 id="manuals">Technical Manuals</h2>
-<ul class="list-group">
-  {% for manual in manuals %}
-    <li class="list-group-item">
-      <a href="{% url "base:fileDownloadFromDB" "service" "Manual" manual.id "manualFile" %}"><i class="fa-solid fa-file-pdf"></i> {{manual.manualName}}</a>
-    </li>
-  {% endfor %}
-</ul>
-
-
-
 <h2>XML Reference</h2>
 <ul class="list-group">
   <li class="list-group-item">
@@ -60,6 +49,18 @@
   <li class="list-group-item"><a href="{% static "runtime/doxygenReference/mbxmlutils/index.html" %}"><i class="fa-solid fa-file-code"></i> MBXMLUtils</a></li>
   <li class="list-group-item"><a href="{% static "runtime/doxygenReference/openmbvcppinterface/index.html" %}"><i class="fa-solid fa-file-code"></i> OpenMBV C++ Interface</a></li>
 </ul>
+
+
+
+<h2 id="manuals">Technical Manuals</h2>
+<ul class="list-group">
+  {% for manual in manualsSecondary %}
+    <li class="list-group-item">
+      <a href="{% url "base:fileDownloadFromDB" "service" "Manual" manual.id "manualFile" %}"><i class="fa-solid fa-file-pdf"></i> {{manual.manualName}}</a>
+    </li>
+  {% endfor %}
+</ul>
+
 
 
 {% endblock %}

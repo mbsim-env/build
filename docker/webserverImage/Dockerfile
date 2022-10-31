@@ -68,14 +68,16 @@ RUN set -o pipefail && \
   cat /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf.new /tmp/httpd_rootdir.conf > /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf && \
   rm -f /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf.new /tmp/httpd_rootdir.conf
 RUN mkdir -p /opt/rh/httpd24/root/var/log/httpd
+# configure LogFormat
+RUN sed -i -re "s+^( *LogFormat.*)%h(.*)$+\1<IP>\2+;s+^( *LogFormat.*)%\{Referer\}i(.*)$+\1<REFERER>\2+;s+^( *LogFormat.*)%\{User-Agent\}i(.*)$+\1<USERAGENT>\2+" /opt/rh/httpd24/root/etc/httpd/conf/httpd.conf
 
 # configure MPM
 RUN sed -i -re "s/^.*LoadModule +mpm_prefork_module.*$/#/" /opt/rh/httpd24/root/etc/httpd/conf.modules.d/00-mpm.conf && \
     sed -i -re "s/^.*LoadModule +mpm_event_module/LoadModule mpm_event_module/" /opt/rh/httpd24/root/etc/httpd/conf.modules.d/00-mpm.conf
 
 # webserver SSL
-RUN set -o pipefail && \
-  sed -i -r "s|^( *< *VirtualHost +_default_ *: *443 *> *(#.*)?)$|\1\nServerName \${MBSIMENVSERVERNAME}\n|" /opt/rh/httpd24/root/etc/httpd/conf.d/ssl.conf
+RUN sed -i -r "s|^( *< *VirtualHost +_default_ *: *443 *> *(#.*)?)$|\1\nServerName \${MBSIMENVSERVERNAME}\nCustomLog logs/ssl_error_log common\nCustomLog logs/ssl_access_log common\n|" /opt/rh/httpd24/root/etc/httpd/conf.d/ssl.conf
+RUN sed -i -r "/^ *CustomLog +logs\/ssl_request_log *\\\ *$/N;s|^ *CustomLog +logs\/ssl_request_log.*|CustomLog logs/ssl_request_log common|" /opt/rh/httpd24/root/etc/httpd/conf.d/ssl.conf
 COPY docker/webserverImage/conf/mpm_event.conf /opt/rh/httpd24/root/etc/httpd/conf.d/
 COPY docker/webserverImage/conf/le-redirect-mbsim-env.conf /opt/rh/httpd24/root/etc/httpd/conf.d/
 
