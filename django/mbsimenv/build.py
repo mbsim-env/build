@@ -131,19 +131,24 @@ def mainDocPage():
   if not args.buildSystemRun or args.buildType!="linux64-dailydebug":
     return
 
-  staticRuntimeDir="/webserverstatic"
+  print("Copy documentation")
+  def rsyncToFileStorage(src, dst, msg=""):
+    params=django.conf.settings.SIMPLE_SFTP_STORAGE_PARAMS
+    with tempfile.NamedTemporaryFile(mode='wt') as pwfile:
+      pwfile.write(params["password"])
+      pwfile.flush()
+      if subprocess.call(["sshpass", "-f"+pwfile.name, "rsync", "-a", "--delete",
+                          "-e", "ssh -p "+str(params["port"])+" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+                          src+"/",
+                          params["username"]+"@"+params["hostname"]+":"+dst+"/"],
+                          stderr=subprocess.STDOUT)!=0:
+        raise RuntimeError("rsync failed: "+msg)
 
+  staticRuntimeDir="/data/webserverstatic"
   # copy xmldoc
-  if os.path.isdir(pj(staticRuntimeDir, "xmlReference")):
-    shutil.rmtree(pj(staticRuntimeDir, "xmlReference"))
-  if os.path.isdir(os.path.normpath(docDir)):
-    shutil.copytree(os.path.normpath(docDir), pj(staticRuntimeDir, "xmlReference"), symlinks=True)
-
+  rsyncToFileStorage(os.path.normpath(docDir), pj(staticRuntimeDir, "xmlReference"), "copy xmldoc")
   # copy doc
-  if os.path.isdir(pj(staticRuntimeDir, "doxygenReference")):
-    shutil.rmtree(pj(staticRuntimeDir, "doxygenReference"))
-  if os.path.isdir(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc"))):
-    shutil.copytree(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc")), pj(staticRuntimeDir, "doxygenReference"), symlinks=True)
+  rsyncToFileStorage(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc")), pj(staticRuntimeDir, "doxygenReference"), "copy doxydoc")
 
 def setGithubStatus(run, state):
   # skip for none build system runs

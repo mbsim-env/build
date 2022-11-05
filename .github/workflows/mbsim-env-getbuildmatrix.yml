@@ -109,4 +109,5 @@ jobs:
           matrix={"data": list(matrix)}
           # set output
           print("jobs.getBuildMatrix.steps.matrix.outputs.matrix:\n"+json.dumps(matrix, indent=2))
-          print("::set-output name=matrix::"+json.dumps(matrix))
+          with open("${{github.output}}", "at") as o:
+            print("matrix="+json.dumps(matrix), file=o)

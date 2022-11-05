@@ -86,7 +86,7 @@ if django.conf.settings.DEFAULT_FILE_STORAGE=="mbsimenv.storage.SimpleSFTPStorag
   client.set_missing_host_key_policy(paramiko.client.MissingHostKeyPolicy)
   client.connect(params["hostname"], port=params["port"],
                       username=params["username"], password=params["password"],
-                      allow_agent=False, look_for_keys=False, banner_timeout=60, auth_timeout=120)
+                      allow_agent=False, look_for_keys=False, timeout=60, banner_timeout=60, auth_timeout=60)
   sftp=client.open_sftp()
   try:
     for f in sftp.listdir(params["root"]):

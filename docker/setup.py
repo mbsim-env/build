@@ -417,7 +417,6 @@ def runAutobuild(s, buildType, addCommand, jobs=4, interactive=False, enforceCon
     volumes={
       'mbsimenv_mbsim-'+buildType+"."+getTagname():  {"bind": "/mbsim-env",       "mode": "rw"},
       'mbsimenv_ccache.'+getTagname():               {"bind": "/mbsim-ccache",    "mode": "rw"},
-      'mbsimenv_webserverstatic.'+getTagname():      {"bind": "/webserverstatic", "mode": "rw"}, # to copy xmldoc and doxydoc
       'mbsimenv_config.'+getTagname():               {"bind": "/mbsim-config",    "mode": "ro"},
     },
     detach=True, stdout=True, stderr=True)
@@ -721,7 +720,7 @@ def run(s, jobs=4,
       volumes={
         'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config",        "mode": "ro"},
         'mbsimenv_letsencrypt.'+getTagname():                 {"bind": "/etc/letsencrypt",     "mode": "rw"},
-        'mbsimenv_webserverstatic.'+getTagname():             {"bind": "/webserverstatic",     "mode": "ro"},
+        'mbsimenv_webserverstatic.'+getTagname():             {"bind": "/webserverstatic",     "mode": "ro"}, # xmldoc and doxydoc
         '/var/run/docker.sock':                               {"bind": "/var/run/docker.sock", "mode": "rw"},
       },
       hostname=getServername(),
@@ -814,8 +813,9 @@ def run(s, jobs=4,
       network=networki.id,
       ports=ports,
       volumes={
-        'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config",  "mode": "ro"},
-        'mbsimenv_databasemedia.'+getTagname():               {"bind": "/jail/databasemedia", "mode": "rw"},
+        'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config",         "mode": "ro"},
+        'mbsimenv_databasemedia.'+getTagname():               {"bind": "/data/databasemedia",   "mode": "rw"}, # django DB files
+        'mbsimenv_webserverstatic.'+getTagname():             {"bind": "/data/webserverstatic", "mode": "rw"}, # xmldoc and doxydoc
       },
       detach=True, stdout=True, stderr=True)
     networki.disconnect(filestorage)

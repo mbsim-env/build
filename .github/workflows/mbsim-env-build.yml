@@ -142,7 +142,8 @@ jobs:
               raise RuntimeError("Failed to createUniqueRunID:\n"+response.text)
             data={"skip": skip, "runID": runID, "branches": branches}
           print("jobs.build.steps.whatToDo.outputs.data:\n"+json.dumps(data, indent=2))
-          print("::set-output name=data::"+json.dumps(data))
+          with open("${{github.output}}", "at") as o:
+            print("data="+json.dumps(data), file=o)
       - name: "Docker: pull image"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         run: >
@@ -155,7 +156,8 @@ jobs:
         run: |
           import uuid
           print("jobs.build.steps.matrixUUID.outputs.matrixUUID:\n"+str(uuid.uuid4()))
-          print("::set-output name=matrixUUID::"+str(uuid.uuid4()))
+          with open("${{github.output}}", "at") as o:
+            print("matrixUUID="+str(uuid.uuid4()), file=o)
       - name: "Cache: ccache"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         uses: actions/cache@v2
@@ -212,11 +214,13 @@ jobs:
               buildInfo=json.load(f)
             print("https://${{env.MBSIMENVSERVERNAME}}/builds/run/"+str(buildInfo["buildRunID"])+"/")
             print("jobs.build.steps.buildDetails.outputs.buildInfo:\n"+json.dumps(buildInfo, indent=2))
-            print("::set-output name=buildInfo::"+json.dumps(buildInfo))
+            with open("${{github.output}}", "at") as o:
+              print("buildInfo="+json.dumps(buildInfo, file=o))
           except:
             print("No buildInfo file found")
             print("jobs.build.steps.buildDetails.outputs.buildInfo:\n{}")
-            print("::set-output name=buildInfo::{}")
+            with open("${{github.output}}", "at") as o:
+              print("buildInfo={}", file=o)
       - name: "Artifact: tar/compress prefix and coverage-files"
         if: ${{always() && inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
         run: >

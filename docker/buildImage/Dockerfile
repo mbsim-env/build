@@ -67,6 +67,8 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   qt5-qtstyleplugins \
   cmake3 \
   ninja-build \
+  rsync \
+  sshpass \
   && yum clean all
 # config devtoolset-7 and SCL and git2.27
 ENV PATH=/opt/rh/rh-git227/root/usr/bin:/opt/rh/devtoolset-7/root/usr/bin:$PATH \
@@ -290,8 +292,8 @@ ENV PATH=/usr/lib64/ccache:/mbsim-env/build/misc:$PATH \
 # - set permissions of volume mount dirs
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
   groupadd -g 48 apache && \
-  mkdir /mbsim-env /mbsim-ccache /webserverstatic && \
-  chown dockeruser:dockeruser /mbsim-env /mbsim-ccache /webserverstatic
+  mkdir /mbsim-env /mbsim-ccache && \
+  chown dockeruser:dockeruser /mbsim-env /mbsim-ccache
 
 # add g++/c++ to cache dir (its not added automatically since g++ is not installed since scl is used
 RUN ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/g++ && ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/c++

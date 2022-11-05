@@ -1,15 +1,19 @@
 FROM centos:centos7
 
 # install software
-RUN yum --setopt=skip_missing_names_on_install=False install -y \
+RUN yum --setopt=skip_missing_names_on_install=False install -y epel-release && \
+  yum --setopt=skip_missing_names_on_install=False install -y \
   python3 \
   openssh-server \
+  rsync \
+  rssh \
   && yum clean all
 
 # openssh config
 RUN ssh-keygen -A
-RUN sed -i -re "s/^[ \t]*Subsystem[ \t].*$/Subsystem sftp internal-sftp/" /etc/ssh/sshd_config
-RUN echo -e "Port 1122\nMatch User dockeruser\n  ChrootDirectory /jail\n  X11Forwarding no\n  AllowTcpForwarding no\n  ForceCommand internal-sftp" >> /etc/ssh/sshd_config
+RUN echo -e "Port 1122\nX11Forwarding no\nAllowTcpForwarding no" >> /etc/ssh/sshd_config
+# rssh config
+RUN echo -e "allowsftp\nallowrsync" >> /etc/rssh.conf
 
 # copy context files
 COPY docker/filestorageImage/entrypoint.py /context/entrypoint.py
@@ -22,10 +26,10 @@ LABEL org.label-schema.schema-version="1.0" \
   org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/filestorageImage" \
   org.label-schema.vendor="MBSim-Environment"
 
-# Add user dockeruser: /jail must be owned by root for ChrootDirectory of sshd
-RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
-  mkdir -p /jail/databasemedia && \
-  chown root:root /jail && chown dockeruser:dockeruser /jail/databasemedia
+# Add user dockeruser: with rssh as shell to restrict the ssh access; group rsshuser needed to execute rssh
+RUN groupadd -g 1065 dockeruser && useradd --no-log-init -s /usr/bin/rssh -u 1065 -g dockeruser -G rsshusers dockeruser && \
+  mkdir -p /data/databasemedia /data/webserverstatic && \
+  chown root:root /data && chown dockeruser:dockeruser /data/databasemedia /data/webserverstatic
 
 #HEALTHCHECK --interval=60s --timeout=30s --start-period=30s --retries=3 \
 #  CMD /usr/pgsql-13/bin/pg_isready || exit 1

@@ -22,7 +22,7 @@ DEFAULT_FILE_STORAGE="mbsimenv.storage.SimpleSFTPStorage"
 SIMPLE_SFTP_STORAGE_PARAMS={
   "hostname": filestorageServerAndPort()[0],
   "port": filestorageServerAndPort()[1],
-  "root": "/databasemedia/",
+  "root": "/data/databasemedia/",
   "username": "dockeruser",
   "password": mbsimenvSecrets.getSecrets("filestoragePassword"),
 }

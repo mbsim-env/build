@@ -148,11 +148,13 @@ jobs:
               runexamplesInfo=json.load(f)
             print("https://${{env.MBSIMENVSERVERNAME}}/runexamples/run/"+str(runexamplesInfo["runID"])+"/")
             print("jobs.runexamples.steps.runexamplesDetails.outputs.runexamplesInfo:\n"+json.dumps(runexamplesInfo, indent=2))
-            print("::set-output name=runexamplesInfo::"+json.dumps(runexamplesInfo))
+            with open("${{github.output}}", "at") as o:
+              print("runexamplesInfo="+json.dumps(runexamplesInfo), file=o)
           except:
             print("No runexamplesInfo file found")
             print("jobs.runexamples.steps.runexamplesDetails.outputs.runexamplesInfo:{}\n")
-            print("::set-output name=runexamplesInfo::{}")
+            with open("${{github.output}}", "at") as o:
+              print("runexamplesInfo={}", file=o)
       - name: "Artifact: compress lcov-files"
         if: ${{always() && inputs.uploadArtifactLcovdata}}
         run: >
