@@ -419,3 +419,8 @@ def bulk_create(model, objs, refresh=True):
     # ... reload the created objects from the DB and set the PK of the corresponding python objects
     for idUUID in model.objects.filter(uuid__in=[o.uuid for o in objs]).values_list("pk", "uuid"):
       next(filter(lambda o: o.uuid==idUUID[1], objs)).pk=idUUID[0]
+
+def urls_path(*argv, robots=True, **kwargs):
+  path=django.urls.path(*argv, **kwargs)
+  path.robots=robots
+  return path

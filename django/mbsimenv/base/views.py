@@ -35,6 +35,10 @@ class Base(django.views.generic.base.TemplateView):
     context['userAvatarEle']=userAvatarEle
     return context
 
+# robots.txt file
+def robotsTXT(request):
+  return django.http.HttpResponse(django.apps.apps.get_app_config("base").robotsTXT, content_type="text/plain")
+
 # displays a TextField of a build dataset
 class TextFieldFromDB(Base):
   template_name='base/textFieldFromDB.html'

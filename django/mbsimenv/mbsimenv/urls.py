@@ -14,6 +14,7 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 import django
+import base
 import django.shortcuts
 import base.views
 import mbsimenv
@@ -21,22 +22,23 @@ import django.conf.urls.static
 import importlib.util
 
 urlpatterns = [
-  django.urls.path('', lambda _: django.shortcuts.redirect('home:base', "index.html")),
-  django.urls.path('base/', django.urls.include('base.urls')),
-  django.urls.path('admin/', django.contrib.admin.site.urls),
-  django.urls.path('accounts/login/', lambda _: django.shortcuts.redirect('github_login')),
-  django.urls.path('accounts/logout/', base.views.userLogout),
-  django.urls.path('accounts/profile/', base.views.UserProfile.as_view(), name='base_userprofile'),
+  base.helper.urls_path('', lambda _: django.shortcuts.redirect('home:base', "index.html")),
+  base.helper.urls_path('robots.txt', base.views.robotsTXT),
+  base.helper.urls_path('base/', django.urls.include('base.urls')),
+  base.helper.urls_path('admin/', django.contrib.admin.site.urls, robots="recFalse"),
+  base.helper.urls_path('accounts/login/', lambda _: django.shortcuts.redirect('github_login'), robots="recFalse"),
+  base.helper.urls_path('accounts/logout/', base.views.userLogout, robots="recFalse"),
+  base.helper.urls_path('accounts/profile/', base.views.UserProfile.as_view(), name='base_userprofile', robots="recFalse"),
 ]
 if importlib.util.find_spec("runexamples") is not None:
-  urlpatterns.append(django.urls.path('runexamples/', django.urls.include('runexamples.urls')))
+  urlpatterns.append(base.helper.urls_path('runexamples/', django.urls.include('runexamples.urls')))
 if importlib.util.find_spec("builds") is not None:
- urlpatterns.append(django.urls.path('builds/', django.urls.include('builds.urls')))
+ urlpatterns.append(base.helper.urls_path('builds/', django.urls.include('builds.urls')))
 if importlib.util.find_spec("service") is not None:
-  urlpatterns.append(django.urls.path('service/', django.urls.include('service.urls')))
+  urlpatterns.append(base.helper.urls_path('service/', django.urls.include('service.urls')))
 if importlib.util.find_spec("home") is not None:
-  urlpatterns.append(django.urls.path('home/', django.urls.include('home.urls')))
+  urlpatterns.append(base.helper.urls_path('home/', django.urls.include('home.urls')))
 if importlib.util.find_spec("allauth") is not None:
-  urlpatterns.append(django.urls.path('accounts/', django.urls.include('allauth.urls')))
+  urlpatterns.append(base.helper.urls_path('accounts/', django.urls.include('allauth.urls'), robots="recFalse"))
 else:
-  urlpatterns.append(django.urls.path('accounts/', django.views.defaults.permission_denied, name='account_login'))
+  urlpatterns.append(base.helper.urls_path('accounts/', django.views.defaults.permission_denied, name='account_login', robots="recFalse"))

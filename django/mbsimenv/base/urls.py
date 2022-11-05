@@ -1,15 +1,15 @@
-import django
+import base
 import base.views
 
 app_name="base"
 
 urlpatterns = [
-  django.urls.path('impressum_disclaimer_datenschutz/', base.views.Impressum.as_view(), name='impressum'),
-  django.urls.path('listOcticons/', base.views.ListOcticons.as_view(), name='list_octicons'),
-  django.urls.path('textFieldFromDB/<str:app>/<str:model>/<slug:id>/<str:field>/',
-    base.views.TextFieldFromDB.as_view(), name='textFieldFromDB'),
-  django.urls.path('textFieldFromDBDownload/<str:app>/<str:model>/<slug:id>/<str:field>/',
-    base.views.textFieldFromDBDownload, name='textFieldFromDBDownload'),
-  django.urls.path('fileDownloadFromDB/<str:app>/<str:model>/<slug:id>/<str:field>/',
-    base.views.fileDownloadFromDB, name='fileDownloadFromDB'),
+  base.helper.urls_path('impressum_disclaimer_datenschutz/', base.views.Impressum.as_view(), name='impressum'),
+  base.helper.urls_path('listOcticons/', base.views.ListOcticons.as_view(), name='list_octicons'),
+  base.helper.urls_path('textFieldFromDB/<str:app>/<str:model>/<slug:id>/<str:field>/',
+    base.views.TextFieldFromDB.as_view(), name='textFieldFromDB', robots=False),
+  base.helper.urls_path('textFieldFromDBDownload/<str:app>/<str:model>/<slug:id>/<str:field>/',
+    base.views.textFieldFromDBDownload, name='textFieldFromDBDownload', robots=False),
+  base.helper.urls_path('fileDownloadFromDB/<str:app>/<str:model>/<slug:id>/<str:field>/',
+    base.views.fileDownloadFromDB, name='fileDownloadFromDB', robots=False),
 ]

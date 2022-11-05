@@ -1,9 +1,9 @@
-import django
+import base
 import home.views
 
 app_name="home"
 
 urlpatterns = [
-  django.urls.path('videos/', home.views.Videos.as_view(), name='videos'),
-  django.urls.path('<path:suburl>', home.views.Home.as_view(), name='base'),
+  base.helper.urls_path('videos/', home.views.Videos.as_view(), name='videos'),
+  base.helper.urls_path('<path:suburl>', home.views.Home.as_view(), name='base'),
 ]
