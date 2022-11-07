@@ -3,7 +3,7 @@ FROM centos:centos7 AS temp
 ARG NOVNCBRANCH=v0.6.2
 RUN yum --setopt=skip_missing_names_on_install=False -y install \
   git \
-  inkscape \
+  librsvg2-tools \
   python3-pip \
   && yum clean all
 RUN pip3 install django-octicons==1.0

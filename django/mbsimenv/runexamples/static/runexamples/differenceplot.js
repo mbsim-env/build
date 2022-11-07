@@ -3,7 +3,7 @@ function loadDifferencePlot(url) {
     // done
 
     // get min/max
-    xMin=1e99;//mfmf xMin,xMax
+    xMin=1e99;
     xMax=-1e99;
     if(result.current) {
       xMin=Math.min(xMin, result.current[0][0]);
@@ -20,7 +20,7 @@ function loadDifferencePlot(url) {
       signalSeries.push({
         name: 'Reference',
         lineWidth: 2.0,
-        color: "#FF0000",
+        color: getComputedStyle(document.documentElement,null).getPropertyValue('--danger'),
         marker: { enabled: false },
         data: result.reference,
       });
@@ -29,7 +29,7 @@ function loadDifferencePlot(url) {
       signalSeries.push({
         name: 'Current',
         lineWidth: 1.0,
-        color: "#00FF00",
+        color: getComputedStyle(document.documentElement,null).getPropertyValue('--success'),
         marker: { enabled: false },
         data: result.current,
       });
@@ -76,13 +76,13 @@ function loadDifferencePlot(url) {
         series: [{
           name: 'Absolute error',
           lineWidth: 2.0,
-          color: "#0000FF",
+          color: getComputedStyle(document.documentElement,null).getPropertyValue('--info'),
           marker: { enabled: false },
           data: result.abs,
         }, {
           name: 'Absolute tolerance',
           lineWidth: 0.5,
-          color: "#444444",
+          color: getComputedStyle(document.documentElement,null).getPropertyValue('--secondary'),
           marker: { enabled: false },
           data: [[xMin,2e-5],[xMax,2e-5]],
         }],
@@ -111,13 +111,13 @@ function loadDifferencePlot(url) {
         series: [{
           name: 'Relative error',
           lineWidth: 2.0,
-          color: "#0000FF",
+          color: getComputedStyle(document.documentElement,null).getPropertyValue('--info'),
           marker: { enabled: false },
           data: result.rel,
         }, {
           name: 'Relative tolerance',
           lineWidth: 0.5,
-          color: "#444444",
+          color: getComputedStyle(document.documentElement,null).getPropertyValue('--secondary'),
           marker: { enabled: false },
           data: [[xMin,2e-5],[xMax,2e-5]],
         }],

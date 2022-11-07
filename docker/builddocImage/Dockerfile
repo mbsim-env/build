@@ -22,11 +22,7 @@ ENV PATH=/opt/rh/rh-git227/root/usr/bin:$PATH \
 
 # copy context files
 COPY docker/builddocImage/entrypoint.py /context/entrypoint.py
-COPY django/mbsimenv/builddoc.py        /context/mbsimenv/builddoc.py
-COPY django/mbsimenv/mbsimenvSecrets.py /context/mbsimenv/mbsimenvSecrets.py
-COPY django/mbsimenv/mbsimenv           /context/mbsimenv/mbsimenv
-COPY django/mbsimenv/base               /context/mbsimenv/base
-COPY django/mbsimenv/service            /context/mbsimenv/service
+COPY django/mbsimenv /context/mbsimenv
 
 # set labels
 LABEL org.label-schema.schema-version="1.0" \
