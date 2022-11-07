@@ -160,7 +160,7 @@ jobs:
             print("matrixUUID="+str(uuid.uuid4()), file=o)
       - name: "Cache: ccache"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
-        uses: actions/cache@v2
+        uses: actions/cache@v3
         with:
           path: ${{github.workspace}}/mbsim-ccache
           key: ccache-${{matrix.data.os.buildType}}--${{steps.matrixUUID.outputs.matrixUUID}}
