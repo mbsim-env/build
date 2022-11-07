@@ -215,7 +215,7 @@ jobs:
             print("https://${{env.MBSIMENVSERVERNAME}}/builds/run/"+str(buildInfo["buildRunID"])+"/")
             print("jobs.build.steps.buildDetails.outputs.buildInfo:\n"+json.dumps(buildInfo, indent=2))
             with open("${{github.output}}", "at") as o:
-              print("buildInfo="+json.dumps(buildInfo, file=o))
+              print("buildInfo="+json.dumps(buildInfo), file=o)
           except:
             print("No buildInfo file found")
             print("jobs.build.steps.buildDetails.outputs.buildInfo:\n{}")
