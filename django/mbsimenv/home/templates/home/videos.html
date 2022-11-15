@@ -10,7 +10,7 @@
   {% for video in videos %}
     <div class="row" style="margin-top:2em;margin-bottom:2em;">
       <figure class="figure col-md">
-        <video class="figure-img img-fluid" controls>
+        <video class="figure-img img-fluid" controls poster="{% static video.col1.poster %}">
           <source src="{% static video.col1.file %}" type="video/webm">
         </video>
         <figcaption class="figure-caption text-center"><span class="h2">{{ video.col1.title }}
@@ -21,7 +21,7 @@
       </figure>
       {% if video.col2 is not None %}
         <figure class="figure col-md">
-          <video class="figure-img img-fluid" controls>
+          <video class="figure-img img-fluid" controls poster="{% static video.col2.poster %}">
             <source src="{% static video.col2.file %}" type="video/webm">
           </video>
           <figcaption class="figure-caption text-center"><span class="h2">{{ video.col2.title }}
