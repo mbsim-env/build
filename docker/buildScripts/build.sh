@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -e
+set -o pipefail
+
 SCRIPTDIR=$(readlink -m $(dirname $0))
 MBSIMENVDIR=$(readlink -f "$SCRIPTDIR"/../../..)
 
