@@ -146,15 +146,16 @@ jobs:
           try:
             with open("${{github.workspace}}/mbsim-env/local/.runexamplesInfo.json", "r") as f:
               runexamplesInfo=json.load(f)
-            print("https://${{env.MBSIMENVSERVERNAME}}/runexamples/run/"+str(runexamplesInfo["runID"])+"/")
-            print("jobs.runexamples.steps.runexamplesDetails.outputs.runexamplesInfo:\n"+json.dumps(runexamplesInfo, indent=2))
-            with open("${{github.output}}", "at") as o:
-              print("runexamplesInfo="+json.dumps(runexamplesInfo), file=o)
           except:
             print("No runexamplesInfo file found")
             print("jobs.runexamples.steps.runexamplesDetails.outputs.runexamplesInfo:{}\n")
             with open("${{github.output}}", "at") as o:
               print("runexamplesInfo={}", file=o)
+          else:
+            print("https://${{env.MBSIMENVSERVERNAME}}/runexamples/run/"+str(runexamplesInfo["runID"])+"/")
+            print("jobs.runexamples.steps.runexamplesDetails.outputs.runexamplesInfo:\n"+json.dumps(runexamplesInfo, indent=2))
+            with open("${{github.output}}", "at") as o:
+              print("runexamplesInfo="+json.dumps(runexamplesInfo), file=o)
       - name: "Artifact: compress lcov-files"
         if: ${{always() && inputs.uploadArtifactLcovdata}}
         run: >

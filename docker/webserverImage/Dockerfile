@@ -1,10 +1,12 @@
 # get noVNC
 FROM centos:centos7 AS temp
 ARG NOVNCBRANCH=v0.6.2
-RUN yum --setopt=skip_missing_names_on_install=False -y install \
+RUN yum -y install http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm && \
+  yum --setopt=skip_missing_names_on_install=False -y install \
   git \
   librsvg2-tools \
   python3-pip \
+  ffmpeg \
   && yum clean all
 RUN pip3 install django-octicons==1.0
 # install noVNC (the package from yum is to old)
@@ -14,7 +16,10 @@ WORKDIR /tmp/noVNC
 RUN git checkout $NOVNCBRANCH
 # build png icons
 COPY docker/webserverImage/generatepng.py /tmp/generatepng.py
-RUN python3 /tmp/generatepng.py
+RUN python3 /tmp/generatepng.py # output: /tmp/generatepng/*.png
+# build poster png from videos
+COPY django/mbsimenv/home/static/home/videos /tmp/videos
+RUN for V in /tmp/videos/*.webm; do ffmpeg -i $V -frames:v 1 ${V%.webm}.png; done
 
 
 
@@ -83,7 +88,10 @@ COPY docker/webserverImage/conf/le-redirect-mbsim-env.conf /opt/rh/httpd24/root/
 
 # static django files
 RUN mkdir /var/www/html/static
+# copy generated static files which do need the django hash in the filename to the django dir 
+COPY --from=temp /tmp/videos/*.png /context/mbsimenv/home/static/home/videos/
 RUN DJANGO_SETTINGS_MODULE=mbsimenv.settings_buildsystem python3 /context/mbsimenv/manage.py collectstatic --noinput
+# copy generated static files which do not need the django hash in the filename to the static www dir 
 COPY --from=temp /tmp/generatepng/*.png /var/www/html/static/octiconpng/
 
 # set crontab for
