@@ -11,10 +11,6 @@ import requests
 sys.path.append("/context")
 import setup
 
-os.environ["PATH"]="/opt/rh/httpd24/root/usr/bin:/opt/rh/httpd24/root/usr/sbin:"+os.environ["PATH"]
-LD_LIBRARY_PATH=os.environ.get("LD_LIBRARY_PATH", "")
-os.environ["LD_LIBRARY_PATH"]="/opt/rh/httpd24/root/usr/lib64"+(":" if LD_LIBRARY_PATH!="" else "")+LD_LIBRARY_PATH
-
 # arguments
 argparser=argparse.ArgumentParser(
   formatter_class=argparse.ArgumentDefaultsHelpFormatter,

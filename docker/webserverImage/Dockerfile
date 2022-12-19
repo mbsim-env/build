@@ -43,6 +43,8 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   sudo \
   && yum clean all
 RUN python3 -m pip install --upgrade pip && pip3 install django==3.2 django-allauth==0.48 django-octicons==1.0 h5py==2.9.0 paramiko==2.9
+ENV PATH=/opt/rh/httpd24/root/usr/bin:/opt/rh/httpd24/root/usr/sbin:$PATH \
+    LD_LIBRARY_PATH=/opt/rh/httpd24/root/usr/lib64
 
 # a webserver is running on port 80
 EXPOSE 80/tcp 443/tcp
@@ -100,8 +102,10 @@ COPY --from=temp /tmp/generatepng/*.png /var/www/html/static/octiconpng/
 RUN mkdir /var/www/html/certbot
 RUN echo -e 'SHELL=/bin/bash\n\
 1 0 * * * python3 -c "import time; import random; time.sleep(random.randint(0,24*60*60-100))"; \
-sudo -u dockeruser /usr/bin/certbot-2 renew --work-dir /tmp/certbotwork --logs-dir /tmp/certbotlog --webroot -w /var/www/html/certbot --post-hook "httpd -k graceful" \
-2> >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/2) > >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/1)\n\
+/usr/bin/certbot-2 renew --work-dir /tmp/certbotwork --logs-dir /tmp/certbotlog --webroot \
+-w /var/www/html/certbot --post-hook "/opt/rh/httpd24/root/usr/sbin/httpd -k graceful" \
+2> >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/2) > >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/1); \
+chown -R dockeruser:dockeruser /etc/letsencrypt/\n\
 39 7 * * * DJANGO_SETTINGS_MODULE=mbsimenv.settings_buildsystem python3 /context/mbsimenv/manage.py clearsessions' \
 | crontab /dev/stdin
 
