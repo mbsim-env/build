@@ -298,24 +298,24 @@ class Feed(django.contrib.syndication.views.Feed):
     isBuild=type(run) is builds.models.Run
     buildRun=run if isBuild else run.build_run
     if buildRun is None:
-      return '''<p><b>{NRFAILED} of {NRALL} {TYPE} failed.</b></p>'''
-    return '''<p><b>{NRFAILED} of {NRALL} {TYPE} failed.</b></p>
-              <p>Build was run on: {EXECUTOR}</p>
-              <p>Build done with the following branches:</p>
-              <dl>
-                <dt>fmatvec</dt><dd><b>{FMATVECBRANCH}</b>: <i>{FMATVECAUTHOR}</i> - {FMATVECMSG}</dd>
-                <dt>hdf5serie</dt><dd><b>{HDF5SERIEBRANCH}</b>: <i>{HDF5SERIEAUTHOR}</i> - {HDF5SERIEMSG}</dd>
-                <dt>openmbv</dt><dd><b>{OPENMBVBRANCH}</b>: <i>{OPENMBVAUTHOR}</i> - {OPENMBVMSG}</dd>
-                <dt>mbsim</dt><dd><b>{MBSIMBRANCH}</b>: <i>{MBSIMAUTHOR}</i> - {MBSIMMSG}</dd>
-              </dl>'''.format(
-      NRFAILED=run.nrFailed(), NRALL=run.nrAll(),
-      TYPE="build parts" if isBuild else "examples",
-      FMATVECBRANCH=buildRun.fmatvecBranch, FMATVECAUTHOR=buildRun.fmatvecUpdateAuthor, FMATVECMSG=buildRun.fmatvecUpdateMsg,
-      HDF5SERIEBRANCH=buildRun.hdf5serieBranch, HDF5SERIEAUTHOR=buildRun.hdf5serieUpdateAuthor, HDF5SERIEMSG=buildRun.hdf5serieUpdateMsg,
-      OPENMBVBRANCH=buildRun.openmbvBranch, OPENMBVAUTHOR=buildRun.openmbvUpdateAuthor, OPENMBVMSG=buildRun.openmbvUpdateMsg,
-      MBSIMBRANCH=buildRun.mbsimBranch, MBSIMAUTHOR=buildRun.mbsimUpdateAuthor, MBSIMMSG=buildRun.mbsimUpdateMsg,
-      EXECUTOR=buildRun.executor,
-    )
+      return f'''<p><b>{run.nrFailed()} of {run.nrAll()} {"build parts" if isBuild else "examples"} failed.</b></p>'''
+    def bolds(bold):
+      return '<b>' if bold else ""
+    def bolde(bold):
+      return '</b>' if bold else ""
+    return f'''<p><b>{run.nrFailed()} of {run.nrAll()} {"build parts" if isBuild else "examples"} failed.</b></p>
+               <p>Build was run on: {buildRun.executor}</p>
+               <p>Build done with the following branches:</p>
+               <dl>
+                 <dt>{bolds(buildRun.fmatvecTriggered)}fmatvec{bolde(buildRun.fmatvecTriggered)}</dt>
+                   <dd><b>{buildRun.fmatvecBranch}</b>: <i>{buildRun.fmatvecUpdateAuthor}</i> - {buildRun.fmatvecUpdateMsg}</dd>
+                 <dt>{bolds(buildRun.hdf5serieTriggered)}hdf5serie{bolde(buildRun.hdf5serieTriggered)}</dt>
+                   <dd><b>{buildRun.hdf5serieBranch}</b>: <i>{buildRun.hdf5serieUpdateAuthor}</i> - {buildRun.hdf5serieUpdateMsg}</dd>
+                 <dt>{bolds(buildRun.openmbvTriggered)}openmbv{bolde(buildRun.openmbvTriggered)}</dt>
+                   <dd><b>{buildRun.openmbvBranch}</b>: <i>{buildRun.openmbvUpdateAuthor}</i> - {buildRun.openmbvUpdateMsg}</dd>
+                 <dt>{bolds(buildRun.mbsimTriggered)}mbsim{bolde(buildRun.mbsimTriggered)}</dt>
+                   <dd><b>{buildRun.mbsimBranch}</b>: <i>{buildRun.mbsimUpdateAuthor}</i> - {buildRun.mbsimUpdateMsg}</dd>
+               </dl>'''
   def item_link(self, run):
     isBuild=type(run) is builds.models.Run
     return django.urls.reverse("builds:run" if isBuild else "runexamples:run", args=[run.id])
@@ -566,15 +566,14 @@ class DataTableLatestBranchCombiBuilds(base.views.DataTable):
   def searchField(self):
     return "buildType"
 
-  def colData_timedate(self, ds):
+  def colData_timedate_buildType_executor(self, ds):
     import humanize
-    return base.helper.tooltip(humanize.naturaldelta(django.utils.timezone.now()-ds.startTime)+"<br/>ago",
-                               ds.startTime.isoformat()+"&#013;builds/Run: id="+str(ds.id))
-  def colSortKey_timedate(self, ds):
-    return ds.startTime.isoformat()
-  def colData_buildType_executor(self, ds):
-    return base.helper.buildTypeIcon(ds.buildType)+'&nbsp'+ds.buildType+'<br/>'+\
+    return octicon("clock")+'&nbsp;'+base.helper.tooltip(humanize.naturaldelta(django.utils.timezone.now()-ds.startTime)+"&nbsp;ago",
+                               ds.startTime.isoformat()+"&#013;builds/Run: id="+str(ds.id))+'<br/>'+\
+           base.helper.buildTypeIcon(ds.buildType)+'&nbsp;'+ds.buildType+'<br/>'+\
            octicon("terminal")+'&nbsp;'+ds.executor
+  def colSortKey_timedate_buildType_executor(self, ds):
+    return ds.startTime.isoformat()
 
   def _colData_Branch(self, ds, repo):
     import humanize

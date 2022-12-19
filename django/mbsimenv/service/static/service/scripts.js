@@ -90,8 +90,7 @@ function deleteBranchCombination(self, url) {
 
 function initLatestBranchCombiBuilds(url) {
   return initDatatable('latestBranchCombiBuilds', url, [
-    "timedate",
-    "buildType_executor",
+    "timedate_buildType_executor",
     "fmatvecBranch",
     "hdf5serieBranch",
     "openmbvBranch",
