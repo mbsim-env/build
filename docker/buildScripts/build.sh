@@ -117,6 +117,8 @@ while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1
   SOQT_CFLAGS=-I/3rdparty/local/include SOQT_LIBS="-L/3rdparty/local/lib64 -lSoQt" \
   "${CONFIGUREARGS[@]}" \
   --passToCMake \
+  -DARPACK_INCLUDE_DIRS=/3rdparty/local/include/arpack -DARPACK_LIBRARIES=/3rdparty/local/lib64/libarpack.so \
+  -DSPOOLES_INCLUDE_DIRS=/3rdparty/local/include/spooles -DSPOOLES_LIBRARIES=/3rdparty/local/lib/spooles.a \
   -DBOOST_INCLUDEDIR=/usr/include/boost169 -DBOOST_LIBRARYDIR=/usr/lib64/boost169 \
   -DCMAKE_BUILD_TYPE=$BT \
   -DCMAKE_CXX_FLAGS_${BT^^}="$CXXFLAGS" \

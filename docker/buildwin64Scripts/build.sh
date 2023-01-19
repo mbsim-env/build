@@ -137,6 +137,8 @@ while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1
   -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake \
   -DBLAS_LIBRARIES=/3rdparty/local/lib/libblas.dll.a -DBLAS=1 \
   -DLAPACK_LIBRARIES=/3rdparty/local/lib/liblapack.dll.a -DLAPACK=1 \
+  -DARPACK_INCLUDE_DIRS=/3rdparty/local/include/arpack -DARPACK_LIBRARIES=/3rdparty/local/lib/libarpack.dll.a \
+  -DSPOOLES_INCLUDE_DIRS=/3rdparty/local/include/spooles -DSPOOLES_LIBRARIES=/3rdparty/local/lib/spooles.a \
   -DBOOST_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw \
   -DBoost_ARCHITECTURE=-x64 \
   -DCMAKE_BUILD_TYPE=$BT \
