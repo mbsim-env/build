@@ -299,11 +299,11 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   # stop the execution time guard thread
   if maxExecutionTime>0:
     if killed.isSet():
-      return subprocessCall.timedOutErrorCode # return to indicate that the program was terminated/killed
+      return subprocessCall.timedOutErrorCode # return to indicate that the program was terminated/killed due to a timeout
     else:
       guard.cancel()
   if stopByRE:
-    return subprocessCall.timedOutErrorCode # return to indicate that the program was terminated/killed
+    return subprocessCall.stopByREErrorCode # return to indicate that the program was terminated/killed due to a stop regex
   # check for core dump file
   exeRE=re.compile("^.*LSB core file.*, *from '([^']*)' *,.*$")
   for coreFile in glob.glob("core.*")+glob.glob("vgcore.*"):
@@ -322,6 +322,10 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   # return the return value ot the called programm
   return ret
 subprocessCall.timedOutErrorCode=1000000
+subprocessCall.stopByREErrorCode=1000001
+def subprocessOtherFailure(ret):
+  return ret==subprocessCall.timedOutErrorCode or \
+         ret==subprocessCall.stopByREErrorCode
 
 # init django
 def startLocalServer(port, onlyGetServerInfo=False):

@@ -82,7 +82,7 @@ elif args.buildType == "win64-ci":
   os.environ['CFLAGS']=os.environ.get('CFLAGS', '')+" -O0 -g -gdwarf-2"
   os.environ['FFLAGS']=os.environ.get('FFLAGS', '')+" -O0 -g -gdwarf-2"
   ARGS=["--disableDoxygen", "--disableXMLDoc"]
-  RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--disableMakeClean", "--exeExt", ".exe", "--filter", "'basic' in labels"]
+  RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--disableMakeClean", "--exeExt", ".exe", "--filter", "'basic' in labels"]
 
   # get current/last image ID
   curImageID=os.environ.get("MBSIMENVIMAGEID", None)

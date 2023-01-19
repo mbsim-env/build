@@ -205,9 +205,9 @@ class DataTableExample(base.views.DataTable):
     if ds.runResult==runexamples.models.Example.RunResult.PASSED:
       icon='<span class="text-success">'+octicon("check")+'</span>'
       text="passed"
-    elif ds.runResult==runexamples.models.Example.RunResult.TIMEDOUT:
+    elif ds.runResult==runexamples.models.Example.RunResult.WARNING:
       icon='<span class="text-danger">'+octicon("stop")+'</span>'
-      text="timed out"
+      text="other failure"
     elif ds.runResult==runexamples.models.Example.RunResult.FAILED:
       icon='<span class="text-danger">'+octicon("stop")+'</span>'
       text="failed"
@@ -257,19 +257,19 @@ class DataTableExample(base.views.DataTable):
     ret=""
     url=django.urls.reverse('base:textFieldFromDB', args=["runexamples", "Example", ds.id, "guiTestOpenmbvOutput"])
     vis="visible" if ds.guiTestOpenmbvOK is not None else "hidden"
-    ok="success" if ds.guiTestOpenmbvOK==runexamples.models.Example.GUITestResult.PASSED else ("warning" if ds.guiTestOpenmbvOK==runexamples.models.Example.GUITestResult.TIMEDOUT or ds.willFail else "danger")
+    ok="success" if ds.guiTestOpenmbvOK==runexamples.models.Example.GUITestResult.PASSED else ("warning" if ds.guiTestOpenmbvOK==runexamples.models.Example.GUITestResult.WARNING or ds.willFail else "danger")
     img=django.templatetags.static.static("base/openmbv.svg")
     ret+='<a href="%s"><button type="button" style="visibility:%s;" class="btn btn-%s btn-xs">'%(url, vis, ok)+\
            '<img src="%s" alt="ombv"/></button></a>&nbsp;'%(img)
     url=django.urls.reverse('base:textFieldFromDB', args=["runexamples", "Example", ds.id, "guiTestHdf5serieOutput"])
     vis="visible" if ds.guiTestHdf5serieOK is not None else "hidden"
-    ok="success" if ds.guiTestHdf5serieOK==runexamples.models.Example.GUITestResult.PASSED else ("warning" if ds.guiTestHdf5serieOK==runexamples.models.Example.GUITestResult.TIMEDOUT or ds.willFail else "danger")
+    ok="success" if ds.guiTestHdf5serieOK==runexamples.models.Example.GUITestResult.PASSED else ("warning" if ds.guiTestHdf5serieOK==runexamples.models.Example.GUITestResult.WARNING or ds.willFail else "danger")
     img=django.templatetags.static.static("base/h5plotserie.svg")
     ret+='<a href="%s"><button type="button" style="visibility:%s;" class="btn btn-%s btn-xs">'%(url, vis, ok)+\
            '<img src="%s" alt="h5p"/></button></a>&nbsp;'%(img)
     url=django.urls.reverse('base:textFieldFromDB', args=["runexamples", "Example", ds.id, "guiTestMbsimguiOutput"])
     vis="visible" if ds.guiTestMbsimguiOK is not None else "hidden"
-    ok="success" if ds.guiTestMbsimguiOK==runexamples.models.Example.GUITestResult.PASSED else ("warning" if ds.guiTestMbsimguiOK==runexamples.models.Example.GUITestResult.TIMEDOUT or ds.willFail else "danger")
+    ok="success" if ds.guiTestMbsimguiOK==runexamples.models.Example.GUITestResult.PASSED else ("warning" if ds.guiTestMbsimguiOK==runexamples.models.Example.GUITestResult.WARNING or ds.willFail else "danger")
     img=django.templatetags.static.static("base/mbsimgui.svg")
     ret+='<a href="%s"><button type="button" style="visibility:%s;" class="btn btn-%s btn-xs">'%(url, vis, ok)+\
            '<img src="%s" alt="gui"/></button></a>'%(img)
@@ -291,7 +291,7 @@ class DataTableExample(base.views.DataTable):
     m={None:                                            0,
        runexamples.models.Example.RunResult.PASSED:     1,
        runexamples.models.Example.RunResult.FAILED:    10,
-       runexamples.models.Example.RunResult.TIMEDOUT: 100}
+       runexamples.models.Example.RunResult.WARNING:  100}
     return -(m[ds.guiTestOpenmbvOK]+m[ds.guiTestHdf5serieOK]+m[ds.guiTestMbsimguiOK])
 
   def colData_ref(self, ds):

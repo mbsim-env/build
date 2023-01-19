@@ -94,7 +94,7 @@ class ExampleManager(django.db.models.Manager):
   # return a queryset with all failed examples of the current queryset
   def filterFailed(self):
     return self.filter(Q(willFail=False) & (
-      (Q(runResult__isnull=False)          & Q(runResult__in=[Example.RunResult.FAILED, Example.RunResult.TIMEDOUT])) |
+      (Q(runResult__isnull=False)          & Q(runResult__in=[Example.RunResult.FAILED, Example.RunResult.WARNING])) |
       (Q(guiTestHdf5serieOK__isnull=False) & Q(guiTestHdf5serieOK=Example.GUITestResult.FAILED)) |
       (Q(guiTestOpenmbvOK__isnull=False)   & Q(guiTestOpenmbvOK=Example.GUITestResult.FAILED)) |
       (Q(guiTestMbsimguiOK__isnull=False)  & Q(guiTestMbsimguiOK=Example.GUITestResult.FAILED)) |
@@ -107,11 +107,11 @@ class Example(django.db.models.Model):
   class RunResult(django.db.models.IntegerChoices):
     PASSED = 0
     FAILED = 1
-    TIMEDOUT = 2
+    WARNING = 2
   class GUITestResult(django.db.models.IntegerChoices):
     PASSED = 0
     FAILED = 1
-    TIMEDOUT = 2
+    WARNING = 2
 
   objects=ExampleManager()
 

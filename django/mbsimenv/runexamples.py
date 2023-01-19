@@ -618,7 +618,7 @@ def runExample(exRun, lock, example):
       executeFD.close()
       ex.runOutput=executeFD.getData().replace("\0", "&#00;");
       exRunOutputWritten=True
-      ex.runResult=runexamples.models.Example.RunResult.TIMEDOUT if executeRet==base.helper.subprocessCall.timedOutErrorCode else \
+      ex.runResult=runexamples.models.Example.RunResult.WARNING if base.helper.subprocessOtherFailure(executeRet) else \
                    (runexamples.models.Example.RunResult.FAILED if executeRet!=0 else runexamples.models.Example.RunResult.PASSED)
       ex.save()
     if executeRet!=0: runExampleRet=1
@@ -649,9 +649,9 @@ def runExample(exRun, lock, example):
         tries=3 if exePrefix()==["wine"] else 1
         outFD=base.helper.MultiFile(args.printToConsole)
         comm=[pj(mbsimBinDir, tool+args.exeExt), "--autoExit"]+files
-        allTimedOut=True
         # if this string is found in the output (wine output) then stop the execution immediately
         windowsOutputStopRE=re.compile("Application tried to create a window, but no driver could be loaded")
+        ret=0
         for t in range(0, tries):
           print("Starting (try %d/%d):\n"%(t+1, tries)+"\n\n", file=outFD)
           if lock is not None and args.exeExt==".exe":
@@ -660,21 +660,15 @@ def runExample(exRun, lock, example):
           if lock is not None and args.exeExt==".exe":
             lock.release()
           print("\n\nReturned with "+str(ret), file=outFD)
-          if ret!=base.helper.subprocessCall.timedOutErrorCode: allTimedOut=False
-          if ret==0: break
+          if ret==0 or not base.helper.subprocessOtherFailure(ret): # OK or real error -> stop more tries
+            break
           if t+1<tries: time.sleep(10) # wait some time, a direct next test will likely also fail (see above)
-        if ret!=0 and not allTimedOut: ret=1 # if at least one example failed return with error (not with base.helper.subprocessCall.timedOutErrorCode)
-        if exePrefix()!=["wine"] and allTimedOut: ret=1 # on none wine treat allTimedOut as error (allTimedOut is just a hack for Windows)
         retv=valgrindOutputAndAdaptRet("guitest_"+tool, ex)
         if retv!=0: ret=1
-        # treat timedOutErrorCode not as error: note that on Linux timedOutErrorCode can neven happen here, see above
-        if ret!=0 and ret!=base.helper.subprocessCall.timedOutErrorCode:
+        if ret!=0:
           runExampleRet=1
         outFD.close()
-        if allTimedOut and exePrefix()==["wine"]:
-          setattr(ex, exOK, runexamples.models.Example.GUITestResult.TIMEDOUT)
-        else:
-          setattr(ex, exOK, runexamples.models.Example.GUITestResult.PASSED if ret==0 else runexamples.models.Example.GUITestResult.FAILED)
+        setattr(ex, exOK, runexamples.models.Example.GUITestResult.PASSED if ret==0 else (runexamples.models.Example.GUITestResult.WARNING if base.helper.subprocessOtherFailure(ret) else runexamples.models.Example.GUITestResult.FAILED))
         setattr(ex, exOutput, outFD.getData().replace("\0", "&#00;"))
         ex.save()
       runGUI(ombvFiles, "openmbv", ex, "guiTestOpenmbvOK", "guiTestOpenmbvOutput")
@@ -933,6 +927,8 @@ def executeFlatXMLExample(ex, executeFD):
   # return
   if ret1==base.helper.subprocessCall.timedOutErrorCode or ret2==base.helper.subprocessCall.timedOutErrorCode:
     ret=base.helper.subprocessCall.timedOutErrorCode
+  elif ret1==base.helper.subprocessCall.stopByREErrorCode or ret2==base.helper.subprocessCall.stopByREErrorCode:
+    ret=base.helper.subprocessCall.stopByREErrorCode
   else:
     ret=abs(ret1)+abs(ret2)
   return ret, dt
@@ -1031,6 +1027,8 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   # return
   if ret1==base.helper.subprocessCall.timedOutErrorCode or ret2==base.helper.subprocessCall.timedOutErrorCode or ret3==base.helper.subprocessCall.timedOutErrorCode:
     ret=base.helper.subprocessCall.timedOutErrorCode
+  elif ret1==base.helper.subprocessCall.stopByREErrorCode or ret2==base.helper.subprocessCall.stopByREErrorCode or ret3==base.helper.subprocessCall.stopByREErrorCode:
+    ret=base.helper.subprocessCall.stopByREErrorCode
   else:
     ret=abs(ret1)+abs(ret2)+abs(ret3)
 
@@ -1052,6 +1050,8 @@ def executeFMIXMLExample(ex, executeFD):
   # return
   if ret1==base.helper.subprocessCall.timedOutErrorCode or ret2==base.helper.subprocessCall.timedOutErrorCode:
     ret=base.helper.subprocessCall.timedOutErrorCode
+  elif ret1==base.helper.subprocessCall.stopByREErrorCode or ret2==base.helper.subprocessCall.stopByREErrorCode:
+    ret=base.helper.subprocessCall.stopByREErrorCode
   else:
     ret=abs(ret1)+abs(ret2)
   return ret, dt
