@@ -180,10 +180,8 @@ if build or args.runExamplesPre:
           ref.exampleStatic=exStatic
           ref.h5FileName=rfCur.h5FileName
           with rfCur.h5File.open("rb") as fi:
-            data=fi.read()
-          ref.h5FileSHA1=hashlib.sha1(data).hexdigest()
-          with ref.h5File.open("wb") as fo:
-            base.helper.copyFile(data, fo)
+            with ref.h5File.open("wb") as fo:
+              ref.h5FileSHA1=base.helper.copyFile(fi, fo, returnSHA1HexDigest=True)
           ref.save()
         # set ref time
         exStatic.refTime=exCur.time

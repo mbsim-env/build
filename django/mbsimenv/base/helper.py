@@ -15,6 +15,7 @@ import sys
 import enum
 import importlib.util
 import octicons.templatetags.octicons
+import hashlib
 
 # a dummy context object doing just nothing (e.g. usefull as a dummy lock(mutext) object.
 class NullContext(object):
@@ -364,15 +365,23 @@ def startLocalServer(port, onlyGetServerInfo=False):
 def tooltip(text, tooltip):
   return '<span data-toggle="tooltip" data-placement="bottom" title="%s">%s</span>'%(tooltip, text)
 
-def copyFile(fi, fo):
+def copyFile(fi, fo, returnSHA1HexDigest=False):
   if type(fi)==bytes:
     fo.write(fi)
+    if returnSHA1HexDigest:
+      return hashlib.sha1(fi).hexdigest()
   else:
+    if returnSHA1HexDigest:
+      m=hashlib.sha1()
     while True:
       data=fi.read(32768)
       if len(data)==0:
         break
       fo.write(data)
+      if returnSHA1HexDigest:
+        m.update(data)
+    if returnSHA1HexDigest:
+      return m.hexdigest()
 
 getExecutorIDRE=re.compile("\WMBSIMENV_EXECUTOR_([a-zA-Z0-9_]+)")
 def getExecutorID(executor):

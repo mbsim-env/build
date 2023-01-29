@@ -316,10 +316,10 @@ def releaseDistribution(request, run_id):
   r.save()
   with r.releaseFile.open("wb") as fo:
     with run.distributionFile.open("rb") as fi:
-      base.helper.copyFile(fi, fo)
+      base.helper.copyFile(fi, fo)#mfmf not working for some reason
   with r.releaseDebugFile.open("wb") as fo:
     with run.distributionDebugFile.open("rb") as fi:
-      base.helper.copyFile(fi, fo)
+      base.helper.copyFile(fi, fo)#mfmf not working for some reason
   return django.http.HttpResponse()
 
 def runDistributionFileBuildtypeBranch(request, buildtype, fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch):
