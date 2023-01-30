@@ -154,6 +154,14 @@ debugOpts.add_argument("--runID", default=None, type=int, help="The id of the ru
 args = argparser.parse_args()
 normalRun=not args.pre and not args.post and not args.partition
 
+windowsOutputStopRE=re.compile("Application tried to create a window, but no driver could be loaded")
+def guiEnvVars(displayNR):
+  denv=os.environ.copy()
+  denv["DISPLAY"]=":"+str(displayNR)
+  denv["COIN_FULL_INDIRECT_RENDERING"]="1"
+  denv["QT_X11_NO_MITSHM"]="1"
+  return denv
+
 mbsimenvSecrets.getSecrets()
 if args.buildSystemRun:
   os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
@@ -333,15 +341,21 @@ def main():
         displayNR=displayNR+1
         if displayNR>100:
           raise RuntimeError("Cannot find a free DISPLAY for vnc server.")
+      if exePrefix()==["wine"]:
+        print("Starting a dummy Windows GUI program (h5plotserie) and close it again. " \
+              "This is needed to avoid failures in wine if the first GUI program is started while a none GUI program is running. " \
+              "(This is a strange 'bug' in wine)")
+        ret=base.helper.subprocessCall(exePrefix()+[pj(mbsimBinDir, "h5plotserie"+args.exeExt), "--autoExit"], open(os.devnull, 'w'), env=guiEnvVars(displayNR), maxExecutionTime=5, stopRE=windowsOutputStopRE)
+        if ret!=0:
+          print("Failed to start the dummy Windows GUI program. Return code: "+str(ret))
 
     try:
       if args.partition:
-        lock=multiprocessing.Manager().Lock()
         pList=[]
         django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
         with multiprocessing.Pool(args.j) as pool:
           for i in range(0,args.j):
-            pList.append(pool.apply_async(func=functools.partial(runExampleOuter, exRun, lock)))
+            pList.append(pool.apply_async(func=functools.partial(runExampleOuter, exRun)))
           retAll=[]
           for p in pList:
             retAll.extend(p.get())
@@ -349,9 +363,8 @@ def main():
       elif not args.debugDisableMultiprocessing:
         # init mulitprocessing handling and run in parallel
         django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
-        lock=multiprocessing.Manager().Lock()
         with multiprocessing.Pool(args.j) as pool:
-          poolResult=pool.map_async(functools.partial(runExample, exRun, lock), directories, 1)
+          poolResult=pool.map_async(functools.partial(runExample, exRun), directories, 1)
           # wait for pool to finish and get result
           retAll=poolResult.get()
         django.db.connections.close_all() # close connections before finishing a process
@@ -562,7 +575,7 @@ def addExamplesByFilter(baseDir, directoriesSet):
 
 
 # run the given example
-def runExample(exRun, lock, example):
+def runExample(exRun, example):
   print("Started example "+example)
   sys.stdout.flush()
   savedDir=os.getcwd()
@@ -638,27 +651,18 @@ def runExample(exRun, lock, example):
       elif os.path.exists("FMI_cosim.mbsx"):
         guiFile='./FMI_cosim.mbsx'
       # run gui tests
-      denv=os.environ.copy()
-      denv["DISPLAY"]=":"+str(displayNR)
-      denv["COIN_FULL_INDIRECT_RENDERING"]="1"
-      denv["QT_X11_NO_MITSHM"]="1"
       def runGUI(files, tool, ex, exOK, exOutput):
         if len(files)==0:
           return []
         # at least on Windows (wine) the DISPLAY is not found sometimes (unknown why). Hence, try this number of times before reporting an error
-        tries=3 if exePrefix()==["wine"] else 1
+        tries=20 if exePrefix()==["wine"] else 1
         outFD=base.helper.MultiFile(args.printToConsole)
         comm=[pj(mbsimBinDir, tool+args.exeExt), "--autoExit"]+files
         # if this string is found in the output (wine output) then stop the execution immediately
-        windowsOutputStopRE=re.compile("Application tried to create a window, but no driver could be loaded")
         ret=0
         for t in range(0, tries):
           print("Starting (try %d/%d):\n"%(t+1, tries)+"\n\n", file=outFD)
-          if lock is not None and args.exeExt==".exe":
-            lock.acquire() # for Windows (wine) run only one GUI program in parallel (wine often failes with DISPLAY error otherwise)
-          ret=base.helper.subprocessCall(prefixSimulation(tool)+exePrefix()+comm, outFD, env=denv, maxExecutionTime=(20 if args.prefixSimulationKeyword=='VALGRIND' else 5), stopRE=windowsOutputStopRE)
-          if lock is not None and args.exeExt==".exe":
-            lock.release()
+          ret=base.helper.subprocessCall(prefixSimulation(tool)+exePrefix()+comm, outFD, env=guiEnvVars(displayNR), maxExecutionTime=(20 if args.prefixSimulationKeyword=='VALGRIND' else 5), stopRE=windowsOutputStopRE)
           print("\n\nReturned with "+str(ret), file=outFD)
           if ret==0 or not base.helper.subprocessOtherFailure(ret): # OK or real error -> stop more tries
             break
@@ -711,11 +715,11 @@ def runExample(exRun, lock, example):
 
 # helper function for runExample for args.partition
 # this function must be at global scope
-def runExampleOuter(exRun, lock):
+def runExampleOuter(exRun):
   dirs=ExampleServerQueue("totalTimeValgrind" if args.prefixSimulationKeyword=='VALGRIND' else "totalTimeNormal")
   retAllPerThread=[]
   for d in dirs:
-    retAllPerThread.append(runExample(exRun, lock, d))
+    retAllPerThread.append(runExample(exRun, d))
   django.db.connections.close_all() # close connections before finishing a process
   return retAllPerThread
 
