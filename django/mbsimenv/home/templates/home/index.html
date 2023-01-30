@@ -14,7 +14,7 @@
   <h1>The MBSim Environment</h1>
 
   <h2 style="margin-top: 1em;">Introduction</h2>
-  <p>The MBSim Environment provides tools for simulation, visualization and analysis of multibody systems.</p>
+  <p>The MBSim Environment provides tools for simulation, visualization and analysis of smooth and non-smooth multibody systems.</p>
   <p><img src="{% static 'home/mbsimgui.png' %}" style="height: 180px;">
   <img src="{% static 'home/openmbv.png' %}" style="height: 180px;">
   <img src="{% static 'home/h5plotserie.png' %}" style="height: 180px;"></p>
@@ -27,7 +27,46 @@
     <li class="list-group-item">Modules for control, hydraulics, physics and flexible bodies</li>
     <li class="list-group-item">Model exchange via Functional Mock-up Interface (FMI)</li>
     <li class="list-group-item">Full extensibility via C++ or Python interface</li>
- </ul>
+  </ul>
+
+  <h2 style="margin-top: 1em;">Used (Quasi)-Standards</h2>
+  The following (quasi)-standards can be utilized by MBSim:
+  <table class="table table-striped table-hover table-bordered table-sm">
+    <thead>
+      <tr>
+        <th>Icon</th>
+        <th>Standard</th>
+        <th>Used for</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr>
+        <td><a href="https://fmi-standard.org/"><img style="height:3em" src="{% static 'home/FMI_bare.svg' %}"/></a></td>
+        <td><a href="https://fmi-standard.org/"><b>Functional Mock-up Interface</b></a></td>
+        <td>Export of the complete model using <b>FMI 1.0 for Co-Simulation</b> or <b>FMI 1.0 for Model-Exchange</b></td>
+      </tr>
+      <tr>
+        <td><a href="https://www.hdfgroup.org/"><img style="height:3em" src="{% static 'home/HDF.png' %}"/></a></td>
+        <td><a href="https://www.hdfgroup.org/solutions/hdf5/"><b>Hierarchical Data Format - HDF5</b></a></td>
+        <td>All data output is store using HDF5:
+            time series of dynamic analysis;
+            eigenvalues and eigenvectors of eigen analysis;
+            frequencies and mode shapes of modal analysis;
+            system-, input-, output- and feed-through matrix of LTI system exports
+        </td>
+      </tr>
+      <tr>
+        <td><a href="http://www.calculix.de/"><img style="height:3em" src="{% static 'home/CalculiX.png' %}"/></a></td>
+        <td><a href="http://www.dhondt.de/"><b>FRD files</b></a></td>
+        <td>CalculiX result files as input for flexible bodies</td>
+      </tr>
+      <tr>
+        <td><b>Pacejka Magic Formula</b></td>
+        <td><b>MF-Tire/MF-Swift (TIR)</b></td>
+        <td>Import of tir files to parametrise tires</td>
+      </tr>
+  </table>
+
 
   <h2 style="margin-top: 1em;">History</h2>
   <p>The history of MBSim and its accompanying tools goes back to the year 2007. It is continuously improved and extended since then.</p>
