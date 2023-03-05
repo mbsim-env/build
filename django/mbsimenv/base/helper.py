@@ -437,3 +437,10 @@ def urls_path(*argv, robots=True, **kwargs):
   path=django.urls.path(*argv, **kwargs)
   path.robots=robots
   return path
+
+def handleRecoverableError(title, message):
+  if "GITHUB_REPOSITORY" in os.environ:
+    # we are running as a Github action -> print in Github action format
+    print("::error title="+title+"::"+message)
+  else:
+    print("ERROR: "+title+"\n"+message)

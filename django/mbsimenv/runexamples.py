@@ -478,7 +478,7 @@ def setGithubStatus(run, state):
     if django.conf.settings.DEBUG:
       raise
     else:
-      raise RuntimeError("Original exception avoided in setGithubStatus to ensure that no secret is printed.") from None
+      base.helper.handleRecoverableError("runexamples_setGithubStatus", "Original exception avoided to ensure that no secret is printed."):
 
 def pkgconfig(module, options):
   comm=["pkg-config", module]
