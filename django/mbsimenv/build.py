@@ -178,7 +178,7 @@ def setGithubStatus(run, state):
     if django.conf.settings.DEBUG:
       raise
     else:
-      base.helper.handleRecoverableError("build_setGithubStatus", "Original exception avoided to ensure that no secret is printed."):
+      base.helper.handleRecoverableError("build_setGithubStatus", "Original exception avoided to ensure that no secret is printed.")
 
 def removeOldBuilds():
   olderThan=django.utils.timezone.now()-datetime.timedelta(days=args.removeOlderThan)
