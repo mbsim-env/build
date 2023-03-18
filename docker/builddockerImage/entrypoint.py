@@ -8,6 +8,7 @@ import os
 import subprocess
 import setup
 import traceback
+import psutil
 import socket
 import django
 sys.path.append("/context/mbsimenv")
@@ -19,7 +20,7 @@ argparser=argparse.ArgumentParser(
   description="Entrypoint for container mbsimenv/build.")
   
 argparser.add_argument("commitID", type=str, help="The commit ID to build")
-argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs to run in parallel")
+argparser.add_argument("--jobs", "-j", type=int, default=psutil.cpu_count(False), help="Number of jobs to run in parallel")
 
 args=argparser.parse_args()
 

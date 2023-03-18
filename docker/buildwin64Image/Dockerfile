@@ -29,6 +29,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   python3-h5py \
   python3-pytz \
   python3-sqlparse \
+  python3-psutil \
   mingw64-qwt-qt5 \
   wine \
   mingw64-xerces-c \

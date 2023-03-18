@@ -7,6 +7,7 @@ import os
 import fileinput
 import time
 import argparse
+import psutil
 import requests
 sys.path.append("/context")
 import setup
@@ -16,7 +17,7 @@ argparser=argparse.ArgumentParser(
   formatter_class=argparse.ArgumentDefaultsHelpFormatter,
   description="Entrypoint for container mbsimenv/webserver.")
   
-argparser.add_argument("--jobs", "-j", type=int, default=1, help="Number of jobs to run in parallel")
+argparser.add_argument("--jobs", "-j", type=int, default=psutil.cpu_count(False), help="Number of jobs to run in parallel")
 
 args=argparser.parse_args()
 

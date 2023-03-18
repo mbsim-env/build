@@ -194,7 +194,6 @@ jobs:
           ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}}
           --buildType ${{matrix.data.os.buildType}}
           --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
-          -j $(nproc)
           ${{github.run_attempt>1 && '--forceBuild' || ''}}
           --ccacheSize 5
           --fmatvecBranch ${{fromJson(steps.whatToDo.outputs.data).branches.fmatvec}}

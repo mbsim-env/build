@@ -23,7 +23,7 @@ import mbsimenvSecrets
 import builds
 import mbsimenv
 import tempfile
-import multiprocessing
+import psutil
 
 if django.VERSION[0]!=3:
   print("Need django version 3. This is django version "+django.__version__)
@@ -61,7 +61,7 @@ def parseArguments():
     help="run config.status --recheck instead of configure")
   
   cfgOpts=argparser.add_argument_group('Configuration Options')
-  cfgOpts.add_argument("-j", default=multiprocessing.cpu_count(), type=int, help="Number of jobs to run in parallel (for make and examples)")
+  cfgOpts.add_argument("-j", default=psutil.cpu_count(False), type=int, help="Number of jobs to run in parallel (for make and examples)")
   cfgOpts.add_argument("--forceBuild", action="store_true", help="Force building even if --buildSystemRun is used and no new commits exist")
   cfgOpts.add_argument("--buildTools", action="append", type=str, help="The list of tools to build. Build all tools if not specified.")
   

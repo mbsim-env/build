@@ -63,6 +63,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   python36-pytz \
   python36-pygithub \
   python3-psycopg2 \
+  python3-psutil \
   adwaita-qt5 \
   qt5-qtstyleplugins \
   cmake3 \

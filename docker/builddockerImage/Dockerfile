@@ -6,6 +6,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   python36-docker \
   python36-pytz \
   python3-psycopg2 \
+  python3-psutil \
   rh-git227-git \
   && yum clean all
 RUN python3 -m pip install --upgrade pip && pip3 install django==3.2 django-octicons==1.0 paramiko==2.9

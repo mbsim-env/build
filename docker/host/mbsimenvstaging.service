@@ -13,8 +13,8 @@ Environment=MBSIMENVSERVERNAME=wwwstaging.mbsim-env.de
 Environment=MBSIMENVTAGNAME=staging
 Type=oneshot
 RemainAfterExit=yes
-ExecStart=/home/dockeruser/buildstaging/docker/setup.py run service -j 6 -d start
-ExecStop=/home/dockeruser/buildstaging/docker/setup.py run service -j 6 -d stop
+ExecStart=/home/dockeruser/buildstaging/docker/setup.py run service -d start
+ExecStop=/home/dockeruser/buildstaging/docker/setup.py run service -d stop
 
 [Install]
 WantedBy=multi-user.target

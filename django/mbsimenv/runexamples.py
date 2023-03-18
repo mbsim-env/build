@@ -13,6 +13,7 @@ import glob
 import shutil
 import functools
 import multiprocessing
+import psutil
 import traceback
 import re
 import hashlib
@@ -88,7 +89,7 @@ mainOpts.add_argument("--action", default="report", type=str,
 - 'copyToReference' Copy results in current directories to reference
 - 'updateReference' Update references from build system
 - 'list'            List directories to be run''')
-mainOpts.add_argument("-j", default=multiprocessing.cpu_count(), type=int,
+mainOpts.add_argument("-j", default=psutil.cpu_count(False), type=int,
   help="Number of jobs to run in parallel (applies only to the action 'report') [default: %(default)s]")
 mainOpts.add_argument("--filter", default="'basic' in labels", type=str,
   help='''Filter the specifed directories using the given Python code. If not given all directories with the

@@ -40,6 +40,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   python36-defusedxml \
   python3-psycopg2 \
   python3-humanize \
+  python3-psutil \
   sudo \
   && yum clean all
 RUN python3 -m pip install --upgrade pip && pip3 install django==3.2 django-allauth==0.48 django-octicons==1.0 h5py==2.9.0 paramiko==2.9
