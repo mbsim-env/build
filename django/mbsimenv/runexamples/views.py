@@ -168,7 +168,7 @@ class DataTableExample(base.views.DataTable):
     vis["guiTest"]=query["guiTestHdf5serie"]+query["guiTestOpenmbv"]+query["guiTestMbsimgui"]>0
     vis["ref"]=query["ref"]>0
     vis["webApp"]=query["webAppHdf5serie"]+query["webAppOpenmbv"]+query["webAppMbsimgui"]>0 and \
-                  self.run.build_run is not None and self.run.build_run.distributionFile is not None and \
+                  self.run.build_run is not None and bool(self.run.build_run.distributionFile) and \
                   self.run.build_run.buildType.startswith("linux64")
     vis["dep"]=query["dep"]>0
     vis["xmlOut"]=query["xmlOut"]>0

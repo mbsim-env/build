@@ -5,6 +5,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && 
   python36-numpy \
   python36-docker \
   python3-setuptools \
+  python3-psutil \
   && yum clean all
 
 

@@ -37,7 +37,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   qt5-qtsvg-devel \
   python3-pip \
   boost169-devel \
-  lapack-devel \
+  openblas-devel \
   doxygen \
   xalan-c-devel \
   which \
@@ -126,10 +126,10 @@ RUN ninja install
 ARG OCTAVEVERSION=4.4.1
 WORKDIR /3rdparty
 RUN set -o pipefail && \
-  wget -q -O - https://ftp.gnu.org/gnu/octave/octave-$OCTAVEVERSION.tar.gz | tar -xz
+  wget -q -O - ftp://ftp-stud.fht-esslingen.de/pub/Mirrors/ftp.gnu.org/octave/octave-4.4.1.tar.gz | tar -xz
 RUN mkdir /3rdparty/octave-build
 WORKDIR /3rdparty/octave-build
-RUN ../octave-$OCTAVEVERSION/configure --enable-shared --disable-static --prefix=/3rdparty/local --disable-java --disable-gui --without-opengl --disable-readline
+RUN ../octave-$OCTAVEVERSION/configure --enable-shared --disable-static --prefix=/3rdparty/local --disable-java --disable-gui --without-opengl --disable-readline --with-blas=/usr/lib64/libopenblas.so --with-lapack=/usr/lib64/libopenblas.so
 RUN make -j $JOBS
 RUN make install
 # fix octave: it is not initializing when runnig without a DISPLAY
@@ -237,7 +237,7 @@ ARG ARPACKBRANCH=3.8.0
 RUN git checkout $ARPACKBRANCH
 RUN mkdir /3rdparty/arpack-build
 WORKDIR /3rdparty/arpack-build
-RUN cmake3 -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DCMAKE_CXX_FLAGS="-g -O2" -DICB=1 ../arpack-ng
+RUN cmake3 -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DCMAKE_CXX_FLAGS="-g -O2" -DICB=1 -DBLAS_LIBRARIES=/usr/lib64/libopenblas.so -DLAPACK_LIBRARIES=/usr/lib64/libopenblas.so ../arpack-ng
 RUN make -j $JOBS
 RUN make install
 

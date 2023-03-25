@@ -119,6 +119,7 @@ while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1
   --passToCMake \
   -DARPACK_INCLUDE_DIRS=/3rdparty/local/include/arpack -DARPACK_LIBRARIES=/3rdparty/local/lib64/libarpack.so \
   -DSPOOLES_INCLUDE_DIRS=/3rdparty/local/include/spooles -DSPOOLES_LIBRARIES=/3rdparty/local/lib/spooles.a \
+  -DBLAS_LIBRARIES=/usr/lib64/libopenblas.so.0 -DLAPACK_LIBRARIES=/usr/lib64/libopenblas.so.0 \
   -DBOOST_INCLUDEDIR=/usr/include/boost169 -DBOOST_LIBRARYDIR=/usr/lib64/boost169 \
   -DCMAKE_BUILD_TYPE=$BT \
   -DCMAKE_CXX_FLAGS_${BT^^}="$CXXFLAGS" \

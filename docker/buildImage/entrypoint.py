@@ -229,6 +229,7 @@ if build:
     "-DCMAKE_Fortran_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["FFLAGS"],
     "-DARPACK_INCLUDE_DIRS=/3rdparty/local/include/arpack", "-DARPACK_LIBRARIES=/3rdparty/local/lib64/libarpack.so",
     "-DSPOOLES_INCLUDE_DIRS=/3rdparty/local/include/spooles", "-DSPOOLES_LIBRARIES=/3rdparty/local/lib/spooles.a",
+    "-DBLAS_LIBRARIES=/usr/lib64/libopenblas.so.0", "-DLAPACK_LIBRARIES=/usr/lib64/libopenblas.so.0",
     "--passToRunexamples", "--buildType", args.buildType]+\
     RUNEXAMPLESARGS+RUNEXAMPLESFILTER,
     stdout=sys.stdout, stderr=sys.stderr)

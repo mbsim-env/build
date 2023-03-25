@@ -106,7 +106,6 @@ while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1
   --enable-shared --disable-static \
   --enable-python \
   --build=x86_64-redhat-linux --host=x86_64-w64-mingw32 \
-  --with-lapack-lib-prefix=/3rdparty/local/lib \
   --with-hdf5-prefix=/3rdparty/local \
   --with-qmake=/usr/bin/x86_64-w64-mingw32-qmake-qt5 \
   --with-qwt-inc-prefix=/usr/x86_64-w64-mingw32/sys-root/mingw/include/qt5/qwt --with-qwt-lib-name=qwt-qt5 \
@@ -135,8 +134,8 @@ while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1
   "${CONFIGUREARGS[@]}" \
   --passToCMake \
   -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake \
-  -DBLAS_LIBRARIES=/3rdparty/local/lib/libblas.dll.a -DBLAS=1 \
-  -DLAPACK_LIBRARIES=/3rdparty/local/lib/liblapack.dll.a -DLAPACK=1 \
+  -DBLAS_LIBRARIES=/3rdparty/local/lib/libopenblas.dll.a -DBLAS=1 \
+  -DLAPACK_LIBRARIES=/3rdparty/local/lib/libopenblas.dll.a -DLAPACK=1 \
   -DARPACK_INCLUDE_DIRS=/3rdparty/local/include/arpack -DARPACK_LIBRARIES=/3rdparty/local/lib/libarpack.dll.a \
   -DSPOOLES_INCLUDE_DIRS=/3rdparty/local/include/spooles -DSPOOLES_LIBRARIES=/3rdparty/local/lib/spooles.a \
   -DBOOST_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw \

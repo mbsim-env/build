@@ -146,8 +146,10 @@ def mainDocPage():
 
   staticRuntimeDir="/data/webserverstatic"
   # copy xmldoc
+  os.makedirs(os.path.normpath(docDir), exist_ok=True)
   rsyncToFileStorage(os.path.normpath(docDir), pj(staticRuntimeDir, "xmlReference"), "copy xmldoc")
   # copy doc
+  os.makedirs(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc")), exist_ok=True)
   rsyncToFileStorage(os.path.normpath(pj(docDir, os.pardir, os.pardir, "doc")), pj(staticRuntimeDir, "doxygenReference"), "copy doxydoc")
 
 def setGithubStatus(run, state):

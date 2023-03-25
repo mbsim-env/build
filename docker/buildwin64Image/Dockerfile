@@ -67,16 +67,12 @@ RUN mkdir /3rdparty
 
 COPY docker/buildwin64Image/toolchain-mingw64.cmake /context/toolchain-mingw64.cmake
 
-# lapack
-ARG LAPACKVERSION=3.4.2
-WORKDIR /3rdparty
-RUN set -o pipefail && \
-  wget -q -O - http://www.netlib.org/lapack/lapack-$LAPACKVERSION.tgz | tar -xz
-RUN mkdir /3rdparty/lapack-build
-WORKDIR /3rdparty/lapack-build
-RUN cmake ../lapack-$LAPACKVERSION -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local
-RUN make -j $JOBS
-RUN make install
+# openblas (blas + lapack)
+RUN mkdir /3rdparty/openblas-build
+WORKDIR /3rdparty/openblas-build
+RUN wget https://github.com/xianyi/OpenBLAS/releases/download/v0.3.21/OpenBLAS-0.3.21-x64.zip
+RUN unzip OpenBLAS-0.3.21-x64.zip
+RUN mkdir -p /3rdparty/local/bin/ /3rdparty/local/lib/; cp bin/libopenblas.dll /3rdparty/local/bin/; cp lib/libopenblas.dll.a /3rdparty/local/lib/
 
 # hdf5
 # HDF5
@@ -144,7 +140,7 @@ RUN set -o pipefail && \
   wget -q -O - https://ftp.gnu.org/gnu/octave/octave-$OCTAVEVERSION.tar.gz | tar -xz
 RUN mkdir /3rdparty/octave-build
 WORKDIR /3rdparty/octave-build
-RUN ax_blas_integer_size=4 ../octave-$OCTAVEVERSION/configure --enable-shared --disable-static --build=x86_64-redhat-linux --host=x86_64-w64-mingw32 --prefix=/3rdparty/local --disable-java --disable-gui --without-opengl --with-blas="-L/3rdparty/local/lib -lblas" --with-lapack="-L/3rdparty/local/lib -llapack" --disable-readline
+RUN ax_blas_integer_size=4 ../octave-$OCTAVEVERSION/configure --enable-shared --disable-static --build=x86_64-redhat-linux --host=x86_64-w64-mingw32 --prefix=/3rdparty/local --disable-java --disable-gui --without-opengl --with-blas="-L/3rdparty/local/lib -lopenblas" --with-lapack="-L/3rdparty/local/lib -lopenblas" --disable-readline
 RUN make -j $JOBS
 RUN make install
 # fix octave: it is not initializing when runnig without a DISPLAY
@@ -197,7 +193,7 @@ ARG ARPACKBRANCH=3.8.0
 RUN git checkout $ARPACKBRANCH
 RUN mkdir /3rdparty/arpack-build
 WORKDIR /3rdparty/arpack-build
-RUN cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DCMAKE_CXX_FLAGS="-g -O2" -DICB=1 -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DBLAS_LIBRARIES=/3rdparty/local/lib/libblas.dll.a -DLAPACK_LIBRARIES=/3rdparty/local/lib/liblapack.dll.a ../arpack-ng
+RUN cmake -DCMAKE_INSTALL_PREFIX=/3rdparty/local -DCMAKE_CXX_FLAGS="-g -O2" -DICB=1 -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake -DBLAS_LIBRARIES=/3rdparty/local/lib/libopenblas.dll.a -DLAPACK_LIBRARIES=/3rdparty/local/lib/libopenblas.dll.a ../arpack-ng
 RUN make -j $JOBS
 RUN make install
 
