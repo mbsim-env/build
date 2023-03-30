@@ -3,6 +3,8 @@ on:
   repository_dispatch:
     types: [ci]
 env:
+  # set the CPU type for OpenBLAS to avoid CPU dependent results (e.g. with/without AVX512)
+  OPENBLAS_CORETYPE: Haswell
   # tagname and servername of remote mbsimenv server
   MBSIMENVTAGNAME: latest
   MBSIMENVSERVERNAME: www.mbsim-env.de
