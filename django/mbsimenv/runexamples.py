@@ -64,8 +64,8 @@ However only examples of the type matching --filter are executed. The specified 
 processed from left to right.
 The type of an example is defined dependent on some key files in the corrosponding example directory:
 - If a file named 'Makefile' exists, than it is treated as a SRC example.
-- If a file named 'MBS.flat.mbsx' exists, then it is treated as a FLATXML example.
-- If a file named 'MBS.mbsx' exists, then it is treated as a XML example
+- If a file named '*.flat.mbsx' exists, then it is treated as a FLATXML example.
+- If a file named '*.mbsx' exists, then it is treated as a XML example (if its not a *.flat.xml, FMI.mbsx or FMI_cosim.mbsx file)
   which run throught the MBXMLUtils preprocessor first.
 - If a file named 'FMI.mbsx' exists, then it is treated as a FMI ME XML export example. Beside running the file
   by mbsimxml also mbsimCreateFMU is run to export the model as a FMU and the FMU is run by fmuCheck.<PLATFORM>.
@@ -537,6 +537,34 @@ def getLabels(directory):
 
 
 
+def ppxmlFile(root=None):
+  if root is None:
+    root=os.getcwd()
+  if os.path.isfile(pj(root, "FMI.mbsx")): return None
+  if os.path.isfile(pj(root, "FMI_cosim.mbsx")): return None
+  if len(glob.glob(pj(root, "*.flat.mbsx")))>0: return None
+  ppxmlFiles=glob.glob(pj(root, "*.mbsx")) 
+  if len(ppxmlFiles)!=1: return None
+  return ppxmlFiles[0]
+def flatxmlFile(root=None):
+  if root is None:
+    root=os.getcwd()
+  flatxmlFiles=glob.glob(pj(root, "*.flat.mbsx")) 
+  if len(flatxmlFiles)!=1: return None
+  return flatxmlFiles[0]
+def fmiFile(root=None):
+  if root is None:
+    root=os.getcwd()
+  if os.path.isfile(pj(root, "FMI.mbsx")):
+    return pj(root, "FMI.mbsx")
+  return None
+def fmiCosimFile(root=None):
+  if root is None:
+    root=os.getcwd()
+  if os.path.isfile(pj(root, "FMI_cosim.mbsx")):
+    return pj(root, "FMI_cosim.mbsx")
+  return None
+
 # handle the --filter option: add/remove to directoriesSet
 def addExamplesByFilter(baseDir, directoriesSet):
   if baseDir[0]!="^": # add dir
@@ -547,12 +575,12 @@ def addExamplesByFilter(baseDir, directoriesSet):
   # make baseDir a relative path
   baseDir=os.path.relpath(baseDir)
   for root, dirs, _ in os.walk(baseDir):
-    ppxml=os.path.isfile(pj(root, "MBS.mbsx")) 
-    flatxml=os.path.isfile(pj(root, "MBS.flat.mbsx"))
+    ppxml=ppxmlFile(root) is not None
+    flatxml=flatxmlFile(root) is not None
     xml=ppxml or flatxml
     src=os.path.isfile(pj(root, "Makefile")) or os.path.isfile(pj(root, "Makefile_FMI")) or os.path.isfile(pj(root, "Makefile_FMI_cosim"))
-    fmi=os.path.isfile(pj(root, "FMI.mbsx")) or os.path.isfile(pj(root, "Makefile_FMI")) or \
-        os.path.isfile(pj(root, "FMI_cosim.mbsx")) or os.path.isfile(pj(root, "Makefile_FMI_cosim"))
+    fmi=fmiFile(root) is not None or os.path.isfile(pj(root, "Makefile_FMI")) or \
+        fmiCosimFile(root) is not None or os.path.isfile(pj(root, "Makefile_FMI_cosim"))
     # skip none examples directires
     if(not ppxml and not flatxml and not src and not fmi):
       continue
@@ -605,8 +633,10 @@ def runExample(exRun, example):
     executeRet=0
     if not args.disableRun:
       # remove lock from all h5 file, just to avoid the the results depend on crashes of previous runs
-      base.helper.subprocessCall(exePrefix()+[pj(mbsimBinDir, "h5lockserie"+args.exeExt), "--remove"]+glob.glob("*.ombvh5")+glob.glob("*.mbsh5"),
-                                 executeFD, maxExecutionTime=1)
+      lockFiles=glob.glob("*.ombvh5")+glob.glob("*.mbsh5")
+      if len(lockFiles)>0:
+        base.helper.subprocessCall(exePrefix()+[pj(mbsimBinDir, "h5lockserie"+args.exeExt), "--remove"]+lockFiles,
+                                   executeFD, maxExecutionTime=1)
 
       # clean output of previous run
       list(map(os.remove, glob.glob("*.fmuh5")))
@@ -616,11 +646,11 @@ def runExample(exRun, example):
       dt=0
       if os.path.isfile("Makefile"):
         executeRet, dt=executeSrcExample(ex, executeFD)
-      elif os.path.isfile("MBS.mbsx"):
+      elif ppxmlFile() is not None:
         executeRet, dt=executeXMLExample(ex, executeFD)
-      elif os.path.isfile("MBS.flat.mbsx"):
+      elif flatxmlFile() is not None:
         executeRet, dt=executeFlatXMLExample(ex, executeFD)
-      elif os.path.isfile("FMI.mbsx") or os.path.isfile("FMI_cosim.mbsx"):
+      elif fmiFile() is not None or fmiCosimFile() is not None:
         executeRet, dt=executeFMIXMLExample(ex, executeFD)
       elif os.path.isfile("Makefile_FMI") or os.path.isfile("Makefile_FMI_cosim"):
         executeRet, dt=executeFMISrcExample(ex, executeFD)
@@ -643,14 +673,14 @@ def runExample(exRun, example):
       ombvFiles=mainFiles(glob.glob("*.ombvx"), ".", ".ombvx")
       h5pFiles=mainFiles(glob.glob("*.mbsh5"), ".", ".mbsh5")
       guiFile=None
-      if os.path.exists("MBS.mbsx"):
-        guiFile='./MBS.mbsx'
-      elif os.path.exists("MBS.flat.mbsx"):
-        guiFile='./MBS.flat.mbsx'
-      elif os.path.exists("FMI.mbsx"):
-        guiFile='./FMI.mbsx'
-      elif os.path.exists("FMI_cosim.mbsx"):
-        guiFile='./FMI_cosim.mbsx'
+      if ppxmlFile() is not None:
+        guiFile=ppxmlFile()
+      elif flatxmlFile() is not None:
+        guiFile=flatxmlFile()
+      elif fmiFile() is not None:
+        guiFile=fmiFile()
+      elif fmiCosimFile() is not None:
+        guiFile=fmiCosimFile()
       # run gui tests
       def runGUI(files, tool, ex, exOK, exOutput):
         if len(files)==0:
@@ -881,10 +911,10 @@ def executeSrcExample(ex, executeFD):
 # execute the XML example in the current directory (write everything to fd executeFD)
 def executeXMLExample(ex, executeFD, env=os.environ):
   # we handle MBS.mbsx, MBS.flat.mbsx, FMI.mbsx, and FMI_cosim.mbsx files here
-  if   os.path.isfile("MBS.mbsx"):          prjFile="MBS.mbsx"
-  elif os.path.isfile("MBS.flat.mbsx"):     prjFile="MBS.flat.mbsx"
-  elif os.path.isfile("FMI.mbsx"):          prjFile="FMI.mbsx"
-  elif os.path.isfile("FMI_cosim.mbsx"):    prjFile="FMI_cosim.mbsx"
+  if   ppxmlFile() is not None:    prjFile=ppxmlFile()
+  elif flatxmlFile() is not None:  prjFile=flatxmlFile()
+  elif fmiFile() is not None:      prjFile=fmiFile()
+  elif fmiCosimFile() is not None: prjFile=fmiCosimFile()
   else: raise RuntimeError("Internal error: Unknown ppxml file.")
 
   print("Running command:", file=executeFD)
@@ -915,7 +945,7 @@ def executeFlatXMLExample(ex, executeFD):
 
   print("\n\n\n", file=executeFD)
   print("Running command:", file=executeFD)
-  list(map(lambda x: print(x, end=" ", file=executeFD), [pj(mbsimBinDir, "mbsimflatxml"), "MBS.flat.mbsx"]))
+  list(map(lambda x: print(x, end=" ", file=executeFD), [pj(mbsimBinDir, "mbsimflatxml"), flatxmlFile()]))
   print("\n", file=executeFD)
   ex.webappHdf5serie=True
   ex.webappOpenmbv=True
@@ -923,7 +953,7 @@ def executeFlatXMLExample(ex, executeFD):
   executeFD.flush()
   t0=datetime.datetime.now()
   ret2=abs(base.helper.subprocessCall(prefixSimulation('mbsimflatxml')+exePrefix()+[pj(mbsimBinDir, "mbsimflatxml"+args.exeExt),
-       "MBS.flat.mbsx"], executeFD, maxExecutionTime=args.maxExecutionTime))
+       flatxmlFile()], executeFD, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
   retv=valgrindOutputAndAdaptRet("example_flatxml", ex)
@@ -1049,8 +1079,8 @@ def executeFMIXMLExample(ex, executeFD):
   minimalTEndEnv["MBSIM_SET_MINIMAL_TEND"]="1"
   ret1, dt=executeXMLExample(ex, executeFD, env=minimalTEndEnv)
   # create and run FMU
-  basename="FMI.mbsx" if os.path.isfile("FMI.mbsx") else "FMI_cosim.mbsx"
-  cosim=False if os.path.isfile("FMI.mbsx") else True
+  basename=fmiFile() if fmiFile() is not None else fmiCosimFile()
+  cosim=False if fmiFile() is not None else True
   ret2, dt=executeFMIExample(ex, executeFD, basename, cosim)
   # return
   if ret1==base.helper.subprocessCall.timedOutErrorCode or ret2==base.helper.subprocessCall.timedOutErrorCode:
@@ -1378,7 +1408,7 @@ def listExamples():
 def validateXML(ex):
   nrFailed=0
   types=["*.ombvx", # validate openmbv files generated by MBSim
-         "MBS.flat.mbsx"] # validate user mbsim flat xml files
+         "*.flat.mbsx"] # validate user mbsim flat xml files
   for root, _, filenames in os.walk(os.curdir):
     for typesKey in types:
       for filename in fnmatch.filter(filenames, typesKey):
