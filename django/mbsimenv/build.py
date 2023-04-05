@@ -212,6 +212,9 @@ def main():
       django.db.close_old_connections()
   django.db.models.signals.pre_save.connect(closeOldConnections)
 
+  if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
+    localServer=base.helper.startLocalServer(args.localServerPort, django.conf.settings.MBSIMENV_TYPE=="localdocker")
+
   removeOldBuilds()
 
   # all tools to be build including the tool dependencies
@@ -351,13 +354,13 @@ def main():
   # rewrite build info (build.run.id + repo-sha1)
   with open((args.prefix if args.prefix is not None else args.prefixAuto)+"/.buildInfo.json", "w") as f:
     json.dump(buildInfo, f, indent=2)
- 
+
   if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
-    s=base.helper.startLocalServer(args.localServerPort, django.conf.settings.MBSIMENV_TYPE=="localdocker")
-    print("Build info is avaiable at: http://%s:%d%s"%(s["hostname"], s["port"],
+    print("Build info is avaiable at: http://%s:%d%s"%(localServer["hostname"], localServer["port"],
           django.urls.reverse("builds:current_buildtype_branch", args=[run.buildType,
             run.fmatvecBranch, run.hdf5serieBranch, run.openmbvBranch, run.mbsimBranch])))
     print("")
+    sys.stdout.flush()
 
   # set status on commit
   setGithubStatus(run, "pending")
