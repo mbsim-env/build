@@ -757,10 +757,21 @@ def check(tool):
     run=1
     # check
     print("RUNNING check\n", file=checkFD); checkFD.flush()
-    if base.helper.subprocessCall(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["-j", str(args.j), "check"], checkFD)==0:
-      result="done"
+    checkTargetExists=True
+    if cmake:
+      checkTargetExists=False
+      for line in base.helper.subprocessCheckOutput(["ninja", "-t", "targets"]).decode('utf-8').splitlines():
+        if line.startswith("check:"):
+          checkTargetExists=True;
+          break
+    if checkTargetExists:
+      if base.helper.subprocessCall(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["-j", str(args.j), "check"], checkFD)==0:
+        result="done"
+      else:
+        result="failed"
     else:
-      result="failed"
+      checkFD.write("No check target");
+      result="done"
   else:
     print("make check disabled", file=checkFD); checkFD.flush()
     result="done"

@@ -212,9 +212,10 @@ def killSubprocessCall(proc, f, killed, timeout):
     f.write("******************** END: MESSAGE FROM runexamples.py **********************\n\n\n\n")
     proc.kill()
 
-def subprocessCheckOutput(comm, f):
+def subprocessCheckOutput(comm, f=None):
   p=subprocess.run(comm, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-  f.write(p.stderr.decode('utf-8'))
+  if f is not None:
+    f.write(p.stderr.decode('utf-8'))
   return p.stdout
 
 # decode the bytes b to utf-8 replacing invalid bytes with {{0x??}}
