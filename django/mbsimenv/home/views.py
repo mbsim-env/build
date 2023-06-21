@@ -18,7 +18,7 @@ class Videos(base.views.Base):
     videos=[
       #                                                                                           path in mbsim/examples repo
       #        path to video in django static                       title                         (may be None)
-      {"file": "home/videos/xml_motorcycle_drift.webm"   , "title": "Motorcycle drift" , "example": ""                       },
+      {"file": "home/videos/xml_motorcycle_drift.webm"   , "title": "Motorcycle drift" , "example": None                     },
       {"file": "home/videos/xml_mbsim_logo.webm"         , "title": "MBSim-Logo"       , "example": "xml/mbsim_logo"         },
       {"file": "home/videos/xml_woodpecker.webm"         , "title": "Woodpacker"       , "example": "xml/woodpecker"         },
       {"file": "home/videos/xml_rack_contact.webm"       , "title": "Rack"             , "example": "xml/rack_contact"       },
