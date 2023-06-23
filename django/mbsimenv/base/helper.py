@@ -422,8 +422,10 @@ def bulk_create(model, objs, refresh=True):
   objs=list(filter(lambda o: o.pk is None, objs))
   if len(objs)==0:
     return
-  # needed since django.db.models.signals.pre_save.connect(...) is not called by bulk_create
-  django.db.close_old_connections()
+  # needes since django.db.models.signals.pre_save.connect(...) is not called by bulk_update
+  connection=django.db.connections["default"]
+  connection.ensure_connection()
+  if not connection.is_usable(): connection.close()
   # bulk create objects
   model.objects.bulk_create(objs)
   # if a refresh (update of the PK of the python objects) is requested and the PK is not set ...
