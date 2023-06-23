@@ -153,11 +153,11 @@
       {% cycle run.fmatvecUpdateMsg run.hdf5serieUpdateMsg run.openmbvUpdateMsg run.mbsimUpdateMsg as repoUpdateMsg silent %}
       <tr>
         <td>
-          <a href="https://github.com/mbsim-env/{{ repo }}"><span class="badge badge-success">{% octicon "repo" %}&nbsp;{{ repo }}&nbsp;{% octicon "link-external" %}</span></a>
+          <a href="https://github.com/mbsim-env/{{ repo }}"><span class="badge badge-success">{% octicon "repo" %}&nbsp;{{ repo }}</span></a>
         </td>
         <td>
           <a href="https://github.com/mbsim-env/{{ repo }}/tree/{{ repoBranch }}">
-            <span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{ repoBranch }}&nbsp;{% octicon "link-external" %}</span>
+            <span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{ repoBranch }}</span>
           </a>
         </td>
         {% if run.fmatvecUpdateOK is not None or run.hdf5serieUpdateOK is not None or run.openmbvUpdateOK is not None or run.mbsimUpdateOK is not None %}
@@ -172,7 +172,7 @@
         {% endif %}
         <td {% if repoTriggered %}class="table-info"{%endif%}>
           <a class="text-nowrap" href="https://github.com/mbsim-env/{{ repo }}/commit/{{ repoUpdateCommitID }}">
-            <code>{{ repoUpdateCommitID|truncatechars:8 }}</code>&nbsp;{% octicon "link-external" %}
+            <code>{{ repoUpdateCommitID|truncatechars:8 }}</code>
           </a>
         </td>
         <td {% if repoTriggered %}class="table-info"{%endif%}>

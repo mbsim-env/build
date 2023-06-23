@@ -14,9 +14,13 @@
           <source src="{% static video.col1.file %}" type="video/webm">
         </video>
         <figcaption class="figure-caption text-center"><span class="h2">{{ video.col1.title }}
-          {% if video.col1.example is not None %}
-            <small><a href="https://github.com/mbsim-env/mbsim/tree/master/examples/{{ video.col1.example }}">source&nbsp;{% octicon "link-external" %}</a></small>
-          {% endif %}
+          <small><a href="{{ video.col1.href }}">
+            {% if video.col2.ext %}
+              3rd party&nbsp;{% octicon "link-external" %}
+            {% else %}
+              source
+            {% endif %}
+          </a></small>
         </span></figcaption>
       </figure>
       {% if video.col2 is not None %}
@@ -25,9 +29,13 @@
             <source src="{% static video.col2.file %}" type="video/webm">
           </video>
           <figcaption class="figure-caption text-center"><span class="h2">{{ video.col2.title }}
-            {% if video.col2.example is not None %}
-              <small><a href="https://github.com/mbsim-env/mbsim/tree/master/examples/{{ video.col2.example }}">source&nbsp;{% octicon "link-external" %}</a></small>
-            {% endif %}
+            <small><a href="{{ video.col2.href }}">
+              {% if video.col2.ext %}
+                3rd party&nbsp;{% octicon "link-external" %}
+              {% else %}
+                source
+              {% endif %}
+            </a></small>
           </span></figcaption>
         </figure>
       {% endif %}

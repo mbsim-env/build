@@ -22,7 +22,7 @@
 
       <p>This side stores the basic information provided by GitHub. Is also stores an access token to interact with GitHub on your behalf.</p>
 
-      <p>You can <a href="https://github.com/settings/connections/applications/{{ clientID }}">view and revoke&nbsp;{% octicon "link-external" %}</a> this
+      <p>You can <a href="https://github.com/settings/connections/applications/{{ clientID }}">view and revoke</a> this
       access token on GitHub at any time. Revoking this access token will revoke any access of this service on your GitHub account.
       Your GitHub password is not known or checked by this server.</p>
     </span>
@@ -76,7 +76,7 @@
       <p>You are currently not logged in to this system.</p>
       <p>Browse this side anonymously starting at <a href="{% url 'service:home' %}">{% octicon "home" %} home</a>,</p>
       <p>or <a href="{% url 'account_login' %}">{% octicon "sign-in" %} login</a> using a
-            <a href="https://github.com/">{% octicon "logo-github" %}&nbsp;{% octicon "link-external" %}</a> account.</p>
+            <a href="https://github.com/">{% octicon "logo-github" %}</a> account.</p>
     </span>
   </div>
 {% endif %}
