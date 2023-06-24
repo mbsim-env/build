@@ -304,9 +304,6 @@ jobs:
           --env mbsimenvsec_codecovUploadToken_mbsim
           mbsimenv/builddoc:${{env.MBSIMENVTAGNAME}}
           --mbsimBranch ${{fromJson(needs.buildPartitionedExamples.outputs.buildInfo).repo.mbsim}}
-      - name: "dummy - just testing"
-        if: ${{always()}}
-        run: apt install tree
       - name: "Dump resources"
         if: ${{always()}}
-        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name" && tree -hF --du /|grep "/$"
+        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
