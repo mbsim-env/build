@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/usr/bin/env python3
 
 # imports
 import sys
@@ -292,14 +292,6 @@ def main():
         'mbsim/kernel',
         'mbsim/mbsimxml',
         'mbsim/modules/mbsimControl',
-      ])],
-    'track': [False, set([ # depends on
-        'fmatvec',
-      ])],
-    'mbsimRCStengel': [False, set([ # depends on
-        'track',
-        'mbsim/kernel',
-        'mbsim/mbsimgui',
       ])],
   }
 
