@@ -241,4 +241,4 @@ jobs:
           path: ${{github.workspace}}/local-cov.tar.gz
       - name: "Dump resources"
         if: ${{always()}}
-        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
+        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name" && tree -xhF --du /|grep "/$"

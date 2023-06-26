@@ -25,13 +25,15 @@ else:
     os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_local"
 django.setup()
 
-# close old connections before model save(); CONN_MAX_AGE is used
+# close unusable connections before model save()
 # (to avoid connection failures between two save() on the same model when a large time is in-between;
 #  e.g. firewalls may drop such TCP connections)
-def closeOldConnections(**kwargs):
-  if not django.db.connections[kwargs["using"]].in_atomic_block:
-    django.db.close_old_connections()
-django.db.models.signals.pre_save.connect(closeOldConnections)
+def closeUnusableConnection(**kwargs):
+  connection=django.db.connections[kwargs["using"]]
+  connection.ensure_connection()
+  if not connection.is_usable():
+    connection.close()
+django.db.models.signals.pre_save.connect(closeUnusableConnection)
 
 def buildLatex(f):
   if base.helper.subprocessCall(["pdflatex", "-halt-on-error", "-file-line-error", "main.tex"], f)!=0:

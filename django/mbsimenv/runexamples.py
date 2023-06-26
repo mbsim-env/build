@@ -173,13 +173,15 @@ else:
     os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_local"
 django.setup()
 
-# close old connections before model save(); CONN_MAX_AGE is used
+# close unusable connections before model save()
 # (to avoid connection failures between two save() on the same model when a large time is in-between;
 #  e.g. firewalls may drop such TCP connections)
-def closeOldConnections(**kwargs):
-  if not django.db.connections[kwargs["using"]].in_atomic_block:
-    django.db.close_old_connections()
-django.db.models.signals.pre_save.connect(closeOldConnections)
+def closeUnusableConnection(**kwargs):
+  connection=django.db.connections[kwargs["using"]]
+  connection.ensure_connection()
+  if not connection.is_usable():
+    connection.close()
+django.db.models.signals.pre_save.connect(closeUnusableConnection)
 
 if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
   s=base.helper.startLocalServer(args.localServerPort, django.conf.settings.MBSIMENV_TYPE=="localdocker")
@@ -313,7 +315,10 @@ def main():
     base.helper.bulk_create(runexamples.models.ExampleStatic, esl, refresh=False)
     for es in esl:
       es.queued=True
-    django.db.close_old_connections() # needes since django.db.models.signals.pre_save.connect(...) is not called by bulk_update
+    # needes since django.db.models.signals.pre_save.connect(...) is not called by bulk_update
+    connection=django.db.connections["default"]
+    connection.ensure_connection()
+    if not connection.is_usable(): connection.close()
     runexamples.models.ExampleStatic.objects.bulk_update(esl, ["queued"])
     # exit pre step
     return 0
