@@ -68,6 +68,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
   # -e PATH= is the PATH in the container appended by :/mbsim-env/local-docker/bin and prefixed by .:
   # -e LD_LIBRARY_PATH= is the LD_LIBRARY_PATH in the container prefixed by /mbsim-env/local-docker/lib:/mbsim-env/local-docker/lib64:
   # -e PKG_CONFIG_PATH= is the PKG_CONFIG_PATH in the container appended by :/mbsim-env/local-docker/lib/pkgconfig:/mbsim-env/local-docker/lib64/pkgconfig
+  mkdir -p "$MBSIMENVDIR/.ccache" "$MBSIMENVDIR/.home"
   function callDocker {
     docker run --init --entrypoint= --rm \
       $INTERACTIVE \

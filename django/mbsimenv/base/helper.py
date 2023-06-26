@@ -351,8 +351,8 @@ def startLocalServer(port, onlyGetServerInfo=False):
       env=os.environ.copy()
       env['DJANGO_SETTINGS_MODULE']='mbsimenv.settings_'+django.conf.settings.MBSIMENV_TYPE
       p=subprocess.Popen([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../manage.py",
-                          "runserver", "--insecure", "--noreload", "localhost:"+str(port)],
-                         preexec_fn=os.setpgrp, env=env)
+                          "runserver", "--insecure", "--noreload", "0.0.0.0:"+str(port)],
+                          preexec_fn=os.setpgrp, env=env)
       with open(pidfile, "w") as f:
         json.dump({"hostname": "localhost", "port": port}, f)
     else:

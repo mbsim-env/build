@@ -70,6 +70,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
   # -e WINEPATH= is the WINEPATH in the container appended by ;/mbsim-env/local-dockerwin64/bin
   exePrefix=""
   test ${ARGS: -4} == ".exe" && exePrefix=wine
+  mkdir -p "$MBSIMENVDIR/.ccache" "$MBSIMENVDIR/.home"
   function callDocker {
     docker run --init --entrypoint= --rm \
       $INTERACTIVE \

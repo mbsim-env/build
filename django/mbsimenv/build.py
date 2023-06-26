@@ -762,10 +762,13 @@ def check(tool):
     checkTargetExists=True
     if cmake:
       checkTargetExists=False
-      for line in base.helper.subprocessCheckOutput(["ninja", "-t", "targets"]).decode('utf-8').splitlines():
-        if line.startswith("check:"):
-          checkTargetExists=True;
-          break
+      try:
+        for line in base.helper.subprocessCheckOutput(["ninja", "-t", "targets"]).decode('utf-8').splitlines():
+          if line.startswith("check:"):
+            checkTargetExists=True;
+            break
+      except:
+        pass
     if checkTargetExists:
       if base.helper.subprocessCall(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["-j", str(args.j), "check"], checkFD)==0:
         result="done"

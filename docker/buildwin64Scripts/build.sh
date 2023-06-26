@@ -83,13 +83,14 @@ else
   break
 fi
 
+PORT=${PORT:-27583}
 MBSIMENVTAGNAME=${MBSIMENVTAGNAME:-latest}
 docker run -d --init --entrypoint= --rm \
   --user $(id -u):$(id -g) \
   -v "$MBSIMENVDIR":/mbsim-env \
-  --net=host \
+  -p $PORT:$PORT \
   mbsimenv/buildwin64:$MBSIMENVTAGNAME \
-  /mbsim-env/build/docker/buildImage/runlocalserver.py > /dev/null
+  /mbsim-env/build/docker/buildImage/runlocalserver.py --localServerPort $PORT > /dev/null || echo "Port in use!?"
 # wait until localserver.json exists to avoid a race-condition between containers
 while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1; done
 
