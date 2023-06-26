@@ -1,4 +1,4 @@
-#!/usr/bin/python3
+#!/usr/bin/env python3
 
 import websockify.token_plugins
 import websockify.auth_plugins

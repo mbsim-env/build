@@ -1,4 +1,4 @@
-#! /usr/bin/python3
+#!/usr/bin/env python3
 
 # This script checks an existing database (local or buildSystem (postgres)).
 # It lists unused rows in the database and unused files in the databasemedia.

@@ -291,6 +291,14 @@ def main():
         'mbsim/mbsimxml',
         'mbsim/modules/mbsimControl',
       ])],
+    'track': [False, set([ # depends on
+        'fmatvec',
+      ])],
+    'mbsimRCStengel': [False, set([ # depends on
+        'track',
+        'mbsim/kernel',
+        'mbsim/mbsimgui',
+      ])],
   }
 
   # extend the dependencies recursively
