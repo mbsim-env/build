@@ -750,6 +750,23 @@ def make(tool):
 
 
 
+# return true for autotools build and true for cmake builds if a target named target exits
+def existsTarget(tool, target):
+  cmake=not os.path.exists(pj(args.sourceDir, tool.toolName, "configure.ac"))
+  targetExists=True
+  if cmake:
+    targetExists=False
+    try:
+      for line in base.helper.subprocessCheckOutput(["ninja", "-t", "targets"]).decode('utf-8').splitlines():
+        if line.startswith(target+":"):
+          targetExists=True;
+          break
+    except:
+      pass
+  return targetExists
+
+
+
 def check(tool):
   checkFD=io.StringIO()
   run=0
@@ -759,17 +776,7 @@ def check(tool):
     run=1
     # check
     print("RUNNING check\n", file=checkFD); checkFD.flush()
-    checkTargetExists=True
-    if cmake:
-      checkTargetExists=False
-      try:
-        for line in base.helper.subprocessCheckOutput(["ninja", "-t", "targets"]).decode('utf-8').splitlines():
-          if line.startswith("check:"):
-            checkTargetExists=True;
-            break
-      except:
-        pass
-    if checkTargetExists:
+    if existsTarget(tool, "check"):
       if base.helper.subprocessCall(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["-j", str(args.j), "check"], checkFD)==0:
         result="done"
       else:
@@ -831,15 +838,16 @@ def doc(tool, disabled, docDirName):
       # make doc
       errStr=""
       print("\n\nRUNNING ninja %s-clean\n"%(docDirName), file=docFD); docFD.flush()
-      if base.helper.subprocessCall(["ninja", "-v", "%s-clean"%(docDirName)], docFD)!=0:
-        errStr=errStr+"ninja %s-clean failed; "%(docDirName)
-      print("\n\nRUNNING ninja %s\n"%(docDirName), file=docFD); docFD.flush()
-      if base.helper.subprocessCall(["ninja", "-v", "-k", "1000000", "%s"%(docDirName)], docFD)!=0:
-        errStr=errStr+"ninja %s failed; "%(docDirName)
-      print("\n\nRUNNING ninja %s-install\n"%(docDirName), file=docFD); docFD.flush()
-      if base.helper.subprocessCall(["ninja", "-v", "%s-install"%(docDirName)], docFD)!=0:
-        errStr=errStr+"ninja %s-install failed; "%(docDirName)
-      if errStr!="": raise RuntimeError(errStr)
+      if existsTarget(tool, "doc-clean"):
+        if base.helper.subprocessCall(["ninja", "-v", "%s-clean"%(docDirName)], docFD)!=0:
+          errStr=errStr+"ninja %s-clean failed; "%(docDirName)
+        print("\n\nRUNNING ninja %s\n"%(docDirName), file=docFD); docFD.flush()
+        if base.helper.subprocessCall(["ninja", "-v", "-k", "1000000", "%s"%(docDirName)], docFD)!=0:
+          errStr=errStr+"ninja %s failed; "%(docDirName)
+        print("\n\nRUNNING ninja %s-install\n"%(docDirName), file=docFD); docFD.flush()
+        if base.helper.subprocessCall(["ninja", "-v", "%s-install"%(docDirName)], docFD)!=0:
+          errStr=errStr+"ninja %s-install failed; "%(docDirName)
+        if errStr!="": raise RuntimeError(errStr)
     else:
       print(docDirName+" disabled", file=docFD); docFD.flush()
 
