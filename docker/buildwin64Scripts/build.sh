@@ -134,7 +134,7 @@ while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1
   SOQT_CFLAGS=-I/3rdparty/local/include \
   "${CONFIGUREARGS[@]}" \
   --passToCMake \
-  -DCMAKE_TOOLCHAIN_FILE=/context/toolchain-mingw64.cmake \
+  -DCMAKE_TOOLCHAIN_FILE=/mbsim-env/build/docker/buildwin64Image/toolchain-mingw64.cmake \
   -DBLAS_LIBRARIES=/3rdparty/local/lib/libopenblas.dll.a -DBLAS=1 \
   -DLAPACK_LIBRARIES=/3rdparty/local/lib/libopenblas.dll.a -DLAPACK=1 \
   -DARPACK_INCLUDE_DIRS=/3rdparty/local/include/arpack -DARPACK_LIBRARIES=/3rdparty/local/lib/libarpack.dll.a \

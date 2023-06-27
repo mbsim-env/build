@@ -183,13 +183,6 @@ def closeUnusableConnection(**kwargs):
     connection.close()
 django.db.models.signals.pre_save.connect(closeUnusableConnection)
 
-if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
-  s=base.helper.startLocalServer(args.localServerPort, django.conf.settings.MBSIMENV_TYPE=="localdocker")
-  print("Runexample info is avaiable at: http://%s:%d%s"%(s["hostname"], s["port"],
-        django.urls.reverse("runexamples:current_buildtype", args=[args.buildType])))
-  print("")
-  sys.stdout.flush()
-
 def removeOldBuilds():
   olderThan=django.utils.timezone.now()-datetime.timedelta(days=args.removeOlderThan)
   keep=runexamples.models.Run.objects.all().order_by('-startTime')[0:args.removeOlderThan].values("id")
@@ -284,6 +277,15 @@ def main():
     setGithubStatus(exRun, "pending")
   else:
     exRun=runexamples.models.Run.objects.filter(id=args.runID).select_related("build_run").get()
+
+  if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
+    s=base.helper.startLocalServer(args.localServerPort, django.conf.settings.MBSIMENV_TYPE=="localdocker")
+    print("Runexample info is avaiable at: http://%s:%d%s"%(s["hostname"], s["port"],
+          django.urls.reverse("runexamples:current_buildtype", args=[args.buildType])))
+    print("                              = http://%s:%d%s"%(s["hostname"], s["port"],
+          django.urls.reverse("runexamples:run", args=[id])))
+    print("")
+    sys.stdout.flush()
 
   mainRet=0
 

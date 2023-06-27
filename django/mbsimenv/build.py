@@ -361,6 +361,8 @@ def main():
     print("Build info is avaiable at: http://%s:%d%s"%(localServer["hostname"], localServer["port"],
           django.urls.reverse("builds:current_buildtype_branch", args=[run.buildType,
             run.fmatvecBranch, run.hdf5serieBranch, run.openmbvBranch, run.mbsimBranch])))
+    print("                         = http://%s:%d%s"%(localServer["hostname"], localServer["port"],
+          django.urls.reverse("builds:run", args=[run.id])))
     print("")
     sys.stdout.flush()
 
@@ -848,6 +850,8 @@ def doc(tool, disabled, docDirName):
         if base.helper.subprocessCall(["ninja", "-v", "%s-install"%(docDirName)], docFD)!=0:
           errStr=errStr+"ninja %s-install failed; "%(docDirName)
         if errStr!="": raise RuntimeError(errStr)
+      else:
+        docFD.write("No doc target");
     else:
       print(docDirName+" disabled", file=docFD); docFD.flush()
 
