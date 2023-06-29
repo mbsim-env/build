@@ -283,7 +283,7 @@ def main():
     print("Runexample info is avaiable at: http://%s:%d%s"%(s["hostname"], s["port"],
           django.urls.reverse("runexamples:current_buildtype", args=[args.buildType])))
     print("                              = http://%s:%d%s"%(s["hostname"], s["port"],
-          django.urls.reverse("runexamples:run", args=[id])))
+          django.urls.reverse("runexamples:run", args=[exRun.id])))
     print("")
     sys.stdout.flush()
 
