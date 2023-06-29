@@ -83,7 +83,13 @@ else
   break
 fi
 
-PORT=${PORT:-27583}
+PORT=27583
+for i in ${!NORMALARGS[@]}; do
+  if [ "${NORMALARGS[$i]}" == "--localServerPort" ]; then
+    PORT=${NORMALARGS[$[$i+1]]}
+    break
+  fi
+done
 MBSIMENVTAGNAME=${MBSIMENVTAGNAME:-latest}
 docker run -d --init --entrypoint= --rm \
   --user $(id -u):$(id -g) \
