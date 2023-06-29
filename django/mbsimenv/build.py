@@ -87,6 +87,7 @@ def parseArguments():
   cfgOpts.add_argument("--coverage", action="store_true", help='Enable coverage analyzis using gcov/lcov.')
   cfgOpts.add_argument("--buildFailedExit", default=None, type=int, help='Define the exit code when the build fails.')
   cfgOpts.add_argument("--buildRunID", default=None, type=int, help='Internal: use a already created Run ID.')
+  cfgOpts.add_argument("--additionalTools", default=None, type=str, help='A json string of additional tools to process. (The format must follow the toolDependencies variable)')
   
   outOpts=argparser.add_argument_group('Output Options')
   outOpts.add_argument("--buildType", default="local", type=str, help="A description of the build type (e.g: linux64-dailydebug)")
@@ -224,54 +225,54 @@ def main():
 
   toolDependencies={
     #   |ToolName   |WillFail (if WillFail is true no Atom Feed error is reported if this Tool fails somehow)
-    'fmatvec': [False, set([ # depends on
-      ])],
-    'hdf5serie/h5plotserie': [False, set([ # depends on
+    'fmatvec': [False, [ # depends on
+      ]],
+    'hdf5serie/h5plotserie': [False, [ # depends on
         'hdf5serie/hdf5serie',
-      ])],
-    'hdf5serie/hdf5serie': [False, set([ # depends on
+      ]],
+    'hdf5serie/hdf5serie': [False, [ # depends on
         'fmatvec',
-      ])],
-    'openmbv/mbxmlutils': [False, set([ # depends on
+      ]],
+    'openmbv/mbxmlutils': [False, [ # depends on
         'fmatvec',
-      ])],
-    'openmbv/openmbv': [False, set([ # depends on
+      ]],
+    'openmbv/openmbv': [False, [ # depends on
         'openmbv/openmbvcppinterface',
         'hdf5serie/hdf5serie',
-      ])],
-    'openmbv/openmbvcppinterface': [False, set([ # depends on
+      ]],
+    'openmbv/openmbvcppinterface': [False, [ # depends on
         'hdf5serie/hdf5serie',
         'openmbv/mbxmlutils',
-      ])],
-    'mbsim/kernel': [False, set([ # depends on
+      ]],
+    'mbsim/kernel': [False, [ # depends on
         'fmatvec',
         'openmbv/openmbvcppinterface',
-      ])],
-    'mbsim/modules/mbsimHydraulics': [False, set([ # depends on
+      ]],
+    'mbsim/modules/mbsimHydraulics': [False, [ # depends on
         'mbsim/kernel',
         'mbsim/modules/mbsimControl',
-      ])],
-    'mbsim/modules/mbsimFlexibleBody': [False, set([ # depends on
+      ]],
+    'mbsim/modules/mbsimFlexibleBody': [False, [ # depends on
         'mbsim/kernel',
         'mbsim/thirdparty/nurbs++',
-      ])],
-    'mbsim/thirdparty/nurbs++': [False, set([ # depends on
-      ])],
-    'mbsim/modules/mbsimElectronics': [False, set([ # depends on
+      ]],
+    'mbsim/thirdparty/nurbs++': [False, [ # depends on
+      ]],
+    'mbsim/modules/mbsimElectronics': [False, [ # depends on
         'mbsim/kernel',
         'mbsim/modules/mbsimControl',
-      ])],
-    'mbsim/modules/mbsimControl': [False, set([ # depends on
+      ]],
+    'mbsim/modules/mbsimControl': [False, [ # depends on
         'mbsim/kernel',
-      ])],
-    'mbsim/modules/mbsimPhysics': [False, set([ # depends on
+      ]],
+    'mbsim/modules/mbsimPhysics': [False, [ # depends on
         'mbsim/kernel',
-      ])],
-    'mbsim/modules/mbsimInterface': [False, set([ # depends on
+      ]],
+    'mbsim/modules/mbsimInterface': [False, [ # depends on
         'mbsim/kernel',
         'mbsim/modules/mbsimControl',
-      ])],
-    'mbsim/mbsimxml': [False, set([ # depends on
+      ]],
+    'mbsim/mbsimxml': [False, [ # depends on
         'mbsim/kernel',
         'openmbv/openmbvcppinterface',
         'openmbv/mbxmlutils',
@@ -282,18 +283,24 @@ def main():
         'mbsim/modules/mbsimControl',
         'mbsim/modules/mbsimPhysics',
         'mbsim/modules/mbsimInterface',
-      ])],
-    'mbsim/mbsimgui': [False, set([ # depends on
+      ]],
+    'mbsim/mbsimgui': [False, [ # depends on
         'openmbv/openmbv',
         'openmbv/mbxmlutils',
         'mbsim/mbsimxml',
-      ])],
-    'mbsim/mbsimfmi': [False, set([ # depends on
+      ]],
+    'mbsim/mbsimfmi': [False, [ # depends on
         'mbsim/kernel',
         'mbsim/mbsimxml',
         'mbsim/modules/mbsimControl',
-      ])],
+      ]],
   }
+  # add command line tools
+  if args.additionalTools is not None:
+    toolDependencies.update(json.loads(args.additionalTools))
+  # convert dependent list to set
+  for t in toolDependencies:
+    toolDependencies[t][1]=set(toolDependencies[t][1])
 
   # extend the dependencies recursively
   addAllDepencencies()
