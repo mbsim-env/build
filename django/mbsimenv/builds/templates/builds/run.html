@@ -218,7 +218,7 @@
     <a href="{% url 'base:textFieldFromDB' 'builds' 'Run' run.id 'distributionOutput' %}">log-file</a>;
     <strong><a href="distributionFile/">Download</a></strong>;
     <a href="distributionDebugFile/">debug-info</a>
-    {% if run.distributionFile is not None %}
+    {% if run.distributionFile is not None and releaseDistributionPossible %}
       <div class="card border-light">
         <div class="card-header bg-light">
           {% octicon "cloud-upload" %}{% octicon "tag" %}&nbsp;<a href="#releaseDistribution" data-toggle="collapse">
