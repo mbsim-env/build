@@ -72,7 +72,11 @@ RUN mkdir /3rdparty/openblas-build
 WORKDIR /3rdparty/openblas-build
 RUN wget https://github.com/xianyi/OpenBLAS/releases/download/v0.3.21/OpenBLAS-0.3.21-x64.zip
 RUN unzip OpenBLAS-0.3.21-x64.zip
-RUN mkdir -p /3rdparty/local/bin/ /3rdparty/local/lib/; cp bin/libopenblas.dll /3rdparty/local/bin/; cp lib/libopenblas.dll.a /3rdparty/local/lib/
+RUN mkdir -p /3rdparty/local/bin/ /3rdparty/local/lib/ /3rdparty/local/include/ /3rdparty/local/lib/cmake/openblas/; \
+  cp bin/libopenblas.dll /3rdparty/local/bin/; \
+  cp lib/libopenblas.dll.a /3rdparty/local/lib/; \
+  cp include/lapack.h include/lapacke_utils.h include/cblas.h include/lapacke_config.h include/f77blas.h include/openblas_config.h include/lapacke_mangling.h include/lapacke.h /3rdparty/local/include/; \
+  cp lib/cmake/openblas/OpenBLASConfigVersion.cmake lib/cmake/openblas/OpenBLASConfig.cmake /3rdparty/local/lib/cmake/openblas/
 
 # hdf5
 # HDF5
