@@ -87,6 +87,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
       -e MBXMLUTILS_DEACTIVATE_BLOCK \
       -w "$CURDIR" \
       -e DISPLAY \
+      -v /tmp/.X11-unix:/tmp/.X11-unix \
       -v ${XAUTHORITY:-$HOME/.Xauthority}:/root/.Xauthority \
       --net=host \
       mbsimenv/buildwin64:$MBSIMENVTAGNAME \
