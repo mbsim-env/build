@@ -285,7 +285,7 @@ if build:
         "--baseExampleDir", "/mbsim-env/mbsim-valgrind/examples"] if "--coverage" in ARGS else [])+\
       ["--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
       "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh "+\
-      "--child-silent-after-fork=yes --num-callers=24 --gen-suppressions=all "+\
+      "--child-silent-after-fork=yes --num-callers=50 --gen-suppressions=all "+\
       "--suppressions=/mbsim-env/mbsim/thirdparty/valgrind/valgrind-mbsim.supp "+\
       "--suppressions=/mbsim-build/build/misc/valgrind-python.supp --leak-check=full"]+RUNEXAMPLESFILTER
       , env=valgrindEnv)
@@ -348,7 +348,7 @@ def runExamplesPartition(ARGS, pullMbsim, pullAll):
     (["--disableCompare", "--disableValidate",
     "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
     "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh "+\
-    "--child-silent-after-fork=yes --num-callers=24 --gen-suppressions=all "+\
+    "--child-silent-after-fork=yes --num-callers=50 --gen-suppressions=all "+\
     "--suppressions=/mbsim-env/mbsim/thirdparty/valgrind/valgrind-mbsim.supp "+\
     "--suppressions=/mbsim-build/build/misc/valgrind-python.supp --leak-check=full"] if args.valgrindExamples else [])+\
     ARGS+RUNEXAMPLESFILTER,
