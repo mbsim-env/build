@@ -18,7 +18,7 @@ class Videos(base.views.Base):
     videos=[
     #        path to video in django static                       title                link external link href (abs or rel to mbsim/examples)
     {"file": "home/videos/xml_motorcycle_drift.webm"   , "title": "Motorcycle drift" , "ext": True , "href": "https://github.com/TUMFTM/motorcycle_model" },
-    {"file": "home/videos/xml_humanoid_robot.webm"     , "title": "Humanoid robot"   , "ext": True , "href": "https://www.mbsim-env.de"                   },
+    {"file": "home/videos/xml_humanoid_robot.webm"     , "title": "Humanoid robot"   , "ext": False, "href": "xml/humanoid_robot"                         },
     {"file": "home/videos/xml_flexible_conrod.webm"    , "title": "Flexible conrod"  , "ext": False, "href": "xml/flexible_conrod"                        },
     {"file": "home/videos/xml_mbsim_logo.webm"         , "title": "MBSim-Logo"       , "ext": False, "href": "xml/mbsim_logo"                             },
     {"file": "home/videos/xml_woodpecker.webm"         , "title": "Woodpecker"       , "ext": False, "href": "xml/woodpecker"                             },
