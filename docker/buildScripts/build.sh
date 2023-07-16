@@ -96,7 +96,7 @@ docker run -d --init --entrypoint= --rm \
   -v "$MBSIMENVDIR":/mbsim-env \
   -p $PORT:$PORT \
   mbsimenv/build:$MBSIMENVTAGNAME \
-  /mbsim-env/build/docker/buildImage/runlocalserver.py --localServerPort $PORT > /dev/null
+  /mbsim-env/build/docker/buildImage/runlocalserver.py --localServerPort $PORT > /dev/null || echo "Port in use!?"
 # wait until localserver.json exists to avoid a race-condition between containers
 while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1; done
 
