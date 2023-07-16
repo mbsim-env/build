@@ -552,24 +552,24 @@ def ppxmlFile(root=None):
   if len(glob.glob(pj(root, "*.flat.mbsx")))>0: return None
   ppxmlFiles=glob.glob(pj(root, "*.mbsx")) 
   if len(ppxmlFiles)!=1: return None
-  return ppxmlFiles[0]
+  return os.path.basename(ppxmlFiles[0]) # Windows dockerwin64 build is failing if we pass the abs path to mbsimflatxml/mbsimxml (very strange!)
 def flatxmlFile(root=None):
   if root is None:
     root=os.getcwd()
   flatxmlFiles=glob.glob(pj(root, "*.flat.mbsx")) 
   if len(flatxmlFiles)!=1: return None
-  return flatxmlFiles[0]
+  return os.path.basename(flatxmlFiles[0]) # Windows dockerwin64 build is failing if we pass the abs path to mbsimflatxml/mbsimxml (very strange!)
 def fmiFile(root=None):
   if root is None:
     root=os.getcwd()
   if os.path.isfile(pj(root, "FMI.mbsx")):
-    return pj(root, "FMI.mbsx")
+    return os.path.basename(pj(root, "FMI.mbsx")) # Windows dockerwin64 build is failing if we pass the abs path to mbsimflatxml/mbsimxml (very strange!)
   return None
 def fmiCosimFile(root=None):
   if root is None:
     root=os.getcwd()
   if os.path.isfile(pj(root, "FMI_cosim.mbsx")):
-    return pj(root, "FMI_cosim.mbsx")
+    return os.path.basename(pj(root, "FMI_cosim.mbsx")) # Windows dockerwin64 build is failing if we pass the abs path to mbsimflatxml/mbsimxml (very strange!)
   return None
 
 # handle the --filter option: add/remove to directoriesSet
