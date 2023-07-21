@@ -65,6 +65,15 @@ jobs:
       fail-fast: false
       matrix: ${{fromJson(inputs.matrix)}}
     steps:
+      - name: "Maximize disk space (remove unwanted pre-installed software)"
+        run: |
+          BEFORE=$(df --output=used / | tail -n 1)
+          #echo "Remove .NET (~1GB/~3sec)" && sudo rm -rf /usr/share/dotnet
+          #echo "Remove Android (~12GB/70sec)" && sudo rm -rf /usr/local/lib/android
+          echo "Remove CodeQL (~8GB/1sec)" && sudo rm -rf /opt/hostedtoolcache/CodeQL
+          #echo "Remove Docker images (~4GB/15sec)" && sudo docker image prune --all --force > /dev/null
+          AFTER=$(df --output=used / | tail -n 1)
+          echo "$[($BEFORE-$AFTER)/1000000]GB freed"
       - name: "Dump resources"
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
       - name: "Dump build config"
@@ -241,4 +250,4 @@ jobs:
           path: ${{github.workspace}}/local-cov.tar.gz
       - name: "Dump resources"
         if: ${{always()}}
-        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name" && tree -xhF --du /|grep "/$"
+        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
