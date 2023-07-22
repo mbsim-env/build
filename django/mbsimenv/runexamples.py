@@ -328,7 +328,7 @@ def main():
   if normalRun or args.partition:
     # get mbxmlutilsvalidate program
     global mbxmlutilsvalidate, xmlCatalog
-    mbxmlutilsvalidate=pj(pkgconfig("mbxmlutils", ["--variable=BINDIR"]), "mbxmlutilsvalidate"+args.exeExt)
+    mbxmlutilsvalidate=pj(pkgconfig("mbxmlutils", ["--variable=BINDIR"]), "mbxmlutilsvalidate"+args.exeExt)#mfmf
     if not os.path.isfile(mbxmlutilsvalidate):
       mbxmlutilsvalidate="mbxmlutilsvalidate"+args.exeExt
     # set global dirs
@@ -337,7 +337,7 @@ def main():
     # get schema files
     # create mbsimxml schema
     xmlCatalog="/tmp/.runexamples.catalog.xml"
-    if subprocess.call(exePrefix()+[pj(mbsimBinDir, "mbsimxml"+args.exeExt), "--dumpXMLCatalog", xmlCatalog])!=0:
+    if subprocess.call(exePrefix()+[pj(mbsimBinDir, "mbsimxml"+args.exeExt), "--dumpXMLCatalog", exePathConvert(xmlCatalog)])!=0:
       xmlCatalog=None
       print("Error: 'mbsimxml --dumpXMLCatalog <file>' failed. Trying to continue without schema files.", file=sys.stderr)
 
@@ -552,24 +552,24 @@ def ppxmlFile(root=None):
   if len(glob.glob(pj(root, "*.flat.mbsx")))>0: return None
   ppxmlFiles=glob.glob(pj(root, "*.mbsx")) 
   if len(ppxmlFiles)!=1: return None
-  return os.path.basename(ppxmlFiles[0]) # Windows dockerwin64 build is failing if we pass the abs path to mbsimflatxml/mbsimxml (very strange!)
+  return ppxmlFiles[0]
 def flatxmlFile(root=None):
   if root is None:
     root=os.getcwd()
   flatxmlFiles=glob.glob(pj(root, "*.flat.mbsx")) 
   if len(flatxmlFiles)!=1: return None
-  return os.path.basename(flatxmlFiles[0]) # Windows dockerwin64 build is failing if we pass the abs path to mbsimflatxml/mbsimxml (very strange!)
+  return flatxmlFiles[0]
 def fmiFile(root=None):
   if root is None:
     root=os.getcwd()
   if os.path.isfile(pj(root, "FMI.mbsx")):
-    return os.path.basename(pj(root, "FMI.mbsx")) # Windows dockerwin64 build is failing if we pass the abs path to mbsimflatxml/mbsimxml (very strange!)
+    return pj(root, "FMI.mbsx")
   return None
 def fmiCosimFile(root=None):
   if root is None:
     root=os.getcwd()
   if os.path.isfile(pj(root, "FMI_cosim.mbsx")):
-    return os.path.basename(pj(root, "FMI_cosim.mbsx")) # Windows dockerwin64 build is failing if we pass the abs path to mbsimflatxml/mbsimxml (very strange!)
+    return pj(root, "FMI_cosim.mbsx")
   return None
 
 # handle the --filter option: add/remove to directoriesSet
@@ -642,7 +642,7 @@ def runExample(exRun, example):
       # remove lock from all h5 file, just to avoid the the results depend on crashes of previous runs
       lockFiles=glob.glob("*.ombvh5")+glob.glob("*.mbsh5")
       if len(lockFiles)>0:
-        base.helper.subprocessCall(exePrefix()+[pj(mbsimBinDir, "h5lockserie"+args.exeExt), "--remove"]+lockFiles,
+        base.helper.subprocessCall(exePrefix()+[pj(mbsimBinDir, "h5lockserie"+args.exeExt), "--remove"]+exePathConvert(lockFiles),
                                    executeFD, maxExecutionTime=1)
 
       # clean output of previous run
@@ -695,7 +695,7 @@ def runExample(exRun, example):
         # at least on Windows (wine) the DISPLAY is not found sometimes (unknown why). Hence, try this number of times before reporting an error
         tries=20 if exePrefix()==["wine"] else 1
         outFD=base.helper.MultiFile(args.printToConsole)
-        comm=[pj(mbsimBinDir, tool+args.exeExt), "--autoExit"]+files
+        comm=[pj(mbsimBinDir, tool+args.exeExt), "--autoExit"]+exePathConvert(files)
         # if this string is found in the output (wine output) then stop the execution immediately
         ret=0
         for t in range(0, tries):
@@ -777,6 +777,17 @@ def exePrefix():
     return []
   else:
     return ["wine"]
+# if args.exeEXt is set we must convert every path to a Windows path
+def exePathConvert(path):
+  if args.exeExt=="":
+    return path
+  else:
+    def convert(p):
+        return "z:"+p.replace("/", "\\") if os.path.isabs(p) else p.replace("/", "\\")
+    if type(path)==str:
+      return convert(path)
+    else:
+      return list(map(lambda p: convert(p), path))   
 
 
 # prefix the simultion with this parameter.
@@ -933,7 +944,7 @@ def executeXMLExample(ex, executeFD, env=os.environ):
   executeFD.flush()
   t0=datetime.datetime.now()
   ret=abs(base.helper.subprocessCall(prefixSimulation('mbsimxml')+exePrefix()+[pj(mbsimBinDir, "mbsimxml"+args.exeExt)]+
-                         [prjFile], executeFD, env=env, maxExecutionTime=args.maxExecutionTime))
+                         exePathConvert([prjFile]), executeFD, env=env, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
   retv=valgrindOutputAndAdaptRet("example_xml", ex)
@@ -960,7 +971,7 @@ def executeFlatXMLExample(ex, executeFD):
   executeFD.flush()
   t0=datetime.datetime.now()
   ret2=abs(base.helper.subprocessCall(prefixSimulation('mbsimflatxml')+exePrefix()+[pj(mbsimBinDir, "mbsimflatxml"+args.exeExt),
-       flatxmlFile()], executeFD, maxExecutionTime=args.maxExecutionTime))
+       exePathConvert(flatxmlFile())], executeFD, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
   retv=valgrindOutputAndAdaptRet("example_flatxml", ex)
@@ -991,7 +1002,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   if cosim: cosimArg=['--cosim']
   noparamArg=[]
   if "noparam" in labels: noparamArg=['--noparam']
-  comm=exePrefix()+[pj(mbsimBinDir, "mbsimCreateFMU"+args.exeExt), '--nocompress']+cosimArg+noparamArg+[fmiInputFile]
+  comm=exePrefix()+[pj(mbsimBinDir, "mbsimCreateFMU"+args.exeExt), '--nocompress']+cosimArg+noparamArg+[exePathConvert(fmiInputFile)]
   ret1=abs(base.helper.subprocessCall(prefixSimulation('mbsimCreateFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
   retv=valgrindOutputAndAdaptRet("example_fmi_create", ex)
   if retv!=0: ret1=1
@@ -1427,7 +1438,7 @@ def validateXML(ex):
         print("Running command:", file=outputFD)
         xmlOut.resultOK=True
         if base.helper.subprocessCall(exePrefix()+[mbxmlutilsvalidate]+\
-           (["--xmlCatalog", xmlCatalog] if xmlCatalog else [])+\
+           (["--xmlCatalog", exePathConvert(xmlCatalog)] if xmlCatalog else [])+\
            [pj(root, filename)], outputFD)!=0:
           nrFailed+=1
           xmlOut.resultOK=False
