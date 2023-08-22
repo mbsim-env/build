@@ -378,7 +378,11 @@ def main():
 
   # a sorted list of all tools te be build (in the correct order according the dependencies)
   orderedBuildTools=list()
-  sortBuildTools(set(toolDependencies) if args.buildTools is None else set(args.buildTools), orderedBuildTools)
+  try:
+    sortBuildTools(set(toolDependencies) if args.buildTools is None else set(args.buildTools), orderedBuildTools)
+  except RecursionError:
+    print("ERROR: Recursive tool dependencies detected: Please check the --additionalTools argument!")
+    return 1
 
   # list tools which are not updated and must not be rebuild according dependencies
   for toolName in set(toolDependencies)-set(orderedBuildTools):
