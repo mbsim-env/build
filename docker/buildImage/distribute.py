@@ -467,14 +467,18 @@ $INSTDIR/bin/.python-envvar "$@"
 
   # add pip executable
   if platform=="linux":
-    pipEnvvar='''#!/bin/bash
+    pipData='''#!/bin/bash
 INSTDIR="$(readlink -f $(dirname $0)/..)"
-$INSTDIR/bin/python $INSTDIR/bin/.pip-envvar "$@"
+export PIP_TARGET=$INSTDIR/../mbsim-env-python-site-packages
+$INSTDIR/bin/python -m pip "$@"
 '''
-    addStrToDist(pipEnvvar, "mbsim-env/bin/pip", True)
-    addFileToDist("/usr/bin/pip3.6", "mbsim-env/bin/.pip-envvar")
+    addStrToDist(pipData, "mbsim-env/bin/pip", True)
   if platform=="win":
-    addFileToDist("/3rdparty/local/python-win64/Scripts/pip.exe", "mbsim-env/bin/pip.exe")
+    pipData=r'''@echo off
+set INSTDIR=%~dp0..
+set PIP_TARGET=%INSTDIR%\..\mbsim-env-python-site-packages
+"%INSTDIR%\bin\python.exe" -m pip %*'''
+    addStrToDist(pipData, "mbsim-env/bin/pip.bat", True)
 
 
 
