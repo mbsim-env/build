@@ -8,7 +8,6 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   mingw64-gcc \
   mingw64-gcc-c++ \
   mingw64-gcc-gfortran \
-  wine \
   python3-requests \
   libtool automake autoconf \
   python3-pip \
@@ -31,7 +30,6 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   python3-sqlparse \
   python3-psutil \
   mingw64-qwt-qt5 \
-  wine \
   mingw64-xerces-c \
   mingw64-libarchive \
   diffutils \
@@ -39,6 +37,9 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   cmake \
   ninja-build \
   sqlite \
+  && dnf install -y 'dnf-command(config-manager)' \
+  && dnf config-manager --add-repo https://dl.winehq.org/wine-builds/fedora/31/winehq.repo \
+  && dnf install -y winehq-stable \
   && yum clean all
 RUN python3 -m pip install --upgrade pip && pip3 install django==3.2 django-octicons==1.0 paramiko==2.9
 # bugfix for moc
@@ -99,43 +100,19 @@ RUN ln -s /3rdparty/local/lib/hdf5.lib /3rdparty/local/lib/libhdf5.lib && \
     ln -s /3rdparty/local/lib/hdf5_cpp.lib /3rdparty/local/lib/libhdf5_cpp.lib
 
 # python (mingw64-python has several problems)
-ARG PYTHONVERSION=3.4.4
 WORKDIR /3rdparty
-RUN wget https://www.python.org/ftp/python/$PYTHONVERSION/python-$PYTHONVERSION.amd64.msi
-RUN wine msiexec -i python-$PYTHONVERSION.amd64.msi -q n TARGETDIR="$(winepath -w /3rdparty/local/python-win64)" && wineserver -w
+# we cannot download and install the python-3.6.8-amd64.exe since this fails using wine
+# hence, python-3.6.8-amd64.exe is installed on a native windows machine and the result is zipped to python3.6.8.zip
+COPY docker/buildwin64Image/python3.6.8.zip python3.6.8.zip
+RUN mkdir -p /3rdparty/local/python-win64 && cd /3rdparty/local/python-win64 && unzip /3rdparty/python3.6.8.zip
 # fix libfile name
-RUN mv /3rdparty/local/python-win64/libs/python34.lib /3rdparty/local/python-win64/libs/libpython34.lib
+RUN mv /3rdparty/local/python-win64/libs/python36.lib /3rdparty/local/python-win64/libs/libpython36.lib
 
 # numpy
-ARG NUMPYVERSION=1.15.0
-WORKDIR /3rdparty
-RUN wget https://files.pythonhosted.org/packages/11/9f/f7550ba7d6ea7d1da16ac2069157b42d225b02b47e4c30ccc1c5b6be3b8f/numpy-$NUMPYVERSION-cp34-none-win_amd64.whl
-RUN mkdir /3rdparty/numpy-build
-WORKDIR /3rdparty/numpy-build
-RUN unzip ../numpy-$NUMPYVERSION-cp34-none-win_amd64.whl
-RUN cp -a numpy /3rdparty/local/python-win64/Lib/site-packages/.
+RUN wine /3rdparty/local/python-win64/python.exe -m pip install numpy==1.12.1 && wineserver -w
 
 # mpmath/sympy
-ARG MPMATHVERSION=1.1.0
-ARG SYMPYVERSION=1.4
-WORKDIR /3rdparty
-RUN wget https://files.pythonhosted.org/packages/ca/63/3384ebb3b51af9610086b23ea976e6d27d6d97bf140a76a365bd77a3eb32/mpmath-$MPMATHVERSION.tar.gz \
-  && wget https://github.com/sympy/sympy/releases/download/sympy-$SYMPYVERSION/sympy-$SYMPYVERSION.tar.gz
-RUN mkdir /3rdparty/mpmath-build /3rdparty/mpmath-local /3rdparty/sympy-build /3rdparty/sympy-local
-WORKDIR /3rdparty/mpmath-build
-RUN tar -xzf ../mpmath-$MPMATHVERSION.tar.gz
-WORKDIR /3rdparty/sympy-build
-RUN tar -xzf ../sympy-$SYMPYVERSION.tar.gz
-WORKDIR /3rdparty/mpmath-build/mpmath-$MPMATHVERSION
-RUN wine /3rdparty/local/python-win64/python.exe setup.py build && \
-    wine /3rdparty/local/python-win64/python.exe setup.py install && wineserver -w
-WORKDIR /3rdparty/sympy-build/sympy-$SYMPYVERSION
-RUN mkdir -p /3rdparty/sympy-inst/Lib/site-packages
-RUN wine /3rdparty/local/python-win64/python.exe setup.py build && wineserver -w
-RUN PYTHONPATH="$(winepath -w /3rdparty/sympy-inst/Lib/site-packages)" wine /3rdparty/local/python-win64/python.exe \
-    setup.py install --prefix="$(winepath -w /3rdparty/sympy-inst)" && \
-    wineserver -w
-RUN unzip -d /3rdparty/local/python-win64/Lib/site-packages dist/sympy-$SYMPYVERSION-py3.4.egg
+RUN wine /3rdparty/local/python-win64/python.exe -m pip install sympy==1.9 && wineserver -w
 
 # octave
 ARG OCTAVEVERSION=4.4.1
@@ -235,11 +212,6 @@ LABEL org.label-schema.schema-version="1.0" \
 RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser dockeruser && \
   mkdir /mbsim-env /mbsim-ccache && \
   chown dockeruser:dockeruser /mbsim-env /mbsim-ccache
-
-# configure wine
-COPY docker/buildwin64Image/wine.inf /context/wine.inf
-RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\+g'); \
-    sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.inf >> /usr/share/wine/wine.inf
 
 # init conf
 USER dockeruser:dockeruser

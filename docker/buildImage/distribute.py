@@ -425,10 +425,15 @@ def addPython():
 
   if platform=="linux":
     subdir="lib64/python3.6"
-    pysrcdirs=["/usr/lib64/python3.6", "/usr/local/lib/python3.6"]
+    pysrcdirs=["/usr/local/lib/python3.6", "/usr/lib64/python3.6", "/usr/lib/python3.6", ] # search packages in this order
   if platform=="win":
     subdir="lib"
-    pysrcdirs=["/3rdparty/local/python-win64/Lib"]
+    pysrcdirs=["/3rdparty/local/python-win64/Lib"] # search packages in this order
+  sitePackages=[["pip", False],
+                ["setuptools", False],
+                ["numpy", False],
+                ["sympy", False],
+                ["mpmath", False]]
   for pysrcdir in pysrcdirs:
     # everything in pysrcdir except some special dirs
     for d in os.listdir(pysrcdir):
@@ -437,15 +442,10 @@ def addPython():
       if d=="config": # not required and contains links not supported by addFileToDist
         continue
       addFileToDist(pysrcdir+"/"+d, "mbsim-env/"+subdir+"/"+d)
-    # copy site-packages/numpy
-    if os.path.exists(pysrcdir+"/site-packages/numpy"):
-      addFileToDist(pysrcdir+"/site-packages/numpy", "mbsim-env/"+subdir+"/site-packages/numpy")
-    # copy site-packages/sympy
-    if os.path.exists(pysrcdir+"/site-packages/sympy"):
-      addFileToDist(pysrcdir+"/site-packages/sympy", "mbsim-env/"+subdir+"/site-packages/sympy")
-    # copy site-packages/mpmath
-    if os.path.exists(pysrcdir+"/site-packages/mpmath"):
-      addFileToDist(pysrcdir+"/site-packages/mpmath", "mbsim-env/"+subdir+"/site-packages/mpmath")
+    for sp in sitePackages:
+      if sp[1]==False and os.path.exists(pysrcdir+"/site-packages/"+sp[0]):
+        sp[1]=True
+        addFileToDist(pysrcdir+"/site-packages/"+sp[0], "mbsim-env/"+subdir+"/site-packages/"+sp[0])
 
     # on Windows copy also the DLLs dir
     if platform=="win":
@@ -464,6 +464,17 @@ $INSTDIR/bin/.python-envvar "$@"
   if platform=="win":
     addFileToDist("/3rdparty/local/python-win64/python.exe", "mbsim-env/bin/python.exe")
     addFileToDist("/3rdparty/local/python-win64/pythonw.exe", "mbsim-env/bin/pythonw.exe")
+
+  # add pip executable
+  if platform=="linux":
+    pipEnvvar='''#!/bin/bash
+INSTDIR="$(readlink -f $(dirname $0)/..)"
+$INSTDIR/bin/python $INSTDIR/bin/.pip-envvar "$@"
+'''
+    addStrToDist(pipEnvvar, "mbsim-env/bin/pip", True)
+    addFileToDist("/usr/bin/pip3.6", "mbsim-env/bin/.pip-envvar")
+  if platform=="win":
+    addFileToDist("/3rdparty/local/python-win64/Scripts/pip.exe", "mbsim-env/bin/pip.exe")
 
 
 

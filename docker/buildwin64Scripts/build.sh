@@ -132,7 +132,7 @@ while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1
   CFLAGS="$CFLAGS" \
   FFLAGS="$FFLAGS" \
   PYTHON_CFLAGS="-I/3rdparty/local/python-win64/include -DMS_WIN64" \
-  PYTHON_LIBS="-L/3rdparty/local/python-win64/libs -L/3rdparty/local/python-win64 -lpython34" \
+  PYTHON_LIBS="-L/3rdparty/local/python-win64/libs -L/3rdparty/local/python-win64 -lpython36" \
   PYTHON_BIN="/3rdparty/local/python-win64/python.exe" \
   COIN_LIBS="-L/3rdparty/local/lib -lCoin" \
   COIN_CFLAGS=-I/3rdparty/local/include \
