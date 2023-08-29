@@ -225,7 +225,8 @@ NOTE:
   View the plots with h5plotserie and view the animation with openmbv.
 - Build your own models using the GUI: <install-dir>/mbsim-env/bin/mbsimgui
 
-Have fun!'''%(note, scriptExt)
+Have fun!
+'''%(note, scriptExt)
 
   addStrToDist(text, 'mbsim-env/README.txt')
 
@@ -323,7 +324,8 @@ if [ -z "$ERROR" ]; then
 else
   echo "THE FOLLOWING TESTS FAILED:"
   echo "$ERROR"
-fi''' % ('\n'.join(map(addMBSimEnvTestExampleLinux, basicExamples())))
+fi
+''' % ('\n'.join(map(addMBSimEnvTestExampleLinux, basicExamples())))
 
   if platform=="win":
     text=r'''@echo off
@@ -383,7 +385,8 @@ if "%%ERROR%%"=="" (
   echo %%ERROR%%
 )
 
-cd "%%PWD%%"''' % ('\n'.join(map(addMBSimEnvTestExampleWin, basicExamples())))
+cd "%%PWD%%"
+''' % ('\n'.join(map(addMBSimEnvTestExampleWin, basicExamples())))
 
   addStrToDist(text, 'mbsim-env/bin/mbsim-env-test'+('.bat' if platform=="win" else ""), True)
 
@@ -466,7 +469,8 @@ $INSTDIR/bin/.python-envvar "$@"
     pythonData=r'''@echo off
 set INSTDIR=%~dp0..
 set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages
-"%INSTDIR%\bin\.python-envvar.exe" $*'''
+"%INSTDIR%\bin\.python-envvar.exe" %*
+'''
     addStrToDist(pythonData, "mbsim-env/bin/python.bat", True)
     addFileToDist("/3rdparty/local/python-win64/python.exe", "mbsim-env/bin/.python-envvar.exe")
 
@@ -484,7 +488,8 @@ $INSTDIR/bin/python -m pip "$@"
 set INSTDIR=%~dp0..
 set PIP_TARGET=%INSTDIR%\..\mbsim-env-python-site-packages
 set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages
-"%INSTDIR%\bin\.python-envvar.exe" -m pip %*'''
+"%INSTDIR%\bin\.python-envvar.exe" -m pip %*
+'''
     addStrToDist(pipData, "mbsim-env/bin/pip.bat", True)
 
 
