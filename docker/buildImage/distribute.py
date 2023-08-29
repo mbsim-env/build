@@ -454,22 +454,28 @@ def addPython():
 
   # add python executable
   if platform=="linux":
-    pythonEnvvar='''#!/bin/bash
+    pythonData='''#!/bin/bash
 INSTDIR="$(readlink -f $(dirname $0)/..)"
 export LD_LIBRARY_PATH="$INSTDIR/lib"
+export PYTHONPATH=$INSTDIR/../mbsim-env-python-site-packages
 $INSTDIR/bin/.python-envvar "$@"
 '''
-    addStrToDist(pythonEnvvar, "mbsim-env/bin/python", True)
+    addStrToDist(pythonData, "mbsim-env/bin/python", True)
     addFileToDist("/usr/bin/python3.6", "mbsim-env/bin/.python-envvar")
   if platform=="win":
-    addFileToDist("/3rdparty/local/python-win64/python.exe", "mbsim-env/bin/python.exe")
-    addFileToDist("/3rdparty/local/python-win64/pythonw.exe", "mbsim-env/bin/pythonw.exe")
+    pythonData=r'''@echo off
+set INSTDIR=%~dp0..
+set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages
+"%INSTDIR%\bin\.python-envvar.exe" $*'''
+    addStrToDist(pythonData, "mbsim-env/bin/python.bat", True)
+    addFileToDist("/3rdparty/local/python-win64/python.exe", "mbsim-env/bin/.python-envvar.exe")
 
   # add pip executable
   if platform=="linux":
     pipData='''#!/bin/bash
 INSTDIR="$(readlink -f $(dirname $0)/..)"
 export PIP_TARGET=$INSTDIR/../mbsim-env-python-site-packages
+export PYTHONPATH=$INSTDIR/../mbsim-env-python-site-packages
 $INSTDIR/bin/python -m pip "$@"
 '''
     addStrToDist(pipData, "mbsim-env/bin/pip", True)
@@ -477,7 +483,8 @@ $INSTDIR/bin/python -m pip "$@"
     pipData=r'''@echo off
 set INSTDIR=%~dp0..
 set PIP_TARGET=%INSTDIR%\..\mbsim-env-python-site-packages
-"%INSTDIR%\bin\python.exe" -m pip %*'''
+set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages
+"%INSTDIR%\bin\.python-envvar.exe" -m pip %*'''
     addStrToDist(pipData, "mbsim-env/bin/pip.bat", True)
 
 
