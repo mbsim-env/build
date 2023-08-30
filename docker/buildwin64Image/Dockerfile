@@ -213,6 +213,11 @@ RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser d
   mkdir /mbsim-env /mbsim-ccache && \
   chown dockeruser:dockeruser /mbsim-env /mbsim-ccache
 
+# configure wine
+COPY docker/buildwin64Image/wine.inf /context/wine.inf
+RUN P=$(winepath -w /3rdparty/local/python-win64 | sed -re 's+\\+\\\\+g'); \
+    sed -re "s+%_PYTHONHOME_%+$P+" /context/wine.inf >> /opt/wine-stable/share/wine/wine.inf
+
 # init conf
 USER dockeruser:dockeruser
 RUN wine cmd /c echo dummy && wineserver -w
