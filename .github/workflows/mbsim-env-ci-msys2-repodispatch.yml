@@ -1,7 +1,6 @@
 name: CI msys2 (Repo-Dispatch)
 on:
-  repository_dispatch:
-    types: [ci]
+  push:
 env:
   PKG_CONFIG_PATH: $GITHUB_WORKSPACE/local/lib/pkgconfig
   MBSIM_SWIG: 1
