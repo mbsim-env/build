@@ -2,7 +2,6 @@ name: CI msys2 (Repo-Dispatch)
 on:
   push:
 env:
-  PKG_CONFIG_PATH: $GITHUB_WORKSPACE/local/lib/pkgconfig
   MBSIM_SWIG: 1
 jobs:
   build:
@@ -56,7 +55,7 @@ jobs:
           git clone https://github.com/mbsim-env/mbsim.git
       - name: "fmatvec"
         run: >
-          echo $PKG_CONFIG_PATH && echo $MBSIM_SWIG && echo GITHUB_WORKSPACE &&
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           mkdir fmatvec-build &&
           cd fmatvec-build &&
           cmake $GITHUB_WORKSPACE/fmatvec -DSPOOLES_INCLUDE_DIRS=/ucrt64/include/spooles -DSPOOLES_LIBRARIES=/ucrt64/lib/libspooles.a -GNinja -DCMAKE_INSTALL_PREFIX=$GITHUB_WORKSPACE/local &&
@@ -65,6 +64,7 @@ jobs:
           ninja check
       - name: "hdf5serie"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd hdf5serie/hdf5serie && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir hdf5serie-build/hdf5serie &&
           cd hdf5serie-build/hdf5serie &&
@@ -74,6 +74,7 @@ jobs:
           make check
       - name: "h5plotserie"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd hdf5serie/h5plotserie && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir hdf5serie-build/h5plotserie &&
           cd hdf5serie-build/h5plotserie &&
@@ -83,6 +84,7 @@ jobs:
           make check
       - name: "mbxmlutils"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd openmbv/mbxmlutils && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir openmbv-build/mbxmlutils &&
           cd openmbv-build/mbxmlutils &&
@@ -92,6 +94,7 @@ jobs:
           make check
       - name: "openmbvcppinterface"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd openmbv/openmbvcppinterface && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir openmbv-build/openmbvcppinterface &&
           cd openmbv-build/openmbvcppinterface &&
@@ -101,6 +104,7 @@ jobs:
           make check
       - name: "openmbv"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd openmbv/openmbv && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir openmbv-build/openmbv &&
           cd openmbv-build/openmbv &&
@@ -110,6 +114,7 @@ jobs:
           make check
       - name: "kernel"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd mbsim/kernel && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir mbsim-build/kernel &&
           cd mbsim-build/kernel &&
@@ -119,6 +124,7 @@ jobs:
           make check
       - name: "mbsimControl"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd mbsim/modules/mbsimControl && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir mbsim-build/modules/mbsimControl &&
           cd mbsim-build/modules/mbsimControl &&
@@ -128,6 +134,7 @@ jobs:
           make check
       - name: "mbsimElectronics"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd mbsim/modules/mbsimElectronics && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir mbsim-build/modules/mbsimElectronics &&
           cd mbsim-build/modules/mbsimElectronics &&
@@ -137,6 +144,7 @@ jobs:
           make check
       - name: "mbsimFlexibleBody"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd mbsim/modules/mbsimFlexibleBody && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir mbsim-build/modules/mbsimFlexibleBody &&
           cd mbsim-build/modules/mbsimFlexibleBody &&
@@ -146,6 +154,7 @@ jobs:
           make check
       - name: "mbsimHydraulics"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd mbsim/modules/mbsimHydraulics && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir mbsim-build/modules/mbsimHydraulics &&
           cd mbsim-build/modules/mbsimHydraulics &&
@@ -155,6 +164,7 @@ jobs:
           make check
       - name: "mbsimInterface"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd mbsim/modules/mbsimInterface && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir mbsim-build/modules/mbsimInterface &&
           cd mbsim-build/modules/mbsimInterface &&
@@ -164,6 +174,7 @@ jobs:
           make check
       - name: "mbsimPhysics"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd mbsim/modules/mbsimPhysics && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir mbsim-build/modules/mbsimPhysics &&
           cd mbsim-build/modules/mbsimPhysics &&
@@ -173,6 +184,7 @@ jobs:
           make check
       - name: "mbsimxml"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd mbsim/mbsimxml && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir mbsim-build/mbsimxml &&
           cd mbsim-build/mbsimxml &&
@@ -182,6 +194,7 @@ jobs:
           make check
       - name: "mbsimfmi"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd mbsim/mbsimfmi && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir mbsim-build/mbsimfmi &&
           cd mbsim-build/mbsimfmi &&
@@ -191,6 +204,7 @@ jobs:
           make check
       - name: "mbsimgui"
         run: >
+          PKG_CONFIG_PATH=$GITHUB_WORKSPACE/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
           (cd mbsim/mbsimgui && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
           mkdir mbsim-build/mbsimgui &&
           cd mbsim-build/mbsimgui &&
