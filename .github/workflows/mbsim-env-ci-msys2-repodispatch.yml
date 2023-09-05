@@ -46,7 +46,7 @@ jobs:
             patch
       - uses: actions/checkout@v4
       - name: "patch swig"
-        run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u $GITHUB_WORKSPACE)/build/.github/workflows/swig.git.patch
+        run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u $GITHUB_WORKSPACE)/.github/workflows/swig.git.patch
       - name: "Checkout"
         run: >
           git clone https://github.com/mbsim-env/fmatvec.git &&
