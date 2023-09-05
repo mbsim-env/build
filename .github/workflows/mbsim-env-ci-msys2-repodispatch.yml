@@ -45,11 +45,8 @@ jobs:
             mingw-w64-ucrt-x86_64-xerces-c
             patch
       - uses: actions/checkout@v4
-      - run: find / -mount -name swig.git.patch
-      - run: find / -mount -name octrun.swg
-#      - name: "patch swig"
-#        run: >
-#          patch -p2 < ~/swig.git.patch
+      - name: "patch swig"
+        run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u $GITHUB_WORKSPACE)/build/.github/workflows/swig.git.patch
       - name: "Checkout"
         run: >
           git clone https://github.com/mbsim-env/fmatvec.git &&
