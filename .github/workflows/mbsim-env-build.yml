@@ -54,6 +54,7 @@ env:
   mbsimenvsec_codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
   mbsimenvsec_codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
   mbsimenvsec_codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+  GH_TOKEN: ${{github.token}}
 jobs:
   build:
     name: "${{matrix.data.os.buildType}}: ${{matrix.data.branches.fmatvecBranch}} ${{matrix.data.branches.hdf5serieBranch}} ${{matrix.data.branches.openmbvBranch}} ${{matrix.data.branches.mbsimBranch}}"
