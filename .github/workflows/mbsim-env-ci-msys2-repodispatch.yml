@@ -18,21 +18,17 @@ jobs:
           update: true
           msystem: UCRT64
           install: >
-            autoconf-wrapper
-            automake-wrapper
             dos2unix
             git
-            libtool
+            patch
             mingw-w64-ucrt-x86_64-arpack
             mingw-w64-ucrt-x86_64-autotools
             mingw-w64-ucrt-x86_64-boost
             mingw-w64-ucrt-x86_64-cmake
             mingw-w64-ucrt-x86_64-doxygen
             mingw-w64-ucrt-x86_64-gcc
-            mingw-w64-ucrt-x86_64-gdb
             mingw-w64-ucrt-x86_64-graphviz
             mingw-w64-ucrt-x86_64-hdf5
-            mingw-w64-ucrt-x86_64-neovim-qt
             mingw-w64-ucrt-x86_64-octave
             mingw-w64-ucrt-x86_64-openblas
             mingw-w64-ucrt-x86_64-python-numpy
@@ -43,7 +39,6 @@ jobs:
             mingw-w64-ucrt-x86_64-swig
             mingw-w64-ucrt-x86_64-xalan-c
             mingw-w64-ucrt-x86_64-xerces-c
-            patch
       - uses: actions/checkout@v4
       - name: "patch swig"
         run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u $GITHUB_WORKSPACE)/.github/workflows/swig.git.patch
@@ -70,138 +65,138 @@ jobs:
           $(cygpath -u $GITHUB_WORKSPACE)/hdf5serie/hdf5serie/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
           make -j 2 &&
           make install
-      - name: "h5plotserie"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd hdf5serie/h5plotserie && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p hdf5serie-build/h5plotserie &&
-          cd hdf5serie-build/h5plotserie &&
-          $(cygpath -u $GITHUB_WORKSPACE)/hdf5serie/h5plotserie/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 &&
-          make install
-      - name: "mbxmlutils"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd openmbv/mbxmlutils && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p openmbv-build/mbxmlutils &&
-          cd openmbv-build/mbxmlutils &&
-          $(cygpath -u $GITHUB_WORKSPACE)/openmbv/mbxmlutils/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 -k;
-          make install -k; :
-      - name: "openmbvcppinterface"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd openmbv/openmbvcppinterface && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p openmbv-build/openmbvcppinterface &&
-          cd openmbv-build/openmbvcppinterface &&
-          $(cygpath -u $GITHUB_WORKSPACE)/openmbv/openmbvcppinterface/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 &&
-          make install
-      - name: "openmbv"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd openmbv/openmbv && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p openmbv-build/openmbv &&
-          cd openmbv-build/openmbv &&
-          $(cygpath -u $GITHUB_WORKSPACE)/openmbv/openmbv/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 &&
-          make install
-      - name: "kernel"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd mbsim/kernel && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p mbsim-build/kernel &&
-          cd mbsim-build/kernel &&
-          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/kernel/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 &&
-          make install
-      - name: "nurbs"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd mbsim/thirdparty/nurbs++ && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p mbsim-build/thirdparty/nurbs++ &&
-          cd mbsim-build/thirdparty/nurbs++ &&
-          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/thirdparty/nurbs++/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 &&
-          make install
-      - name: "mbsimControl"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd mbsim/modules/mbsimControl && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p mbsim-build/modules/mbsimControl &&
-          cd mbsim-build/modules/mbsimControl &&
-          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/modules/mbsimControl/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 &&
-          make install
-      - name: "mbsimElectronics"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd mbsim/modules/mbsimElectronics && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p mbsim-build/modules/mbsimElectronics &&
-          cd mbsim-build/modules/mbsimElectronics &&
-          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/modules/mbsimElectronics/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 &&
-          make install
-      - name: "mbsimFlexibleBody"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd mbsim/modules/mbsimFlexibleBody && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p mbsim-build/modules/mbsimFlexibleBody &&
-          cd mbsim-build/modules/mbsimFlexibleBody &&
-          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/modules/mbsimFlexibleBody/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 &&
-          make install
-      - name: "mbsimHydraulics"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd mbsim/modules/mbsimHydraulics && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p mbsim-build/modules/mbsimHydraulics &&
-          cd mbsim-build/modules/mbsimHydraulics &&
-          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/modules/mbsimHydraulics/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 &&
-          make install
-      - name: "mbsimInterface"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd mbsim/modules/mbsimInterface && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p mbsim-build/modules/mbsimInterface &&
-          cd mbsim-build/modules/mbsimInterface &&
-          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/modules/mbsimInterface/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 &&
-          make install
-      - name: "mbsimPhysics"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd mbsim/modules/mbsimPhysics && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p mbsim-build/modules/mbsimPhysics &&
-          cd mbsim-build/modules/mbsimPhysics &&
-          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/modules/mbsimPhysics/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 &&
-          make install
-      - name: "mbsimxml"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd mbsim/mbsimxml && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p mbsim-build/mbsimxml &&
-          cd mbsim-build/mbsimxml &&
-          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/mbsimxml/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 &&
-          make install
-      - name: "mbsimfmi"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd mbsim/mbsimfmi && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p mbsim-build/mbsimfmi &&
-          cd mbsim-build/mbsimfmi &&
-          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/mbsimfmi/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 &&
-          make install
-      - name: "mbsimgui"
-        run: >
-          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
-          (cd mbsim/mbsimgui && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
-          mkdir -p mbsim-build/mbsimgui &&
-          cd mbsim-build/mbsimgui &&
-          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/mbsimgui/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
-          make -j 2 &&
-          make install
+#      - name: "h5plotserie"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd hdf5serie/h5plotserie && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p hdf5serie-build/h5plotserie &&
+#          cd hdf5serie-build/h5plotserie &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/hdf5serie/h5plotserie/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 &&
+#          make install
+#      - name: "mbxmlutils"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd openmbv/mbxmlutils && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p openmbv-build/mbxmlutils &&
+#          cd openmbv-build/mbxmlutils &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/openmbv/mbxmlutils/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 -k;
+#          make install -k; :
+#      - name: "openmbvcppinterface"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd openmbv/openmbvcppinterface && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p openmbv-build/openmbvcppinterface &&
+#          cd openmbv-build/openmbvcppinterface &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/openmbv/openmbvcppinterface/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 &&
+#          make install
+#      - name: "openmbv"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd openmbv/openmbv && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p openmbv-build/openmbv &&
+#          cd openmbv-build/openmbv &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/openmbv/openmbv/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 &&
+#          make install
+#      - name: "kernel"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd mbsim/kernel && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p mbsim-build/kernel &&
+#          cd mbsim-build/kernel &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/kernel/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 &&
+#          make install
+#      - name: "nurbs"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd mbsim/thirdparty/nurbs++ && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p mbsim-build/thirdparty/nurbs++ &&
+#          cd mbsim-build/thirdparty/nurbs++ &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/thirdparty/nurbs++/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 &&
+#          make install
+#      - name: "mbsimControl"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd mbsim/modules/mbsimControl && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p mbsim-build/modules/mbsimControl &&
+#          cd mbsim-build/modules/mbsimControl &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/modules/mbsimControl/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 &&
+#          make install
+#      - name: "mbsimElectronics"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd mbsim/modules/mbsimElectronics && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p mbsim-build/modules/mbsimElectronics &&
+#          cd mbsim-build/modules/mbsimElectronics &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/modules/mbsimElectronics/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 &&
+#          make install
+#      - name: "mbsimFlexibleBody"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd mbsim/modules/mbsimFlexibleBody && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p mbsim-build/modules/mbsimFlexibleBody &&
+#          cd mbsim-build/modules/mbsimFlexibleBody &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/modules/mbsimFlexibleBody/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 &&
+#          make install
+#      - name: "mbsimHydraulics"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd mbsim/modules/mbsimHydraulics && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p mbsim-build/modules/mbsimHydraulics &&
+#          cd mbsim-build/modules/mbsimHydraulics &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/modules/mbsimHydraulics/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 &&
+#          make install
+#      - name: "mbsimInterface"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd mbsim/modules/mbsimInterface && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p mbsim-build/modules/mbsimInterface &&
+#          cd mbsim-build/modules/mbsimInterface &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/modules/mbsimInterface/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 &&
+#          make install
+#      - name: "mbsimPhysics"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd mbsim/modules/mbsimPhysics && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p mbsim-build/modules/mbsimPhysics &&
+#          cd mbsim-build/modules/mbsimPhysics &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/modules/mbsimPhysics/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 &&
+#          make install
+#      - name: "mbsimxml"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd mbsim/mbsimxml && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p mbsim-build/mbsimxml &&
+#          cd mbsim-build/mbsimxml &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/mbsimxml/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 &&
+#          make install
+#      - name: "mbsimfmi"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd mbsim/mbsimfmi && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p mbsim-build/mbsimfmi &&
+#          cd mbsim-build/mbsimfmi &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/mbsimfmi/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 &&
+#          make install
+#      - name: "mbsimgui"
+#        run: >
+#          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+#          (cd mbsim/mbsimgui && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+#          mkdir -p mbsim-build/mbsimgui &&
+#          cd mbsim-build/mbsimgui &&
+#          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/mbsimgui/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+#          make -j 2 &&
+#          make install
