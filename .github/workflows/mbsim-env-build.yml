@@ -54,7 +54,7 @@ env:
   mbsimenvsec_codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
   mbsimenvsec_codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
   mbsimenvsec_codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
-  GH_TOKEN: ${{github.token}}
+  GH_TOKEN: ${{github.token}} # needed for gh-actions-cache
 jobs:
   build:
     name: "${{matrix.data.os.buildType}}: ${{matrix.data.branches.fmatvecBranch}} ${{matrix.data.branches.hdf5serieBranch}} ${{matrix.data.branches.openmbvBranch}} ${{matrix.data.branches.mbsimBranch}}"
@@ -259,9 +259,9 @@ jobs:
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         run: >
           gh extension install actions/gh-actions-cache &&
-          KEYS=$(gh actions-cache list --key ccache-${{matrix.data.os.buildType}}-- --order asc --sort created-at | tail -n +2) &&
+          KEYS=$(gh actions-cache list --key ccache-${{matrix.data.os.buildType}}-- --order asc --sort created-at --repo ${{github.repository}} --branch ${{github.ref_name}}| tail -n +2) &&
           echo $KEYS
-#          gh actions-cache remove $KEYS --confirm
+#          gh actions-cache delete $KEYS --confirm -- --repo ${{github.repository}} --branch ${{github.ref_name}}
       - name: "Dump resources"
         if: ${{always()}}
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
