@@ -7,21 +7,14 @@ import argparse
 from os.path import join as pj
 import subprocess
 import re
-import glob
 import datetime
-import fileinput
 import shutil
-import codecs
-import hmac
 import json
-import fcntl
 import io
-import urllib.request
 import django
 import base.helper
 import mbsimenvSecrets
 import builds
-import mbsimenv
 import tempfile
 import psutil
 
