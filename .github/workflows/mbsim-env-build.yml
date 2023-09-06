@@ -54,6 +54,7 @@ env:
   mbsimenvsec_codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
   mbsimenvsec_codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
   mbsimenvsec_codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
+  GH_TOKEN: ${{github.token}}
 jobs:
   build:
     name: "${{matrix.data.os.buildType}}: ${{matrix.data.branches.fmatvecBranch}} ${{matrix.data.branches.hdf5serieBranch}} ${{matrix.data.branches.openmbvBranch}} ${{matrix.data.branches.mbsimBranch}}"
@@ -169,9 +170,9 @@ jobs:
           print("jobs.build.steps.matrixUUID.outputs.matrixUUID:\n"+str(uuid.uuid4()))
           with open("${{github.output}}", "at") as o:
             print("matrixUUID="+str(uuid.uuid4()), file=o)
-      - name: "Cache: ccache"
+      - name: "Cache restore: ccache"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
-        uses: actions/cache@v3
+        uses: actions/cache/restore@v3
         with:
           path: ${{github.workspace}}/mbsim-ccache
           key: ccache-${{matrix.data.os.buildType}}--${{steps.matrixUUID.outputs.matrixUUID}}
@@ -248,6 +249,19 @@ jobs:
           name: mbsim-env-local-cov
           retention-days: 1
           path: ${{github.workspace}}/local-cov.tar.gz
+      - name: "Cache save: ccache"
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
+        uses: actions/cache/save@v3
+        with:
+          path: ${{github.workspace}}/mbsim-ccache
+          key: ccache-${{matrix.data.os.buildType}}--${{steps.matrixUUID.outputs.matrixUUID}}
+      - name: "Cache remove-old: ccache"
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
+        run: >
+          gh extension install actions/gh-actions-cache &&
+          KEYS=$(gh actions-cache list --key ccache-${{matrix.data.os.buildType}}-- --order asc --sort created-at | tail -n +2) &&
+          echo $KEYS
+#          gh actions-cache remove $KEYS --confirm
       - name: "Dump resources"
         if: ${{always()}}
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
