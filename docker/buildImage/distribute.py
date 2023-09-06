@@ -307,16 +307,17 @@ fi
 
 echo "H5PLOTSERIE"
 cd $INSTDIR/examples/xml/hierachical_modelling
-$INSTDIR/bin/h5plotserie TS.mbsh5 || ERROR="$ERROR H5PLOTSERIE"
+$INSTDIR/bin/h5plotserie MBS.mbsim.mbsh5 || ERROR="$ERROR H5PLOTSERIE"
 echo "DONE"
 
 echo "OPENMBV"
 cd $INSTDIR/examples/xml/hierachical_modelling
-$INSTDIR/bin/openmbv TS.ombvx || ERROR="$ERROR OPENMBV"
+$INSTDIR/bin/openmbv MBS.mbsim.ombvx || ERROR="$ERROR OPENMBV"
 echo "DONE"
 
 echo "MBSIMGUI"
-$INSTDIR/bin/mbsimgui || ERROR="$ERROR MBSIMGUI"
+cd $INSTDIR/examples/xml/hierachical_modelling
+$INSTDIR/bin/mbsimgui MBS.mbsx || ERROR="$ERROR MBSIMGUI"
 echo "DONE"
 
 if [ -z "$ERROR" ]; then
@@ -363,18 +364,19 @@ IF "%%MBSIMENV_TEST_JAVA%%"=="1" (
 
 echo H5PLOTSERIE
 cd "%%INSTDIR%%\examples\xml\hierachical_modelling"
-"%%INSTDIR%%\bin\h5plotserie.exe" TS.mbsh5
+"%%INSTDIR%%\bin\h5plotserie.exe" MBS.mbsim.mbsh5
 IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% H5PLOTSERIE
 echo DONE
 
 echo OPENMBV
 cd "%%INSTDIR%%\examples\xml\hierachical_modelling"
-"%%INSTDIR%%\bin\openmbv.exe" TS.ombvx
+"%%INSTDIR%%\bin\openmbv.exe" MBS.mbsim.ombvx
 IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% OPENMBV
 echo DONE
 
 echo MBSIMGUI
-"%%INSTDIR%%\bin\mbsimgui.exe"
+cd "%%INSTDIR%%\examples\xml\hierachical_modelling"
+"%%INSTDIR%%\bin\mbsimgui.exe" MBS.mbsx
 IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% MBSIMGUI
 echo DONE
 
