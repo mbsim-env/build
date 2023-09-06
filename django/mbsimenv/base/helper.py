@@ -6,7 +6,6 @@ import os
 import glob
 import subprocess
 import threading
-import fcntl
 import time
 import re
 import string
@@ -257,7 +256,11 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
     guard.start()
   # make stdout none blocking
   fd=proc.stdout.fileno()
-  fcntl.fcntl(fd, fcntl.F_SETFL, fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NONBLOCK)
+  try:
+    import fcntl
+    fcntl.fcntl(fd, fcntl.F_SETFL, fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NONBLOCK)
+  except:
+    pass
   # read all output
   dataNP=b'' # not already processed bytes (required since we read 100 bytes which may break a unicode multi byte character)
   sleepTime=0.01
