@@ -115,6 +115,15 @@ jobs:
           $(cygpath -u $GITHUB_WORKSPACE)/mbsim/kernel/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
           make -j 2 &&
           make install
+      - name: "nurbs"
+        run: >
+          PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
+          (cd mbsim/thirdparty/nurbs++ && aclocal && libtoolize && autoheader && automake -a && autoconf) &&
+          mkdir -p mbsim-build/thirdparty/nurbs++ &&
+          cd mbsim-build/thirdparty/nurbs++ &&
+          $(cygpath -u $GITHUB_WORKSPACE)/mbsim/thirdparty/nurbs++/configure --prefix=$(cygpath -u $GITHUB_WORKSPACE)/local --with-boost-system-lib=boost_system-mt --with-boost-filesystem-lib=boost_filesystem-mt --with-boost-chrono-lib=boost_chrono-mt --with-boost-thread-lib=boost_thread-mt --with-boost-program-options-lib=boost_program_options-mt --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 --with-qwt-lib-name=qwt-qt5 --enable-python --with-boost-regex-lib=boost_regex-mt --with-boost-timer-lib=boost_timer-mt --with-boost-date-time-lib=boost_date_time-mt &&
+          make -j 2 &&
+          make install
       - name: "mbsimControl"
         run: >
           PKG_CONFIG_PATH=$(cygpath -u $GITHUB_WORKSPACE)/local/lib/pkgconfig:$PKG_CONFIG_PATH &&
