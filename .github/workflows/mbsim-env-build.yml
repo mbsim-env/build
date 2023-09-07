@@ -259,9 +259,8 @@ jobs:
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         run: >
           gh extension install actions/gh-actions-cache &&
-          KEYS=$(gh actions-cache list --key ccache-${{matrix.data.os.buildType}}-- --order asc --sort created-at --repo ${{github.repository}} --branch ${{github.ref_name}}| tail -n +2) &&
-          echo $KEYS
-#          gh actions-cache delete $KEYS --confirm -- --repo ${{github.repository}} --branch ${{github.ref_name}}
+          KEYS=$(gh actions-cache list --key ccache-${{matrix.data.os.buildType}}-- --order desc --sort created-at --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1) &&
+          gh actions-cache delete $KEYS --confirm --repo ${{github.repository}} --branch ${{github.ref_name}}
       - name: "Dump resources"
         if: ${{always()}}
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
