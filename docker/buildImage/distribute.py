@@ -254,20 +254,20 @@ def addMBSimEnvTestExampleWin(ex):
 cd "%%INSTDIR%%\examples\%s"
 ''' % (ex, ex)
   if os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.flat.mbsx"):
-    text+=r'''"%INSTDIR%\bin\mbsimflatxml" MBS.flat.mbsx'''+'\n'+\
+    text+=r'''call "%INSTDIR%\bin\mbsimflatxml" MBS.flat.mbsx'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% %s''' % (ex) + '\n'
   elif os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/MBS.mbsx"):
-    text+=r'''"%INSTDIR%\bin\mbsimxml" MBS.mbsx'''+'\n'+\
+    text+=r'''call "%INSTDIR%\bin\mbsimxml" MBS.mbsx'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% %s''' % (ex) + '\n'
   elif os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/FMI.mbsx"):
-    text+=r'''"%INSTDIR%\bin\mbsimCreateFMU" --nocompress FMI.mbsx'''+'\n'+\
+    text+=r'''call "%INSTDIR%\bin\mbsimCreateFMU" --nocompress FMI.mbsx'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% fmucre_%s''' % (ex) + '\n'
-    text+=r'''"%INSTDIR%\bin\fmuCheck.win64" -f -l 5 mbsim.fmu'''+'\n'+\
+    text+=r'''call "%INSTDIR%\bin\fmuCheck.win64" -f -l 5 mbsim.fmu'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% fmuch_%s''' % (ex) + '\n'
   elif os.path.exists(args.prefix+"/../mbsim/examples/"+ex+"/FMI_cosim.mbsx"):
-    text+=r'''"%INSTDIR%\bin\mbsimCreateFMU" --nocompress FMI_cosim.mbsx'''+'\n'+\
+    text+=r'''call "%INSTDIR%\bin\mbsimCreateFMU" --nocompress FMI_cosim.mbsx'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% fmucre_%s''' % (ex) + '\n'
-    text+=r'''"%INSTDIR%\bin\fmuCheck.win64" -f -l 5 mbsim.fmu'''+'\n'+\
+    text+=r'''call "%INSTDIR%\bin\fmuCheck.win64" -f -l 5 mbsim.fmu'''+'\n'+\
           r'''IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% fmuch_%s''' % (ex) + '\n'
   text+=r'''echo DONE
 '''
@@ -343,20 +343,20 @@ set OPENMBVCPPINTERFACE_PREFIX=%%INSTDIR%%
 
 echo OPENMBVCPPINTERFACE_SWIG_OCTAVE
 cd "%%INSTDIR%%\share\openmbvcppinterface\examples\swig"
-"%%INSTDIR%%\bin\octave-cli" octavetest.m
+call "%%INSTDIR%%\bin\octave-cli" octavetest.m
 IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% OPENMBVCPPINTERFACE_SWIG_OCTAVE
 echo DONE
 
 echo OPENMBVCPPINTERFACE_SWIG_PYTHON
 cd "%%INSTDIR%%\share\openmbvcppinterface\examples\swig"
-"%%INSTDIR%%\bin\python" pythontest.py
+call "%%INSTDIR%%\bin\python" pythontest.py
 IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% OPENMBVCPPINTERFACE_SWIG_PYTHON
 echo DONE
 
 IF "%%MBSIMENV_TEST_JAVA%%"=="1" (
   echo OPENMBVCPPINTERFACE_SWIG_JAVA
   cd "%%INSTDIR%%\share\openmbvcppinterface\examples\swig"
-  java -classpath .;%%INSTDIR%%/bin/openmbv.jar javatest
+  call java -classpath .;%%INSTDIR%%/bin/openmbv.jar javatest
   IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% OPENMBVCPPINTERFACE_SWIG_JAVA
   echo DONE
 )
@@ -364,19 +364,19 @@ IF "%%MBSIMENV_TEST_JAVA%%"=="1" (
 
 echo H5PLOTSERIE
 cd "%%INSTDIR%%\examples\xml\hierachical_modelling"
-"%%INSTDIR%%\bin\h5plotserie" MBS.mbsim.mbsh5
+call "%%INSTDIR%%\bin\h5plotserie" MBS.mbsim.mbsh5
 IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% H5PLOTSERIE
 echo DONE
 
 echo OPENMBV
 cd "%%INSTDIR%%\examples\xml\hierachical_modelling"
-"%%INSTDIR%%\bin\openmbv" MBS.mbsim.ombvx
+call "%%INSTDIR%%\bin\openmbv" MBS.mbsim.ombvx
 IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% OPENMBV
 echo DONE
 
 echo MBSIMGUI
 cd "%%INSTDIR%%\examples\xml\hierachical_modelling"
-"%%INSTDIR%%\bin\mbsimgui" MBS.mbsx
+call "%%INSTDIR%%\bin\mbsimgui" MBS.mbsx
 IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% MBSIMGUI
 echo DONE
 
