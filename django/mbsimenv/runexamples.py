@@ -1294,6 +1294,7 @@ def compareExample(ex):
           h5CurFile.close()
       finally:
         os.unlink(tempF.name)
+  base.helper.bulk_create(runexamples.models.CompareResultFile, cmpResFiles, refresh=True)
   # files in current but not in reference
   curFiles=[]
   curFiles.extend(glob.glob("*.fmuh5"))
@@ -1302,16 +1303,19 @@ def compareExample(ex):
   for curFile in curFiles:
     if not any(map(lambda x: x.h5FileName==curFile, refFiles)):
       cmpResFile=runexamples.models.CompareResultFile()
-      cmpResFiles.append(cmpResFile) # -> append to bulk_create later on
       cmpResFile.example=ex
       cmpResFile.h5Filename=curFile
+      cmpResFile.h5FileName=cmpResFile.h5Filename # this calls save on the dataset cmpResFile -> no bulk_create
+      with cmpResFile.h5File.open("wb") as fw:
+        with open(curFile, "rb") as fr:
+          base.helper.copyFile(fr, fw)
+      cmpResFile.save()
 
       cmpRes=runexamples.models.CompareResult()
       cmpRess.append(cmpRes)
       cmpRes.compareResultFile=cmpResFile
       cmpRes.result=runexamples.models.CompareResult.Result.FILENOTINREF
       nrFailed[0]+=1
-  base.helper.bulk_create(runexamples.models.CompareResultFile, cmpResFiles, refresh=True)
   base.helper.bulk_create(runexamples.models.CompareResult, cmpRess, refresh=False)
   ex.resultsFailed=0
   for rf in ex.resultFiles.all():
