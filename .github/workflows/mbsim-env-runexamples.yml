@@ -79,7 +79,7 @@ jobs:
         run: |
           BEFORE=$(df --output=used / | tail -n 1)
           #echo "Remove .NET (~1GB/~3sec)" && sudo rm -rf /usr/share/dotnet
-          #echo "Remove Android (~12GB/70sec)" && sudo rm -rf /usr/local/lib/android
+          echo "Remove Android (~12GB/70sec)" && sudo rm -rf /usr/local/lib/android
           echo "Remove CodeQL (~8GB/1sec)" && sudo rm -rf /opt/hostedtoolcache/CodeQL
           #echo "Remove Docker images (~4GB/15sec)" && sudo docker image prune --all --force > /dev/null
           AFTER=$(df --output=used / | tail -n 1)

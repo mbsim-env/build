@@ -166,8 +166,10 @@ if build or args.runExamplesPre:
         keepFilename=[]
         rfCurs=exCur.resultFiles.all()
         for rfCur in rfCurs:
-          if rfCur.h5FileName is None and rfCur.results[0].result!=runexamples.CompareResult.Result.FILENOTINCUR:
-            keepFilename.append(rfCur.h5Filename)
+          if rfCur.h5FileName is None:
+            firstRes=rfCur.results.all().first()
+            if firstRes is None or firstRes.result!=runexamples.models.CompareResult.Result.FILENOTINCUR:
+              keepFilename.append(rfCur.h5Filename)
         delete=[]
         for rfStatic in exStatic.references.all():
           if rfStatic.h5FileName not in keepFilename:
