@@ -353,9 +353,10 @@ def startLocalServer(port, onlyGetServerInfo=False):
       print("No server is running. Starting server. (only done the first time)")
       env=os.environ.copy()
       env['DJANGO_SETTINGS_MODULE']='mbsimenv.settings_'+django.conf.settings.MBSIMENV_TYPE
+      preexec_fn=os.setpgrp if os.name=="posix" else None
       p=subprocess.Popen([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../manage.py",
                           "runserver", "--insecure", "--noreload", "0.0.0.0:"+str(port)],
-                          preexec_fn=os.setpgrp, env=env)
+                          preexec_fn=preexec_fn, env=env)
       with open(pidfile, "w") as f:
         json.dump({"hostname": "localhost", "port": port}, f)
     else:

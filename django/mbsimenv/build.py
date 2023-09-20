@@ -34,6 +34,7 @@ if not hasattr(octicons, '__version__') or hasattr(octicons, 'default_app_config
 toolDependencies=dict()
 docDir=None
 args=None
+sh=[shutil.which("sh"), "--login"]
 
 def parseArguments():
   # command line option definition
@@ -81,6 +82,7 @@ def parseArguments():
   cfgOpts.add_argument("--buildFailedExit", default=None, type=int, help='Define the exit code when the build fails.')
   cfgOpts.add_argument("--buildRunID", default=None, type=int, help='Internal: use a already created Run ID.')
   cfgOpts.add_argument("--additionalTools", default=None, type=str, help='A json string of additional tools to process. (The format must follow the toolDependencies variable)')
+  cfgOpts.add_argument("--makeProg", default="make", type=str, help='Program to use as make (should be a gmake compatible make)')
   
   outOpts=argparser.add_argument_group('Output Options')
   outOpts.add_argument("--buildType", default="local", type=str, help="A description of the build type (e.g: linux64-dailydebug)")
@@ -301,12 +303,6 @@ def main():
   # set docDir
   global docDir
   docDir=pj(args.prefix, "share", "mbxmlutils", "doc")
-  # append path to PKG_CONFIG_PATH to find mbxmlutils and co. by runexmaples.py
-  pkgConfigDir=os.path.normpath(pj(docDir, os.pardir, os.pardir, os.pardir, "lib", "pkgconfig"))
-  if "PKG_CONFIG_PATH" in os.environ:
-    os.environ["PKG_CONFIG_PATH"]=pkgConfigDir+os.pathsep+os.environ["PKG_CONFIG_PATH"]
-  else:
-    os.environ["PKG_CONFIG_PATH"]=pkgConfigDir
 
   # enable coverage
   if args.coverage:
@@ -636,34 +632,35 @@ def configure(tool):
         os.chdir(savedDir)
         os.chdir(pj(args.sourceDir, tool.toolName))
         print("\n\nRUNNING aclocal\n", file=configureFD); configureFD.flush()
-        if base.helper.subprocessCall(["aclocal", "--force"], configureFD)!=0:
+        if base.helper.subprocessCall(sh+["aclocal", "--force"], configureFD)!=0:
           raise RuntimeError("aclocal failed")
         print("\n\nRUNNING autoheader\n", file=configureFD); configureFD.flush()
-        if base.helper.subprocessCall(["autoheader", "--force"], configureFD)!=0:
+        if base.helper.subprocessCall(sh+["autoheader", "--force"], configureFD)!=0:
           raise RuntimeError("autoheader failed")
         print("\n\nRUNNING libtoolize\n", file=configureFD); configureFD.flush()
-        if base.helper.subprocessCall(["libtoolize", "-c", "--force"], configureFD)!=0:
+        if base.helper.subprocessCall(sh+["libtoolize", "-c", "--force"], configureFD)!=0:
           raise RuntimeError("libtoolize failed")
         print("\n\nRUNNING automake\n", file=configureFD); configureFD.flush()
-        if base.helper.subprocessCall(["automake", "-a", "-c", "-f"], configureFD)!=0:
+        if base.helper.subprocessCall(sh+["automake", "-a", "-c", "-f"], configureFD)!=0:
           raise RuntimeError("automake failed")
         print("\n\nRUNNING autoconf\n", file=configureFD); configureFD.flush()
-        if base.helper.subprocessCall(["autoconf", "--force"], configureFD)!=0:
+        if base.helper.subprocessCall(sh+["autoconf", "--force"], configureFD)!=0:
           raise RuntimeError("autoconf failed")
         print("\n\nRUNNING autoreconf\n", file=configureFD); configureFD.flush()
-        if base.helper.subprocessCall(["autoreconf", "--force"], configureFD)!=0:
+        if base.helper.subprocessCall(sh+["autoreconf", "--force"], configureFD)!=0:
           raise RuntimeError("autoreconf failed")
       # configure
       os.chdir(savedDir)
       os.chdir(pj(args.sourceDir, buildTool(tool.toolName)))
       print("\n\nRUNNING configure\n", file=configureFD); configureFD.flush()
       if args.prefix is None:
-        if base.helper.subprocessCall(["./config.status", "--recheck"], configureFD)!=0:
+        if base.helper.subprocessCall(sh+["./config.status", "--recheck"], configureFD)!=0:
           raise RuntimeError("configure failed")
       else:
-        command=[pj(args.sourceDir, tool.toolName, "configure"), "--prefix", args.prefix]
+        command=sh+[os.path.relpath(pj(args.sourceDir, tool.toolName, "configure")), "--prefix", args.prefix] # use relpath to configure script to avoid Windows/Unix path problems with msys2
         command.extend(args.passToConfigure)
-        if base.helper.subprocessCall(command, configureFD)!=0:
+        pkgConfigDir=os.path.normpath(pj(args.prefix, "lib", "pkgconfig"))
+        if base.helper.subprocessCall(command+["PKG_CONFIG_PATH="+pkgConfigDir], configureFD)!=0:
           raise RuntimeError("configure failed")
     elif cmake and (not args.disableConfigure or not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName), "CMakeCache.txt"))):
       run=1
@@ -712,7 +709,7 @@ def make(tool):
   makeFD=io.StringIO()
   run=0
   cmake=not os.path.exists(pj(args.sourceDir, tool.toolName, "configure.ac"))
-  buildCmd=["make"] if not cmake else ["ninja", "-v"]
+  buildCmd=[args.makeProg] if not cmake else ["ninja", "-v"]
   try:
     if not args.disableMake:
       run=1
@@ -777,7 +774,7 @@ def check(tool):
   checkFD=io.StringIO()
   run=0
   cmake=not os.path.exists(pj(args.sourceDir, tool.toolName, "configure.ac"))
-  buildCmd=["make"] if not cmake else ["ninja", "-v"]
+  buildCmd=[args.makeProg] if not cmake else ["ninja", "-v"]
   if not args.disableMakeCheck:
     run=1
     # check
@@ -829,13 +826,13 @@ def doc(tool, disabled, docDirName):
       # make doc
       errStr=""
       print("\n\nRUNNING make clean\n", file=docFD); docFD.flush()
-      if base.helper.subprocessCall(["make", "clean"], docFD)!=0:
+      if base.helper.subprocessCall([args.makeProg, "clean"], docFD)!=0:
         errStr=errStr+"make clean failed; "
       print("\n\nRUNNING make\n", file=docFD); docFD.flush()
-      if base.helper.subprocessCall(["make", "-k"], docFD)!=0:
+      if base.helper.subprocessCall([args.makeProg, "-k"], docFD)!=0:
         errStr=errStr+"make failed; "
       print("\n\nRUNNING make install\n", file=docFD); docFD.flush()
-      if base.helper.subprocessCall(["make", "-k", "install"], docFD)!=0:
+      if base.helper.subprocessCall([args.makeProg, "-k", "install"], docFD)!=0:
         errStr=errStr+"make install failed; "
       if errStr!="": raise RuntimeError(errStr)
     elif cmake and not disabled:
@@ -907,7 +904,7 @@ def createDistribution(run):
 
   with tempfile.TemporaryDirectory() as tempDir:
     distLog=io.StringIO()
-    distributeErrorCode=base.helper.subprocessCall(["/context/distribute.py", "--outDir", tempDir,
+    distributeErrorCode=base.helper.subprocessCall([sys.executalbe, "/context/distribute.py", "--outDir", tempDir,
                                            args.prefix if args.prefix is not None else args.prefixAuto], distLog)
     run.distributionOK=distributeErrorCode==0
     run.distributionOutput=distLog.getvalue()
