@@ -909,7 +909,7 @@ def createDistribution(run):
 
   with tempfile.TemporaryDirectory() as tempDir:
     distLog=io.StringIO()
-    distributeErrorCode=base.helper.subprocessCall([sys.executalbe, "/context/distribute.py", "--outDir", tempDir,
+    distributeErrorCode=base.helper.subprocessCall([sys.executable, "/context/distribute.py", "--outDir", tempDir,
                                            args.prefix if args.prefix is not None else args.prefixAuto], distLog)
     run.distributionOK=distributeErrorCode==0
     run.distributionOutput=distLog.getvalue()
