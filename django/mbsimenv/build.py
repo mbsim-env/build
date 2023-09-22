@@ -34,7 +34,7 @@ if not hasattr(octicons, '__version__') or hasattr(octicons, 'default_app_config
 toolDependencies=dict()
 docDir=None
 args=None
-sh=[shutil.which("sh"), "--login"]
+sh=[shutil.which("sh"), "-l"]
 
 def parseArguments():
   # command line option definition
