@@ -103,6 +103,10 @@ else:
 if args.forceBuild:
   ARGS.append('--forceBuild')
 
+# env
+os.environ['PKG_CONFIG_PATH']=((os.environ['PKG_CONFIG_PATH']+":") if 'PKG_CONFIG_PATH' in os.environ else "")+\
+                              "/mbsim-env/local/lib/pkgconfig:/mbsim-env/local/lib64/pkgconfig"
+
 subprocess.call(["ccache", "-M", str(args.ccacheSize)+"G"])
 print("Zeroing ccache statistics.")
 subprocess.call(["ccache", "-z"])
