@@ -315,11 +315,11 @@ def releaseDistribution(request, run_id):
   r.releaseFileName=relArchiveName
   r.releaseDebugFileName=relArchiveDebugName
   r.save()
-  with r.releaseFile.open("wb") as fo:
-    with run.distributionFile.open("rb") as fi:
+  with run.distributionFile.open("rb") as fi:
+    with r.releaseFile.open("wb") as fo:
       base.helper.copyFile(fi, fo)#mfmf not working for some reason
-  with r.releaseDebugFile.open("wb") as fo:
-    with run.distributionDebugFile.open("rb") as fi:
+  with run.distributionDebugFile.open("rb") as fi:
+    with r.releaseDebugFile.open("wb") as fo:
       base.helper.copyFile(fi, fo)#mfmf not working for some reason
   return django.http.HttpResponse()
 

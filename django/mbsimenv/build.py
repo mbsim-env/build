@@ -85,7 +85,7 @@ def parseArguments():
   cfgOpts.add_argument("--buildFailedExit", default=None, type=int, help='Define the exit code when the build fails.')
   cfgOpts.add_argument("--buildRunID", default=None, type=int, help='Internal: use a already created Run ID.')
   cfgOpts.add_argument("--additionalTools", default=None, type=str, help='A json string of additional tools to process. (The format must follow the toolDependencies variable)')
-  cfgOpts.add_argument("--makeProg", default="make", type=str, help='Program to use as make (should be a gmake compatible make)')
+  cfgOpts.add_argument("--makeProg", default=shutil.which("make"), type=str, help='Program to use as make (should be a gmake compatible make)')
   
   outOpts=argparser.add_argument_group('Output Options')
   outOpts.add_argument("--buildType", default="local", type=str, help="A description of the build type (e.g: linux64-dailydebug)")
