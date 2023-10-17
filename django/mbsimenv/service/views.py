@@ -399,9 +399,9 @@ def webhook(request):
   try:
     if not hmac.compare_digest(sig, hmac.new(mbsimenvSecrets.getSecrets("githubWebhookSecret").encode('utf-8'), rawdata, hashlib.sha1).hexdigest()):
       return django.http.HttpResponseForbidden()
-  except ex:
+  except:
     if django.conf.settings.DEBUG:
-      raise ex
+      raise
     else:
       raise RuntimeError("Original exception avoided in webhook to ensure that no secret is printed.") from None
   event=request.headers['X-GitHub-Event']
