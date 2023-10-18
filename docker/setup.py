@@ -70,7 +70,7 @@ def getServername():
 
 def getServerIP():
   if args.bindIP!="MBSIMENVSERVERNAME":
-    return args.bindIP
+    return [args.bindIP]
   addrinfo=socket.getaddrinfo(getServername(), None, 0, socket.SOCK_STREAM)
   if len(addrinfo)==0:
     raise RuntimeError("Cannot get address of MBSIMENVSERVERNAME.")

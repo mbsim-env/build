@@ -12,6 +12,7 @@ sys.path.append("/context/mbsimenv")
 import mbsimenvSecrets
 import service
 import argparse
+import docker
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -123,6 +124,12 @@ info.shortInfo="Container ID: %s\nImage ID: %s\ngit Commit ID: %s"%(containerID,
 info.save()
 service.models.Info.objects.exclude(id=os.environ["GITCOMMITID"]).delete() # remove everything except the current runnig Info object
 
+# allow connections from the docker internal network "mbsimenv_service_intern"
+with open("/database/pg_hba.conf", "a") as f:
+  dockerClient=docker.from_env()
+  networki=dockerClient.networks.get("mbsimenv_service_intern:"+os.environ["MBSIMENVTAGNAME"])
+  for c in networki.attrs["IPAM"]["Config"]:
+    print("hostnossl mbsimenv-service-database mbsimenvuser "+c["Subnet"]+" md5", file=f)
 if not args.noSSL:
   # enable SSL
   CERTDIR="/sslconfig/live/mbsim-env"
