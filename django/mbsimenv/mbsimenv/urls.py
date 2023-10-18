@@ -26,6 +26,7 @@ urlpatterns = [
   base.helper.urls_path('robots.txt', base.views.robotsTXT),
   base.helper.urls_path('base/', django.urls.include('base.urls')),
   base.helper.urls_path('admin/', django.contrib.admin.site.urls, robots="recFalse"),
+  base.helper.urls_path('accounts/local/', django.urls.include("django.contrib.auth.urls")), #name="login"
   base.helper.urls_path('accounts/login/', lambda _: django.shortcuts.redirect('github_login'), robots="recFalse"),
   base.helper.urls_path('accounts/logout/', base.views.userLogout, robots="recFalse"),
   base.helper.urls_path('accounts/profile/', base.views.UserProfile.as_view(), name='base_userprofile', robots="recFalse"),
