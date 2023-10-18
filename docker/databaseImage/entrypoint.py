@@ -19,7 +19,7 @@ argparser=argparse.ArgumentParser(
   description="Entrypoint for container mbsimenv/database.")
   
 argparser.add_argument("--noSSL", action='store_true', help="Disable SSL support")
-argparser.add_argument("--networkiSubnet", type=str, help="The subnet of the internal docker network")
+argparser.add_argument("--dockerSubnet", default=[], nargs="*", help="The subnet's of the internal docker network's")
 
 args=argparser.parse_args()
 
@@ -126,7 +126,8 @@ service.models.Info.objects.exclude(id=os.environ["GITCOMMITID"]).delete() # rem
 
 # allow connections from the docker internal network "mbsimenv_service_intern"
 with open("/database/pg_hba.conf", "a") as f:
-  print("hostnossl mbsimenv-service-database mbsimenvuser "+args.networkiSubnet+" md5", file=f)
+  for subnet in args.dockerSubnet:
+    print("hostnossl mbsimenv-service-database mbsimenvuser "+subnet+" md5", file=f)
 if not args.noSSL:
   # enable SSL
   CERTDIR="/sslconfig/live/mbsim-env"

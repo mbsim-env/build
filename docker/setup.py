@@ -509,7 +509,7 @@ def runNetworkAndDatabase(printLog, daemon):
     init=True, name='mbsimenv.database.'+getTagname(),
     hostname="database", # reverse DNS must work for "database"
     network=networki.id,
-    command=(["--noSSL"] if args.noSSL else [])+["--networkiSubnet", networki.attrs["IPAM"]["Config"][0]["Subnet"]],
+    command=(["--noSSL"] if args.noSSL else [])+["--dockerSubnet", networki.attrs["IPAM"]["Config"][0]["Subnet"], networke.attrs["IPAM"]["Config"][0]["Subnet"]],
     environment={"MBSIMENVSERVERNAME": getServername(), "GITCOMMITID": databaseImage.labels["gitCommitID"], "IMAGEID": databaseImage.id},
     volumes=volumes,
     ports=ports,
