@@ -11,6 +11,16 @@ import allauth
 sys.path.append("/context/mbsimenv")
 import mbsimenvSecrets
 import service
+import argparse
+
+# arguments
+argparser=argparse.ArgumentParser(
+  formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+  description="Entrypoint for container mbsimenv/database.")
+  
+argparser.add_argument("--noSSL", action='store_true', help="Disable SSL support")
+
+args=argparser.parse_args()
 
 # check environment
 if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="":
@@ -113,19 +123,21 @@ info.shortInfo="Container ID: %s\nImage ID: %s\ngit Commit ID: %s"%(containerID,
 info.save()
 service.models.Info.objects.exclude(id=os.environ["GITCOMMITID"]).delete() # remove everything except the current runnig Info object
 
-# enable SSL
-CERTDIR="/sslconfig/live/mbsim-env"
-while not os.path.exists(CERTDIR+"/cert.pem") or not os.path.exists(CERTDIR+"/privkey.pem"):
-  print("Waiting for ssl certificate.")
-  time.sleep(0.5)
-with open("/database/postgresql.conf", "a") as f:
-  print("ssl = on", file=f)
-  print("ssl_cert_file = '"+CERTDIR+"/cert.pem'", file=f)
-  print("ssl_key_file = '"+CERTDIR+"/privkey.pem'", file=f)
+if not args.noSSL:
+  # enable SSL
+  CERTDIR="/sslconfig/live/mbsim-env"
+  while not os.path.exists(CERTDIR+"/cert.pem") or not os.path.exists(CERTDIR+"/privkey.pem"):
+    print("Waiting for ssl certificate.")
+    time.sleep(0.5)
+  with open("/database/postgresql.conf", "a") as f:
+    print("ssl = on", file=f)
+    print("ssl_cert_file = '"+CERTDIR+"/cert.pem'", file=f)
+    print("ssl_key_file = '"+CERTDIR+"/privkey.pem'", file=f)
 
-# now allow connections from all interface (not only localhost)
-with open("/database/pg_hba.conf", "a") as f:
-  print("hostssl mbsimenv-service-database mbsimenvuser all md5", file=f)
+  # now allow connections from all interface (not only localhost)
+  with open("/database/pg_hba.conf", "a") as f:
+    print("hostssl mbsimenv-service-database mbsimenvuser all md5", file=f)
+
 subprocess.check_call(["/usr/pgsql-13/bin/pg_ctl", "-D", "/database", "reload"])
 print("DB server reloaded, allow now all hostnames to connect.")
 sys.stdout.flush()

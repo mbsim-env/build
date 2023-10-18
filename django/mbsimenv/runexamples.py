@@ -328,7 +328,7 @@ def main():
   if normalRun or args.partition:
     # get mbxmlutilsvalidate program
     global mbxmlutilsvalidate, xmlCatalog
-    mbxmlutilsvalidate=pj(pkgconfig("mbxmlutils", ["--variable=BINDIR"]), "mbxmlutilsvalidate"+args.exeExt)#mfmf
+    mbxmlutilsvalidate=pj(pkgconfig("mbxmlutils", ["--variable=BINDIR"]), "mbxmlutilsvalidate"+args.exeExt)
     if not os.path.isfile(mbxmlutilsvalidate):
       mbxmlutilsvalidate="mbxmlutilsvalidate"+args.exeExt
     # set global dirs

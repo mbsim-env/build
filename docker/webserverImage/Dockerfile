@@ -57,6 +57,7 @@ COPY django/mbsimenv /context/mbsimenv
 
 # copy entrypoint
 COPY docker/webserverImage/entrypoint.py /context/entrypoint.py
+COPY docker/webserverImage/cron-certbot.sh /context/cron-certbot.sh
 COPY docker/webserverImage/cron-daily.py /context/cron-daily.py
 COPY docker/webserverImage/cron-ci.py /context/cron-ci.py
 COPY docker/setup.py /context/setup.py
@@ -102,11 +103,7 @@ COPY --from=temp /tmp/generatepng/*.png /var/www/html/static/octiconpng/
 # - django clear expired sessions (once a day)
 RUN mkdir /var/www/html/certbot
 RUN echo -e 'SHELL=/bin/bash\n\
-1 0 * * * python3 -c "import time; import random; time.sleep(random.randint(0,24*60*60-100))"; \
-/usr/bin/certbot-2 renew --work-dir /tmp/certbotwork --logs-dir /tmp/certbotlog --webroot \
--w /var/www/html/certbot --post-hook "/opt/rh/httpd24/root/usr/sbin/httpd -k graceful" \
-2> >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/2) > >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/1); \
-chown -R dockeruser:dockeruser /etc/letsencrypt/\n\
+1 0 * * * /context/cron-certbot.sh\n\
 39 7 * * * DJANGO_SETTINGS_MODULE=mbsimenv.settings_buildsystem python3 /context/mbsimenv/manage.py clearsessions' \
 | crontab /dev/stdin
 

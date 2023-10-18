@@ -18,6 +18,7 @@ argparser=argparse.ArgumentParser(
   description="Entrypoint for container mbsimenv/webserver.")
   
 argparser.add_argument("--jobs", "-j", type=int, default=psutil.cpu_count(False), help="Number of jobs to run in parallel")
+argparser.add_argument("--noSSL", action='store_true', help="Disable SSL support")
 
 args=argparser.parse_args()
 
@@ -59,21 +60,30 @@ waitForWWW(10)
 print("Started webserver, not allowing connections.")
 sys.stdout.flush()
 
-# create cert if not existing or renew if already existing
-subprocess.check_call(["sudo", "-u", "dockeruser", "/usr/bin/certbot-2", "--work-dir", "/tmp/certbotwork", "--logs-dir", "/tmp/certbotlog",
-  "--agree-tos", "--email", "fm12@freenet.de", "certonly", "-n", "--webroot", "-w", "/var/www/html/certbot",
-  "--cert-name", "mbsim-env", "-d", os.environ["MBSIMENVSERVERNAME"]])
+if not args.noSSL:
+  # create cert if not existing or renew if already existing
+  subprocess.check_call(["sudo", "-u", "dockeruser", "/usr/bin/certbot-2", "--work-dir", "/tmp/certbotwork", "--logs-dir", "/tmp/certbotlog",
+    "--agree-tos", "--email", "fm12@freenet.de", "certonly", "-n", "--webroot", "-w", "/var/www/html/certbot",
+    "--cert-name", "mbsim-env", "-d", os.environ["MBSIMENVSERVERNAME"]])
 
-# adapt web server config to use the letsencrypt certs
-for line in fileinput.FileInput("/opt/rh/httpd24/root/etc/httpd/conf.d/ssl.conf", inplace=1):
-  if line.lstrip().startswith("SSLCertificateFile "):
-    line="SSLCertificateFile /etc/letsencrypt/live/mbsim-env/cert.pem\n"
-  if line.lstrip().startswith("SSLCertificateKeyFile "):
-    line="SSLCertificateKeyFile /etc/letsencrypt/live/mbsim-env/privkey.pem\n"+\
-         "SSLCertificateChainFile /etc/letsencrypt/live/mbsim-env/chain.pem\n"
-  print(line, end="")
+  # adapt web server config to use the letsencrypt certs
+  for line in fileinput.FileInput("/opt/rh/httpd24/root/etc/httpd/conf.d/ssl.conf", inplace=1):
+    if line.lstrip().startswith("SSLCertificateFile "):
+      line="SSLCertificateFile /etc/letsencrypt/live/mbsim-env/cert.pem\n"
+    if line.lstrip().startswith("SSLCertificateKeyFile "):
+      line="SSLCertificateKeyFile /etc/letsencrypt/live/mbsim-env/privkey.pem\n"+\
+           "SSLCertificateChainFile /etc/letsencrypt/live/mbsim-env/chain.pem\n"
+    print(line, end="")
+else:
+  # adapt web server config to disable https to http redirect
+  for line in fileinput.FileInput("/opt/rh/httpd24/root/etc/httpd/conf.d/le-redirect-mbsim-env.conf", inplace=1):
+    if line.lstrip().startswith("RewriteEngine "):
+      line="RewriteEngine Off\n"
+    print(line, end="")
+
 # reload web server config
 subprocess.check_call(["httpd", "-k", "graceful"])
+
 # now allow all connections
 replaceNext=False
 for line in fileinput.FileInput("/opt/rh/httpd24/root/etc/httpd/conf/httpd.conf", inplace=1):

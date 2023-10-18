@@ -41,6 +41,12 @@ def parseArgs():
   argparser.add_argument("--pushPullMultistageImage", action='store_true', help="Also push/pull multistage images")
   argparser.add_argument("--cacheFromSelf", action='store_true', help="Use existing image with same name as --cache_from")
   argparser.add_argument("--enforceConfigure", action='store_true', help="Enforce configure run (only for building mbsimenv runs)")
+
+  argparser.add_argument("--noSSL", action='store_true', help="Disable SSL support")
+  argparser.add_argument("--databasePort", type=int, default=5432, help="The database port number to use on the host side (default: 5432)")
+  argparser.add_argument("--httpPort", type=int, default=80, help="The http port number to use on the host side http (default: 80)")
+  argparser.add_argument("--httpsPort", type=int, default=443, help="The https port number to use on the host side; not used if --noSSL (default: 443)")
+  argparser.add_argument("--filestoragePort", type=int, default=1122, help="The filestorage port number to use on the host side (default: 1122)")
   
   return argparser.parse_known_args()
 
@@ -122,7 +128,11 @@ allServices=[ # must be in order
   "webapprun",
 ]
 
+global args
+args=None
+
 def main():
+  global args
   args, argsRest=parseArgs()
 
   # terminate handler for command "run"
@@ -471,24 +481,25 @@ def runNetworkAndDatabase(printLog, daemon):
     raise RuntimeError("Cannot get address of MBSIMENVSERVERNAME.")
   ports={5432: []}
   for ai in addrinfo:
-    for p in [5432]:
-      ports[p].append((ai[4][0], p))
+    ports[5432].append((ai[4][0], args.databasePort))
   if getServername()=="wwwstaging.mbsim-env.de": # special handling for external docker builds which cannot use ipv6 only staging ip address
     ports[5432].append(("www.mbsim-env.de", 15432))
 
   # database
   renameStoppedContainer('mbsimenv.database.')
   databaseImage=dockerClient.images.get("mbsimenv/database:"+getTagname())
+  volumes={
+    'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config", "mode": "ro"},
+    'mbsimenv_database.'+getTagname():                    {"bind": "/database",     "mode": "rw"},
+  },
+  if not args.noSSL:
+    volumes['mbsimenv_letsencrypt.'+getTagname()]=        {"bind": "/sslconfig",    "mode": "ro"}
   database=dockerClient.containers.run(image="mbsimenv/database:"+getTagname(),
     init=True, name='mbsimenv.database.'+getTagname(),
     hostname="database", # reverse DNS must work for "database"
     network=networki.id,
     environment={"MBSIMENVSERVERNAME": getServername(), "GITCOMMITID": databaseImage.labels["gitCommitID"], "IMAGEID": databaseImage.id},
-    volumes={
-      'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config", "mode": "ro"},
-      'mbsimenv_database.'+getTagname():                    {"bind": "/database",     "mode": "rw"},
-      'mbsimenv_letsencrypt.'+getTagname():                 {"bind": "/sslconfig",    "mode": "ro"},
-    },
+    volumes=volumes,
     ports=ports,
     detach=True, stdout=True, stderr=True)
   networki.disconnect(database)
@@ -703,8 +714,9 @@ def run(s, jobs=psutil.cpu_count(False),
       raise RuntimeError("Cannot get address of MBSIMENVSERVERNAME.")
     ports={80: [], 443: []}
     for ai in addrinfo:
-      for p in [80, 443]:
-        ports[p].append((ai[4][0], p))
+      ports[80].append((ai[4][0], args.httpPort))
+      if not args.noSSL:
+        ports[443].append((ai[4][0], args.httpsPort))
     if getServername()=="wwwstaging.mbsim-env.de": # special handling for external docker builds which cannot use ipv6 only staging ip address
       ports[80].append(("www.mbsim-env.de", 10080))
       ports[443].append(("www.mbsim-env.de", 10443))
@@ -713,17 +725,19 @@ def run(s, jobs=psutil.cpu_count(False),
 
     # webserver
     renameStoppedContainer('mbsimenv.webserver.')
+    volumes={
+      'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config",        "mode": "ro"},
+      'mbsimenv_webserverstatic.'+getTagname():             {"bind": "/webserverstatic",     "mode": "ro"}, # xmldoc and doxydoc
+      '/var/run/docker.sock':                               {"bind": "/var/run/docker.sock", "mode": "rw"},
+    },
+    if not args.noSSL:
+      volumes['mbsimenv_letsencrypt.'+getTagname()]=        {"bind": "/etc/letsencrypt",     "mode": "rw"}
     webserver=dockerClient.containers.run(image="mbsimenv/webserver:"+getTagname(),
       init=True, name='mbsimenv.webserver.'+getTagname(),
       network=networki.id,
       command=["-j", str(jobs)]+addCommands,
       environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
-      volumes={
-        'mbsimenv_config.'+getTagname():                      {"bind": "/mbsim-config",        "mode": "ro"},
-        'mbsimenv_letsencrypt.'+getTagname():                 {"bind": "/etc/letsencrypt",     "mode": "rw"},
-        'mbsimenv_webserverstatic.'+getTagname():             {"bind": "/webserverstatic",     "mode": "ro"}, # xmldoc and doxydoc
-        '/var/run/docker.sock':                               {"bind": "/var/run/docker.sock", "mode": "rw"},
-      },
+      volumes=volumes,
       hostname=getServername(),
       ports=ports,
       detach=True, stdout=True, stderr=True)
@@ -803,8 +817,7 @@ def run(s, jobs=psutil.cpu_count(False),
       raise RuntimeError("Cannot get address of MBSIMENVSERVERNAME.")
     ports={1122: []}
     for ai in addrinfo:
-      for p in [1122]:
-        ports[p].append((ai[4][0], p))
+      ports[1122].append((ai[4][0], args.filestoragePort))
     if getServername()=="wwwstaging.mbsim-env.de": # special handling for external docker builds which cannot use ipv6 only staging ip address
       ports[1122].append(("www.mbsim-env.de", 11122))
 
