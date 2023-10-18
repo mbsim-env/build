@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 # imports
+#mfmf "global" cannot be used on windows with multiprocessing
 import sys
 import argparse
 import fnmatch
@@ -201,6 +202,12 @@ def main():
     print("error: unknown argument --action "+args.action+" (see -h)")
     return -1
 
+  if args.prefix is not None:
+    if "PKG_CONFIG_PATH" in os.environ:
+      os.environ["PKG_CONFIG_PATH"]=os.environ["PKG_CONFIG_PATH"]+os.pathsep+args.prefix+"/lib/pkgconfig"
+    else:
+      os.environ["PKG_CONFIG_PATH"]=args.prefix+"/lib/pkgconfig"
+
   if normalRun or args.pre:
     removeOldBuilds()
 
@@ -379,7 +386,7 @@ def main():
       else: # debugging
         import queue
         poolResult=queue.Queue()
-        poolResult.put(list(map(functools.partial(runExample, exRun, None), directories)))
+        poolResult.put(list(map(functools.partial(runExample, exRun), directories)))
         # wait for pool to finish and get result
         retAll=poolResult.get()
 
@@ -492,7 +499,7 @@ def pkgconfig(module, options):
   comm=["pkg-config", module]
   comm.extend(options)
   try:
-    output=subprocess.check_output(comm).decode("utf-8")
+    output=subprocess.check_output(comm).rstrip().decode("utf-8")
   except subprocess.CalledProcessError as ex:
     if ex.returncode==0:
       raise
@@ -779,15 +786,18 @@ def exePrefix():
     return ["wine"]
 # if args.exeEXt is set we must convert every path to a Windows path
 def exePathConvert(path):
-  if args.exeExt=="":
+  if os.name!="nt" or shutil.which("cygpath") is None:
     return path
-  else:
-    def convert(p):
-        return "z:"+p.replace("/", "\\") if os.path.isabs(p) else p.replace("/", "\\")
-    if type(path)==str:
-      return convert(path)
+
+  def convert(p):
+    if not os.path.isabs(p):
+      return p
     else:
-      return list(map(lambda p: convert(p), path))   
+      return subprocess.check_output(["cygpath", "-w", p]).rstrip().decode("utf-8")
+  if type(path)==str:
+    return convert(path)
+  else:
+    return list(map(lambda p: convert(p), path))   
 
 
 # prefix the simultion with this parameter.
@@ -1122,7 +1132,7 @@ def executeFMISrcExample(ex, executeFD):
     if base.helper.subprocessCall(["make", "-f", basename, "clean"], executeFD)!=0: return 1, 0
   if base.helper.subprocessCall(["make", "-f", basename], executeFD)!=0: return 1, 0
   # create and run FMU
-  if args.exeExt==".exe":
+  if os.name=="nt":
     dllExt=".dll"
   else:
     dllExt=".so"
