@@ -110,19 +110,23 @@ def waitContainer(container, prefix=""):
 
 runningContainers=set()
 
-allServices=[ # must be in order
-  "database",
-  "filestorage",
-  "build",
-  "buildwin64",
-  "buildmsys2ucrt64",
-  "builddoc",
-  "builddocker",
-  "proxy",
-  "webserver",
-  "webapp",
-  "webapprun",
-]
+if sys.platform=="linux":
+  allServices=[ # must be in order
+    "database",
+    "filestorage",
+    "build",
+    "buildwin64",
+    "builddoc",
+    "builddocker",
+    "proxy",
+    "webserver",
+    "webapp",
+    "webapprun",
+  ]
+else:
+  allServices=[ # must be in order
+    "buildmsys2ucrt64",
+  ]
 
 def main():
   args, argsRest=parseArgs()
