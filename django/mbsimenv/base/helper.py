@@ -199,17 +199,17 @@ class MultiFile(object):
 # kill the called subprocess
 def killSubprocessCall(proc, f, killed, timeout):
   killed.set()
-  f.write("\n\n\n******************** START: MESSAGE FROM runexamples.py ********************\n")
+  f.write("\n\n\n******************** START: MESSAGE FROM subprocessCall.py ********************\n")
   f.write("The maximal execution time (%d min) has reached (option --maxExecutionTime),\n"%(timeout))
   f.write("but the program is still running. Terminating the program now.\n")
-  f.write("******************** END: MESSAGE FROM runexamples.py **********************\n\n\n\n")
+  f.write("******************** END: MESSAGE FROM subprocessCall.py **********************\n\n\n\n")
   proc.terminate()
   time.sleep(30)
   # if proc has not terminated after 30 seconds kill it
   if proc.poll() is None:
-    f.write("\n\n\n******************** START: MESSAGE FROM runexamples.py ********************\n")
+    f.write("\n\n\n******************** START: MESSAGE FROM subprocessCall.py ********************\n")
     f.write("Program has not terminated after 30 seconds, killing the program now.\n")
-    f.write("******************** END: MESSAGE FROM runexamples.py **********************\n\n\n\n")
+    f.write("******************** END: MESSAGE FROM subprocessCall.py **********************\n\n\n\n")
     proc.kill()
 
 def subprocessCheckOutput(comm, f=None):
@@ -288,9 +288,9 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
       stopByRE=True
       break
   if stopByRE:
-    f.write("\n\n\n******************** START: MESSAGE FROM runexamples.py ********************\n")
+    f.write("\n\n\n******************** START: MESSAGE FROM subprocessCall.py ********************\n")
     f.write("Terminating due to stop regex in output\n")
-    f.write("******************** END: MESSAGE FROM runexamples.py **********************\n\n\n\n")
+    f.write("******************** END: MESSAGE FROM subprocessCall.py **********************\n\n\n\n")
     proc.terminate()
     time.sleep(1)
     if proc.poll() is None:

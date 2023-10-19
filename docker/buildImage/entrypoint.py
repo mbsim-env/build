@@ -255,7 +255,7 @@ if build:
     for repo in ["https://github.com/mbsim-env/mbsim.git"]+args.buildConfig.get("exampleRepos", []):
       localDir=repo.split("/")[-1][0:-4]
       if not os.path.isdir("/mbsim-env/"+localDir+"-valgrind"):
-        subprocess.check_call(["git", "clone", "-q", "--depth", "1", repo], cwd="/mbsim-env",
+        subprocess.check_call(["git", "clone", "-q", "--depth", "1", repo, localDir+"-valgrind"], cwd="/mbsim-env",
           stdout=sys.stdout, stderr=sys.stderr)
     
     # update

@@ -94,11 +94,11 @@ def parseArguments():
                        type=int, help="Remove all build reports older than X days but keep at least the last X.")
   
   passOpts=argparser.add_argument_group('Options beeing passed to other commands')
-  passOpts.add_argument("--passToRunexamples", default=list(), nargs=argparse.REMAINDER,#mfmf replace this option by configBuild?
+  passOpts.add_argument("--passToRunexamples", default=list(), nargs=argparse.REMAINDER,#mfmf replace this option by buildConfig?
     help="pass all following options, up to but not including the next --passTo* argument, to run examples.")
-  passOpts.add_argument("--passToConfigure", default=list(), nargs=argparse.REMAINDER,#mfmf replace this option by configBuild?
+  passOpts.add_argument("--passToConfigure", default=list(), nargs=argparse.REMAINDER,#mfmf replace this option by buildConfig?
     help="pass all following options, up to but not including the next --passTo* argument, to configure.")
-  passOpts.add_argument("--passToCMake", default=list(), nargs=argparse.REMAINDER,#mfmf replace this option by configBuild?
+  passOpts.add_argument("--passToCMake", default=list(), nargs=argparse.REMAINDER,#mfmf replace this option by buildConfig?
     help="pass all following options, up to but not including the next --passTo* argument, to configure.")
   
   # parse command line options:
@@ -546,9 +546,9 @@ def repoUpdate(run, buildInfo):
     retlocal=0
     if not args.disableUpdate:
       print('Update remote repository '+repo+":")
-      retlocal+=abs(subprocess.call(["git", "checkout", "-q", "HEAD~0"])
-      retlocal+=abs(subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", "master:master"])
-    retlocal+=abs(subprocess.call(["git", "checkout", "-q", "master"])
+      retlocal+=abs(subprocess.call(["git", "checkout", "-q", "HEAD~0"]))
+      retlocal+=abs(subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", "master:master"]))
+    retlocal+=abs(subprocess.call(["git", "checkout", "-q", "master"]))
     ret+=retlocal
   # for daily builds set the triggered flag for every repo with a change wrt the last daily build
   if "daily" in args.buildType:
@@ -690,7 +690,7 @@ def configure(tool):
         if cmakeCmd is None: cmakeCmd="cmake"
         command=[cmakeCmd, pj(args.sourceDir, tool.toolName), "-GNinja", "-DCMAKE_INSTALL_PREFIX="+args.prefix]
         command.extend(args.passToCMake)
-        command.extend(args.configBuild.get("cmake", []))
+        command.extend(args.buildConfig.get("cmake", []))
         if base.helper.subprocessCall(command, configureFD)!=0:
           raise RuntimeError("configure failed")
     else:
@@ -891,7 +891,7 @@ def runexamples(run):
     return 0
 
   # run example command
-  command=["python3", os.path.dirname(os.path.realpath(__file__))+"/runexamples.py", "-j", str(args.j)]
+  command=["python3", os.path.dirname(os.path.realpath(__file__))+"/runexamples.py", "-j", str(args.j), "--buildConfig", json.dumps(args.buildConfig)]
   if args.coverage:
     command.extend(["--coverage", "--sourceDir", args.sourceDir]+(["--binSuffix="+args.binSuffix] if args.binSuffix!="" else [])+\
                    ["--prefix", args.prefix, "--baseExampleDir", pj(args.sourceDir, "mbsim", "examples")])
