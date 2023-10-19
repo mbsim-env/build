@@ -84,8 +84,8 @@ def parseArguments():
   cfgOpts.add_argument("--coverage", action="store_true", help='Enable coverage analyzis using gcov/lcov.')
   cfgOpts.add_argument("--buildFailedExit", default=None, type=int, help='Define the exit code when the build fails.')
   cfgOpts.add_argument("--buildRunID", default=None, type=int, help='Internal: use a already created Run ID.')
-  cfgOpts.add_argument("--additionalTools", default=None, type=str, help='A json string of additional tools to process. (The format must follow the toolDependencies variable)')
   cfgOpts.add_argument("--makeProg", default="make", type=str, help='Program to use as make (should be a gmake compatible make)')
+  cfgOpts.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")
   
   outOpts=argparser.add_argument_group('Output Options')
   outOpts.add_argument("--buildType", default="local", type=str, help="A description of the build type (e.g: linux64-dailydebug)")
@@ -94,11 +94,11 @@ def parseArguments():
                        type=int, help="Remove all build reports older than X days but keep at least the last X.")
   
   passOpts=argparser.add_argument_group('Options beeing passed to other commands')
-  passOpts.add_argument("--passToRunexamples", default=list(), nargs=argparse.REMAINDER,
+  passOpts.add_argument("--passToRunexamples", default=list(), nargs=argparse.REMAINDER,#mfmf replace this option by configBuild?
     help="pass all following options, up to but not including the next --passTo* argument, to run examples.")
-  passOpts.add_argument("--passToConfigure", default=list(), nargs=argparse.REMAINDER,
+  passOpts.add_argument("--passToConfigure", default=list(), nargs=argparse.REMAINDER,#mfmf replace this option by configBuild?
     help="pass all following options, up to but not including the next --passTo* argument, to configure.")
-  passOpts.add_argument("--passToCMake", default=list(), nargs=argparse.REMAINDER,
+  passOpts.add_argument("--passToCMake", default=list(), nargs=argparse.REMAINDER,#mfmf replace this option by configBuild?
     help="pass all following options, up to but not including the next --passTo* argument, to configure.")
   
   # parse command line options:
@@ -294,8 +294,7 @@ def main():
       ]],
   }
   # add command line tools
-  if args.additionalTools is not None:
-    toolDependencies.update(json.loads(args.additionalTools))
+  toolDependencies.update(args.buildConfig.get("tools", {}))
   # convert dependent list to set
   for t in toolDependencies:
     toolDependencies[t][1]=set(toolDependencies[t][1])
@@ -373,7 +372,7 @@ def main():
   try:
     sortBuildTools(set(toolDependencies) if args.buildTools is None else set(args.buildTools), orderedBuildTools)
   except RecursionError:
-    print("ERROR: Recursive tool dependencies detected: Please check the --additionalTools argument!")
+    print("ERROR: Recursive tool dependencies detected: Please check the 'tools' in the --buildConfig argument!")
     return 1
 
   # list tools which are not updated and must not be rebuild according dependencies
@@ -542,6 +541,15 @@ def repoUpdate(run, buildInfo):
     run.save()
     repoUpdFD.close()
     buildInfo["repo"][repo]=branch+"*"+commitidfull[repo]
+  for repo in args.buildConfig.get("buildRepos", [])+args.buildConfig.get("exampleRepos", []):
+    localDir=repo.split("/")[-1][0:-4]
+    retlocal=0
+    if not args.disableUpdate:
+      print('Update remote repository '+repo+":")
+      retlocal+=abs(subprocess.call(["git", "checkout", "-q", "HEAD~0"])
+      retlocal+=abs(subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", "master:master"])
+    retlocal+=abs(subprocess.call(["git", "checkout", "-q", "master"])
+    ret+=retlocal
   # for daily builds set the triggered flag for every repo with a change wrt the last daily build
   if "daily" in args.buildType:
     previousRun=run.getPrevious()
@@ -682,6 +690,7 @@ def configure(tool):
         if cmakeCmd is None: cmakeCmd="cmake"
         command=[cmakeCmd, pj(args.sourceDir, tool.toolName), "-GNinja", "-DCMAKE_INSTALL_PREFIX="+args.prefix]
         command.extend(args.passToCMake)
+        command.extend(args.configBuild.get("cmake", []))
         if base.helper.subprocessCall(command, configureFD)!=0:
           raise RuntimeError("configure failed")
     else:

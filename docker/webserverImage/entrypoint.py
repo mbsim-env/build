@@ -9,6 +9,7 @@ import time
 import argparse
 import psutil
 import requests
+import json
 sys.path.append("/context")
 import setup
 
@@ -20,6 +21,7 @@ argparser=argparse.ArgumentParser(
 argparser.add_argument("--jobs", "-j", type=int, default=psutil.cpu_count(False), help="Number of jobs to run in parallel")
 argparser.add_argument("--noSSL", action='store_true', help="Disable SSL support")
 argparser.add_argument("--cronBuilds", action='store_true', help="Run daily and CI builds in docker containers by cron.")
+argparser.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")
 
 args=argparser.parse_args()
 
@@ -30,6 +32,8 @@ if "MBSIMENVTAGNAME" not in os.environ or os.environ["MBSIMENVTAGNAME"]=="":
   raise RuntimeError("Envvar MBSIMENVTAGNAME is not defined.")
 
 if args.cronBuilds:
+  with open("/context/buildConfig.json", "wt") as f:
+    json.dump(args.buildConfig, f)
   # add daily build to crontab (starting at 01:00)
   crontab=\
     "MBSIMENVSERVERNAME=%s\n"%(os.environ["MBSIMENVSERVERNAME"])+\

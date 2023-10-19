@@ -104,6 +104,7 @@ class GithubCache(object):
     return self.request.session["githubCache"]["mbsimenvOrg"]
 
   def getUserInMbsimenvOrg(self, timeout):
+    # mfmf all users loged in with a local account should return True
     if not self.gh:
       return False
     if "githubCache" not in self.request.session:

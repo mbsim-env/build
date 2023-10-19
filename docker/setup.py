@@ -50,6 +50,8 @@ def parseArgs():
   argparser.add_argument("--httpPort", type=int, default=80, help="The http port number to use on the host side http (default: 80)")
   argparser.add_argument("--httpsPort", type=int, default=443, help="The https port number to use on the host side; not used if --noSSL (default: 443)")
   argparser.add_argument("--filestoragePort", type=int, default=1122, help="The filestorage port number to use on the host side (default: 1122)")
+
+  argparser.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")
   
   return argparser.parse_known_args()
 
@@ -176,7 +178,7 @@ def main():
     ret=0
     for s in args.service:
       ret=run(s, args.jobs, addCommands=argsRest, interactive=args.interactive, daemon=args.daemon,
-              enforceConfigure=args.enforceConfigure)
+              enforceConfigure=args.enforceConfigure, buildConfig=args.buildConfig)
       if ret!=0:
         break
     return ret
@@ -407,7 +409,7 @@ def renameStoppedContainer(name):
 
 def runAutobuild(s, buildType, addCommand, jobs=psutil.cpu_count(False), interactive=False, enforceConfigure=False,
                  fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
-                 printLog=True, detach=False):
+                 printLog=True, detach=False, buildConfig={}):
   stopDatabase=False
   if len(dockerClient.networks.list(names="mbsimenv_service_intern:"+getTagname()))==1 and \
      len(dockerClient.networks.list(names="mbsimenv_service_intern:"+getTagname()))==1 and \
@@ -432,12 +434,15 @@ def runAutobuild(s, buildType, addCommand, jobs=psutil.cpu_count(False), interac
     network=networki.id,
     labels={"buildtype": buildType},
     entrypoint=None if not interactive else ["sleep", "infinity"],
-    command=(["--buildType", buildType, "-j", str(jobs),
-              "--executor", '<span class="MBSIMENV_EXECUTOR_MBSIMENV">MBSim-Env</span>',
-              "--fmatvecBranch", fmatvecBranch,
-              "--hdf5serieBranch", hdf5serieBranch,
-              "--openmbvBranch", openmbvBranch,
-              "--mbsimBranch", mbsimBranch]+addCommand+(["--enforceConfigure"] if enforceConfigure else [])) if not interactive else [],
+    command=([ "--buildType", buildType, "-j", str(jobs),
+               "--executor", '<span class="MBSIMENV_EXECUTOR_MBSIMENV">MBSim-Env</span>',
+               "--fmatvecBranch", fmatvecBranch,
+               "--hdf5serieBranch", hdf5serieBranch,
+               "--openmbvBranch", openmbvBranch,
+               "--mbsimBranch", mbsimBranch,
+               "--buildConfig", buildConfig]+\
+             addCommand+(["--enforceConfigure"] if enforceConfigure else [])
+            ) if not interactive else [],
     environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname(), "MBSIMENVIMAGEID": imageID},
     volumes={
       'mbsimenv_mbsim-'+buildType+"."+getTagname():  {"bind": "/mbsim-env",       "mode": "rw"},
@@ -535,7 +540,7 @@ def run(s, jobs=psutil.cpu_count(False),
         fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
         builddockerBranch="master", keepBuildDockerContainerRunning=False,
         networkID=None, hostname=None,
-        wait=True, printLog=True, detach=False, daemon=""):
+        wait=True, printLog=True, detach=False, daemon="", buildConfig={}):
 
   if detach and interactive:
     raise RuntimeError("Cannot run detached an interactively.")
@@ -543,33 +548,33 @@ def run(s, jobs=psutil.cpu_count(False),
   if s=="build-linux64-ci":
     return runAutobuild(s, "linux64-ci", addCommands, jobs=jobs, interactive=interactive, enforceConfigure=enforceConfigure,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach)
+                 printLog=printLog, detach=detach, buildConfig=buildConfig)
 
   elif s=="build-win64-ci":
     return runAutobuild(s, "win64-ci", addCommands, jobs=jobs, interactive=interactive, enforceConfigure=enforceConfigure,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach)
+                 printLog=printLog, detach=detach, buildConfig=buildConfig)
 
   elif s.startswith("build-linux64-dailydebug"):
     buildTypeSuffix=s[len("build-linux64-dailydebug"):]
     return runAutobuild(s, "linux64-dailydebug"+buildTypeSuffix, ["--valgrindExamples"]+addCommands,
                  jobs=jobs, interactive=interactive, enforceConfigure=enforceConfigure,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach)
+                 printLog=printLog, detach=detach, buildConfig=buildConfig)
 
   elif s.startswith("build-linux64-dailyrelease"):
     buildTypeSuffix=s[len("build-linux64-dailyrelease"):]
     return runAutobuild(s, "linux64-dailyrelease"+buildTypeSuffix, addCommands,
                  jobs=jobs, interactive=interactive, enforceConfigure=enforceConfigure,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach)
+                 printLog=printLog, detach=detach, buildConfig=buildConfig)
 
   elif s.startswith("build-win64-dailyrelease"):
     buildTypeSuffix=s[len("build-win64-dailyrelease"):]
     return runAutobuild(s, "win64-dailyrelease"+buildTypeSuffix, addCommands, jobs=jobs,
                  interactive=interactive, enforceConfigure=enforceConfigure,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach)
+                 printLog=printLog, detach=detach, buildConfig=buildConfig)
 
   elif s=="builddoc":
     stopDatabase=False

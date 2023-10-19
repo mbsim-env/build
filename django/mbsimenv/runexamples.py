@@ -135,6 +135,7 @@ cfgOpts.add_argument("--baseExampleDir", default=None, type=str, help='[needed b
 cfgOpts.add_argument("--buildSystemRun", action="store_true", help='Run in build system mode.')
 cfgOpts.add_argument("--localServerPort", type=int, default=27583, help='Port for local server, if started automatically.')
 cfgOpts.add_argument("--updateURL", type=str, default="https://www.mbsim-env.de", help='Base url of server used to pull references.')
+cfgOpts.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")
 
 outOpts=argparser.add_argument_group('Output Options')
 outOpts.add_argument("--removeOlderThan", default=3 if os.environ.get("MBSIMENVTAGNAME", "")=="staging" else 30,
@@ -224,13 +225,20 @@ def main():
 
   # check args.directories
   for d in args.directories:
-    if not os.path.isdir(d):
+    dd=d
+    if dd[0]=="^":
+      dd=d[1:]
+    if not os.path.isdir(dd):
       print("The positional argument (directory) "+d+" does not exist.")
       return -1
 
   # if no directory is specified use the current dir (all examples) filter by --filter
   if len(args.directories)==0:
-    dirs=[os.curdir]
+    buildConfigExamples=args.buildConfig.get("examples", [])
+    if len(buildConfigExamples)==0:
+      dirs=[os.curdir]
+    else:
+      dirs=buildConfigExamples
   else:
     dirs=args.directories
   # loop over all directories on command line and add subdir which match the filter

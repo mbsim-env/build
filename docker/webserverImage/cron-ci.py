@@ -7,6 +7,7 @@ import argparse
 import django
 import datetime
 import psutil
+import json
 sys.path.append("/context")
 import setup
 sys.path.append("/context/mbsimenv")
@@ -56,9 +57,12 @@ if ciq is not None:
       # run linux64-ci (win64-ci is not run by crone for now!!!)
       ciq.delete()
       enforceConfigure=False # if this is set to True the CI build enforces a configure run which is sometime required.
+      with open("/context/buildConfig.json", "rt") as f:
+        buildConfig=json.load(f)
       ret=setup.run("build-linux64-ci", args.jobs, printLog=False, enforceConfigure=enforceConfigure,
                     fmatvecBranch=ciq.fmatvecBranch, hdf5serieBranch=ciq.hdf5serieBranch,
-                    openmbvBranch=ciq.openmbvBranch, mbsimBranch=ciq.mbsimBranch)
+                    openmbvBranch=ciq.openmbvBranch, mbsimBranch=ciq.mbsimBranch,
+                    buildConfig=buildConfig)
       sys.exit(ret)
   elif os.environ["MBSIMENVTAGNAME"]=="staging" and ciq.buildCommitID is not None and ciq.buildCommitID!="":
     print("Start build of staging build-system: "+ciq.buildCommitID)

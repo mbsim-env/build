@@ -9,6 +9,7 @@ import setup
 sys.path.append("/context/mbsimenv")
 import mbsimenvSecrets
 import django
+import json
 import service
 
 # arguments
@@ -24,18 +25,23 @@ os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
 django.setup()
 
 def dailyBuild(fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch):
+  with open("/context/buildConfig.json", "rt") as f:
+    buildConfig=json.load(f)
   # linux64-dailydebug
   contldd=setup.run("build-linux64-dailydebug", 6, printLog=False, detach=True, addCommands=[],
-                    fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
+                    fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
+                    buildConfig=buildConfig)
   
   # win64-dailyrelease
   contwdr=setup.run("build-win64-dailyrelease", 3, printLog=False, detach=True, addCommands=[],
-                    fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
+                    fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
+                    buildConfig=buildConfig)
   retwdr=setup.waitContainer(contwdr)
   
   # linux64-dailyrelease
   contldr=setup.run("build-linux64-dailyrelease", 3, printLog=False, detach=True, addCommands=[],
-                    fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch)
+                    fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
+                    buildConfig=buildConfig)
   retldr=setup.waitContainer(contldr)
   
   retldd=setup.waitContainer(contldd)

@@ -36,6 +36,7 @@ argparser.add_argument('--forceBuild', action="store_true", help="Passed to buil
 argparser.add_argument("--valgrindExamples", action="store_true", help="Run examples also with valgrind.")
 argparser.add_argument("--ccacheSize", default=10, type=int, help="Maximal ccache size in GB.")
 argparser.add_argument("--disableRunExamples", action="store_true", help="Do not run examples")
+argparser.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")
 
 runExamplesGroup=argparser.add_mutually_exclusive_group()
 runExamplesGroup.add_argument("--runExamplesPre", action="store_true", help="Init a partitioned runExamples run")
@@ -77,18 +78,16 @@ django.db.connections.close_all()
 
 if build:
   # clone repos if needed
-  if not os.path.isdir("/mbsim-env/fmatvec"):
-    subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/fmatvec.git"], cwd="/mbsim-env",
-      stdout=sys.stdout, stderr=sys.stderr)
-  if not os.path.isdir("/mbsim-env/hdf5serie"):
-    subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/hdf5serie.git"], cwd="/mbsim-env",
-      stdout=sys.stdout, stderr=sys.stderr)
-  if not os.path.isdir("/mbsim-env/openmbv"):
-    subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/openmbv.git"], cwd="/mbsim-env",
-      stdout=sys.stdout, stderr=sys.stderr)
-  if not os.path.isdir("/mbsim-env/mbsim"):
-    subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/mbsim.git"], cwd="/mbsim-env",
-      stdout=sys.stdout, stderr=sys.stderr)
+  for repo in [
+                "https://github.com/mbsim-env/fmatvec.git",
+                "https://github.com/mbsim-env/hdf5serie.git",
+                "https://github.com/mbsim-env/openmbv.git",
+                "https://github.com/mbsim-env/mbsim.git",
+              ]+args.buildConfig.get("buildRepos", [])+args.buildConfig.get("exampleRepos", []):
+    localDir=repo.split("/")[-1][0:-4]
+    if not os.path.isdir("/mbsim-env/"+localDir):
+      subprocess.check_call(["git", "clone", "-q", "--depth", "1", repo], cwd="/mbsim-env",
+        stdout=sys.stdout, stderr=sys.stderr)
 
 # compile flags
 if args.buildType == "linux64-ci" or args.buildType.startswith("linux64-dailydebug"):
@@ -216,6 +215,7 @@ if build:
     "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix",
     "--buildType", args.buildType,
     "--executor", args.executor,
+    "--buildConfig", args.buildConfig,
     "--passToConfigure", "--disable-static",
     "--enable-python", "--with-qwt-inc-prefix=/3rdparty/local/include", "--with-qwt-lib-prefix=/3rdparty/local/lib",
     "--with-boost-inc=/usr/include/boost169",
@@ -252,9 +252,11 @@ if build:
   if args.valgrindExamples:
     # run examples with valgrind
   
-    if not os.path.isdir("/mbsim-env/mbsim-valgrind"):
-      subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/mbsim.git", "mbsim-valgrind"], cwd="/mbsim-env",
-        stdout=sys.stdout, stderr=sys.stderr)
+    for repo in ["https://github.com/mbsim-env/mbsim.git"]+args.buildConfig.get("exampleRepos", []):
+      localDir=repo.split("/")[-1][0:-4]
+      if not os.path.isdir("/mbsim-env/"+localDir+"-valgrind"):
+        subprocess.check_call(["git", "clone", "-q", "--depth", "1", repo], cwd="/mbsim-env",
+          stdout=sys.stdout, stderr=sys.stderr)
     
     # update
     CURDIR=os.getcwd()
@@ -271,6 +273,16 @@ if build:
     if subprocess.call(["git", "checkout", "-q", sha])!=0:
       ret=ret+1
       print("git checkout of branch "+args.mbsimBranch+" failed.")
+    for repo in args.buildConfig.get("exampleRepos", []):
+      localDir=repo.split("/")[-1][0:-4]
+      os.chdir("/mbsim-env/"+localDir+"-valgrind")
+      print('Update remote repository '+repo+":")
+      if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
+        ret=ret+1
+      if subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", "master:master"])!=0:
+        ret=ret+1
+      if subprocess.call(["git", "checkout", "-q", "master"])!=0:
+        ret=ret+1
     sys.stdout.flush()
     valgrindEnv=os.environ.copy()
     valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
@@ -280,7 +292,7 @@ if build:
       if os.environ["MBSIMENVTAGNAME"]=="staging" or
          not isMaster(args.fmatvecBranch) or not isMaster(args.hdf5serieBranch) or not isMaster(args.openmbvBranch) or not isMaster(args.mbsimBranch) \
          else ["--filter", "'nightly' in labels"])
-    localRet=subprocess.call(["python3", "/context/mbsimenv/runexamples.py", "--checkGUIs", "--disableCompare", "--disableValidate",
+    localRet=subprocess.call(["python3", "/context/mbsimenv/runexamples.py", "--checkGUIs", "--disableCompare", "--disableValidate", "--buildConfig", args.buildConfig,
       "--buildType", args.buildType+"-valgrind", "--executor", args.executor, "--buildSystemRun", "-j", str(args.jobs),
       "--buildRunID", str(buildInfo["buildRunID"])]+\
       (["--coverage", "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local",
@@ -299,25 +311,36 @@ if build:
 
 
 
-def runExamplesPartition(ARGS, pullMbsim, pullAll):
+def runExamplesPartition(ARGS, pullExampleRepos, pullAll):
   ret=0
   CURDIR=os.getcwd()
 
   repos=set()
-  if pullMbsim:
-    repos.add("mbsim")
+  if pullExampleRepos:
+    repos.add("https://github.com/mbsim-env/mbsim.git")
+    repos.update(args.buildConfig.get("exampleRepos", []))
   if pullAll:
-    repos.update(["fmatvec", "hdf5serie", "openmbv", "mbsim"])
+    repos.update(["https://github.com/mbsim-env/fmatvec.git",
+                  "https://github.com/mbsim-env/hdf5serie.git",
+                  "https://github.com/mbsim-env/openmbv.git",
+                  "https://github.com/mbsim-env/mbsim.git"])
+    repos.update(args.buildConfig.get("exampleRepos", []))
+    repos.update(args.buildConfig.get("buildRepos", []))
   for repo in repos:
+    localDir=repo.split("/")[-1][0:-4]
     # clone if needed
-    if not os.path.isdir("/mbsim-env/"+repo):
-      subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/"+repo+".git", repo], cwd="/mbsim-env",
+    if not os.path.isdir("/mbsim-env/"+localDir):
+      subprocess.check_call(["git", "clone", "-q", "--depth", "1", repo, localDir], cwd="/mbsim-env",
         stdout=sys.stdout, stderr=sys.stderr)
     
     # update
-    os.chdir("/mbsim-env/"+repo)
+    os.chdir("/mbsim-env/"+localDir)
     
-    branchSplit=getattr(args, repo+"Branch").split("*")
+    if localDir in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
+      branch=getattr(args, localDir+"Branch")
+    else:
+      branch="master"
+    branchSplit=branch.split("*")
     sha=branchSplit[1 if len(branchSplit)>=2 and branchSplit[1]!="" else 0]
     if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
       ret=ret+1
@@ -327,7 +350,7 @@ def runExamplesPartition(ARGS, pullMbsim, pullAll):
       print("git fetch failed.")
     if subprocess.call(["git", "checkout", "-q", sha])!=0:
       ret=ret+1
-      print("git checkout of branch "+getattr(args, repo+"Branch")+" failed.")
+      print("git checkout of branch "+branch+" failed.")
     sys.stdout.flush()
 
   os.makedirs("/mbsim-env/mbsim/examples", exist_ok=True)
@@ -345,7 +368,7 @@ def runExamplesPartition(ARGS, pullMbsim, pullAll):
     "--buildType", args.buildType+("-valgrind" if args.valgrindExamples else ""), "--executor", args.executor,
     "--buildSystemRun", "-j", str(args.jobs),
     "--buildRunID", str(args.buildRunID), "--runID", str(args.runID),
-    "--coverage", "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local",
+    "--coverage", "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "--buildConfig", args.buildConfig,
     "--baseExampleDir", "/mbsim-env/mbsim/examples"]+\
     (["--disableCompare", "--disableValidate",
     "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
@@ -363,12 +386,12 @@ def runExamplesPartition(ARGS, pullMbsim, pullAll):
   return ret
 
 if args.runExamplesPre:
-  ret+=runExamplesPartition(["--pre"], pullMbsim=True, pullAll=False)
+  ret+=runExamplesPartition(["--pre"], pullExampleRepos=True, pullAll=False)
 
 if args.runExamplesPartition:
-  ret+=runExamplesPartition(["--partition"], pullMbsim=True, pullAll=True)
+  ret+=runExamplesPartition(["--partition"], pullExampleRepos=True, pullAll=True)
 
 if args.runExamplesPost:
-  ret+=runExamplesPartition(["--post"], pullMbsim=True, pullAll=True)
+  ret+=runExamplesPartition(["--post"], pullExampleRepos=True, pullAll=True)
 
 sys.exit(ret)

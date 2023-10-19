@@ -26,6 +26,7 @@ argparser.add_argument("--jobs", "-j", type=int, default=psutil.cpu_count(False)
 argparser.add_argument('--forceBuild', action="store_true", help="Passed to buily.py if existing")
 argparser.add_argument("--ccacheSize", default=10, type=int, help="Maximal ccache size in GB.")
 argparser.add_argument("--buildRunID", default=None, type=int, help="The id of the builds.model.Run dataset this example run belongs to.")
+argparser.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")
 
 args=argparser.parse_args()
 
@@ -53,18 +54,16 @@ django.db.connections.close_all()
 # run
 
 # clone repos if needed
-if not os.path.isdir("/mbsim-env/fmatvec"):
-  subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/fmatvec.git"], cwd="/mbsim-env",
-    stdout=sys.stdout, stderr=sys.stderr)
-if not os.path.isdir("/mbsim-env/hdf5serie"):
-  subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/hdf5serie.git"], cwd="/mbsim-env",
-    stdout=sys.stdout, stderr=sys.stderr)
-if not os.path.isdir("/mbsim-env/openmbv"):
-  subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/openmbv.git"], cwd="/mbsim-env",
-    stdout=sys.stdout, stderr=sys.stderr)
-if not os.path.isdir("/mbsim-env/mbsim"):
-  subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/mbsim.git"], cwd="/mbsim-env",
-    stdout=sys.stdout, stderr=sys.stderr)
+for repo in [
+              "https://github.com/mbsim-env/fmatvec.git",
+              "https://github.com/mbsim-env/hdf5serie.git",
+              "https://github.com/mbsim-env/openmbv.git",
+              "https://github.com/mbsim-env/mbsim.git",
+            ]+args.buildConfig.get("buildRepos", [])+args.buildConfig.get("exampleRepos", []):
+  localDir=repo.split("/")[-1][0:-4]
+  if not os.path.isdir("/mbsim-env/"+localDir):
+    subprocess.check_call(["git", "clone", "-q", "--depth", "1", repo], cwd="/mbsim-env",
+      stdout=sys.stdout, stderr=sys.stderr)
 
 os.environ['WINEPATH']=((os.environ['WINEPATH']+";") if 'WINEPATH' in os.environ else "")+"/mbsim-env/local/bin"
 
@@ -126,6 +125,7 @@ ret=subprocess.call(
   "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix",
   "--buildType", args.buildType,
   "--executor", args.executor,
+  "--buildConfig", args.buildConfig,
   "--passToConfigure", "--enable-shared", "--disable-static", "--enable-python",
   "--build=x86_64-redhat-linux", "--host=x86_64-w64-mingw32",
   "--with-hdf5-prefix=/3rdparty/local", 
