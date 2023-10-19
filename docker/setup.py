@@ -88,21 +88,22 @@ def getTagname():
 
 def syncLogBuildImage(build, fd=sys.stdout):
   ret=0
-  for line in build:
-    entry=json.loads(line.decode("UTF-8"))
-    if "stream" in entry:
-      print(entry["stream"], end="", file=fd)
-      fd.flush()
-    if "status" in entry:
-      print(entry["status"]+(": "+entry["id"] if "id" in entry else "")+(": "+entry["progress"] if "progress" in entry else ""), file=fd)
-      fd.flush()
-    if "error" in entry:
-      ret=1
-      print("Exited with an error", file=fd)
-      print(entry["error"], file=fd)
-      if "errorDetail" in entry and "message" in entry["errorDetail"] and entry["errorDetail"]["message"]!=entry["error"]:
-        print(entry["errorDetail"], file=fd)
-      fd.flush()
+  for lines in build:
+    for line in lines.splitlines():
+      entry=json.loads(line.decode("UTF-8"))
+      if "stream" in entry:
+        print(entry["stream"], end="", file=fd)
+        fd.flush()
+      if "status" in entry:
+        print(entry["status"]+(": "+entry["id"] if "id" in entry else "")+(": "+entry["progress"] if "progress" in entry else ""), file=fd)
+        fd.flush()
+      if "error" in entry:
+        ret=1
+        print("Exited with an error", file=fd)
+        print(entry["error"], file=fd)
+        if "errorDetail" in entry and "message" in entry["errorDetail"] and entry["errorDetail"]["message"]!=entry["error"]:
+          print(entry["errorDetail"], file=fd)
+        fd.flush()
   return ret
 
 def asyncLogContainer(container, prefix=""):
@@ -131,18 +132,23 @@ def waitContainer(container, prefix=""):
 
 runningContainers=set()
 
-allServices=[ # must be in order
-  "database",
-  "filestorage",
-  "build",
-  "buildwin64",
-  "builddoc",
-  "builddocker",
-  "proxy",
-  "webserver",
-  "webapp",
-  "webapprun",
-]
+if sys.platform=="linux":
+  allServices=[ # must be in order
+    "database",
+    "filestorage",
+    "build",
+    "buildwin64",
+    "builddoc",
+    "builddocker",
+    "proxy",
+    "webserver",
+    "webapp",
+    "webapprun",
+  ]
+else:
+  allServices=[ # must be in order
+    "buildmsys2ucrt64",
+  ]
 
 global args
 args=None
@@ -348,6 +354,13 @@ def build(s, jobs=psutil.cpu_count(False), fd=sys.stdout, baseDir=scriptdir, cac
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=baseDir+"/..",
       dockerfile="docker/buildwin64Image/Dockerfile",
+      rm=False)
+
+  elif s=="buildmsys2ucrt64":
+    return buildImage(tag="mbsimenv/buildmsys2ucrt64:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
+      buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
+      path=baseDir+"/..",
+      dockerfile="docker/buildmsys2ucrt64Image/Dockerfile",
       rm=False)
 
   elif s=="builddoc":

@@ -84,7 +84,7 @@ def parseArguments():
   cfgOpts.add_argument("--coverage", action="store_true", help='Enable coverage analyzis using gcov/lcov.')
   cfgOpts.add_argument("--buildFailedExit", default=None, type=int, help='Define the exit code when the build fails.')
   cfgOpts.add_argument("--buildRunID", default=None, type=int, help='Internal: use a already created Run ID.')
-  cfgOpts.add_argument("--makeProg", default="make", type=str, help='Program to use as make (should be a gmake compatible make)')
+  cfgOpts.add_argument("--makeProg", default=shutil.which("make"), type=str, help='Program to use as make (should be a gmake compatible make)')
   cfgOpts.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")
   
   outOpts=argparser.add_argument_group('Output Options')
