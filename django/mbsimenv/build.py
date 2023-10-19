@@ -543,6 +543,7 @@ def repoUpdate(run, buildInfo):
     buildInfo["repo"][repo]=branch+"*"+commitidfull[repo]
   for repo in args.buildConfig.get("buildRepos", [])+args.buildConfig.get("exampleRepos", []):
     localDir=repo.split("/")[-1][0:-4]
+    os.chdir(pj(args.sourceDir, localDir))
     retlocal=0
     if not args.disableUpdate:
       print('Update remote repository '+repo+":")
