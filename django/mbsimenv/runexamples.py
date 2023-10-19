@@ -48,6 +48,7 @@ mbsimBinDir=None
 canCompare=True # True if numpy and h5py are found
 mbxmlutilsvalidate=None
 xmlCatalog=None
+
 directories=list() # a list of all examples sorted in descending order (filled recursively (using the filter) by --directories)
 
 # MBSim Modules
@@ -121,7 +122,7 @@ cfgOpts.add_argument("--disableValidate", action="store_true", help="disable val
 cfgOpts.add_argument("--printToConsole", action='store_const', const=sys.stdout, help="print all output also to the console")
 cfgOpts.add_argument("--buildType", default="local", type=str, help="Description of the build type (e.g: linux64-dailydebug) [default: %(default)s]")
 cfgOpts.add_argument("--executor", default='<span class="MBSIMENV_EXECUTOR_LOCAL">local</span>', type=str, help="The executor of this run (can contain simple HTML a-elements)")
-cfgOpts.add_argument("--prefixSimulation", default=None, type=str,
+cfgOpts.add_argument("--prefixSimulation", default=[], type=lambda x: x.split(" "),
   help="prefix the simulation command (./main, mbsimflatxml, mbsimxml) with this string: e.g. 'valgrind --tool=callgrind'")
 cfgOpts.add_argument("--prefixSimulationKeyword", default=None, type=str,
   help="VALGRIND: add special arguments and handling for valgrind")
@@ -203,12 +204,6 @@ def main():
 
   if normalRun or args.pre:
     removeOldBuilds()
-
-  # fix arguments
-  if args.prefixSimulation is not None:
-    args.prefixSimulation=args.prefixSimulation.split(' ')
-  else:
-    args.prefixSimulation=[]
 
   # check if the numpy and h5py modules exists. If not disable compare
   try: 
@@ -341,9 +336,10 @@ def main():
       xmlCatalog=None
       print("Error: 'mbsimxml --dumpXMLCatalog <file>' failed. Trying to continue without schema files.", file=sys.stderr)
 
+    global displayNR
+    displayNr=None
     if args.checkGUIs:
       # start vnc server on a free display
-      global displayNR
       displayNR=3
       while subprocess.call(["vncserver", ":"+str(displayNR), "-noxstartup", "-SecurityTypes", "None"], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))!=0:
         displayNR=displayNR+1
@@ -358,12 +354,20 @@ def main():
           print("Failed to start the dummy Windows GUI program. Return code: "+str(ret))
 
     try:
+      multiprocessing.set_start_method('spawn') # use same method on Window and Linux (= python>=3.14 default)
+      globalVars={
+        "mbsimBinDir": mbsimBinDir,
+        "canCompare": canCompare,
+        "mbxmlutilsvalidate": mbxmlutilsvalidate,
+        "xmlCatalog": xmlCatalog,
+        "displayNr": displayNr,
+      }
       if args.partition:
         pList=[]
         django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
         with multiprocessing.Pool(args.j) as pool:
           for i in range(0,args.j):
-            pList.append(pool.apply_async(func=functools.partial(runExampleOuter, exRun)))
+            pList.append(pool.apply_async(func=functools.partial(runExampleOuter, exRun, globalVars)))
           retAll=[]
           for p in pList:
             retAll.extend(p.get())
@@ -372,14 +376,14 @@ def main():
         # init mulitprocessing handling and run in parallel
         django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
         with multiprocessing.Pool(args.j) as pool:
-          poolResult=pool.map_async(functools.partial(runExample, exRun), directories, 1)
+          poolResult=pool.map_async(functools.partial(runExample, exRun, globalVars), directories, 1)
           # wait for pool to finish and get result
           retAll=poolResult.get()
         django.db.connections.close_all() # close connections before finishing a process
       else: # debugging
         import queue
         poolResult=queue.Queue()
-        poolResult.put(list(map(functools.partial(runExample, exRun, None), directories)))
+        poolResult.put(list(map(functools.partial(runExample, exRun, globalVars), directories)))
         # wait for pool to finish and get result
         retAll=poolResult.get()
 
@@ -611,8 +615,16 @@ def addExamplesByFilter(baseDir, directoriesSet):
 
 
 # run the given example
-def runExample(exRun, example):
+def runExample(exRun, globalVars, example):
   print("Started example "+example)
+
+  global mbsimBinDir, canCompare, mbxmlutilsvalidate, xmlCatalog, displayNr
+  mbsimBinDir=globalVars["mbsimBinDir"]
+  canCompare=globalVars["canCompare"]
+  mbxmlutilsvalidate=globalVars["mbxmlutilsvalidate"]
+  xmlCatalog=globalVars["xmlCatalog"]
+  displayNr=globalVars["displayNr"]
+
   sys.stdout.flush()
   savedDir=os.getcwd()
   runExampleRet=0 # run ok
@@ -753,11 +765,11 @@ def runExample(exRun, example):
 
 # helper function for runExample for args.partition
 # this function must be at global scope
-def runExampleOuter(exRun):
+def runExampleOuter(exRun, globalVars):
   dirs=ExampleServerQueue("totalTimeValgrind" if args.prefixSimulationKeyword=='VALGRIND' else "totalTimeNormal")
   retAllPerThread=[]
   for d in dirs:
-    retAllPerThread.append(runExample(exRun, d))
+    retAllPerThread.append(runExample(exRun, globalVars, d))
   django.db.connections.close_all() # close connections before finishing a process
   return retAllPerThread
 
