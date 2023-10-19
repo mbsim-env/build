@@ -440,7 +440,7 @@ def runAutobuild(s, buildType, addCommand, jobs=psutil.cpu_count(False), interac
                "--hdf5serieBranch", hdf5serieBranch,
                "--openmbvBranch", openmbvBranch,
                "--mbsimBranch", mbsimBranch,
-               "--buildConfig", buildConfig]+\
+               "--buildConfig", json.dumps(buildConfig)]+\
              addCommand+(["--enforceConfigure"] if enforceConfigure else [])
             ) if not interactive else [],
     environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname(), "MBSIMENVIMAGEID": imageID},
@@ -751,7 +751,7 @@ def run(s, jobs=psutil.cpu_count(False),
     webserver=dockerClient.containers.run(image="mbsimenv/webserver:"+getTagname(),
       init=True, name='mbsimenv.webserver.'+getTagname(),
       network=networki.id,
-      command=["-j", str(jobs)]+(["--noSSL"] if args.noSSL else [])+(["--cronBuilds"] if args.cronBuilds else [])+addCommands,
+      command=["-j", str(jobs), "--buildConfig", json.dumps(buildConfig)]+(["--noSSL"] if args.noSSL else [])+(["--cronBuilds"] if args.cronBuilds else [])+addCommands,
       environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
       volumes=volumes,
       hostname=getServername(),

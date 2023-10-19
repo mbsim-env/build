@@ -215,7 +215,7 @@ if build:
     "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix",
     "--buildType", args.buildType,
     "--executor", args.executor,
-    "--buildConfig", args.buildConfig,
+    "--buildConfig", json.dumps(args.buildConfig),
     "--passToConfigure", "--disable-static",
     "--enable-python", "--with-qwt-inc-prefix=/3rdparty/local/include", "--with-qwt-lib-prefix=/3rdparty/local/lib",
     "--with-boost-inc=/usr/include/boost169",
@@ -292,7 +292,7 @@ if build:
       if os.environ["MBSIMENVTAGNAME"]=="staging" or
          not isMaster(args.fmatvecBranch) or not isMaster(args.hdf5serieBranch) or not isMaster(args.openmbvBranch) or not isMaster(args.mbsimBranch) \
          else ["--filter", "'nightly' in labels"])
-    localRet=subprocess.call(["python3", "/context/mbsimenv/runexamples.py", "--checkGUIs", "--disableCompare", "--disableValidate", "--buildConfig", args.buildConfig,
+    localRet=subprocess.call(["python3", "/context/mbsimenv/runexamples.py", "--checkGUIs", "--disableCompare", "--disableValidate", "--buildConfig", json.dumps(args.buildConfig),
       "--buildType", args.buildType+"-valgrind", "--executor", args.executor, "--buildSystemRun", "-j", str(args.jobs),
       "--buildRunID", str(buildInfo["buildRunID"])]+\
       (["--coverage", "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local",
@@ -368,7 +368,7 @@ def runExamplesPartition(ARGS, pullExampleRepos, pullAll):
     "--buildType", args.buildType+("-valgrind" if args.valgrindExamples else ""), "--executor", args.executor,
     "--buildSystemRun", "-j", str(args.jobs),
     "--buildRunID", str(args.buildRunID), "--runID", str(args.runID),
-    "--coverage", "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "--buildConfig", args.buildConfig,
+    "--coverage", "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "--buildConfig", json.dumps(args.buildConfig),
     "--baseExampleDir", "/mbsim-env/mbsim/examples"]+\
     (["--disableCompare", "--disableValidate",
     "--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",

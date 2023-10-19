@@ -125,7 +125,7 @@ ret=subprocess.call(
   "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix",
   "--buildType", args.buildType,
   "--executor", args.executor,
-  "--buildConfig", args.buildConfig,
+  "--buildConfig", json.dumps(args.buildConfig),
   "--passToConfigure", "--enable-shared", "--disable-static", "--enable-python",
   "--build=x86_64-redhat-linux", "--host=x86_64-w64-mingw32",
   "--with-hdf5-prefix=/3rdparty/local", 
