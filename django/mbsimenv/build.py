@@ -294,7 +294,7 @@ def main():
       ]],
   }
   # add command line tools
-  toolDependencies.update(args.buildConfig.get("tools", {}))
+  toolDependencies.update(args.buildConfig.get("tools", {}).copy())
   # convert dependent list to set
   for t in toolDependencies:
     toolDependencies[t][1]=set(toolDependencies[t][1])
@@ -513,7 +513,7 @@ def repoUpdate(run, buildInfo):
       sha=branchSplit[1 if len(branchSplit)>=2 and branchSplit[1]!="" else 0]
       retlocal+=abs(base.helper.subprocessCall(["git", "checkout", "-q", "HEAD~0"], repoUpdFD))
       base.helper.subprocessCall(["git", "branch", "-q", "-D", branch], repoUpdFD)
-      retlocal+=abs(base.helper.subprocessCall(["git", "fetch", "-q", "--depth", "1", "origin", sha+":"+branch], repoUpdFD))
+      retlocal+=abs(base.helper.subprocessCall(["git", "fetch", "-q", "-f", "--depth", "1", "origin", sha+":"+branch], repoUpdFD))
     # set branch based on args
     if getattr(args, repo+'Branch')!="":
       branch=branchSplit[0]
@@ -521,11 +521,11 @@ def repoUpdate(run, buildInfo):
       retlocal+=abs(base.helper.subprocessCall(["git", "checkout", "-q", branch], repoUpdFD))
       repoUpdFD.flush()
     # get branch and commit
-    branch=base.helper.subprocessCheckOutput(['git', 'rev-parse', '--abbrev-ref', 'HEAD'], repoUpdFD).decode('utf-8').rstrip()
-    commitidfull[repo]=base.helper.subprocessCheckOutput(['git', 'log', '-n', '1', '--format=%H', 'HEAD'], repoUpdFD).decode('utf-8').rstrip()
-    commitsub=base.helper.subprocessCheckOutput(['git', 'log', '-n', '1', '--format=%s', 'HEAD'], repoUpdFD).decode('utf-8').rstrip()
-    authorName=base.helper.subprocessCheckOutput(['git', 'log', '-n', '1', '--format=%an', 'HEAD'], repoUpdFD).decode('utf-8').rstrip()
-    authorDate=base.helper.subprocessCheckOutput(['git', 'log', '-n', '1', '--format=%aI', 'HEAD'], repoUpdFD).decode('utf-8').rstrip()
+    branch=base.helper.subprocessCheckOutput(["git", "rev-parse", "--abbrev-ref", "HEAD"], repoUpdFD).decode('utf-8').rstrip()
+    commitidfull[repo]=base.helper.subprocessCheckOutput(["git", "log", "-n", "1", "--format=%H", "HEAD"], repoUpdFD).decode('utf-8').rstrip()
+    commitsub=base.helper.subprocessCheckOutput(["git", "log", "-n", "1", "--format=%s", "HEAD"], repoUpdFD).decode('utf-8').rstrip()
+    authorName=base.helper.subprocessCheckOutput(["git", "log", "-n", "1", "--format=%an", "HEAD"], repoUpdFD).decode('utf-8').rstrip()
+    authorDate=base.helper.subprocessCheckOutput(["git", "log", "-n", "1", "--format=%aI", "HEAD"], repoUpdFD).decode('utf-8').rstrip()
     ret+=retlocal
     # save
     setattr(run, repo+"Branch", branch)
@@ -548,7 +548,7 @@ def repoUpdate(run, buildInfo):
     if not args.disableUpdate:
       print('Update remote repository '+repo+":")
       retlocal+=abs(subprocess.call(["git", "checkout", "-q", "HEAD~0"]))
-      retlocal+=abs(subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", "master:master"]))
+      retlocal+=abs(subprocess.call(["git", "fetch", "-q", "-f", "--depth", "1", "origin", "master:master"]))
     retlocal+=abs(subprocess.call(["git", "checkout", "-q", "master"]))
     ret+=retlocal
   # for daily builds set the triggered flag for every repo with a change wrt the last daily build

@@ -110,7 +110,7 @@ def checkoutMbsim():
     if not os.path.isdir("/mbsim-env/mbsim"):
       subprocess.check_call(["git", "clone", "-q", "--depth", "1", "https://github.com/mbsim-env/mbsim.git"], cwd="/mbsim-env")
     subprocess.check_call(["git", "checkout", "-q", "HEAD~0"], cwd="/mbsim-env/mbsim")
-    subprocess.check_call(["git", "fetch", "-q", "--depth", "1", "origin", data["mbsimBranch"]+":"+data["mbsimBranch"]],
+    subprocess.check_call(["git", "fetch", "-q", "-f", "--depth", "1", "origin", data["mbsimBranch"]+":"+data["mbsimBranch"]],
                           cwd="/mbsim-env/mbsim")
     os.makedirs("/home/dockeruser/mbsim", exist_ok=True)
     os.chown("/home/dockeruser/mbsim", 1065, 1065)

@@ -267,7 +267,7 @@ if build:
     if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
       ret=ret+1
       print("git checkout detached failed.")
-    if subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", sha+":"+sha])!=0:
+    if subprocess.call(["git", "fetch", "-q", "-f", "--depth", "1", "origin", sha+":"+sha])!=0:
       ret=ret+1
       print("git fetch failed.")
     if subprocess.call(["git", "checkout", "-q", sha])!=0:
@@ -279,7 +279,7 @@ if build:
       print('Update remote repository '+repo+":")
       if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
         ret=ret+1
-      if subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", "master:master"])!=0:
+      if subprocess.call(["git", "fetch", "-q", "-f", "--depth", "1", "origin", "master:master"])!=0:
         ret=ret+1
       if subprocess.call(["git", "checkout", "-q", "master"])!=0:
         ret=ret+1
@@ -345,7 +345,7 @@ def runExamplesPartition(ARGS, pullExampleRepos, pullAll):
     if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
       ret=ret+1
       print("git checkout detached failed.")
-    if subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", sha+":"+sha])!=0:
+    if subprocess.call(["git", "fetch", "-q", "-f", "--depth", "1", "origin", sha+":"+sha])!=0:
       ret=ret+1
       print("git fetch failed.")
     if subprocess.call(["git", "checkout", "-q", sha])!=0:

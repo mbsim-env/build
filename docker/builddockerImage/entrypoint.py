@@ -45,7 +45,7 @@ try:
                    stderr=subprocess.STDOUT, stdout=subprocess.PIPE, encoding="UTF-8")
   f.write(p.stdout)
   p.check_returncode()
-  p=subprocess.run(["git", "fetch", "-q", "--depth", "1", "origin", args.commitID+":"+args.commitID], cwd="/mbsim-env/build",
+  p=subprocess.run(["git", "fetch", "-q", "-f", "--depth", "1", "origin", args.commitID+":"+args.commitID], cwd="/mbsim-env/build",
                    stderr=subprocess.STDOUT, stdout=subprocess.PIPE, encoding="UTF-8")
   f.write(p.stdout)
   p.check_returncode()

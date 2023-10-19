@@ -25,7 +25,7 @@ if args.mbsimBranch is not None and args.mbsimBranch!="":
   if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
     ret=ret+1
     print("git checkout detached failed.")
-  if subprocess.call(["git", "fetch", "-q", "--depth", "1", "origin", sha+":"+sha])!=0:
+  if subprocess.call(["git", "fetch", "-q", "-f", "--depth", "1", "origin", sha+":"+sha])!=0:
     ret=ret+1
     print("git fetch failed.")
   if subprocess.call(["git", "checkout", "-q", sha])!=0:
