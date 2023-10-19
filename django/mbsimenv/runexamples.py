@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 
 # imports
-#mfmf "global" cannot be used on windows with multiprocessing
 import sys
 import argparse
 import fnmatch
