@@ -208,6 +208,9 @@ def main():
     else:
       os.environ["PKG_CONFIG_PATH"]=args.prefix+"/lib/pkgconfig"
 
+  if os.name=="nt":
+    os.environ["PLATFORM"]="Windows"
+
   if normalRun or args.pre:
     removeOldBuilds()
 
@@ -1213,9 +1216,11 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
     # get shape
     refObjCols=refObj.shape[1] if len(refObj.shape)==2 else 1
     curObjCols=curObj.shape[1] if len(curObj.shape)==2 else 1
+    def toUTF8(x):
+      return x.decode("utf-8") if type(x)==bytes else x
     # get labels from reference
     try:
-      refLabels=list(map(lambda x: x.decode("utf-8"), refObj.attrs["Column Label"]))
+      refLabels=list(map(lambda x: toUTF8(x), refObj.attrs["Column Label"]))
       # append missing dummy labels
       for x in range(len(refLabels), refObjCols):
         refLabels.append('<no label in ref. for col. '+str(x+1)+'>')
@@ -1225,7 +1230,7 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
         range(refObjCols)))
     # get labels from current
     try:
-      curLabels=list(map(lambda x: x.decode("utf-8"), curObj.attrs["Column Label"]))
+      curLabels=list(map(lambda x: toUTF8(x), curObj.attrs["Column Label"]))
       # append missing dummy labels
       for x in range(len(curLabels), curObjCols):
         curLabels.append('<no label in cur. for col. '+str(x+1)+'>')
@@ -1331,6 +1336,7 @@ def compareExample(ex):
           # close h5 files
           h5CurFile.close()
       finally:
+        h5RefFile.close()
         os.unlink(tempF.name)
   base.helper.bulk_create(runexamples.models.CompareResultFile, cmpResFiles, refresh=True)
   # files in current but not in reference
