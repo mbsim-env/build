@@ -43,7 +43,7 @@ if not hasattr(octicons, '__version__') or hasattr(octicons, 'default_app_config
   print("These two packages provide the same Pyhton module 'octicons' and cannot be installed at the same time.")
   sys.exit(1)
 
-# global variables (all these must be handled special in multiprocessing code below: runExample(...))
+# global variables (all these must be handled special before multiprocessing worker start and in runExample(...), runExampleOuter(...))
 mbsimBinDir=None
 canCompare=True # True if numpy and h5py are found
 mbxmlutilsvalidate=None
@@ -781,6 +781,14 @@ def runExample(exRun, globalVars, example):
 # helper function for runExample for args.partition
 # this function must be at global scope
 def runExampleOuter(exRun, globalVars):
+  global mbsimBinDir, canCompare, mbxmlutilsvalidate, xmlCatalog, displayNR, directories
+  mbsimBinDir=globalVars["mbsimBinDir"]
+  canCompare=globalVars["canCompare"]
+  mbxmlutilsvalidate=globalVars["mbxmlutilsvalidate"]
+  xmlCatalog=globalVars["xmlCatalog"]
+  displayNR=globalVars["displayNR"]
+  directories=globalVars["directories"]
+
   dirs=ExampleServerQueue("totalTimeValgrind" if args.prefixSimulationKeyword=='VALGRIND' else "totalTimeNormal")
   retAllPerThread=[]
   for d in dirs:
@@ -806,6 +814,14 @@ def exePrefix():
     return ["wine"]
 # if args.exeEXt is set we must convert every path to a Windows path
 def exePathConvert(path):
+  if exePrefix()==["wine"]:
+    def convert(p):
+        return "z:"+p.replace("/", "\\") if os.path.isabs(p) else p.replace("/", "\\")
+    if type(path)==str:
+      return convert(path)
+    else:
+      return list(map(lambda p: convert(p), path))   
+
   if os.name!="nt" or shutil.which("cygpath") is None:
     return path
 
