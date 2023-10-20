@@ -43,12 +43,12 @@ if not hasattr(octicons, '__version__') or hasattr(octicons, 'default_app_config
   print("These two packages provide the same Pyhton module 'octicons' and cannot be installed at the same time.")
   sys.exit(1)
 
-# global variables
+# global variables (all these must be handled special in multiprocessing code below: runExample(...))
 mbsimBinDir=None
 canCompare=True # True if numpy and h5py are found
 mbxmlutilsvalidate=None
 xmlCatalog=None
-
+displayNR=None
 directories=list() # a list of all examples sorted in descending order (filled recursively (using the filter) by --directories)
 
 # MBSim Modules
@@ -260,7 +260,7 @@ def main():
     updateReference()
     return 0
 
-  # list directires to run
+  # list directories to run
   if args.action=="list":
     listExamples()
     return 0
@@ -350,10 +350,9 @@ def main():
       xmlCatalog=None
       print("Error: 'mbsimxml --dumpXMLCatalog <file>' failed. Trying to continue without schema files.", file=sys.stderr)
 
-    global displayNR
-    displayNr=None
     if args.checkGUIs:
       # start vnc server on a free display
+      global displayNR
       displayNR=3
       while subprocess.call(["vncserver", ":"+str(displayNR), "-noxstartup", "-SecurityTypes", "None"], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))!=0:
         displayNR=displayNR+1
@@ -374,7 +373,8 @@ def main():
         "canCompare": canCompare,
         "mbxmlutilsvalidate": mbxmlutilsvalidate,
         "xmlCatalog": xmlCatalog,
-        "displayNr": displayNr,
+        "displayNR": displayNR,
+        "directories": directories,
       }
       if args.partition:
         pList=[]
@@ -606,7 +606,7 @@ def addExamplesByFilter(baseDir, directoriesSet):
     src=os.path.isfile(pj(root, "Makefile")) or os.path.isfile(pj(root, "Makefile_FMI")) or os.path.isfile(pj(root, "Makefile_FMI_cosim"))
     fmi=fmiFile(root) is not None or os.path.isfile(pj(root, "Makefile_FMI")) or \
         fmiCosimFile(root) is not None or os.path.isfile(pj(root, "Makefile_FMI_cosim"))
-    # skip none examples directires
+    # skip none examples directories
     if(not ppxml and not flatxml and not src and not fmi):
       continue
     dirs=[]
@@ -632,12 +632,13 @@ def addExamplesByFilter(baseDir, directoriesSet):
 def runExample(exRun, globalVars, example):
   print("Started example "+example)
 
-  global mbsimBinDir, canCompare, mbxmlutilsvalidate, xmlCatalog, displayNr
+  global mbsimBinDir, canCompare, mbxmlutilsvalidate, xmlCatalog, displayNR, directories
   mbsimBinDir=globalVars["mbsimBinDir"]
   canCompare=globalVars["canCompare"]
   mbxmlutilsvalidate=globalVars["mbxmlutilsvalidate"]
   xmlCatalog=globalVars["xmlCatalog"]
-  displayNr=globalVars["displayNr"]
+  displayNR=globalVars["displayNR"]
+  directories=globalVars["directories"]
 
   sys.stdout.flush()
   savedDir=os.getcwd()
