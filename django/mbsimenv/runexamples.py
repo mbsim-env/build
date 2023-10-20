@@ -798,6 +798,14 @@ def exePrefix():
     return ["wine"]
 # if args.exeEXt is set we must convert every path to a Windows path
 def exePathConvert(path):
+  if exePrefix()==["wine"]:
+    def convert(p):
+        return "z:"+p.replace("/", "\\") if os.path.isabs(p) else p.replace("/", "\\")
+    if type(path)==str:
+      return convert(path)
+    else:
+      return list(map(lambda p: convert(p), path))   
+
   if os.name!="nt" or shutil.which("cygpath") is None:
     return path
 
