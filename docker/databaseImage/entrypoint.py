@@ -20,6 +20,7 @@ argparser=argparse.ArgumentParser(
   
 argparser.add_argument("--noSSL", action='store_true', help="Disable SSL support")
 argparser.add_argument("--dockerSubnet", default=[], nargs="*", help="The subnet's of the internal docker network's")
+argparser.add_argument("--cronBuilds", action='store_true', help="Run daily and CI builds in docker containers by cron.")
 
 args=argparser.parse_args()
 
@@ -97,14 +98,15 @@ site.domain=os.environ["MBSIMENVSERVERNAME"]
 site.name=os.environ["MBSIMENVSERVERNAME"]
 site.save()
 
-# create github app
-sa, _=allauth.socialaccount.models.SocialApp.objects.get_or_create(provider="github")
-sa.name="MBSim-Environment Build Service"
-sa.client_id=mbsimenvSecrets.getSecrets("githubAppClientID")
-sa.secret=mbsimenvSecrets.getSecrets("githubAppSecret")
-sa.save()
-sa.sites.add(django.contrib.sites.models.Site.objects.get(id=1))
-sa.save()
+if mbsimenvSecrets.getSecrets("githubAppSecret")!="":
+  # create github app
+  sa, _=allauth.socialaccount.models.SocialApp.objects.get_or_create(provider="github")
+  sa.name="MBSim-Environment Build Service"
+  sa.client_id=mbsimenvSecrets.getSecrets("githubAppClientID")
+  sa.secret=mbsimenvSecrets.getSecrets("githubAppSecret")
+  sa.save()
+  sa.sites.add(django.contrib.sites.models.Site.objects.get(id=1))
+  sa.save()
 
 # add master, master, master, master in CIBranches and DailyBranches, if the branch combi is empty
 for model in ["CIBranches", "DailyBranches"]:

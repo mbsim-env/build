@@ -527,7 +527,8 @@ def runNetworkAndDatabase(printLog, daemon):
     init=True, name='mbsimenv.database.'+getTagname(),
     hostname="database", # reverse DNS must work for "database"
     network=networki.id,
-    command=(["--noSSL"] if args.noSSL else [])+["--dockerSubnet", networki.attrs["IPAM"]["Config"][0]["Subnet"], networke.attrs["IPAM"]["Config"][0]["Subnet"]],
+    command=(["--noSSL"] if args.noSSL else [])+\
+            ["--dockerSubnet", networki.attrs["IPAM"]["Config"][0]["Subnet"], networke.attrs["IPAM"]["Config"][0]["Subnet"]],
     environment={"MBSIMENVSERVERNAME": getServername(), "GITCOMMITID": databaseImage.labels["gitCommitID"], "IMAGEID": databaseImage.id},
     volumes=volumes,
     ports=ports,
@@ -764,7 +765,10 @@ def run(s, jobs=psutil.cpu_count(False),
     webserver=dockerClient.containers.run(image="mbsimenv/webserver:"+getTagname(),
       init=True, name='mbsimenv.webserver.'+getTagname(),
       network=networki.id,
-      command=["-j", str(jobs), "--buildConfig", json.dumps(buildConfig)]+(["--noSSL"] if args.noSSL else [])+(["--cronBuilds"] if args.cronBuilds else [])+addCommands,
+      command=["-j", str(jobs), "--buildConfig", json.dumps(buildConfig)]+\
+              (["--noSSL"] if args.noSSL else [])+\
+              (["--cronBuilds"] if args.cronBuilds else [])+\
+              addCommands,
       environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
       volumes=volumes,
       hostname=getServername(),

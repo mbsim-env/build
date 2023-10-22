@@ -231,7 +231,7 @@ def releaseDistribution(request, run_id):
   # prepare the cache for github access
   gh=base.helper.GithubCache(request)
   # if not logged in or not the appropriate right then return a http error
-  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout):
+  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and self.request.user.socialaccount_set.count()!=0:
     return django.http.HttpResponseForbidden()
   # get data
   run=builds.models.Run.objects.get(id=run_id)
@@ -251,61 +251,62 @@ def releaseDistribution(request, run_id):
   if not run.distributionFile or not run.distributionDebugFile:
     return django.http.HttpResponseBadRequest("Release file (or debug file) not propably build.")
 
-  org="mbsim-env"
-  repos=['fmatvec', 'hdf5serie', 'openmbv', 'mbsim']
-  # create tag object, create git reference and create a github release for all repositories
-  # worker function to make github api requests in parallel
-  def tagRefRelease(repo, out):
-    try:
-      if os.environ["MBSIMENVTAGNAME"]!="latest":
-        print("Skipping setting rlease tags on github, this is the staging system!")
+  if mbsimenvSecrets.getSecrets("githubAppSecret")!="":
+    repos=['fmatvec', 'hdf5serie', 'openmbv', 'mbsim']
+    # create tag object, create git reference and create a github release for all repositories
+    # worker function to make github api requests in parallel
+    def tagRefRelease(repo, out):
+      try:
+        if os.environ["MBSIMENVTAGNAME"]!="latest":
+          print("Skipping setting rlease tags on github, this is the staging system!")
+          out.clear()
+          out['success']=True
+          out['message']="Skipping setting rlease tags on github, this is the staging system!"
+          return
+        ghrepo=gh.getMbsimenvRepo(repo)
+        commitid=getattr(run, repo+"UpdateCommitID")
+        message="Release "+releaseVersion+" of MBSim-Env for "+platform+"\n"+\
+                "\n"+\
+                "The binary "+platform+" release can be downloaded from\n"+\
+                "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("service:releases")+"\n"+\
+                "Please note that this binary release includes a full build of MBSim-Env not only of this repository."
+        # create github tag
+        gittag=ghrepo.create_git_tag(tagName, message, commitid, "commit",
+          tagger=github.InputGitAuthor(request.user.username, request.user.email,
+                                       datetime.date.today().strftime("%Y-%m-%dT%H:%M:%SZ")))
+        # create git tag
+        ghrepo.create_git_ref("refs/tags/"+tagName, gittag.sha)
+        # create release
+        ghrepo.create_git_release(tagName, "Release "+releaseVersion+" of MBSim-Env for "+platform, message)
+      except github.GithubException as ex:
         out.clear()
-        out['success']=True
-        out['message']="Skipping setting rlease tags on github, this is the staging system!"
-        return
-      ghrepo=gh.getMbsimenvRepo(repo)
-      commitid=getattr(run, repo+"UpdateCommitID")
-      message="Release "+releaseVersion+" of MBSim-Env for "+platform+"\n"+\
-              "\n"+\
-              "The binary "+platform+" release can be downloaded from\n"+\
-              "https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("service:releases")+"\n"+\
-              "Please note that this binary release includes a full build of MBSim-Env not only of this repository."
-      # create github tag
-      gittag=ghrepo.create_git_tag(tagName, message, commitid, "commit",
-        tagger=github.InputGitAuthor(request.user.username, request.user.email,
-                                     datetime.date.today().strftime("%Y-%m-%dT%H:%M:%SZ")))
-      # create git tag
-      ghrepo.create_git_ref("refs/tags/"+tagName, gittag.sha)
-      # create release
-      ghrepo.create_git_release(tagName, "Release "+releaseVersion+" of MBSim-Env for "+platform, message)
-    except github.GithubException as ex:
-      out.clear()
-      out['success']=False
-      out['message']=ex.data["message"] if "message" in ex.data else str(ex.data)
-    except:
-      import traceback
-      out.clear()
-      out['success']=False
-      out['message']="Internal error: Please report the following error to the maintainer:\n"+traceback.format_exc()
-  # start worker threads
-  thread={}
-  out={}
-  for repo in repos:
-    out[repo]={'success': True, 'message': ''}
-    thread[repo]=threading.Thread(target=tagRefRelease, args=(repo, out[repo]))
-    thread[repo].start()
-  # wait for all threads
-  for repo in repos:
-    thread[repo].join()
-  # combine output of all threads
-  error=False
-  errorMsg=""
-  for repo in repos:
-    if not out[repo]['success']:
-      error=True
-    errorMsg=errorMsg+("\n" if len(out[repo]['message'])>0 else "")+out[repo]['message']
-  if error:
-    return django.http.HttpResponseBadRequest("Releasing failed:\n"+errorMsg)
+        out['success']=False
+        out['message']=ex.data["message"] if "message" in ex.data else str(ex.data)
+      except:
+        import traceback
+        out.clear()
+        out['success']=False
+        out['message']="Internal error: Please report the following error to the maintainer:\n"+traceback.format_exc()
+    # start worker threads
+    thread={}
+    out={}
+    for repo in repos:
+      out[repo]={'success': True, 'message': ''}
+      thread[repo]=threading.Thread(target=tagRefRelease, args=(repo, out[repo]))
+      thread[repo].start()
+    # wait for all threads
+    for repo in repos:
+      thread[repo].join()
+    # combine output of all threads
+    error=False
+    errorMsg=""
+    for repo in repos:
+      if not out[repo]['success']:
+        error=True
+      errorMsg=errorMsg+("\n" if len(out[repo]['message'])>0 else "")+out[repo]['message']
+    if error:
+      return django.http.HttpResponseBadRequest("Releasing failed:\n"+errorMsg)
+
   # create database release object
   r=service.models.Release()
   r.platform=platform
@@ -317,10 +318,10 @@ def releaseDistribution(request, run_id):
   r.save()
   with run.distributionFile.open("rb") as fi:
     with r.releaseFile.open("wb") as fo:
-      base.helper.copyFile(fi, fo)#mfmf not working for some reason
+      base.helper.copyFile(fi, fo)
   with run.distributionDebugFile.open("rb") as fi:
     with r.releaseDebugFile.open("wb") as fo:
-      base.helper.copyFile(fi, fo)#mfmf not working for some reason
+      base.helper.copyFile(fi, fo)
   return django.http.HttpResponse()
 
 def runDistributionFileBuildtypeBranch(request, buildtype, fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch):

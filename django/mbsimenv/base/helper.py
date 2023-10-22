@@ -15,6 +15,7 @@ import enum
 import importlib.util
 import octicons.templatetags.octicons
 import hashlib
+import allauth
 
 # a dummy context object doing just nothing (e.g. usefull as a dummy lock(mutext) object.
 class NullContext(object):
@@ -46,11 +47,8 @@ class GithubCache(object):
       self.gh=None
 
   def getAccessToken(self):
-    if importlib.util.find_spec("allauth") is None:
-      return None
-
-    import allauth
-    if not self.request.user.is_authenticated:
+    if not self.request.user.is_authenticated or \
+       allauth.socialaccount.models.SocialApp.objects.filter(provider="github").count()==0:
       return None
     app=allauth.socialaccount.models.SocialApp.objects.get(provider="github")
     try:
@@ -104,7 +102,6 @@ class GithubCache(object):
     return self.request.session["githubCache"]["mbsimenvOrg"]
 
   def getUserInMbsimenvOrg(self, timeout):
-    # mfmf all users loged in with a local account should return True
     if not self.gh:
       return False
     if "githubCache" not in self.request.session:

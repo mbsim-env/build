@@ -5,12 +5,15 @@ import base
 import importlib
 import mimetypes
 import octicons
+import allauth
 from octicons.templatetags.octicons import octicon
 
 # basic view with header and footer
 class Base(django.views.generic.base.TemplateView):
   def get_context_data(self, **kwargs):
+    githubLogin=allauth.socialaccount.models.SocialApp.objects.filter(provider="github").count()>0
     context=super().get_context_data(**kwargs)
+    context["githubLogin"]=githubLogin
     context["navbar"]={
       "home": False,
       "download": False,
@@ -23,7 +26,6 @@ class Base(django.views.generic.base.TemplateView):
       # nobody is logged in -> use dummy avatar
       userAvatarEle=octicon("person", height="21")
     else:
-      import allauth
       # someone is logged in
       try:
         # get avatar from social account (github)
@@ -123,6 +125,14 @@ class ListOcticons(Base):
     return context
 
 # the user profile page
+class LocalLogin(Base):
+  template_name='base/locallogin.html'
+
+# the user profile page
+class GitHubLogin(Base):
+  template_name='base/githublogin.html'
+
+# the user profile page
 class UserProfile(Base):
   template_name='base/userprofile.html'
   def setup(self, request, *args, **kwargs):
@@ -130,7 +140,6 @@ class UserProfile(Base):
     # provide a cache for github access
     self.gh=base.helper.GithubCache(request)
   def get_context_data(self, **kwargs):
-    import allauth
     context=super().get_context_data(**kwargs)
     context["navbar"]["buildsystem"]=True
     if not self.request.user.is_authenticated:
@@ -147,11 +156,8 @@ class UserProfile(Base):
         # its not a social account (github) -> use large dummy avatar; no social user available
         socialUser=None
         userLargeAvatarEle=octicon("person", height="125")
-    context["clientID"]=allauth.socialaccount.models.SocialApp.objects.get(provider="github").client_id
-    context["userLargeAvatarEle"]=userLargeAvatarEle
-    context["socialUser"]=socialUser
-    context["githubAccessTokenDummy"]="<not shown for security reasons>" if self.gh.getAccessToken() else None
-    context["githubUserInMbsimenv"]=self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout)
+    if context["githubLogin"]:
+      context["clientID"]=allauth.socialaccount.models.SocialApp.objects.get(provider="github").client_id
     sessionDBObj=list(django.contrib.sessions.models.Session.objects.filter(session_key=self.request.session.session_key))
     if len(sessionDBObj)>0:
       context["session"]={}

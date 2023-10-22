@@ -81,9 +81,15 @@
             </li>
           {% else %}
             <li class="nav-item">
-              <a class="nav-link text-light" href="{% url "account_login" %}"
-                 data-toggle="tooltip" data-placement="bottom" title="Login with Github account">
-                {% octicon "sign-in" height="22" %} with {% octicon "mark-github" height="22" %}
+              {% if githubLogin %}
+                <a class="nav-link text-light" href="{% url "githubloginpage" %}"
+                   data-toggle="tooltip" data-placement="bottom" title="Login with Github account">
+                  {% octicon "sign-in" height="22" %} with {% octicon "mark-github" height="22" %}
+              {% else %}
+                <a class="nav-link text-light" href="{% url "localloginpage" %}"
+                   data-toggle="tooltip" data-placement="bottom" title="Login with local account">
+                  {% octicon "sign-in" height="22" %}
+              {% endif %}
               </a>
             </li>
           {% endif %}

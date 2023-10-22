@@ -1,0 +1,24 @@
+{% extends "base/base.html" %}
+
+<!-- This template overrides the allauth local account login page -->
+
+{% load static %}
+{% load octicons %}
+
+{% block title %}Login with Local Account{% endblock %}
+
+{% block body %}
+
+<h1>{% octicon "sign-in" height="38" %} Login with Local Account</h1>
+
+<p>You are about to login using a local account of this site.</p>
+<p>When logged-in this side will store your username and a hashed password.</p>
+
+<form method="POST" action="{% url 'account_login' %}">
+  {% csrf_token %}
+  <p><label for="id_login">Username:</label> <input type="text" name="login" placeholder="Username" autocomplete="username" maxlength="150" required id="id_login"></p>
+<p><label for="id_password">Password:</label> <input type="password" name="password" placeholder="Password" autocomplete="current-password" required id="id_password"></p>
+  <button type="submit" class="btn btn-success">Login</button>
+</form>
+
+{% endblock %}

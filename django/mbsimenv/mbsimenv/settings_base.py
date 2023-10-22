@@ -52,6 +52,10 @@ INSTALLED_APPS = [
   'django.contrib.staticfiles',
   'django.contrib.sites',
   'octicons',
+  'allauth',
+  'allauth.account',
+  'allauth.socialaccount',
+  'allauth.socialaccount.providers.github',
 ]
 if importlib.util.find_spec("runexamples") is not None:
   INSTALLED_APPS.append('runexamples.apps.RunexamplesConfig')
@@ -61,13 +65,6 @@ if importlib.util.find_spec("service") is not None:
   INSTALLED_APPS.append('service.apps.ServiceConfig')
 if importlib.util.find_spec("home") is not None:
   INSTALLED_APPS.append('home.apps.HomeConfig')
-if importlib.util.find_spec("allauth") is not None:
-  INSTALLED_APPS.extend([
-    'allauth',
-    'allauth.account',
-    'allauth.socialaccount',
-    'allauth.socialaccount.providers.github',
-  ])
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

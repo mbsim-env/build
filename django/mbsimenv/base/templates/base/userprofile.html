@@ -7,9 +7,10 @@
 
 {% block body %}
 
-{% if view.request.user.is_authenticated %}
-  <h1>Logged in as user <strong>{{ view.request.user.username }}</strong></h1>
+{% if view.request.user.is_authenticated and githubLogin %}
 
+  <h1>Logged in as {% octicon "mark-github" height="38" %} {% octicon "logo-github" height="38" %} User <strong>{{ view.request.user.username }}</strong></h1>
+  
   <div style="margin-right:0em;" class="row">
     <span class="col-3">
       {% autoescape off %}{{ userLargeAvatarEle }}{% endautoescape %}<br/>
@@ -33,7 +34,6 @@
       <span class="text-success>">{% octicon "check" %}</span>
       You are a member of the Github organization {% octicon "organization" %} mbsim-env. You can make changes using this acount.
     </div>
-  </span>
   {% else %}
     <div style="margin-top: 2em;" class="alert alert-warning" role="alert">
       <span class="text-warning>">{% octicon "alert" %}</span>
@@ -63,8 +63,33 @@
       <dt class="col-2">Session expire</dt><dd class="col-10 DATETIME">&nbsp;{{ session.expire|date:'c' }}</dd>
     {% endif %}
   </dl>
-  
+
+{% elif view.request.user.is_authenticated and not githubLogin %}
+
+  <h1>Logged in as Local  User <strong>{{ view.request.user.username }}</strong></h1>
+
+  <p>Several actions on this side requires you to be logged in with a local account.</p>
+
+  <p>This side stores your username and a hashed password.</p>
+
+  <div style="margin-top: 2em;" class="alert alert-success" role="alert">
+    <span class="text-success>">{% octicon "check" %}</span>
+    Any local user can make changes, so you can make changes using this acount.
+  </div>
+
+  <p style="margin-top: 2em;">In detail this site stores the following information for your account:</p>
+  <dl style="margin-right:0em;" class="row">
+    <dt class="col-2">Username</dt><dd class="col-10">&nbsp;{{ view.request.user.username }}</dd>
+    <dt class="col-2">Password hash</dt><dd class="col-10">&nbsp;&lt;not shown for security reasons&gt;</dd>
+    {% if session %}
+      <dt class="col-2">Session ID</dt><dd class="col-10">&nbsp;&lt;not shown for security reasons&gt;</dd>
+      <dt class="col-2">Session data</dt><dd class="col-10">&nbsp;{{ session.data }}</dd>
+      <dt class="col-2">Session expire</dt><dd class="col-10 DATETIME">&nbsp;{{ session.expire|date:'c' }}</dd>
+    {% endif %}
+  </dl>
+
 {% else %}
+
   <h1>Not logged in</h1>
 
   <div style="margin-right:0em;" class="row">
@@ -75,10 +100,16 @@
     <span class="col-10">
       <p>You are currently not logged in to this system.</p>
       <p>Browse this side anonymously starting at <a href="{% url 'service:home' %}">{% octicon "home" %} home</a>,</p>
-      <p>or <a href="{% url 'account_login' %}">{% octicon "sign-in" %} login</a> using a
-            <a href="https://github.com/">{% octicon "logo-github" %}</a> account.</p>
+      {% if githubLogin %}
+        <p>or <a href="{% url 'githubloginpage' %}">{% octicon "sign-in" %} login</a> using a
+              <a href="https://github.com/">{% octicon "logo-github" %}</a> account.</p>
+      {% else %}
+        <p>or <a href="{% url 'localloginpage' %}">{% octicon "sign-in" %} login</a> using a
+              local account.</p>
+      {% endif %}
     </span>
   </div>
+
 {% endif %}
 
 {% endblock %}
