@@ -1171,7 +1171,7 @@ def executeFMISrcExample(ex, executeFD):
     if base.helper.subprocessCall(["make", "-f", basename, "clean"], executeFD)!=0: return 1, 0
   if base.helper.subprocessCall(["make", "-f", basename], executeFD)!=0: return 1, 0
   # create and run FMU
-  if os.name=="nt":
+  if os.name=="nt" or args.exeExt==".exe":
     dllExt=".dll"
   else:
     dllExt=".so"
