@@ -16,7 +16,7 @@ RUN yum --setopt=skip_missing_names_on_install=False install -y epel-release cen
   python3-psycopg2 \
   python36-requests \
   && yum clean all
-RUN python3 -m pip install --upgrade pip && pip3 install django==3.2 django-octicons==1.0 paramiko==2.9
+RUN python3 -m pip install --upgrade pip && pip3 install django==3.2 django-allauth==0.48 django-octicons==1.0 paramiko==2.9
 # config git2.27
 ENV PATH=/opt/rh/rh-git227/root/usr/bin:$PATH \
     LD_LIBRARY_PATH=/opt/rh/httpd24/root/usr/lib64:$LD_LIBRARY_PATH

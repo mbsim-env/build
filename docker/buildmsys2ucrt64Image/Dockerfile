@@ -66,7 +66,7 @@ RUN "pacman --noconfirm -S \
 # mfmf java must be installed
 
 # install using pip
-RUN "pip install django==3.2 django-octicons==1.0 paramiko==2.9"
+RUN "pip install django==3.2 django-allauth==0.48 django-octicons==1.0 paramiko==2.9"
 
 # patch swig
 RUN "mkdir /context"
