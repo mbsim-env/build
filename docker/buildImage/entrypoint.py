@@ -287,7 +287,8 @@ if build:
     valgrindEnv=os.environ.copy()
     valgrindEnv["MBSIM_SET_MINIMAL_TEND"]="1"
     valgrindEnv["HDF5SERIE_FIXAFTER"]=str(10*60*1000)#10min
-    # build
+    # run examples
+    os.chdir("/mbsim-env/mbsim-valgrind/examples")
     RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] \
       if os.environ["MBSIMENVTAGNAME"]=="staging" or
          not isMaster(args.fmatvecBranch) or not isMaster(args.hdf5serieBranch) or not isMaster(args.openmbvBranch) or not isMaster(args.mbsimBranch) \
