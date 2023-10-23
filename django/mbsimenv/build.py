@@ -17,6 +17,7 @@ import mbsimenvSecrets
 import builds
 import tempfile
 import psutil
+import copy
 
 if django.VERSION[0]!=3:
   print("Need django version 3. This is django version "+django.__version__)
@@ -294,7 +295,7 @@ def main():
       ]],
   }
   # add command line tools
-  toolDependencies.update(args.buildConfig.get("tools", {}).copy())
+  toolDependencies.update(copy.deepcopy(args.buildConfig.get("tools", {})))
   # convert dependent list to set
   for t in toolDependencies:
     toolDependencies[t][1]=set(toolDependencies[t][1])

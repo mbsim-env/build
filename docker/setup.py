@@ -439,7 +439,7 @@ def runAutobuild(s, buildType, addCommand, jobs=psutil.cpu_count(False), interac
 
   # build
   renameStoppedContainer('mbsimenv.build.'+buildType+'.')
-  imageName=("mbsimenv/buildwin64" if buildType.startswith("win64-") else "mbsimenv/build")+":"+getTagname()
+  imageName=(buildConfig.get("buildwin64Image", "mbsimenv/buildwin64") if buildType.startswith("win64-") else buildConfig.get("buildImage", "mbsimenv/build"))+":"+getTagname()
   imageID=dockerClient.images.get(imageName).id
   build=dockerClient.containers.run(
     image=imageName,
