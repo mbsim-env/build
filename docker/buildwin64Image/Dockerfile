@@ -41,7 +41,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   && dnf config-manager --add-repo https://dl.winehq.org/wine-builds/fedora/31/winehq.repo \
   && dnf install -y winehq-stable \
   && yum clean all
-RUN python3 -m pip install --upgrade pip && pip3 install django==3.2 django-octicons==1.0 paramiko==2.9
+RUN python3 -m pip install --upgrade pip && pip3 install django==3.2 django-allauth==0.48 django-octicons==1.0 paramiko==2.9
 # bugfix for moc
 RUN mv /usr/x86_64-w64-mingw32/bin/qt5/moc /usr/x86_64-w64-mingw32/bin/qt5/moc.org
 COPY docker/buildwin64Image/moc /usr/x86_64-w64-mingw32/bin/qt5/moc

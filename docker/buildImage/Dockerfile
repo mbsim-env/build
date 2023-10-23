@@ -78,7 +78,7 @@ ENV PATH=/opt/rh/rh-git227/root/usr/bin:/opt/rh/devtoolset-7/root/usr/bin:$PATH 
 RUN mkdir -p /3rdparty/local && cd /3rdparty/local && npm install mathjax-node@2.1
 RUN python3 -m pip install --upgrade pip==21.3.1 && \
     pip3 install --upgrade setuptools && \
-    pip3 install h5py==2.9.0 sympy==1.9 django==3.2 django-octicons==1.0 paramiko==2.9
+    pip3 install h5py==2.9.0 sympy==1.9 django==3.2 django-allauth==0.48 django-octicons==1.0 paramiko==2.9
 
 
 
