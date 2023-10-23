@@ -82,7 +82,7 @@ The 'Makefile' of a SRC example must build the example and must create an execut
 )
 
 mainOpts=argparser.add_argument_group('Main Options')
-mainOpts.add_argument("directories", nargs="*", default=os.curdir,
+mainOpts.add_argument("directories", nargs="*", default=[],
   help="A directory to run (recursively). If prefixed with '^' remove the directory form the current list [default: %(default)s]")
 mainOpts.add_argument("--action", default="report", type=str,
   help='''The action of this script: [default: %(default)s]
@@ -237,14 +237,9 @@ def main():
       return -1
 
   # if no directory is specified use the current dir (all examples) filter by --filter
-  if len(args.directories)==0:
-    buildConfigExamples=args.buildConfig.get("examples", [])
-    if len(buildConfigExamples)==0:
-      dirs=[os.curdir]
-    else:
-      dirs=buildConfigExamples
-  else:
-    dirs=args.directories
+  dirs=args.directories+args.buildConfig.get("examples", [])
+  if len(dirs)==0:
+    dirs=[os.curdir]
   # loop over all directories on command line and add subdir which match the filter
   directoriesSet=set()
   for d in dirs:
