@@ -118,8 +118,8 @@ def waitContainer(container, prefix=""):
   if (3,0,0)<=docker.version_info:
     if ret["StatusCode"]!=0:
       print(prefix+"Exited with an error. Status code "+str(ret["StatusCode"]))
-    if ret["Error"] is not None:
-      print(prefix+ret["Error"])
+    if "Error" in ret and ret["Error"] is not None:
+      print(prefix+str(ret["Error"]))
     sys.stdout.flush()
     return ret["StatusCode"]
   else:
