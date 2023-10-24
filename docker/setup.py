@@ -762,6 +762,9 @@ def run(s, jobs=psutil.cpu_count(False),
     }
     if not args.noSSL:
       volumes['mbsimenv_letsencrypt.'+getTagname()]=        {"bind": "/etc/letsencrypt",     "mode": "rw"}
+    environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()}
+    if "MBSIMENVDEBUG" in os.environ:
+      environment["MBSIMENVDEBUG"]="1"
     webserver=dockerClient.containers.run(image="mbsimenv/webserver:"+getTagname(),
       init=True, name='mbsimenv.webserver.'+getTagname(),
       network=networki.id,
@@ -769,7 +772,7 @@ def run(s, jobs=psutil.cpu_count(False),
               (["--noSSL"] if args.noSSL else [])+\
               (["--cronBuilds"] if args.cronBuilds else [])+\
               addCommands,
-      environment={"MBSIMENVSERVERNAME": getServername(), "MBSIMENVTAGNAME": getTagname()},
+      environment=environment,
       volumes=volumes,
       hostname=getServername(),
       ports=ports,

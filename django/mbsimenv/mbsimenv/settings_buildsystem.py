@@ -1,9 +1,10 @@
 import os.path
+import os
 from .settings_base import *
 
 MBSIMENV_TYPE='buildsystem'
 
-DEBUG = False
+DEBUG = "MBSIMENVDEBUG" in os.environ
 CSRF_COOKIE_SECURE = True
 LOGGING['disable_existing_loggers'] = False
 
