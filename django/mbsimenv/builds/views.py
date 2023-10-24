@@ -231,7 +231,7 @@ def releaseDistribution(request, run_id):
   # prepare the cache for github access
   gh=base.helper.GithubCache(request)
   # if not logged in or not the appropriate right then return a http error
-  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and base.helper.isGitHubUser(request):
+  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and not base.helper.isLocalUser(request):
     return django.http.HttpResponseForbidden()
   # get data
   run=builds.models.Run.objects.get(id=run_id)
