@@ -107,7 +107,7 @@ def refUpdate(request, exampleName):
   # prepare the cache for github access
   gh=base.helper.GithubCache(request)
   # if not logged in or not the appropriate right then return a http error
-  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and self.request.user.socialaccount_set.count()!=0:
+  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and base.helper.isGitHubUser(request):
     return django.http.HttpResponseForbidden()
   # get the request data as json
   req=json.loads(request.body)
@@ -129,7 +129,7 @@ class DataTableExample(base.views.DataTable):
     super().setup(request, *args, **kwargs)
     self.run=runexamples.models.Run.objects.get(id=self.kwargs["run_id"])
     self.isCurrent=self.run.getCurrent().id==self.run.id
-    self.allowedUser=self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout) or self.request.user.socialaccount_set.count()==0
+    self.allowedUser=self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout) or not base.helper.isGitHubUser(request)
 
   # return the queryset to display [required]
   @functools.lru_cache(maxsize=1)
