@@ -54,7 +54,7 @@ class Run(base.views.Base):
     context['runBuildTypeIcon']=base.helper.buildTypeIcon(self.run.buildType)
     context['repoList']=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
     # the checkboxes for refernece update are enabled for the current runexample and when the logged in user has the rights to do so
-    context["enableUpdate"]=isCurrent and (self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout) or self.request.user.socialaccount_set.count()==0) and \
+    context["enableUpdate"]=isCurrent and (self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout) or not base.helper.isGitHubUser(self.request)) and \
                             self.run.buildType=="linux64-dailydebug" and \
                             self.run.build_run is not None and \
                             self.run.build_run.fmatvecBranch=="master" and self.run.build_run.hdf5serieBranch=="master" and \

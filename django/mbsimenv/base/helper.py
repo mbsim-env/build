@@ -24,6 +24,9 @@ class NullContext(object):
   def __exit__(self, exc_type, exc_val, exc_tb):
     return False 
 
+def isGitHubUser(request):
+  return hasattr(request.user, "socialaccount_set") and request.user.socialaccount_set.count()!=0
+
 class GithubCache(object):
   # Timeouts after that the github rights for the current user are reget from github.
   # A change of the user rights on github may only have an effect on this site after this timeout.

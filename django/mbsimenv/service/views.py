@@ -162,7 +162,7 @@ def repoBranches(request):
 
   repoList=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
   res={}
-  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and self.request.user.socialaccount_set.count()!=0:
+  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and base.helper.isGitHubUser(request):
     # not logged in or allowed -> just show this as branch names and do not enable the comboxboxes and buttons
     for repo in repoList:
       res[repo+"Branch"]=["&lt;not logged in or allowed&gt;"]
@@ -193,7 +193,7 @@ def addBranchCombination(request, model):
   # prepare the cache for github access
   gh=base.helper.GithubCache(request)
   # if not logged in or not the appropriate right then return a http error
-  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and self.request.user.socialaccount_set.count()!=0:
+  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and base.helper.isGitHubUser(request):
     return django.http.HttpResponseForbidden()
   # get the request data as json
   req=json.loads(request.body)
@@ -244,7 +244,7 @@ def deleteBranchCombination(request, model, id):
   # prepare the cache for github access
   gh=base.helper.GithubCache(request)
   # if not logged in or not the appropriate right then return a http error
-  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and self.request.user.socialaccount_set.count()!=0:
+  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and base.helper.isGitHubUser(request):
     return django.http.HttpResponseForbidden()
   # get branch combi in table the example on the the reference should be updated or create it
   b=getattr(service.models, model).objects.get(id=id)
@@ -501,7 +501,7 @@ def checkValidUser(request):
   # prepare the cache for github access
   gh=base.helper.GithubCache(request)
   # if not logged in or not the appropriate right then return a http error
-  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and self.request.user.socialaccount_set.count()!=0:
+  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and base.helper.isGitHubUser(request):
     return django.http.HttpResponseForbidden()
   return django.http.HttpResponse()
 
