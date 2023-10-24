@@ -54,7 +54,7 @@ class Run(base.views.Base):
     context['runBuildTypeIcon']=base.helper.buildTypeIcon(self.run.buildType)
     context['repoList']=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
     # the checkboxes for refernece update are enabled for the current runexample and when the logged in user has the rights to do so
-    context["enableUpdate"]=isCurrent and (self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout) or not base.helper.isGitHubUser(self.request)) and \
+    context["enableUpdate"]=isCurrent and (self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout) or base.helper.isLocalUser(self.request)) and \
                             self.run.buildType=="linux64-dailydebug" and \
                             self.run.build_run is not None and \
                             self.run.build_run.fmatvecBranch=="master" and self.run.build_run.hdf5serieBranch=="master" and \
@@ -107,7 +107,7 @@ def refUpdate(request, exampleName):
   # prepare the cache for github access
   gh=base.helper.GithubCache(request)
   # if not logged in or not the appropriate right then return a http error
-  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and self.request.user.socialaccount_set.count()!=0:
+  if not gh.getUserInMbsimenvOrg(base.helper.GithubCache.changesTimeout) and not base.helper.isLocalUser(request):
     return django.http.HttpResponseForbidden()
   # get the request data as json
   req=json.loads(request.body)
@@ -129,7 +129,7 @@ class DataTableExample(base.views.DataTable):
     super().setup(request, *args, **kwargs)
     self.run=runexamples.models.Run.objects.get(id=self.kwargs["run_id"])
     self.isCurrent=self.run.getCurrent().id==self.run.id
-    self.allowedUser=self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout) or self.request.user.socialaccount_set.count()==0
+    self.allowedUser=self.gh.getUserInMbsimenvOrg(base.helper.GithubCache.viewTimeout) or base.helper.isLocalUser(request)
 
   # return the queryset to display [required]
   @functools.lru_cache(maxsize=1)
