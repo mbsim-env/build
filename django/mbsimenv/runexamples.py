@@ -1581,8 +1581,9 @@ def coverage(exRun, lcovResultFile=None):
       "*.moc.cc", # mbsim generated
       "/mbsim-env/*/CMakeFiles/*", "/mbsim-env/*/CMakeFiles/*/*", "/mbsim-env/*/CMakeFiles/*/*/*", # cmake generated
       "/mbsim-env/hdf5serie*/h5plotserie/h5plotserie/*", "/mbsim-env/openmbv*/openmbv/openmbv/*", "/mbsim-env/mbsim*/mbsimgui/mbsimgui/*", # GUI (untested)
-      "/mbsim-env/mbsim*/modules/mbsimInterface/mbsimInterface/*", # other untested features
-      "-o", pj(tempDir, "cov.trace.final")], lcovFD))
+      "/mbsim-env/mbsim*/modules/mbsimInterface/mbsimInterface/*" # other untested features
+      ]+args.buildConfig.get("coverageExcludes", [])+\
+      ["-o", pj(tempDir, "cov.trace.final")], lcovFD))
     if lcovResultFile is not None:
       shutil.copyfile(pj(tempDir, "cov.trace.final"), lcovResultFile)
       return 0
