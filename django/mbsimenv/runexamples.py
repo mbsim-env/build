@@ -1600,58 +1600,59 @@ def coverage(exRun, lcovResultFile=None):
     # upload to codecov v4
     repos=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
     for repo in repos:
-      # run lcov: remove all counters except one repo
-      ret=ret+abs(base.helper.subprocessCall(["lcov", "-q", "-r", pj(tempDir, "cov.trace.final")]+\
-        list(map(lambda x: "/mbsim-env/"+x+"/*", filter(lambda x: x!=repo, repos)))+\
-        ["-o", pj(tempDir, "cov.trace.final."+repo)], lcovFD))
-      # replace file names in lcov trace file
-      for line in fileinput.FileInput(pj(tempDir, "cov.trace.final."+repo), inplace=1):
-        if line.startswith("SF:/mbsim-env/"+repo+"/"):
-          line=line.replace("SF:/mbsim-env/"+repo+"/", "SF:/")
-        print(line, end="")
-      # upload (v4)
-      commitID=getattr(exRun.build_run, repo+"UpdateCommitID")
-      if os.environ["MBSIMENVTAGNAME"]=="latest" and \
-         exRun.build_run.fmatvecBranch=="master" and exRun.build_run.hdf5serieBranch=="master" and \
-         exRun.build_run.openmbvBranch=="master" and exRun.build_run.mbsimBranch=="master":
-        nrTry=1
-        tries=3
-        while nrTry<=tries:
-          # codecov has some timeouts on connect (try some times more)
-          print("Upload to codecov v4 try %d/%d"%(nrTry, tries), file=lcovFD)
-          codecovError=False
-          try:
-            response=requests.post("https://codecov.io/upload/v4?commit=%s&build=%d&job=%d&build_url=%s&flags=%s&token=%s"% \
-              (commitID, exRun.build_run.id, exRun.id,
-               urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
-               "valgrind" if "valgrind" in args.buildType else "normal", mbsimenvSecrets.getSecrets("codecovUploadToken", repo)),
-              headers={"Accept": "text/plain"})
-          except:
-            codecovError=True
-          if not codecovError and response.status_code==200:
-            break
-          if nrTry<tries: time.sleep(30) # wait some time
-          nrTry=nrTry+1
-        if codecovError or response.status_code!=200:
-          ret=ret+1
-          print("codecov status code "+str(response.status_code), file=lcovFD)
-          lcovFD.write(response.content.decode("utf-8"))
-        else:
-          res=response.text.splitlines()
-          codecovURL=res[0]
-          uploadURL=res[1]
-          with open(pj(tempDir, "cov.trace.final."+repo), "r") as f:
-            response=requests.put(uploadURL, headers={"Content-Type": "text/plain"}, data=f.read())
-          if response.status_code!=200:
+      if mbsimenvSecrets.getSecrets("codecovUploadToken", repo)!="":
+        # run lcov: remove all counters except one repo
+        ret=ret+abs(base.helper.subprocessCall(["lcov", "-q", "-r", pj(tempDir, "cov.trace.final")]+\
+          list(map(lambda x: "/mbsim-env/"+x+"/*", filter(lambda x: x!=repo, repos)))+\
+          ["-o", pj(tempDir, "cov.trace.final."+repo)], lcovFD))
+        # replace file names in lcov trace file
+        for line in fileinput.FileInput(pj(tempDir, "cov.trace.final."+repo), inplace=1):
+          if line.startswith("SF:/mbsim-env/"+repo+"/"):
+            line=line.replace("SF:/mbsim-env/"+repo+"/", "SF:/")
+          print(line, end="")
+        # upload (v4)
+        commitID=getattr(exRun.build_run, repo+"UpdateCommitID")
+        if os.environ["MBSIMENVTAGNAME"]=="latest" and \
+           exRun.build_run.fmatvecBranch=="master" and exRun.build_run.hdf5serieBranch=="master" and \
+           exRun.build_run.openmbvBranch=="master" and exRun.build_run.mbsimBranch=="master":
+          nrTry=1
+          tries=3
+          while nrTry<=tries:
+            # codecov has some timeouts on connect (try some times more)
+            print("Upload to codecov v4 try %d/%d"%(nrTry, tries), file=lcovFD)
+            codecovError=False
+            try:
+              response=requests.post("https://codecov.io/upload/v4?commit=%s&build=%d&job=%d&build_url=%s&flags=%s&token=%s"% \
+                (commitID, exRun.build_run.id, exRun.id,
+                 urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
+                 "valgrind" if "valgrind" in args.buildType else "normal", mbsimenvSecrets.getSecrets("codecovUploadToken", repo)),
+                headers={"Accept": "text/plain"})
+            except:
+              codecovError=True
+            if not codecovError and response.status_code==200:
+              break
+            if nrTry<tries: time.sleep(30) # wait some time
+            nrTry=nrTry+1
+          if codecovError or response.status_code!=200:
             ret=ret+1
-            print("S3 status code "+str(response.status_code), file=lcovFD)
+            print("codecov status code "+str(response.status_code), file=lcovFD)
             lcovFD.write(response.content.decode("utf-8"))
-      else:
-        print("Skipping upload to codecov v4, this is the staging system or a none master/master/master/master build!", file=lcovFD)
-        print("https://codecov.io/upload/v4?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
-          (commitID, "<secret for %s>"%(repo), exRun.build_run.id, exRun.id,
-           urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
-           "valgrind" if "valgrind" in args.buildType else "normal"), file=lcovFD)
+          else:
+            res=response.text.splitlines()
+            codecovURL=res[0]
+            uploadURL=res[1]
+            with open(pj(tempDir, "cov.trace.final."+repo), "r") as f:
+              response=requests.put(uploadURL, headers={"Content-Type": "text/plain"}, data=f.read())
+            if response.status_code!=200:
+              ret=ret+1
+              print("S3 status code "+str(response.status_code), file=lcovFD)
+              lcovFD.write(response.content.decode("utf-8"))
+        else:
+          print("Skipping upload to codecov v4, this is the staging system or a none master/master/master/master build!", file=lcovFD)
+          print("https://codecov.io/upload/v4?commit=%s&token=%s&build=%d&job=%d&build_url=%s&flags=%s"% \
+            (commitID, "<secret for %s>"%(repo), exRun.build_run.id, exRun.id,
+             urllib.parse.quote("https://"+os.environ['MBSIMENVSERVERNAME']+django.urls.reverse("runexamples:run", args=[exRun.id])),
+             "valgrind" if "valgrind" in args.buildType else "normal"), file=lcovFD)
 
     # set coverage info on exRun
     lcovFD.close()
