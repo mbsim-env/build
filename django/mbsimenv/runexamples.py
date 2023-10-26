@@ -1542,7 +1542,8 @@ def coverage(exRun, lcovResultFile=None):
   # lcov "-d" arguments
   dirs=map(lambda x: ["-d", pj(args.sourceDir, x),
                       "-d", pj(args.sourceDir, x+args.binSuffix)],
-                     ["fmatvec", "hdf5serie", "openmbv", "mbsim"])
+                     ["fmatvec", "hdf5serie", "openmbv", "mbsim"]+\
+                     list(map(lambda repo: repo.split("/")[-1][0:-4], args.buildConfig.get("buildRepos", []))))
   dirs=["-d", args.prefix]+[v for il in dirs for v in il]
 
   # replace header map in lcov trace file
