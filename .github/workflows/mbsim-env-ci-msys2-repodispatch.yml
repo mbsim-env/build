@@ -9,7 +9,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - name: "Install msys2"
+      - name: "Install msys2 and msys2 packages"
         uses: msys2/setup-msys2@v2
         with:
           update: true
@@ -36,6 +36,9 @@ jobs:
             mingw-w64-ucrt-x86_64-xalan-c
             mingw-w64-ucrt-x86_64-xerces-c
             mingw-w64-ucrt-x86_64-ccache
+            mingw-w64-ucrt-x86_64-h5py
+      - name: "Install pip packages"
+        run: pip3 install --upgrade pip && pip3 install django==3.2 django-allauth==0.47 django-octicons==1.0
       - name: "Add git to msys2 path"
         run: echo 'PATH="$PATH:/c/Program Files/Git/bin"' >> ~/.bash_profile
       - name: "Checkout all repos"
