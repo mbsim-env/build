@@ -38,6 +38,13 @@ jobs:
             mingw-w64-ucrt-x86_64-ccache
             mingw-w64-ucrt-x86_64-python-h5py
             mingw-w64-ucrt-x86_64-python-pip
+            mingw-w64-ucrt-x86_64-python-asgiref
+            mingw-w64-ucrt-x86_64-python-pytz
+            mingw-w64-ucrt-x86_64-python-sqlparse
+            mingw-w64-ucrt-x86_64-python-requests
+            mingw-w64-ucrt-x86_64-python-pyjwt
+            mingw-w64-ucrt-x86_64-python-cryptography
+            mingw-w64-ucrt-x86_64-python-cffi
       - name: "Install pip packages"
         run: pip install --upgrade pip && pip install django==3.2 django-allauth==0.47 django-octicons==1.0
       - name: "Add git to msys2 path"
