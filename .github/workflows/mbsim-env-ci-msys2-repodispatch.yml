@@ -39,6 +39,8 @@ jobs:
         uses: actions/checkout@v4
       - name: "patch swig"
         run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u $GITHUB_WORKSPACE)/msys2ucrt64Build/swig.git.patch
+      - name: "Add git to msys2 path"
+        run: echo 'PATH="$PATH:/c/Program Files/Git/bin"' >> ~/.bash_profile
       - name: "Checkout mbsim-env repos"
         run: >
           git clone https://github.com/mbsim-env/fmatvec.git &&
