@@ -38,7 +38,7 @@ jobs:
             mingw-w64-ucrt-x86_64-ccache
             mingw-w64-ucrt-x86_64-python-h5py
       - name: "Install pip packages"
-        run: pip3 install --upgrade pip && pip3 install django==3.2 django-allauth==0.47 django-octicons==1.0
+        run: pip install --upgrade pip && pip install django==3.2 django-allauth==0.47 django-octicons==1.0
       - name: "Add git to msys2 path"
         run: echo 'PATH="$PATH:/c/Program Files/Git/bin"' >> ~/.bash_profile
       - name: "Checkout all repos"
