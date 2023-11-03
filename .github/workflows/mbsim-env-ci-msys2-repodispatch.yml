@@ -9,6 +9,7 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
+      - run: pwd; ls -l; 
       - name: "Install msys2"
         uses: msys2/setup-msys2@v2
         with:
@@ -35,10 +36,13 @@ jobs:
             mingw-w64-ucrt-x86_64-swig
             mingw-w64-ucrt-x86_64-xalan-c
             mingw-w64-ucrt-x86_64-xerces-c
+            mingw-w64-ucrt-x86_64-ccache
+      - run: pwd; which gcc; ls -l
       - name: "Checkout build repo"
         uses: actions/checkout@v4
       - name: "patch swig"
         run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u $GITHUB_WORKSPACE)/msys2ucrt64Build/swig.git.patch
+      - run: pwd; ls -l
       - name: "Add git to msys2 path"
         run: echo 'PATH="$PATH:/c/Program Files/Git/bin"' >> ~/.bash_profile
       - name: "Checkout mbsim-env repos"
@@ -47,5 +51,6 @@ jobs:
           git clone https://github.com/mbsim-env/hdf5serie.git &&
           git clone https://github.com/mbsim-env/openmbv.git &&
           git clone https://github.com/mbsim-env/mbsim.git
+      - run: pwd; ls -l
       - name: "Start build.sh"
         run: ./build/msys2ucrt64Build/build.sh
