@@ -8,8 +8,6 @@ jobs:
     defaults:
       run:
         shell: msys2 {0}
-    strategy:
-      fail-fast: false
     steps:
       - name: "Install msys2"
         uses: msys2/setup-msys2@v2
@@ -18,7 +16,6 @@ jobs:
           msystem: UCRT64
           install: >
             dos2unix
-            git
             patch
             mingw-w64-ucrt-x86_64-arpack
             mingw-w64-ucrt-x86_64-autotools

@@ -4,7 +4,6 @@ BASEDIR=$(pwd)
 
 export MBSIM_SWIG=1
 export PATH=$BASEDIR/local-msys2ucrt64/bin:$PATH
-export PKG_CONFIG_PATH=$PKG_CONFIG_PATH:$BASEDIR/local-msys2ucrt64/lib/pkgconfig
 
 if (return 0 2>/dev/null); then
   echo "Script is sources! (just setting envvars)"
