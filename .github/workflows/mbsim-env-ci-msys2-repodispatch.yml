@@ -77,7 +77,7 @@ jobs:
         run: |
           import uuid
           print("jobs.build.steps.matrixUUID.outputs.matrixUUID:\n"+str(uuid.uuid4()))
-          with open("${{github.output}}", "at") as o:
+          with open(r"${{github.output}}", "at") as o:
             print("matrixUUID="+str(uuid.uuid4()), file=o)
       - name: "Cache restore: ccache"
         uses: actions/cache/restore@v3
