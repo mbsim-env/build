@@ -46,6 +46,6 @@ jobs:
           git clone https://github.com/mbsim-env/openmbv.git &&
           git clone https://github.com/mbsim-env/mbsim.git
       - name: "patch swig"
-        run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u $GITHUB_WORKSPACE)/msys2ucrt64Build/swig.git.patch
+        run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u $GITHUB_WORKSPACE)/build/msys2ucrt64Build/swig.git.patch
       - name: "Start build.sh"
         run: ./build/msys2ucrt64Build/build.sh
