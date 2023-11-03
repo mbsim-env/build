@@ -68,7 +68,7 @@ jobs:
           git clone https://github.com/mbsim-env/mbsim.git
       - name: "patch swig"
         run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u $GITHUB_WORKSPACE)/build/msys2ucrt64Build/swig.git.patch
-      - run: ccache -s; ls -l $XDG_CACHE_HOME/ccache; ls -l $HOME/.cache/ccache; ls -l $HOME/.ccache; true
+      - run: ccache -s; ls -l $XDG_CACHE_HOME/ccache || true; ls -l $HOME/.cache/ccache || true; ls -l $HOME/.ccache || true
 #      - name: "Cache restore: ccache"
 #        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
 #        uses: actions/cache/restore@v3
