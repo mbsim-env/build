@@ -55,6 +55,7 @@ jobs:
             mingw-w64-ucrt-x86_64-python-psycopg2
             mingw-w64-ucrt-x86_64-python-pygithub
             mingw-w64-ucrt-x86_64-qwt-qt5
+            mingw-w64-ucrt-x86_64-diffutils
             mingw-w64-ucrt-x86_64-soqt
             mingw-w64-ucrt-x86_64-spooles
             mingw-w64-ucrt-x86_64-swig
@@ -101,7 +102,7 @@ jobs:
           restore-keys: |
             ccache-msys2ucrt64--
       - name: "Start build.sh"
-        run: ./build/msys2ucrt64Build/build.sh --buildSystemRun
+        run: ./build/msys2ucrt64Build/build.sh --buildSystemRun --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
       - name: "Cache save: ccache"
         uses: actions/cache/save@v3
         with:

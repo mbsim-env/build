@@ -63,5 +63,5 @@ python3 $(dirname $0)/../django/mbsimenv/build.py \
   -DCMAKE_Fortran_FLAGS_RELEASE="$FFLAGS" \
   -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
   --passToRunexamples \
-  --checkGUIs --exeExt .exe \
+  --checkGUIs \
   "${RUNEXAMPLESARGS[@]}"
