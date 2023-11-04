@@ -131,7 +131,7 @@ cfgOpts.add_argument("--maxExecutionTime", default=30, type=float, help="The tim
 cfgOpts.add_argument("--coverage", action="store_true", help='Enable coverage analyzis using gcov/lcov')
 cfgOpts.add_argument("--sourceDir", default=None, type=str, help='[needed by coverage and valgrind]')
 cfgOpts.add_argument("--binSuffix", default="", type=str, help='[needed by coverage]')
-cfgOpts.add_argument("--prefix", default=None, type=str, help='[needed by coverage and valgrind]')
+cfgOpts.add_argument("--prefix", default=None, type=str, help='Used to extend PKG_CONFIG_PATH and [needed by coverage and valgrind]')
 cfgOpts.add_argument("--baseExampleDir", default=None, type=str, help='[needed by coverage]')
 cfgOpts.add_argument("--buildSystemRun", action="store_true", help='Run in build system mode.')
 cfgOpts.add_argument("--localServerPort", type=int, default=27583, help='Port for local server, if started automatically.')

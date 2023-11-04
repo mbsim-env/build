@@ -3,6 +3,7 @@ on:
   push:
 env:
   CCACHE_DIR: $GITHUB_WORKSPACE/ccache
+  GH_TOKEN: ${{github.token}} # needed for gh-actions-cache
 jobs:
   build:
     name: "win64-ci-msys2"
@@ -11,6 +12,12 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
+      - name: mfmf1
+        shell: pwsh
+        run: Get-Command gh
+      - name: mfmf2
+        shell: pwsh
+        run: where.exe gh
       - name: "Dump resources"
         shell: pwsh
         run: >
@@ -57,6 +64,8 @@ jobs:
             mingw-w64-ucrt-x86_64-python-defusedxml
             mingw-w64-ucrt-x86_64-python-oauthlib
             mingw-w64-ucrt-x86_64-python-requests-oauthlib
+      - name: mfmf3
+        run: which gh || true
       - name: "Install pip packages"
         run: pip install --upgrade pip && pip install django==3.2 django-allauth==0.47 django-octicons==1.0
       - name: "Add git to msys2 path"
@@ -70,7 +79,6 @@ jobs:
           git clone https://github.com/mbsim-env/mbsim.git
       - name: "patch swig"
         run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u $GITHUB_WORKSPACE)/build/msys2ucrt64Build/swig.git.patch
-      - run: ccache -s; ls -l $XDG_CACHE_HOME/ccache || true; ls -l $HOME/.cache/ccache || true; ls -l $HOME/.ccache || true
       - name: "Create build UUID"
         shell: python
         id: matrixUUID
@@ -92,7 +100,7 @@ jobs:
         uses: actions/cache/save@v3
         with:
           path: $CCACHE_DIR
-          key: ccache-msys2ucrt64--${{steps.matrixUUID.outputs.matrixUUID}}mfmf
+          key: ccache-msys2ucrt64--${{steps.matrixUUID.outputs.matrixUUID}}
       - name: "Cache remove-old: ccache"
         run: >
           gh extension install actions/gh-actions-cache &&
