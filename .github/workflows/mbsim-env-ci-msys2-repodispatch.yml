@@ -53,6 +53,7 @@ jobs:
             mingw-w64-ucrt-x86_64-python-h5py
             mingw-w64-ucrt-x86_64-python-psutil
             mingw-w64-ucrt-x86_64-python-psycopg2
+            mingw-w64-ucrt-x86_64-python-pygithub
             mingw-w64-ucrt-x86_64-qwt-qt5
             mingw-w64-ucrt-x86_64-soqt
             mingw-w64-ucrt-x86_64-spooles
