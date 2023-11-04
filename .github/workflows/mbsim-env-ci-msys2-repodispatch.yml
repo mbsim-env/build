@@ -24,106 +24,105 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
+      - name: "Dump resources"
+        shell: pwsh
+        run: >
+          echo ***df***; Get-WmiObject -Class Win32_LogicalDisk | Format-Table DeviceId, FreeSpace, Size;
+          echo ***free***; Get-CIMInstance Win32_OperatingSystem | Select FreePhysicalMemory,TotalVisibleMemory;
+          echo ***cpu***; Get-CimInstance -ClassName 'Win32_Processor' | Select-Object -Property 'DeviceID', 'Name', 'NumberOfCores';
+      - name: "Install msys2 and msys2 packages"
+        uses: msys2/setup-msys2@v2
+        with:
+          update: true
+          msystem: UCRT64
+          install: >
+            dos2unix
+            patch
+            mingw-w64-ucrt-x86_64-arpack
+            mingw-w64-ucrt-x86_64-autotools
+            mingw-w64-ucrt-x86_64-boost
+            mingw-w64-ucrt-x86_64-cmake
+            mingw-w64-ucrt-x86_64-doxygen
+            mingw-w64-ucrt-x86_64-gcc
+            mingw-w64-ucrt-x86_64-graphviz
+            mingw-w64-ucrt-x86_64-hdf5
+            mingw-w64-ucrt-x86_64-octave
+            mingw-w64-ucrt-x86_64-openblas
+            mingw-w64-ucrt-x86_64-python-numpy
+            mingw-w64-ucrt-x86_64-python-sympy
+            mingw-w64-ucrt-x86_64-python-h5py
+            mingw-w64-ucrt-x86_64-python-psutil
+            mingw-w64-ucrt-x86_64-python-psycopg2
+            mingw-w64-ucrt-x86_64-qwt-qt5
+            mingw-w64-ucrt-x86_64-soqt
+            mingw-w64-ucrt-x86_64-spooles
+            mingw-w64-ucrt-x86_64-swig
+            mingw-w64-ucrt-x86_64-xalan-c
+            mingw-w64-ucrt-x86_64-xerces-c
+            mingw-w64-ucrt-x86_64-ccache
+            mingw-w64-ucrt-x86_64-python-pip
+            mingw-w64-ucrt-x86_64-python-asgiref
+            mingw-w64-ucrt-x86_64-python-pytz
+            mingw-w64-ucrt-x86_64-python-sqlparse
+            mingw-w64-ucrt-x86_64-python-requests
+            mingw-w64-ucrt-x86_64-python-pyjwt
+            mingw-w64-ucrt-x86_64-python-cryptography
+            mingw-w64-ucrt-x86_64-python-cffi
+            mingw-w64-ucrt-x86_64-python-defusedxml
+            mingw-w64-ucrt-x86_64-python-oauthlib
+            mingw-w64-ucrt-x86_64-python-requests-oauthlib
       - name: "mfmf1"
         shell: cmd
-        run: echo %MBSIMENVDATABASE:~0,2%
-      - name: "mfmf2"
-        shell: cmd
         run: echo %mbsimenvsec_djangoSecretKey:~0,2%
-          #      - name: "Dump resources"
-          #        shell: pwsh
-          #        run: >
-          #          echo ***df***; Get-WmiObject -Class Win32_LogicalDisk | Format-Table DeviceId, FreeSpace, Size;
-          #          echo ***free***; Get-CIMInstance Win32_OperatingSystem | Select FreePhysicalMemory,TotalVisibleMemory;
-          #          echo ***cpu***; Get-CimInstance -ClassName 'Win32_Processor' | Select-Object -Property 'DeviceID', 'Name', 'NumberOfCores';
-          #      - name: "Install msys2 and msys2 packages"
-          #        uses: msys2/setup-msys2@v2
-          #        with:
-          #          update: true
-          #          msystem: UCRT64
-          #          install: >
-          #            dos2unix
-          #            patch
-          #            mingw-w64-ucrt-x86_64-arpack
-          #            mingw-w64-ucrt-x86_64-autotools
-          #            mingw-w64-ucrt-x86_64-boost
-          #            mingw-w64-ucrt-x86_64-cmake
-          #            mingw-w64-ucrt-x86_64-doxygen
-          #            mingw-w64-ucrt-x86_64-gcc
-          #            mingw-w64-ucrt-x86_64-graphviz
-          #            mingw-w64-ucrt-x86_64-hdf5
-          #            mingw-w64-ucrt-x86_64-octave
-          #            mingw-w64-ucrt-x86_64-openblas
-          #            mingw-w64-ucrt-x86_64-python-numpy
-          #            mingw-w64-ucrt-x86_64-python-sympy
-          #            mingw-w64-ucrt-x86_64-python-h5py
-          #            mingw-w64-ucrt-x86_64-python-psutil
-          #            mingw-w64-ucrt-x86_64-python-psycopg2
-          #            mingw-w64-ucrt-x86_64-qwt-qt5
-          #            mingw-w64-ucrt-x86_64-soqt
-          #            mingw-w64-ucrt-x86_64-spooles
-          #            mingw-w64-ucrt-x86_64-swig
-          #            mingw-w64-ucrt-x86_64-xalan-c
-          #            mingw-w64-ucrt-x86_64-xerces-c
-          #            mingw-w64-ucrt-x86_64-ccache
-          #            mingw-w64-ucrt-x86_64-python-pip
-          #            mingw-w64-ucrt-x86_64-python-asgiref
-          #            mingw-w64-ucrt-x86_64-python-pytz
-          #            mingw-w64-ucrt-x86_64-python-sqlparse
-          #            mingw-w64-ucrt-x86_64-python-requests
-          #            mingw-w64-ucrt-x86_64-python-pyjwt
-          #            mingw-w64-ucrt-x86_64-python-cryptography
-          #            mingw-w64-ucrt-x86_64-python-cffi
-          #            mingw-w64-ucrt-x86_64-python-defusedxml
-          #            mingw-w64-ucrt-x86_64-python-oauthlib
-          #            mingw-w64-ucrt-x86_64-python-requests-oauthlib
-          #      - name: "Install pip packages"
-          #        run: pip install --upgrade pip && pip install django==3.2 django-allauth==0.47 django-octicons==1.0
-          #      - name: "Add git and gh to msys2 path"
-          #        run: echo 'PATH="$PATH:/c/Program Files/Git/bin:/c/Program Files/GitHub CLI"' >> ~/.bash_profile
-          #      - name: "Checkout all repos"
-          #        run: >
-          #          git clone https://github.com/mbsim-env/build.git &&
-          #          git clone https://github.com/mbsim-env/fmatvec.git &&
-          #          git clone https://github.com/mbsim-env/hdf5serie.git &&
-          #          git clone https://github.com/mbsim-env/openmbv.git &&
-          #          git clone https://github.com/mbsim-env/mbsim.git
-          #      - name: "patch swig"
-          #        run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u $GITHUB_WORKSPACE)/build/msys2ucrt64Build/swig.git.patch
-          #      - name: "Create build UUID"
-          #        shell: python
-          #        id: matrixUUID
-          #        run: |
-          #          import uuid
-          #          print("jobs.build.steps.matrixUUID.outputs.matrixUUID:\n"+str(uuid.uuid4()))
-          #          with open(r"${{github.output}}", "at") as o:
-          #            print("matrixUUID="+str(uuid.uuid4()), file=o)
-          #      - name: "Cache restore: ccache"
-          #        uses: actions/cache/restore@v3
-          #        with:
-          #          path: $CCACHE_DIR
-          #          key: ccache-msys2ucrt64--${{steps.matrixUUID.outputs.matrixUUID}}
-          #          restore-keys: |
-          #            ccache-msys2ucrt64--
-          #      - name: "Start build.sh"
-          #        run: ./build/msys2ucrt64Build/build.sh --buildSystemRun
-          #      - name: "Cache save: ccache"
-          #        uses: actions/cache/save@v3
-          #        with:
-          #          path: $CCACHE_DIR
-          #          key: ccache-msys2ucrt64--${{steps.matrixUUID.outputs.matrixUUID}}
-          #      - name: "Cache remove-old: ccache"
-          #        run: >
-          #          gh extension install actions/gh-actions-cache &&
-          #          KEYS=$(gh actions-cache list --key ccache-msys2ucrt64-- --order desc --sort created-at
-          #                   --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1;
-          #                 gh actions-cache list --key msys2-pkgs- --order desc --sort created-at
-          #                   --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1) &&
-          #          for KEY in $KEYS; do gh actions-cache delete $KEY --confirm --repo ${{github.repository}} --branch ${{github.ref_name}}; done
-          #      - name: "Dump resources"
-          #        if: ${{always()}}
-          #        shell: pwsh
-          #        run: >
-          #          echo ***df***; Get-WmiObject -Class Win32_LogicalDisk | Format-Table DeviceId, FreeSpace, Size;
-          #          echo ***free***; Get-CIMInstance Win32_OperatingSystem | Select FreePhysicalMemory,TotalVisibleMemory;
-          #          echo ***cpu***; Get-CimInstance -ClassName 'Win32_Processor' | Select-Object -Property 'DeviceID', 'Name', 'NumberOfCores';
+      - name: "mfmf2"
+        run: echo ${mbsimenvsec_djangoSecretKey:0:2}
+      - name: "Install pip packages"
+        run: pip install --upgrade pip && pip install django==3.2 django-allauth==0.47 django-octicons==1.0
+      - name: "Add git and gh to msys2 path"
+        run: echo 'PATH="$PATH:/c/Program Files/Git/bin:/c/Program Files/GitHub CLI"' >> ~/.bash_profile
+      - name: "Checkout all repos"
+        run: >
+          git clone https://github.com/mbsim-env/build.git &&
+          git clone https://github.com/mbsim-env/fmatvec.git &&
+          git clone https://github.com/mbsim-env/hdf5serie.git &&
+          git clone https://github.com/mbsim-env/openmbv.git &&
+          git clone https://github.com/mbsim-env/mbsim.git
+      - name: "patch swig"
+        run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u $GITHUB_WORKSPACE)/build/msys2ucrt64Build/swig.git.patch
+      - name: "Create build UUID"
+        shell: python
+        id: matrixUUID
+        run: |
+          import uuid
+          print("jobs.build.steps.matrixUUID.outputs.matrixUUID:\n"+str(uuid.uuid4()))
+          with open(r"${{github.output}}", "at") as o:
+            print("matrixUUID="+str(uuid.uuid4()), file=o)
+      - name: "Cache restore: ccache"
+        uses: actions/cache/restore@v3
+        with:
+          path: $CCACHE_DIR
+          key: ccache-msys2ucrt64--${{steps.matrixUUID.outputs.matrixUUID}}
+          restore-keys: |
+            ccache-msys2ucrt64--
+      - name: "Start build.sh"
+        run: ./build/msys2ucrt64Build/build.sh --buildSystemRun
+      - name: "Cache save: ccache"
+        uses: actions/cache/save@v3
+        with:
+          path: $CCACHE_DIR
+          key: ccache-msys2ucrt64--${{steps.matrixUUID.outputs.matrixUUID}}
+      - name: "Cache remove-old: ccache"
+        run: >
+          gh extension install actions/gh-actions-cache &&
+          KEYS=$(gh actions-cache list --key ccache-msys2ucrt64-- --order desc --sort created-at
+                   --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1;
+                 gh actions-cache list --key msys2-pkgs- --order desc --sort created-at
+                   --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1) &&
+          for KEY in $KEYS; do gh actions-cache delete $KEY --confirm --repo ${{github.repository}} --branch ${{github.ref_name}}; done
+      - name: "Dump resources"
+        if: ${{always()}}
+        shell: pwsh
+        run: >
+          echo ***df***; Get-WmiObject -Class Win32_LogicalDisk | Format-Table DeviceId, FreeSpace, Size;
+          echo ***free***; Get-CIMInstance Win32_OperatingSystem | Select FreePhysicalMemory,TotalVisibleMemory;
+          echo ***cpu***; Get-CimInstance -ClassName 'Win32_Processor' | Select-Object -Property 'DeviceID', 'Name', 'NumberOfCores';
