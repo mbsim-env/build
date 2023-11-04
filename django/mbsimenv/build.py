@@ -29,7 +29,6 @@ if not hasattr(octicons, '__version__') or hasattr(octicons, 'default_app_config
   print("Please ensure that you have installed the package 'django-octicons' not 'octicons' or any other.")
   print("These two packages provide the same Pyhton module 'octicons' and cannot be installed at the same time.")
   sys.exit(1)
-print("mfmf4 "+os.environ["mbsimenvsec_djangoSecretKey"][0:2])
 
 # global variables
 toolDependencies=dict()

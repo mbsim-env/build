@@ -37,7 +37,6 @@ RUNEXAMPLESARGS+=("xml/hierachical_modelling")
 export CC="ccache gcc"
 export CXX="ccache g++"
 
-echo mfmf3 ${mbsimenvsec_djangoSecretKey:0:2}
 python3 $(dirname $0)/../django/mbsimenv/build.py \
   "${ARGS[@]}" \
   --sourceDir $BASEDIR --binSuffix=-msys2ucrt64 --prefix $BASEDIR/local-msys2ucrt64 -j 2 --buildType msys2ucrt64 \

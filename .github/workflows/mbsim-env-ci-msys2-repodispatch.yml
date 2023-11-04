@@ -71,11 +71,6 @@ jobs:
             mingw-w64-ucrt-x86_64-python-defusedxml
             mingw-w64-ucrt-x86_64-python-oauthlib
             mingw-w64-ucrt-x86_64-python-requests-oauthlib
-      - name: "mfmf1"
-        shell: cmd
-        run: echo %mbsimenvsec_djangoSecretKey:~0,2%
-      - name: "mfmf2"
-        run: echo ${mbsimenvsec_djangoSecretKey:0:2}
       - name: "Install pip packages"
         run: pip install --upgrade pip && pip install django==3.2 django-allauth==0.47 django-octicons==1.0
       - name: "Add git and gh to msys2 path"
