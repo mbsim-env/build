@@ -3,6 +3,18 @@ on:
   push:
 env:
   CCACHE_DIR: $GITHUB_WORKSPACE/ccache
+  # set the CPU type for OpenBLAS to avoid CPU dependent results (e.g. with/without AVX512)
+  OPENBLAS_CORETYPE: Haswell
+  # tagname and servername of remote mbsimenv server
+  MBSIMENVSERVERNAME: www.mbsim-env.de
+  # connect to this server:port for www, database and filestorage
+  MBSIMENVDATABASE: www.mbsim-env.de:5432
+  MBSIMENVFILESTORAGE: www.mbsim-env.de:1122
+  # get secrets
+#  mbsimenvsec_githubAccessToken: ${{secrets.githubAccessToken}} not provided for now to avoid adding git commit statuses
+  mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
+  mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
+  mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
   GH_TOKEN: ${{github.token}} # needed for gh-actions-cache
 jobs:
   build:
@@ -12,12 +24,6 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - name: mfmf1
-        shell: pwsh
-        run: Get-Command gh
-      - name: mfmf2
-        shell: pwsh
-        run: where.exe gh
       - name: "Dump resources"
         shell: pwsh
         run: >
@@ -64,12 +70,10 @@ jobs:
             mingw-w64-ucrt-x86_64-python-defusedxml
             mingw-w64-ucrt-x86_64-python-oauthlib
             mingw-w64-ucrt-x86_64-python-requests-oauthlib
-      - name: mfmf3
-        run: which gh || true
       - name: "Install pip packages"
         run: pip install --upgrade pip && pip install django==3.2 django-allauth==0.47 django-octicons==1.0
-      - name: "Add git to msys2 path"
-        run: echo 'PATH="$PATH:/c/Program Files/Git/bin"' >> ~/.bash_profile
+      - name: "Add git and gh to msys2 path"
+        run: echo 'PATH="$PATH:/c/Program Files/Git/bin:/c/Program Files/GitHub CLI"' >> ~/.bash_profile
       - name: "Checkout all repos"
         run: >
           git clone https://github.com/mbsim-env/build.git &&
@@ -95,7 +99,7 @@ jobs:
           restore-keys: |
             ccache-msys2ucrt64--
       - name: "Start build.sh"
-        run: ./build/msys2ucrt64Build/build.sh
+        run: ./build/msys2ucrt64Build/build.sh --buildSystemRun
       - name: "Cache save: ccache"
         uses: actions/cache/save@v3
         with:
@@ -104,7 +108,10 @@ jobs:
       - name: "Cache remove-old: ccache"
         run: >
           gh extension install actions/gh-actions-cache &&
-          KEYS=$(gh actions-cache list --key ccache-msys2ucrt64-- --order desc --sort created-at --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1) &&
+          KEYS=$(gh actions-cache list --key ccache-msys2ucrt64-- --order desc --sort created-at
+                   --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1;
+                 gh actions-cache list --key msys2-pkgs- --order desc --sort created-at
+                   --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1) &&
           for KEY in $KEYS; do gh actions-cache delete $KEY --confirm --repo ${{github.repository}} --branch ${{github.ref_name}}; done
       - name: "Dump resources"
         if: ${{always()}}

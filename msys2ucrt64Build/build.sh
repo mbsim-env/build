@@ -40,6 +40,7 @@ export CXX="ccache g++"
 python3 $(dirname $0)/../django/mbsimenv/build.py \
   "${ARGS[@]}" \
   --sourceDir $BASEDIR --binSuffix=-msys2ucrt64 --prefix $BASEDIR/local-msys2ucrt64 -j 2 --buildType msys2ucrt64 \
+  "$@" \
   --passToConfigure \
   --disable-static \
   --with-boost-system-lib=boost_system-mt \
