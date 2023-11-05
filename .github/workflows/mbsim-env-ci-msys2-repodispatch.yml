@@ -24,9 +24,6 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
-      - name: "mfmf0"
-        shell: cmd
-        run: echo %CCACHE_DIR%
       - name: "Dump resources"
         shell: pwsh
         run: >
@@ -51,6 +48,7 @@ jobs:
             mingw-w64-ucrt-x86_64-hdf5
             mingw-w64-ucrt-x86_64-octave
             mingw-w64-ucrt-x86_64-openblas
+            mingw-w64-ucrt-x86_64-7zip
             mingw-w64-ucrt-x86_64-python-numpy
             mingw-w64-ucrt-x86_64-python-sympy
             mingw-w64-ucrt-x86_64-python-h5py
@@ -77,16 +75,16 @@ jobs:
             mingw-w64-ucrt-x86_64-python-defusedxml
             mingw-w64-ucrt-x86_64-python-oauthlib
             mingw-w64-ucrt-x86_64-python-requests-oauthlib
+      - name: "Install mesa for software OpenGL (only needed to run GUI programs in VMs)"
+        run: >
+          mkdir mesa && cd mesa &&
+          wget https://github.com/pal1000/mesa-dist-win/releases/download/23.1.9/mesa3d-23.1.9-release-msvc.7z &&
+          7z x mesa3d-23.1.9-release-msvc.7z &&
+          cmd //c systemwidedeploy.cmd 1
       - name: "Install pip packages"
         run: pip install --upgrade pip && pip install django==3.2 django-allauth==0.47 django-octicons==1.0
       - name: "Add git and gh to msys2 path"
         run: echo 'PATH="$PATH:/c/Program Files/Git/bin:/c/Program Files/GitHub CLI"' >> ~/.bash_profile
-      - name: "mfmf1"
-        run: echo $CCACHE_DIR; ls -l $CCACHE_DIR || true; ccache -s
-      - name: "mfmfa"
-        run: echo "int main() { return 0; }" > main.cc && ccache g++ -c -o main.o main.cc
-      - name: "mfmf2"
-        run: echo $CCACHE_DIR; ls -l $CCACHE_DIR || true; ccache -s
       - name: "Checkout all repos"
         run: >
           git clone https://github.com/mbsim-env/build.git &&
@@ -111,12 +109,8 @@ jobs:
           key: ccache-msys2ucrt64--${{steps.matrixUUID.outputs.matrixUUID}}
           restore-keys: |
             ccache-msys2ucrt64--
-      - name: "mfmf3"
-        run: echo $CCACHE_DIR; ls -l $CCACHE_DIR || true; ccache -s
       - name: "Start build.sh"
         run: ./build/msys2ucrt64Build/build.sh --buildSystemRun --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
-      - name: "mfmf4"
-        run: echo $CCACHE_DIR; ls -l $CCACHE_DIR || true; ccache -s
       - name: "Cache save: ccache"
         # mfmf remove this if:, if this script is working propably
         if: ${{always()}}
