@@ -26,11 +26,12 @@ ARGS+=("--disableMakeClean")
 #ARGS+=("--disableDoxygen")
 #ARGS+=("--disableXMLDoc")
 #ARGS+=("--disableRunExamples")
-#ARGS+=("--enableDistribution")
+ARGS+=("--enableDistribution")
 
 RUNEXAMPLESARGS=()
-RUNEXAMPLESARGS+=("xmlflat/hierachical_modelling")
-RUNEXAMPLESARGS+=("xml/hierachical_modelling")
+RUNEXAMPLESARGS+=("--checkGUIs")
+#RUNEXAMPLESARGS+=("xmlflat/hierachical_modelling")
+#RUNEXAMPLESARGS+=("xml/hierachical_modelling")
 
 
 
@@ -39,8 +40,8 @@ export CXX="ccache g++"
 
 python3 $(dirname $0)/../django/mbsimenv/build.py \
   "${ARGS[@]}" \
-  --sourceDir $BASEDIR --binSuffix=-msys2ucrt64 --prefix $BASEDIR/local-msys2ucrt64 -j 2 --buildType msys2ucrt64 \
   "$@" \
+  --sourceDir $BASEDIR --binSuffix=-msys2ucrt64 --prefix $BASEDIR/local-msys2ucrt64 --buildType msys2ucrt64 \
   --passToConfigure \
   --disable-static \
   --with-boost-system-lib=boost_system-mt \
@@ -63,5 +64,4 @@ python3 $(dirname $0)/../django/mbsimenv/build.py \
   -DCMAKE_Fortran_FLAGS_RELEASE="$FFLAGS" \
   -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
   --passToRunexamples \
-  --checkGUIs \
   "${RUNEXAMPLESARGS[@]}"
