@@ -94,7 +94,7 @@ jobs:
           git clone -q --depth 1 https://github.com/mbsim-env/openmbv.git &&
           git clone -q --depth 1 https://github.com/mbsim-env/mbsim.git
       - name: "patch swig"
-        run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u $GITHUB_WORKSPACE)/build/msys2ucrt64Build/swig.git.patch
+        run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u ${{github.workspace}})/build/msys2ucrt64Build/swig.git.patch
       - name: "Create build UUID"
         shell: python
         id: matrixUUID
@@ -106,7 +106,7 @@ jobs:
       - name: "Cache restore: ccache"
         uses: actions/cache/restore@v3
         with:
-          path: $CCACHE_DIR
+          path: ${{env.CCACHE_DIR}}
           key: ccache-msys2ucrt64--${{steps.matrixUUID.outputs.matrixUUID}}
           restore-keys: |
             ccache-msys2ucrt64--
@@ -117,7 +117,7 @@ jobs:
         if: ${{always()}}
         uses: actions/cache/save@v3
         with:
-          path: $CCACHE_DIR
+          path: ${{env.CCACHE_DIR}}
           key: ccache-msys2ucrt64--${{steps.matrixUUID.outputs.matrixUUID}}
       - name: "Cache remove-old: ccache"
         # mfmf remove this if:, if this script is working propably
