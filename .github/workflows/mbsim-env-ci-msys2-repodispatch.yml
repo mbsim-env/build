@@ -35,7 +35,7 @@ jobs:
         with:
           update: true
           msystem: UCRT64
-          location: C:\
+          location: C:\mymsys\
           install: >
             dos2unix
             patch
