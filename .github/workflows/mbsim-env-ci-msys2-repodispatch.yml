@@ -24,7 +24,7 @@ jobs:
     runs-on: windows-latest
     defaults:
       run:
-        shell: msys2 {0}
+        shell: C:\msys64\usr\bin\bash.exe -l {0}
     steps:
       - name: "Init msys2 (and install procps needed for free command)"
         run: pacman -S --noconfirm procps
