@@ -2,7 +2,9 @@ name: CI msys2 (Repo-Dispatch)
 on:
   push:
 env:
-  CCACHE_DIR: ${{github.workspace}}/ccache
+  MSYSTEM: UCRT64 # use the msys2 UCRT64 environment
+  HOME: d:\myhome # use d:\myhome as msys2 home dir
+  CCACHE_DIR: c:\myhome\ccache
   # set the CPU type for OpenBLAS to avoid CPU dependent results (e.g. with/without AVX512)
   OPENBLAS_CORETYPE: Haswell
   # tagname and servername of remote mbsimenv server
@@ -24,58 +26,52 @@ jobs:
       run:
         shell: msys2 {0}
     steps:
+      - name: "Init msys2 (and install procps needed for free command)"
+        run: pacman -S --noconfirm procps
       - name: "Dump resources"
-        shell: pwsh
+        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
+      - name: "Install msys2 packages"
         run: >
-          echo ***df***; Get-WmiObject -Class Win32_LogicalDisk | Format-Table DeviceId, FreeSpace, Size;
-          echo ***free***; Get-CIMInstance Win32_OperatingSystem | Select FreePhysicalMemory,TotalVisibleMemory;
-          echo ***cpu***; Get-CimInstance -ClassName 'Win32_Processor' | Select-Object -Property 'DeviceID', 'Name', 'NumberOfCores';
-      - name: "Install msys2 and msys2 packages"
-        uses: msys2/setup-msys2@v2
-        with:
-          update: true
-          msystem: UCRT64
-          location: C:\mymsys\
-          install: >
-            dos2unix
-            patch
-            mingw-w64-ucrt-x86_64-arpack
-            mingw-w64-ucrt-x86_64-autotools
-            mingw-w64-ucrt-x86_64-boost
-            mingw-w64-ucrt-x86_64-cmake
-            mingw-w64-ucrt-x86_64-doxygen
-            mingw-w64-ucrt-x86_64-gcc
-            mingw-w64-ucrt-x86_64-graphviz
-            mingw-w64-ucrt-x86_64-hdf5
-            mingw-w64-ucrt-x86_64-octave
-            mingw-w64-ucrt-x86_64-openblas
-            mingw-w64-ucrt-x86_64-7zip
-            mingw-w64-ucrt-x86_64-python-numpy
-            mingw-w64-ucrt-x86_64-python-sympy
-            mingw-w64-ucrt-x86_64-python-h5py
-            mingw-w64-ucrt-x86_64-python-psutil
-            mingw-w64-ucrt-x86_64-python-psycopg2
-            mingw-w64-ucrt-x86_64-python-pygithub
-            mingw-w64-ucrt-x86_64-python-paramiko
-            mingw-w64-ucrt-x86_64-qwt-qt5
-            mingw-w64-ucrt-x86_64-diffutils
-            mingw-w64-ucrt-x86_64-soqt
-            mingw-w64-ucrt-x86_64-spooles
-            mingw-w64-ucrt-x86_64-swig
-            mingw-w64-ucrt-x86_64-xalan-c
-            mingw-w64-ucrt-x86_64-xerces-c
-            mingw-w64-ucrt-x86_64-ccache
-            mingw-w64-ucrt-x86_64-python-pip
-            mingw-w64-ucrt-x86_64-python-asgiref
-            mingw-w64-ucrt-x86_64-python-pytz
-            mingw-w64-ucrt-x86_64-python-sqlparse
-            mingw-w64-ucrt-x86_64-python-requests
-            mingw-w64-ucrt-x86_64-python-pyjwt
-            mingw-w64-ucrt-x86_64-python-cryptography
-            mingw-w64-ucrt-x86_64-python-cffi
-            mingw-w64-ucrt-x86_64-python-defusedxml
-            mingw-w64-ucrt-x86_64-python-oauthlib
-            mingw-w64-ucrt-x86_64-python-requests-oauthlib
+          pacman -S --noconfirm
+          dos2unix
+          patch
+          mingw-w64-ucrt-x86_64-arpack
+          mingw-w64-ucrt-x86_64-autotools
+          mingw-w64-ucrt-x86_64-boost
+          mingw-w64-ucrt-x86_64-cmake
+          mingw-w64-ucrt-x86_64-doxygen
+          mingw-w64-ucrt-x86_64-gcc
+          mingw-w64-ucrt-x86_64-graphviz
+          mingw-w64-ucrt-x86_64-hdf5
+          mingw-w64-ucrt-x86_64-octave
+          mingw-w64-ucrt-x86_64-openblas
+          mingw-w64-ucrt-x86_64-7zip
+          mingw-w64-ucrt-x86_64-python-numpy
+          mingw-w64-ucrt-x86_64-python-sympy
+          mingw-w64-ucrt-x86_64-python-h5py
+          mingw-w64-ucrt-x86_64-python-psutil
+          mingw-w64-ucrt-x86_64-python-psycopg2
+          mingw-w64-ucrt-x86_64-python-pygithub
+          mingw-w64-ucrt-x86_64-python-paramiko
+          mingw-w64-ucrt-x86_64-qwt-qt5
+          mingw-w64-ucrt-x86_64-diffutils
+          mingw-w64-ucrt-x86_64-soqt
+          mingw-w64-ucrt-x86_64-spooles
+          mingw-w64-ucrt-x86_64-swig
+          mingw-w64-ucrt-x86_64-xalan-c
+          mingw-w64-ucrt-x86_64-xerces-c
+          mingw-w64-ucrt-x86_64-ccache
+          mingw-w64-ucrt-x86_64-python-pip
+          mingw-w64-ucrt-x86_64-python-asgiref
+          mingw-w64-ucrt-x86_64-python-pytz
+          mingw-w64-ucrt-x86_64-python-sqlparse
+          mingw-w64-ucrt-x86_64-python-requests
+          mingw-w64-ucrt-x86_64-python-pyjwt
+          mingw-w64-ucrt-x86_64-python-cryptography
+          mingw-w64-ucrt-x86_64-python-cffi
+          mingw-w64-ucrt-x86_64-python-defusedxml
+          mingw-w64-ucrt-x86_64-python-oauthlib
+          mingw-w64-ucrt-x86_64-python-requests-oauthlib
       - name: "Install mesa for software OpenGL (only needed to run GUI programs in VMs)"
         run: >
           mkdir mesa && cd mesa &&
@@ -95,7 +91,7 @@ jobs:
           git clone -q --depth 1 https://github.com/mbsim-env/openmbv.git &&
           git clone -q --depth 1 https://github.com/mbsim-env/mbsim.git
       - name: "patch swig"
-        run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $(cygpath -u $GITHUB_WORKSPACE)/build/msys2ucrt64Build/swig.git.patch
+        run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $HOME/build/msys2ucrt64Build/swig.git.patch
       - name: "Create build UUID"
         shell: python
         id: matrixUUID
@@ -114,23 +110,15 @@ jobs:
       - name: "Start build.sh"
         run: ./build/msys2ucrt64Build/build.sh --buildSystemRun --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
       - name: "Cache save: ccache"
-        # mfmf remove this if:, if this script is working propably
-        if: ${{always()}}
         uses: actions/cache/save@v3
         with:
           path: ${{env.CCACHE_DIR}}
           key: ccache-msys2ucrt64--${{steps.matrixUUID.outputs.matrixUUID}}
       - name: "Cache remove-old: ccache"
-        # mfmf remove this if:, if this script is working propably
-        if: ${{always()}}
         run: >
           gh extension install actions/gh-actions-cache &&
           KEYS=$(gh actions-cache list --key ccache-msys2ucrt64-- --order desc --sort created-at --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1; gh actions-cache list --key msys2-pkgs- --order desc --sort created-at --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1) &&
           for KEY in $KEYS; do gh actions-cache delete $KEY --confirm --repo ${{github.repository}} --branch ${{github.ref_name}}; done
       - name: "Dump resources"
         if: ${{always()}}
-        shell: pwsh
-        run: >
-          echo ***df***; Get-WmiObject -Class Win32_LogicalDisk | Format-Table DeviceId, FreeSpace, Size;
-          echo ***free***; Get-CIMInstance Win32_OperatingSystem | Select FreePhysicalMemory,TotalVisibleMemory;
-          echo ***cpu***; Get-CimInstance -ClassName 'Win32_Processor' | Select-Object -Property 'DeviceID', 'Name', 'NumberOfCores';
+        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && cat /proc/cpuinfo | grep "model name"
