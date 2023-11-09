@@ -10,6 +10,7 @@ sys.path.append("/context/mbsimenv")
 import mbsimenvSecrets
 import django
 import json
+import math
 import service
 
 # arguments
@@ -28,18 +29,18 @@ def dailyBuild(fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch):
   with open("/context/buildConfig.json", "rt") as f:
     buildConfig=json.load(f)
   # linux64-dailydebug
-  contldd=setup.run("build-linux64-dailydebug", 6, printLog=False, detach=True, addCommands=[],
+  contldd=setup.run("build-linux64-dailydebug", math.ceil(args.jobs/2), printLog=False, detach=True, addCommands=[],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                     buildConfig=buildConfig)
   
   # win64-dailyrelease
-  contwdr=setup.run("build-win64-dailyrelease", 3, printLog=False, detach=True, addCommands=[],
+  contwdr=setup.run("build-win64-dailyrelease", math.ceil(args.jobs/2), printLog=False, detach=True, addCommands=[],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                     buildConfig=buildConfig)
   retwdr=setup.waitContainer(contwdr)
   
   # linux64-dailyrelease
-  contldr=setup.run("build-linux64-dailyrelease", 3, printLog=False, detach=True, addCommands=[],
+  contldr=setup.run("build-linux64-dailyrelease", math.ceil(args.jobs/2), printLog=False, detach=True, addCommands=[],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                     buildConfig=buildConfig)
   retldr=setup.waitContainer(contldr)
@@ -56,7 +57,7 @@ if service.models.DailyBranches.objects.filter(fmatvecBranch="master", hdf5serie
   ret=ret+dailyBuild("master", "master", "master", "master")
   
 # build doc
-contd=setup.run("builddoc", 2, printLog=False, detach=True, addCommands=[])
+contd=setup.run("builddoc", args.jobs, printLog=False, detach=True, addCommands=[])
 ret=ret+abs(setup.waitContainer(contd))
 
 # now build all others
