@@ -894,9 +894,11 @@ def runexamples(run):
 
   # run example command
   command=["python3", os.path.dirname(os.path.realpath(__file__))+"/runexamples.py", "-j", str(args.j), "--buildConfig", json.dumps(args.buildConfig)]
+  if args.prefix is not None:
+    command.extend(["--prefix", args.prefix])
   if args.coverage:
     command.extend(["--coverage", "--sourceDir", args.sourceDir]+(["--binSuffix="+args.binSuffix] if args.binSuffix!="" else [])+\
-                   ["--prefix", args.prefix, "--baseExampleDir", pj(args.sourceDir, "mbsim", "examples")])
+                   ["--baseExampleDir", pj(args.sourceDir, "mbsim", "examples")])
   if args.buildSystemRun:
     command.extend(["--buildSystemRun"])
   if args.localServerPort:

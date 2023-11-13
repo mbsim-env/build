@@ -125,9 +125,9 @@ def addFileToDist(name, arcname, addDepLibs=True):
            not name.startswith("/3rdparty/local/python-win64/"):# do not strip python files (these are not build with mingw)
           # not stripped binary file
           try:
-            subprocess.check_call(["objcopy", "--only-keep-debug", name, tmpDir+"/"+basename+".debug"])
-            subprocess.check_call(["objcopy", "--strip-all", name, tmpDir+"/"+basename])
-            subprocess.check_call(["objcopy", "--add-gnu-debuglink="+tmpDir+"/"+basename+".debug", tmpDir+"/"+basename])
+            subprocess.check_call(["objcopy", "--only-keep-debug", name, tmpDir+"/"+basename+".debug"], stdout=subprocess.DEVNULL)
+            subprocess.check_call(["objcopy", "--strip-all", name, tmpDir+"/"+basename], stdout=subprocess.DEVNULL)
+            subprocess.check_call(["objcopy", "--add-gnu-debuglink="+tmpDir+"/"+basename+".debug", tmpDir+"/"+basename], stdout=subprocess.DEVNULL)
             if platform=="linux":
               if re.search('ELF [0-9]+-bit LSB', content) is not None:
                 adaptRPATH(tmpDir+"/"+basename, name)
@@ -140,6 +140,12 @@ def addFileToDist(name, arcname, addDepLibs=True):
               # only add debug files of mbsim-env
               if name.startswith("/mbsim-env/"):
                 debugArchive.write(tmpDir+"/"+basename+".debug", arcname+".debug")
+          except:
+            print("Failed to strip: "+name+". Adding unstripped.")
+            if platform=="linux":
+              distArchive.add(name, arcname)
+            else:
+              distArchive.write(name, arcname)
           finally:
             if os.path.exists(tmpDir+"/"+basename): os.remove(tmpDir+"/"+basename)
             if os.path.exists(tmpDir+"/"+basename+".debug"): os.remove(tmpDir+"/"+basename+".debug")
@@ -398,10 +404,10 @@ def addOctave():
   print("Add octave share dir")
   sys.stdout.flush()
 
-  if platform=="linux":
+  if os.path.isdir("/3rdparty/local/share/octave"):
     addFileToDist("/3rdparty/local/share/octave", "mbsim-env/share/octave")
-  if platform=="win":
-    addFileToDist("/3rdparty/local/share/octave", "mbsim-env/share/octave")
+  if os.path.isdir("c:/msys64/ucrt64/share/octave"):
+    addFileToDist("c:/msys64/ucrt64/share/octave", "mbsim-env/share/octave")
 
   print("Add octave executable")
   sys.stdout.flush()
@@ -412,7 +418,10 @@ def addOctave():
     subprocess.check_call(["patchelf", "--force-rpath", "--set-rpath", "$ORIGIN/../lib", tmpDir+"/octave-cli"])
     addFileToDist(tmpDir+"/octave-cli", "mbsim-env/bin/octave-cli")
   if platform=="win":
-    addFileToDist("/3rdparty/local/bin/octave-cli-4.4.1.exe", "mbsim-env/bin/octave-cli.exe")
+    if os.path.exists("/3rdparty/local/bin/octave-cli-4.4.1.exe"):
+      addFileToDist("/3rdparty/local/bin/octave-cli-4.4.1.exe", "mbsim-env/bin/octave-cli.exe")
+    if os.path.exists("c:/msys64/ucrt64/bin/octave-cli.exe"):
+      addFileToDist("c:/msys64/ucrt64/bin/octave-cli.exe", "mbsim-env/bin/octave-cli.exe")
 
   print("Add octave oct files")
   sys.stdout.flush()
@@ -420,7 +429,10 @@ def addOctave():
   if platform=="linux":
     addFileToDist("/3rdparty/local/lib/octave/4.4.1/oct/x86_64-pc-linux-gnu", "mbsim-env/lib/octave/4.4.1/oct/x86_64-pc-linux-gnu")
   if platform=="win":
-    addFileToDist("/3rdparty/local/lib/octave/4.4.1/oct/x86_64-w64-mingw32", "mbsim-env/lib/octave/4.4.1/oct/x86_64-w64-mingw32")
+    if os.path.isdir("/3rdparty/local/lib/octave/4.4.1/oct/x86_64-w64-mingw32"):
+      addFileToDist("/3rdparty/local/lib/octave/4.4.1/oct/x86_64-w64-mingw32", "mbsim-env/lib/octave/4.4.1/oct/x86_64-w64-mingw32")
+    if os.path.isdir("c:/msys64/ucrt64/lib/octave/8.3.0/oct/x86_64-w64-mingw32"):
+      addFileToDist("c:/msys64/ucrt64/lib/octave/8.3.0/oct/x86_64-w64-mingw32", "mbsim-env/lib/octave/4.4.1/oct/x86_64-w64-mingw32")
 
 
 
@@ -433,7 +445,10 @@ def addPython():
     pysrcdirs=["/usr/local/lib/python3.6", "/usr/lib64/python3.6", "/usr/lib/python3.6", ] # search packages in this order
   if platform=="win":
     subdir="lib"
-    pysrcdirs=["/3rdparty/local/python-win64/Lib"] # search packages in this order
+    if os.path.isdir("/3rdparty/local/python-win64/Lib"):
+      pysrcdirs=["/3rdparty/local/python-win64/Lib"] # search packages in this order
+    if os.path.isdir("c:/msys64/ucrt64/lib/python3.11/"):
+      pysrcdirs=["c:/msys64/ucrt64/lib/python3.11/"] # search packages in this order
   sitePackages=[["pip", False],
                 ["setuptools", False],
                 ["numpy", False],
@@ -454,8 +469,9 @@ def addPython():
 
     # on Windows copy also the DLLs dir
     if platform=="win":
-      for f in os.listdir(pysrcdir+"/../DLLs"):
-        addFileToDist(pysrcdir+"/../DLLs/"+f, "mbsim-env/DLLs/"+f)
+      if os.path.isdir(pysrcdir+"/../DLLs"):
+        for f in os.listdir(pysrcdir+"/../DLLs"):
+          addFileToDist(pysrcdir+"/../DLLs/"+f, "mbsim-env/DLLs/"+f)
 
   # add python executable
   if platform=="linux":
@@ -474,7 +490,10 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages
 "%INSTDIR%\bin\.python-envvar.exe" %*
 '''
     addStrToDist(pythonData, "mbsim-env/bin/python.bat", True)
-    addFileToDist("/3rdparty/local/python-win64/python.exe", "mbsim-env/bin/.python-envvar.exe")
+    if os.path.exists("/3rdparty/local/python-win64/python.exe"):
+      addFileToDist("/3rdparty/local/python-win64/python.exe", "mbsim-env/bin/.python-envvar.exe")
+    if os.path.exists("c:/msys64/ucrt64/bin/python.exe"):
+      addFileToDist("c:/msys64/ucrt64/bin/python.exe", "mbsim-env/bin/.python-envvar.exe")
 
   # add pip executable
   if platform=="linux":

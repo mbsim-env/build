@@ -12,9 +12,13 @@ def getSecrets(*keys):
     def get(*keys):
       ret=getSecrets.secrets
       for k in keys:
-        try:
-          ret=ret[k]
-        except KeyError:
+        found=False
+        for k2 in ret:
+          if k2.upper()==k.upper():
+            ret=ret[k2]
+            found=True
+            break
+        if not found:
           return ""
       return ret
     # secrets already loaded, just return it
@@ -23,7 +27,7 @@ def getSecrets(*keys):
     # if environment secrets exist use these instead of the from file
     envSecrets={}
     for e in os.environ:
-      if e.startswith("mbsimenvsec_"):
+      if e.upper().startswith("MBSIMENVSEC_"):
         d=envSecrets
         eSplit=e.split("_")
         for k in eSplit[1:-1]:
