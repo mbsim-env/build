@@ -107,8 +107,25 @@ jobs:
           key: ccache-msys2ucrt64--${{steps.matrixUUID.outputs.matrixUUID}}
           restore-keys: |
             ccache-msys2ucrt64--
+      - name: "Set ccache size and zeroing ccache statistics"
+        run: ccache -M 5G && ccache -z
       - name: "Start build.sh"
         run: ./build/msys2ucrt64Build/build.sh --buildSystemRun --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
+      - name: "Dump link to MBSim-Env server"
+        if: ${{always()}}
+        shell: python
+        run: |
+          import json
+          try:
+            with open("${{env.HOME}}/local-msys2ucrt64/.buildInfo.json", "r") as f:
+              buildInfo=json.load(f)
+          except:
+            print("No buildInfo file found")
+          else:
+            print("https://${{env.MBSIMENVSERVERNAME}}/builds/run/"+str(buildInfo["buildRunID"])+"/")
+      - name: "Dump ccache statistics"
+        if: ${{always()}}
+        run: ccache -s
       - name: "Cache save: ccache"
         uses: actions/cache/save@v3
         with:
