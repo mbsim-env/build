@@ -117,7 +117,7 @@ jobs:
       - name: "Cache remove-old: ccache"
         run: >
           gh extension install actions/gh-actions-cache &&
-          KEYS=$(gh actions-cache list --key ccache-msys2ucrt64-- --order desc --sort created-at --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1; gh actions-cache list --key msys2-pkgs- --order desc --sort created-at --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1) &&
+          KEYS=$(gh actions-cache list --key ccache-msys2ucrt64-- --order desc --sort created-at --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1) &&
           for KEY in $KEYS; do gh actions-cache delete $KEY --confirm --repo ${{github.repository}} --branch ${{github.ref_name}}; done
       - name: "Dump resources"
         if: ${{always()}}
