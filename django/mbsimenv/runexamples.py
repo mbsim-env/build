@@ -157,6 +157,17 @@ debugOpts.add_argument("--runID", default=None, type=int, help="The id of the ru
 args = argparser.parse_args()
 normalRun=not args.pre and not args.post and not args.partition
 
+# override args.filter if given in buildConfig
+exampleFilters = args.buildConfig.get("exampleFilters", None)
+if exampleFilters is not None:
+  exampleFilter = exampleFilters.get(args.buildType, None)
+  if exampleFilter is not None:
+    args.filter = exampleFilter
+  else:
+    exampleFilter = exampleFilters.get("ALL", None)
+    if exampleFilter is not None:
+      args.filter = exampleFilter
+
 windowsOutputStopRE=re.compile("Application tried to create a window, but no driver could be loaded")
 def guiEnvVars(displayNR):
   denv=os.environ.copy()
