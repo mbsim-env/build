@@ -51,7 +51,13 @@ def parseArgs():
   argparser.add_argument("--httpsPort", type=int, default=443, help="The https port number to use on the host side; not used if --noSSL (default: 443)")
   argparser.add_argument("--filestoragePort", type=int, default=1122, help="The filestorage port number to use on the host side (default: 1122)")
 
-  argparser.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")
+  def buildConfigConvert(x):
+    try:
+      return json.loads(x)
+    except:
+      with open(x, "rt") as f:
+        return json.load(f)
+  argparser.add_argument("--buildConfig", type=buildConfigConvert, default={}, help="Load an additional build(/examples) configuration as json string or filename")
   
   return argparser.parse_known_args()
 
