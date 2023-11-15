@@ -31,7 +31,7 @@ jobs:
       - name: "Dump resources"
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
       - name: "mfmf monitor resources"
-        run: while [ 1 ]; do date && free && df && sleep 10s; done & echo $! > /tmp/respid
+        run: while [ 1 ]; do date && free && df && sleep 10s; done &> /tmp/resout & echo $! > /tmp/respid
       - name: "Install msys2 packages"
         run: >
           pacman -S --noconfirm
@@ -140,7 +140,7 @@ jobs:
           for KEY in $KEYS; do gh actions-cache delete $KEY --confirm --repo ${{github.repository}} --branch ${{github.ref_name}}; done
       - name: "mfmf monitor resources end"
         if: ${{always()}}
-        run: kill $(cat /tmp/respid)
+        run: cat /tmp/resout; kill $(cat /tmp/respid)
       - name: "Dump resources"
         if: ${{always()}}
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
