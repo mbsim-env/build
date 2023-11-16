@@ -180,6 +180,13 @@ jobs:
           name: mbsim-env-covdata
           retention-days: 1
           path: ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*.gz
+      - name: "Artifact: upload lcov-result"
+        if: ${{always() && inputs.downloadArtifactLcovdata}}
+        uses: actions/upload-artifact@v3
+        with:
+          name: mbsim-env-cov-result
+          retention-days: 7
+          path: ${{github.workspace}}/mbsim-env/local/cov.trace.final
       - name: "Dump resources"
         if: ${{always()}}
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
