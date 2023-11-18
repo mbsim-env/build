@@ -1609,9 +1609,6 @@ def coverage(exRun, lcovResultFile=None):
         covRate=float(m.group(1))
         break
 
-    # save coverage file to prefix dir
-    shutil.copyfile(pj(tempDir, "cov.trace.final"), args.prefix+"/cov.trace.final")
-
     # upload to codecov v4
     repos=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
     for repo in repos:
