@@ -41,6 +41,16 @@ class Run(django.db.models.Model):
   coverageOK=django.db.models.BooleanField(null=True, blank=True)
   coverageRate=django.db.models.FloatField(null=True, blank=True)
   coverageOutput=django.db.models.TextField(blank=True)
+  coverageFile=django.db.models.FileField(null=True, blank=True, max_length=200)
+  @property
+  def coverageFileName(self):
+    if not self.coverageFile: return None
+    return re.sub("^runexamples_Run_[0-9]+_", "", self.coverageFile.name)
+  @coverageFileName.setter
+  def coverageFileName(self, filename):
+    if self.id is None:
+      self.save()
+    self.coverageFile.name="runexamples_Run_"+str(self.id)+"_"+filename
 
   def getCurrent(self):
     if self.build_run:

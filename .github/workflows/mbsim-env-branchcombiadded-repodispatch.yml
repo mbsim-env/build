@@ -16,10 +16,6 @@ env:
   mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
   mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
   mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
-  mbsimenvsec_codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-  mbsimenvsec_codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-  mbsimenvsec_codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-  mbsimenvsec_codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
 jobs:
 
 
@@ -48,10 +44,6 @@ jobs:
       djangoSecretKey: ${{secrets.djangoSecretKey}}
       postgresPassword: ${{secrets.postgresPassword}}
       filestoragePassword: ${{secrets.filestoragePassword}}
-      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
 
 
 
@@ -83,7 +75,3 @@ jobs:
 #      djangoSecretKey: ${{secrets.djangoSecretKey}}
 #      postgresPassword: ${{secrets.postgresPassword}}
 #      filestoragePassword: ${{secrets.filestoragePassword}}
-#      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-#      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-#      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-#      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}

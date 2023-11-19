@@ -140,12 +140,9 @@
       {{ run.coverageOK|yesno:"Passed,Failed" }}: <span class="badge badge-secondary">{{run.coverageRate}}% coverage</span>
     </a>
     <ul class="list-group">
-      {% for repo in repoList %}
-        {% cycle run.build_run.fmatvecUpdateCommitID run.build_run.hdf5serieUpdateCommitID run.build_run.openmbvUpdateCommitID run.build_run.mbsimUpdateCommitID as repoUpdateCommitID silent %}
-        <li class="list-group-item">
-          <a href="https://app.codecov.io/gh/mbsim-env/{{repo}}/commit/{{repoUpdateCommitID}}">{{repo}}&nbsp;{% octicon "link-external" %}</a>
-        </li>
-      {% endfor %}
+      <li class="list-group-item">
+        <a href="{% url "runexamples:dirfilecoverage" run.id %}">Per directory/file coverage</a>
+      </li>
     </ul>
   </div>
 {% endif %}

@@ -19,10 +19,6 @@ env:
   mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
   mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
   mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
-  mbsimenvsec_codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-  mbsimenvsec_codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-  mbsimenvsec_codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-  mbsimenvsec_codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
 jobs:
 
 
@@ -39,10 +35,6 @@ jobs:
       djangoSecretKey: ${{secrets.djangoSecretKey}}
       postgresPassword: ${{secrets.postgresPassword}}
       filestoragePassword: ${{secrets.filestoragePassword}}
-      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
   buildMatrix:
     name: B&e
     uses: ./.github/workflows/mbsim-env-build.yml
@@ -56,10 +48,6 @@ jobs:
       djangoSecretKey: ${{secrets.djangoSecretKey}}
       postgresPassword: ${{secrets.postgresPassword}}
       filestoragePassword: ${{secrets.filestoragePassword}}
-      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
 
 
 
@@ -83,10 +71,6 @@ jobs:
       djangoSecretKey: ${{secrets.djangoSecretKey}}
       postgresPassword: ${{secrets.postgresPassword}}
       filestoragePassword: ${{secrets.filestoragePassword}}
-      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
 
 
 
@@ -111,10 +95,6 @@ jobs:
       djangoSecretKey: ${{secrets.djangoSecretKey}}
       postgresPassword: ${{secrets.postgresPassword}}
       filestoragePassword: ${{secrets.filestoragePassword}}
-      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
   examplesRun:
     name: "E worker"
     uses: ./.github/workflows/mbsim-env-runexamples.yml
@@ -149,10 +129,6 @@ jobs:
       djangoSecretKey: ${{secrets.djangoSecretKey}}
       postgresPassword: ${{secrets.postgresPassword}}
       filestoragePassword: ${{secrets.filestoragePassword}}
-      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
   examplesPost:
     name: "E post"
     uses: ./.github/workflows/mbsim-env-runexamples.yml
@@ -174,10 +150,6 @@ jobs:
       djangoSecretKey: ${{secrets.djangoSecretKey}}
       postgresPassword: ${{secrets.postgresPassword}}
       filestoragePassword: ${{secrets.filestoragePassword}}
-      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
 
 
 
@@ -205,10 +177,6 @@ jobs:
       djangoSecretKey: ${{secrets.djangoSecretKey}}
       postgresPassword: ${{secrets.postgresPassword}}
       filestoragePassword: ${{secrets.filestoragePassword}}
-      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
   examplesRunValgrind:
     name: "E valgrind worker"
     uses: ./.github/workflows/mbsim-env-runexamples.yml
@@ -243,10 +211,6 @@ jobs:
       djangoSecretKey: ${{secrets.djangoSecretKey}}
       postgresPassword: ${{secrets.postgresPassword}}
       filestoragePassword: ${{secrets.filestoragePassword}}
-      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
   examplesPostValgrind:
     name: "E valgrind post"
     uses: ./.github/workflows/mbsim-env-runexamples.yml
@@ -268,10 +232,6 @@ jobs:
       djangoSecretKey: ${{secrets.djangoSecretKey}}
       postgresPassword: ${{secrets.postgresPassword}}
       filestoragePassword: ${{secrets.filestoragePassword}}
-      codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-      codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-      codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-      codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
 
 
 
@@ -298,10 +258,6 @@ jobs:
           --env mbsimenvsec_djangoSecretKey
           --env mbsimenvsec_postgresPassword
           --env mbsimenvsec_filestoragePassword
-          --env mbsimenvsec_codecovUploadToken_fmatvec
-          --env mbsimenvsec_codecovUploadToken_hdf5serie
-          --env mbsimenvsec_codecovUploadToken_openmbv
-          --env mbsimenvsec_codecovUploadToken_mbsim
           mbsimenv/builddoc:${{env.MBSIMENVTAGNAME}}
           --mbsimBranch ${{fromJson(needs.buildPartitionedExamples.outputs.buildInfo).repo.mbsim}}
       - name: "Dump resources"

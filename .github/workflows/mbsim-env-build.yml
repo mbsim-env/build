@@ -26,14 +26,6 @@ on:
         required: true
       filestoragePassword:
         required: true
-      codecovUploadToken_fmatvec:
-        required: true
-      codecovUploadToken_hdf5serie:
-        required: true
-      codecovUploadToken_openmbv:
-        required: true
-      codecovUploadToken_mbsim:
-        required: true
 env:
   # set the CPU type for OpenBLAS to avoid CPU dependent results (e.g. with/without AVX512)
   OPENBLAS_CORETYPE: Haswell
@@ -50,10 +42,6 @@ env:
   mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
   mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
   mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
-  mbsimenvsec_codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-  mbsimenvsec_codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-  mbsimenvsec_codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-  mbsimenvsec_codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
   GH_TOKEN: ${{github.token}} # needed for gh-actions-cache
 jobs:
   build:
@@ -198,10 +186,6 @@ jobs:
           --env mbsimenvsec_djangoSecretKey
           --env mbsimenvsec_postgresPassword
           --env mbsimenvsec_filestoragePassword
-          --env mbsimenvsec_codecovUploadToken_fmatvec
-          --env mbsimenvsec_codecovUploadToken_hdf5serie
-          --env mbsimenvsec_codecovUploadToken_openmbv
-          --env mbsimenvsec_codecovUploadToken_mbsim
           -v ${{github.workspace}}/mbsim-env:/mbsim-env
           -v ${{github.workspace}}/mbsim-ccache:/mbsim-ccache
           ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}}

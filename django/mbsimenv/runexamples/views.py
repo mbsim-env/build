@@ -9,6 +9,8 @@ import urllib
 import math
 import os
 import datetime
+import colorsys
+import requests
 from octicons.templatetags.octicons import octicon
 
 # maps the current url to the proper run id url (without forwarding to keep the URL in the browser)
@@ -818,3 +820,194 @@ def allExampleStatic(request):
       "references": references,
     }
   return django.http.JsonResponse(allEx, json_dumps_params={"indent": 2})
+
+
+
+def lcovColor(rate):
+  rateMin=0.7
+  if rate<rateMin:
+    r=0
+  else:
+    r=(rate-rateMin)/(1-rateMin)
+  return "#"+"".join(map(lambda x: hex(int(x*255))[2:].zfill(2),colorsys.hsv_to_rgb(r*2/6, 1, 0.75)))
+
+def readLCov(f, stopAfterFile=None):
+  lcovdata=[]
+  readNextFile=True
+  for lcovLine in f.readlines():
+    if lcovLine.startswith("SF:"):
+      if not readNextFile:
+        return lcovdata
+      linecoverage=[]
+      lcovdatafile={readLCov.LINECOVERAGE: linecoverage}
+      absfile=lcovLine[3:].rstrip()
+      lcovdata.append((absfile, lcovdatafile))
+      if absfile==stopAfterFile:
+        readNextFile=False
+    if lcovLine.startswith("DA:"):
+      lineNr_count=lcovLine[3:].rstrip().split(",")
+      linecoverage.append((int(lineNr_count[0]), int(lineNr_count[1])))
+  return lcovdata
+readLCov.LINECOVERAGE=0
+
+def inlineProgressBar(rate, color, width=200, height=20):
+  boarderwidth=1
+  boardercolor="#DDDDDD"
+  bgcolor="#EEEEEE"
+  return f'''
+    <svg width="{width}" height="{height}" viewBox="0 0 {width} {height}">
+      <rect style="fill: {bgcolor}; stroke: {boardercolor}; stroke-width: {boarderwidth};"
+            width="{width-boarderwidth}" height="{height-boarderwidth}" x="{boarderwidth/2}" y="{boarderwidth/2}"/>
+      <rect style="fill: {color};"
+            width="{(width-2*boarderwidth)*rate}" height="{height-2*boarderwidth}" x="{boarderwidth}" y="{boarderwidth}"/>
+    </svg>'''
+
+# per directory and file coverage
+class DirFileCoverage(base.views.Base):
+  template_name='runexamples/dirfilecoverage.html'
+  def setup(self, request, *args, **kwargs):
+    super().setup(request, *args, **kwargs)
+    self.run=runexamples.models.Run.objects.get(id=self.kwargs["id"])
+  def get_context_data(self, **kwargs):
+    context=super().get_context_data(**kwargs)
+    context['run']=self.run
+    context['htmltree']=self.prepareCoverageData()
+    return context
+  def prepareCoverageData(self):
+    # read lcov file and save in lcovdata dict
+    with self.run.coverageFile.open("rt") as f:
+      lcovdata=readLCov(f)
+
+    # a heuristic to detect the prefix dir (the smallest dir which contains a subdir fmatvec, hdf5serie, openbmv and mbsim
+    fmatvecIdx = set()
+    hdf5serieIdx = set()
+    openmbvIdx = set()
+    mbsimIdx = set()
+    for absfile, _ in lcovdata:
+      fmatvecIdx.update([idx for idx, ele in enumerate(absfile.split("/")) if ele == "fmatvec"])
+      hdf5serieIdx.update([idx for idx, ele in enumerate(absfile.split("/")) if ele == "hdf5serie"])
+      openmbvIdx.update([idx for idx, ele in enumerate(absfile.split("/")) if ele == "openmbv"])
+      mbsimIdx.update([idx for idx, ele in enumerate(absfile.split("/")) if ele == "mbsim"])
+    prefixIdx=0
+    while True:
+      prefixIdx+=1
+      if prefixIdx in fmatvecIdx and prefixIdx in hdf5serieIdx and prefixIdx in openmbvIdx and prefixIdx in mbsimIdx:
+        break
+
+    # create per hierarchical dir/file line coverage from lcovdata and save to treeroot
+    CHILDREN=0
+    TOTALLINES=1
+    ABSFILE=2
+    COVEREDLINES=3
+    
+    treeroot={TOTALLINES: 0, COVEREDLINES: 0, ABSFILE: "ROOT", CHILDREN: {}}
+    for absfile, lcovdatafile in lcovdata:
+      treenode=treeroot
+      treepath=[treenode]
+      for filenamepart in absfile.split("/"):
+        treenode_children=treenode[CHILDREN]
+        treenode=treenode_children.setdefault(filenamepart, {TOTALLINES: 0, COVEREDLINES: 0,
+                                                             ABSFILE: urllib.parse.quote(absfile,safe=""), CHILDREN: {}})
+        treepath.append(treenode)
+      lcovdatafile_linecoverage=lcovdatafile[readLCov.LINECOVERAGE]
+      totalLines=len(lcovdatafile_linecoverage)
+      coveredLines=sum(1 for _ in filter(lambda linecoverage_item: linecoverage_item[1]>0, lcovdatafile_linecoverage))
+      treepathlast=treepath[-1]
+      treepathlast[TOTALLINES]=totalLines
+      treepathlast[COVEREDLINES]=coveredLines
+      for filenamepart in reversed(treepath[:-1]):
+        filenamepart[TOTALLINES]+=totalLines
+        filenamepart[COVEREDLINES]+=coveredLines
+    
+    # convert treeroot to html content
+    def convertToHTMLTree(treenode, collapseAtIndent, htmltree, indent=0):
+      treenode_children=treenode[CHILDREN]
+      for filenamepart in treenode_children:
+        treenode_children_p=treenode_children[filenamepart]
+        totalLines=treenode_children_p[TOTALLINES]
+        coveredLines=treenode_children_p[COVEREDLINES]
+        rate=1 if totalLines==0 else coveredLines/totalLines
+        color=lcovColor(rate)
+        if len(treenode_children_p[CHILDREN])==0:
+          icon=octicon("file", height="16")
+          href=django.urls.reverse('runexamples:filecoverage', args=[self.run.id, prefixIdx, treenode_children_p[ABSFILE]])
+        else:
+          icon=octicon("file-directory", height="16")
+          href=None
+        htmltree.append({
+          "indent": indent,
+          "collapsed": indent>=collapseAtIndent,
+          "hiddencount": max(0, indent-collapseAtIndent),
+          "icon": icon,
+          "name": f'{filenamepart}',
+          "href": href,
+          "color": color,
+          "rate": rate*100,
+          "rateprogress": inlineProgressBar(rate, color, 200, 15),
+          "totallines": totalLines,
+        })
+        convertToHTMLTree(treenode_children_p, collapseAtIndent, htmltree, indent+1)
+    htmltree=[]
+    convertToHTMLTree(treeroot, prefixIdx, htmltree, 0)
+    return htmltree
+
+# per file coverage
+class FileCoverage(base.views.Base):
+  template_name='runexamples/filecoverage.html'
+  def setup(self, request, *args, **kwargs):
+    super().setup(request, *args, **kwargs)
+    self.run=runexamples.models.Run.objects.get(id=self.kwargs["id"])
+    self.absfile=urllib.parse.unquote(self.kwargs["absfile"])
+    self.prefixIdx=self.kwargs["prefixIdx"]
+  def get_context_data(self, **kwargs):
+    context=super().get_context_data(**kwargs)
+    context['run']=self.run
+
+    # get line coverage
+    with self.run.coverageFile.open("rt") as f:
+      lcovdata=readLCov(f, stopAfterFile=self.absfile)
+    linecoverage=lcovdata[-1][1][readLCov.LINECOVERAGE]
+
+    totalLines=len(linecoverage)
+    coveredLines=sum(1 for _ in filter(lambda linecoverage_item: linecoverage_item[1]>0, linecoverage))
+    rate=1 if totalLines==0 else coveredLines/totalLines
+    context['rate']=rate*100
+    color=lcovColor(rate)
+    context['color']=color
+    context['rateprogress']=inlineProgressBar(rate, color, 200, 18)
+
+    # get source file
+    repoLocal=self.absfile.split("/")[self.prefixIdx]
+    repofile="/".join(self.absfile.split("/")[self.prefixIdx+1:])
+#    repos=set([# mfmf handle also buildConfig("buildRepos") and fix fileurl if this is done
+#      "https://github.com/mbsim-env/fmatvec.git",
+#      "https://github.com/mbsim-env/hdf5serie.git",
+#      "https://github.com/mbsim-env/openmbv.git",
+#      "https://github.com/mbsim-env/mbsim.git",
+#    ])
+#    repo=next(filter(lambda repo: repo.split("/")[-1][0:-4]==repoLocal, repos))
+    context['absfile']=repoLocal+"/"+repofile
+    sha=getattr(self.run.build_run, repoLocal+"UpdateCommitID")
+    fileurl=f"https://raw.githubusercontent.com/mbsim-env/{repoLocal}/{sha}/{repofile}"
+    context['filesource']=fileurl
+    response=requests.get(fileurl)
+    if response.status_code!=200:
+      return django.http.HttpResponseBadRequest("Cannot get raw file content from github.")
+    filecontent=response.content
+
+    htmltree=[]
+    linecovIter = iter(linecoverage)
+    covLine=(0,0)
+    sourceLineNr=0
+    for line in filecontent.splitlines():
+      sourceLineNr+=1
+      while covLine[0]<sourceLineNr:
+        covLine=next(linecovIter, (1e9,0))
+      line=line.decode("utf-8")
+      htmltree.append({
+        "linenr": sourceLineNr,
+        "callcount": covLine[1] if covLine[0]==sourceLineNr else -1,
+        "line": line,
+      })
+    context["htmltree"]=htmltree
+    return context
