@@ -934,18 +934,19 @@ class DirFileCoverage(base.views.Base):
         else:
           icon=octicon("file-directory", height="16")
           href=None
-        htmltree.append({
-          "indent": indent,
-          "collapsed": indent>=collapseAtIndent,
-          "hiddencount": max(0, indent-collapseAtIndent),
-          "icon": icon,
-          "name": f'{filenamepart}',
-          "href": href,
-          "color": color,
-          "rate": rate*100,
-          "rateprogress": inlineProgressBar(rate, color, 200, 15),
-          "totallines": totalLines,
-        })
+        if indent-prefixIdx+1>=0:
+          htmltree.append({
+            "indent": indent-prefixIdx+1,
+            "collapsed": indent>=collapseAtIndent,
+            "hiddencount": max(0, indent-collapseAtIndent),
+            "icon": icon,
+            "name": f'{filenamepart}' if indent-prefixIdx+1>0 else f'<All Repositories>',
+            "href": href,
+            "color": color,
+            "rate": rate*100,
+            "rateprogress": inlineProgressBar(rate, color, 200, 15),
+            "totallines": totalLines,
+          })
         convertToHTMLTree(treenode_children_p, collapseAtIndent, htmltree, indent+1)
     htmltree=[]
     convertToHTMLTree(treeroot, prefixIdx, htmltree, 0)
@@ -979,6 +980,7 @@ class FileCoverage(base.views.Base):
     # get source file
     repoLocal=self.absfile.split("/")[self.prefixIdx]
     repofile="/".join(self.absfile.split("/")[self.prefixIdx+1:])
+    #mfmf https://gitea.rcstengel.de/Software/track/raw/commit/{sha}/{repofile}
 #    repos=set([# mfmf handle also buildConfig("buildRepos") and fix fileurl if this is done
 #      "https://github.com/mbsim-env/fmatvec.git",
 #      "https://github.com/mbsim-env/hdf5serie.git",
