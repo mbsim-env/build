@@ -384,7 +384,7 @@ def createUniqueRunID(request, buildtype, executorID, fmatvecSHA, hdf5serieSHA, 
           setattr(existingRun, repo+"Triggered", triggered)
           existingRun.save()
           try:
-            r = existingRun.repos.objects.get(repoName=repo)
+            r = existingRun.repos.get(repoName=repo)
             r.triggered=triggered
             r.save()
           except builds.models.Repos.DoesNotExist:

@@ -259,7 +259,10 @@ class MyAtom1Feed(django.utils.feedgenerator.Atom1Feed):
       def myAddQuickElement(self, name, contents=None, attrs=None):
         if name=="updated" or name=="published":
           contents=contents[0:-3]+contents[-2:]
-          dt=datetime.datetime.strptime(contents, "%Y-%m-%dT%H:%M:%S.%f%z")
+          try:
+            dt=datetime.datetime.strptime(contents, "%Y-%m-%dT%H:%M:%S.%f%z") # try with .%f ...
+          except ValueError:
+            dt=datetime.datetime.strptime(contents, "%Y-%m-%dT%H:%M:%S%z") # and, if not working without .%f
           dt=(dt+dt.utcoffset()).replace(microsecond=0, tzinfo=None)
           contents=dt.isoformat()+"Z"
         self.addQuickElement_org(name, contents, attrs)
@@ -307,7 +310,7 @@ class Feed(django.contrib.syndication.views.Feed):
               <p>Build was run on: {buildRun.executor}</p>
               <p>Build done with the following branches:</p>
               <dl>'''
-    for repo in buildRun.repos:
+    for repo in buildRun.repos.all():
       ret +=f'''<dt>{bolds(repo.triggered)}fmatvec{bolde(repo.triggered)}</dt>+\
                 <dd><b>{repo.branch}</b>: <i>{repo.updateAuthor}</i> - {repo.updateMsg}</dd>'''
     ret +=f'''</dl>'''

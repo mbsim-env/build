@@ -580,7 +580,7 @@ def repoUpdate(run, buildInfo):
         setattr(run, repo+"Triggered", True)#mfmf
         run.save()
         try:
-          r = run.repos.objects.get(repoName=repo)
+          r = run.repos.get(repoName=repo)
           r.triggered=True
           r.save()
         except builds.models.Repos.DoesNotExist:
