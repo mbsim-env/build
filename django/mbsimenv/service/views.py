@@ -303,19 +303,15 @@ class Feed(django.contrib.syndication.views.Feed):
       return '<b>' if bold else ""
     def bolde(bold):
       return '</b>' if bold else ""
-    return f'''<p><b>{run.nrFailed()} of {run.nrAll()} {"build parts" if isBuild else "examples"} failed.</b></p>
-               <p>Build was run on: {buildRun.executor}</p>
-               <p>Build done with the following branches:</p>
-               <dl>
-                 <dt>{bolds(buildRun.fmatvecTriggered)}fmatvec{bolde(buildRun.fmatvecTriggered)}</dt>
-                   <dd><b>{buildRun.fmatvecBranch}</b>: <i>{buildRun.fmatvecUpdateAuthor}</i> - {buildRun.fmatvecUpdateMsg}</dd>
-                 <dt>{bolds(buildRun.hdf5serieTriggered)}hdf5serie{bolde(buildRun.hdf5serieTriggered)}</dt>
-                   <dd><b>{buildRun.hdf5serieBranch}</b>: <i>{buildRun.hdf5serieUpdateAuthor}</i> - {buildRun.hdf5serieUpdateMsg}</dd>
-                 <dt>{bolds(buildRun.openmbvTriggered)}openmbv{bolde(buildRun.openmbvTriggered)}</dt>
-                   <dd><b>{buildRun.openmbvBranch}</b>: <i>{buildRun.openmbvUpdateAuthor}</i> - {buildRun.openmbvUpdateMsg}</dd>
-                 <dt>{bolds(buildRun.mbsimTriggered)}mbsim{bolde(buildRun.mbsimTriggered)}</dt>
-                   <dd><b>{buildRun.mbsimBranch}</b>: <i>{buildRun.mbsimUpdateAuthor}</i> - {buildRun.mbsimUpdateMsg}</dd>
-               </dl>'''
+    ret = f'''<p><b>{run.nrFailed()} of {run.nrAll()} {"build parts" if isBuild else "examples"} failed.</b></p>
+              <p>Build was run on: {buildRun.executor}</p>
+              <p>Build done with the following branches:</p>
+              <dl>'''
+    for repo in buildRun.repos:
+      ret +=f'''<dt>{bolds(repo.triggered)}fmatvec{bolde(repo.triggered)}</dt>+\
+                <dd><b>{repo.branch}</b>: <i>{repo.updateAuthor}</i> - {repo.updateMsg}</dd>'''
+    ret +=f'''</dl>'''
+    return ret
   def item_link(self, run):
     isBuild=type(run) is builds.models.Run
     return django.urls.reverse("builds:run" if isBuild else "runexamples:run", args=[run.id])

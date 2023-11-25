@@ -54,7 +54,7 @@ class Run(base.views.Base):
     context['run']=self.run
     context['runBuildTypeIcon']=base.helper.buildTypeIcon(self.run.buildType)
     # just a list which can be used to loop over in the template
-    context['repoList']=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
+    context['repos']=list(self.run.repos.all())
     context['examples']=examples
     context['examplesAllOK']=examplesAllOK
     context['releaseFileSuffix']="linux64.tar.bz2" if self.run.buildType=="linux64-dailyrelease" else "win64.zip"
@@ -382,6 +382,13 @@ def createUniqueRunID(request, buildtype, executorID, fmatvecSHA, hdf5serieSHA, 
         triggered=functools.reduce(lambda a, b: a|b, [getattr(run, repo+"Triggered")]+[getattr(x, repo+"Triggered") for x in existingRuns])
         for existingRun in existingRuns:
           setattr(existingRun, repo+"Triggered", triggered)
+          existingRun.save()
+          try:
+            r = existingRun.repos.objects.get(repoName=repo)
+            r.triggered=triggered
+            r.save()
+          except builds.models.Repos.DoesNotExist:
+            pass
       builds.models.Run.objects.bulk_update(existingRuns, fields=["fmatvecTriggered", "hdf5serieTriggered", "openmbvTriggered", "mbsimTriggered"])
       run.delete()
       return django.http.JsonResponse({"runID": None, "existingRunIDs": [x.id for x in existingRuns]}, json_dumps_params={"indent": 2})

@@ -493,9 +493,19 @@ def repoUpdate(run, buildInfo):
     print('Updating repositories: ', end="")
     sys.stdout.flush()
 
+  # buildRepos
+  buildRepos=[
+    {"gitURL": "https://github.com/mbsim-env/fmatvec.git", "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/fmatvec/{sha}/{repofile}"},
+    {"gitURL": "https://github.com/mbsim-env/hdf5serie.git", "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/hdf5serie/{sha}/{repofile}"},
+    {"gitURL": "https://github.com/mbsim-env/openmbv.git", "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/openmbv/{sha}/{repofile}"},
+    {"gitURL": "https://github.com/mbsim-env/mbsim.git", "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/mbsim/{sha}/{repofile}"},
+  ]
+  buildRepos+=args.buildConfig.get("buildRepos", [])
+
   commitidfull={}
   buildInfo["repo"]={}
-  for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
+  for repoDict in buildRepos+args.buildConfig.get("exampleRepos", []):
+    repo=repoDict["gitURL"].split("/")[-1][0:-4]
     os.chdir(pj(args.sourceDir, repo))
     # update
     repoUpdFD=io.StringIO()
@@ -505,7 +515,7 @@ def repoUpdate(run, buildInfo):
     os.environ["GIT_COMMITTER_NAME"]="dummy"
     os.environ["GIT_COMMITTER_EMAIL"]="dummy"
 
-    branchSplit=getattr(args, repo+"Branch").split("*")
+    branchSplit=getattr(args, repo+"Branch", "").split("*")
     if not args.disableUpdate:
       # write repUpd output to report dir
       print('Fetch remote repository '+repo+":", file=repoUpdFD)
@@ -516,9 +526,9 @@ def repoUpdate(run, buildInfo):
       base.helper.subprocessCall(["git", "branch", "-q", "-D", branch], repoUpdFD)
       retlocal+=abs(base.helper.subprocessCall(["git", "fetch", "-q", "-f", "--depth", "1", "origin", sha+":"+branch], repoUpdFD))
     # set branch based on args
-    if getattr(args, repo+'Branch')!="":
+    if getattr(args, repo+'Branch', "")!="":
       branch=branchSplit[0]
-      print('Checkout branch '+getattr(args, repo+'Branch')+' in repository '+repo+":", file=repoUpdFD)
+      print('Checkout branch '+getattr(args, repo+'Branch', "")+' in repository '+repo+":", file=repoUpdFD)
       retlocal+=abs(base.helper.subprocessCall(["git", "checkout", "-q", branch], repoUpdFD))
       repoUpdFD.flush()
     # get branch and commit
@@ -529,35 +539,52 @@ def repoUpdate(run, buildInfo):
     authorDate=base.helper.subprocessCheckOutput(["git", "log", "-n", "1", "--format=%aI", "HEAD"], repoUpdFD).decode('utf-8').rstrip()
     ret+=retlocal
     # save
-    setattr(run, repo+"Branch", branch)
-    setattr(run, repo+"Triggered", getattr(run, repo+"Triggered") or (len(branchSplit)>2 and branchSplit[2]=="T"))
+    # NOTE the following fields are currently stored redundant, see models.py
+    if repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
+      setattr(run, repo+"Branch", branch)
+      setattr(run, repo+"Triggered", getattr(run, repo+"Triggered") or (len(branchSplit)>2 and branchSplit[2]=="T"))
+      if not args.disableUpdate:
+        setattr(run, repo+"UpdateOK", retlocal==0)
+      setattr(run, repo+"UpdateOutput", repoUpdFD.getvalue())
+      setattr(run, repo+"UpdateCommitID", commitidfull[repo])
+      setattr(run, repo+"UpdateMsg", commitsub[:builds.models.Run._meta.get_field(repo+"UpdateMsg").max_length])
+      setattr(run, repo+"UpdateAuthor", authorName)
+      authorDatePy36=re.sub("(:[0-9][0-9][+-][0-9][0-9]):([0-9][0-9])$", "\\1\\2", authorDate) # fix authorDate for Python 3.6
+      setattr(run, repo+"UpdateDate", datetime.datetime.strptime(authorDatePy36, '%Y-%m-%dT%H:%M:%S%z'))
+
+    repos=builds.models.Repos()
+    repos.run=run
+    repos.repoName=repo
+    repos.branch=branch
+    repos.triggered=getattr(run, repo+"Triggered", False) or repos.triggered or (len(branchSplit)>2 and branchSplit[2]=="T")
     if not args.disableUpdate:
-      setattr(run, repo+"UpdateOK", retlocal==0)
-    setattr(run, repo+"UpdateOutput", repoUpdFD.getvalue())
-    setattr(run, repo+"UpdateCommitID", commitidfull[repo])
-    setattr(run, repo+"UpdateMsg", commitsub[:builds.models.Run._meta.get_field(repo+"UpdateMsg").max_length])
-    setattr(run, repo+"UpdateAuthor", authorName)
+      repos.updateOK=retlocal==0
+    repos.updateOutput=repoUpdFD.getvalue()
+    repos.updateCommitID=commitidfull[repo]
+    repos.updateMsg=commitsub[:builds.models.Repos._meta.get_field("updateMsg").max_length]
+    repos.updateAuthor=authorName
     authorDatePy36=re.sub("(:[0-9][0-9][+-][0-9][0-9]):([0-9][0-9])$", "\\1\\2", authorDate) # fix authorDate for Python 3.6
-    setattr(run, repo+"UpdateDate", datetime.datetime.strptime(authorDatePy36, '%Y-%m-%dT%H:%M:%S%z'))
+    repos.updateDate=datetime.datetime.strptime(authorDatePy36, '%Y-%m-%dT%H:%M:%S%z')
+    repos.gitURL=repoDict["gitURL"]
+    repos.sourcefileURL=repoDict["sourcefileURL"]
+    repos.save()
+    # NOTE end
     run.save()
     repoUpdFD.close()
     buildInfo["repo"][repo]=branch+"*"+commitidfull[repo]
-  for repo in args.buildConfig.get("buildRepos", [])+args.buildConfig.get("exampleRepos", []):
-    localDir=repo.split("/")[-1][0:-4]
-    os.chdir(pj(args.sourceDir, localDir))
-    retlocal=0
-    if not args.disableUpdate:
-      print('Update remote repository '+repo+":")
-      retlocal+=abs(subprocess.call(["git", "checkout", "-q", "HEAD~0"]))
-      retlocal+=abs(subprocess.call(["git", "fetch", "-q", "-f", "--depth", "1", "origin", "master:master"]))
-    retlocal+=abs(subprocess.call(["git", "checkout", "-q", "master"]))
-    ret+=retlocal
   # for daily builds set the triggered flag for every repo with a change wrt the last daily build
   if "daily" in args.buildType:
     previousRun=run.getPrevious()
     for repo in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
       if getattr(previousRun, repo+"UpdateCommitID")!=commitidfull[repo]:
-        setattr(run, repo+"Triggered", True)
+        setattr(run, repo+"Triggered", True)#mfmf
+        run.save()
+        try:
+          r = run.repos.objects.get(repoName=repo)
+          r.triggered=True
+          r.save()
+        except builds.models.Repos.DoesNotExist:
+          pass
 
   if not args.disableUpdate:
     if ret>0:

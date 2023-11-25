@@ -1548,13 +1548,21 @@ def coverageBackupRestore(variant):
 def coverage(exRun, lcovResultFile=None):
   import requests
 
+  # buildRepos
+  buildRepos=[
+    {"gitURL": "https://github.com/mbsim-env/fmatvec.git", "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/fmatvec/{sha}/{repofile}"},
+    {"gitURL": "https://github.com/mbsim-env/hdf5serie.git", "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/hdf5serie/{sha}/{repofile}"},
+    {"gitURL": "https://github.com/mbsim-env/openmbv.git", "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/openmbv/{sha}/{repofile}"},
+    {"gitURL": "https://github.com/mbsim-env/mbsim.git", "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/mbsim/{sha}/{repofile}"},
+  ]
+  buildRepos+=args.buildConfig.get("buildRepos", [])
+
   ret=0
   lcovFD=base.helper.MultiFile(args.printToConsole)
   # lcov "-d" arguments
   dirs=map(lambda x: ["-d", pj(args.sourceDir, x),
                       "-d", pj(args.sourceDir, x+args.binSuffix)],
-                     ["fmatvec", "hdf5serie", "openmbv", "mbsim"]+\
-                     list(map(lambda repo: repo.split("/")[-1][0:-4], args.buildConfig.get("buildRepos", []))))
+                     list(map(lambda repo: repo["gitURL"].split("/")[-1][0:-4], buildRepos)))
   dirs=["-d", args.prefix]+[v for il in dirs for v in il]
 
   # replace header map in lcov trace file

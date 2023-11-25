@@ -980,19 +980,12 @@ class FileCoverage(base.views.Base):
     # get source file
     repoLocal=self.absfile.split("/")[self.prefixIdx]
     repofile="/".join(self.absfile.split("/")[self.prefixIdx+1:])
-    #mfmf https://gitea.rcstengel.de/Software/track/raw/commit/{sha}/{repofile}
-#    repos=set([# mfmf handle also buildConfig("buildRepos") and fix fileurl if this is done
-#      "https://github.com/mbsim-env/fmatvec.git",
-#      "https://github.com/mbsim-env/hdf5serie.git",
-#      "https://github.com/mbsim-env/openmbv.git",
-#      "https://github.com/mbsim-env/mbsim.git",
-#    ])
-#    repo=next(filter(lambda repo: repo.split("/")[-1][0:-4]==repoLocal, repos))
     context['absfile']=repoLocal+"/"+repofile
-    sha=getattr(self.run.build_run, repoLocal+"UpdateCommitID")
-    fileurl=f"https://raw.githubusercontent.com/mbsim-env/{repoLocal}/{sha}/{repofile}"
-    context['filesource']=fileurl
-    response=requests.get(fileurl)
+    tool = self.run.build_run.repos.get(repoName=repoLocal)
+    sha=tool.updateCommitID
+    sourcefile=tool.sourcefileURL.format(sha=sha, repofile=repofile)
+    context['filesource']=sourcefile
+    response=requests.get(sourcefile)
     if response.status_code!=200:
       return django.http.HttpResponseBadRequest("Cannot get raw file content from github.")
     filecontent=response.content
