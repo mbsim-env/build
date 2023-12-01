@@ -189,3 +189,7 @@ class Repos(django.db.models.Model):
   updateDate=django.db.models.DateTimeField(null=True)
   gitURL=django.db.models.CharField(max_length=200)
   sourcefileURL=django.db.models.CharField(max_length=200)
+  sourcefilelineURL=django.db.models.CharField(max_length=200)
+  repoURL=django.db.models.CharField(max_length=200)
+  commitURL=django.db.models.CharField(max_length=200)
+  branchURL=django.db.models.CharField(max_length=200)

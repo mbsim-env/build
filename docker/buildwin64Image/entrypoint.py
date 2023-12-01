@@ -61,7 +61,7 @@ for repo in [
               "https://github.com/mbsim-env/hdf5serie.git",
               "https://github.com/mbsim-env/openmbv.git",
               "https://github.com/mbsim-env/mbsim.git",
-            ]+list(map(lambda repo: repo["gitURL"], args.buildConfig.get("buildRepos", [])+args.buildConfig.get("exampleRepos", []))):
+            ]+list(map(lambda repo: repo["gitURL"], args.buildConfig.get("addRepos", []))):
   localDir=repo.split("/")[-1][0:-4]
   if not os.path.isdir("/mbsim-env/"+localDir):
     subprocess.check_call(["git", "clone", "-q", "--depth", "1", repo], cwd="/mbsim-env",

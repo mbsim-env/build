@@ -83,7 +83,7 @@ if build:
                 "https://github.com/mbsim-env/hdf5serie.git",
                 "https://github.com/mbsim-env/openmbv.git",
                 "https://github.com/mbsim-env/mbsim.git",
-              ]+list(map(lambda repo: repo["gitURL"], args.buildConfig.get("buildRepos", [])+args.buildConfig.get("exampleRepos", []))):
+              ]+list(map(lambda repo: repo["gitURL"], args.buildConfig.get("addRepos", []))):
     localDir=repo.split("/")[-1][0:-4]
     if not os.path.isdir("/mbsim-env/"+localDir):
       subprocess.check_call(["git", "clone", "-q", "--depth", "1", repo], cwd="/mbsim-env",
@@ -252,7 +252,7 @@ if build:
   if args.valgrindExamples:
     # run examples with valgrind
   
-    for repo in ["https://github.com/mbsim-env/mbsim.git"]+list(map(lambda repo: repo["gitURL"], args.buildConfig.get("exampleRepos", []))):
+    for repo in ["https://github.com/mbsim-env/mbsim.git"]+list(map(lambda repo: repo["gitURL"], args.buildConfig.get("addRepos", []))):
       localDir=repo.split("/")[-1][0:-4]
       if not os.path.isdir("/mbsim-env/"+localDir+"-valgrind"):
         subprocess.check_call(["git", "clone", "-q", "--depth", "1", repo, localDir+"-valgrind"], cwd="/mbsim-env",
@@ -273,7 +273,7 @@ if build:
     if subprocess.call(["git", "checkout", "-q", sha])!=0:
       ret=ret+1
       print("git checkout of branch "+args.mbsimBranch+" failed.")
-    for repo in args.buildConfig.get("exampleRepos", []):
+    for repo in [{"gitURL": "https://github.com/mbsim-env/mbsim.git"}]+args.buildConfig.get("addRepos", []):
       localDir=repo["gitURL"].split("/")[-1][0:-4]
       os.chdir("/mbsim-env/"+localDir+"-valgrind")
       print('Update remote repository '+repo["gitURL"]+":")
@@ -319,14 +319,13 @@ def runExamplesPartition(ARGS, pullExampleRepos, pullAll):
   repos=set()
   if pullExampleRepos:
     repos.add("https://github.com/mbsim-env/mbsim.git")
-    repos.update(list(map(lambda repo: repo["gitURL"], args.buildConfig.get("exampleRepos", []))))
+    repos.update(list(map(lambda repo: repo["gitURL"], args.buildConfig.get("addRepos", []))))
   if pullAll:
     repos.update(["https://github.com/mbsim-env/fmatvec.git",
                   "https://github.com/mbsim-env/hdf5serie.git",
                   "https://github.com/mbsim-env/openmbv.git",
                   "https://github.com/mbsim-env/mbsim.git"])
-    repos.update(list(map(lambda repo: repo["gitURL"], args.buildConfig.get("exampleRepos", []))))
-    repos.update(list(map(lambda repo: repo["gitURL"], args.buildConfig.get("buildRepos", []))))
+    repos.update(list(map(lambda repo: repo["gitURL"], args.buildConfig.get("addRepos", []))))
   for repo in repos:
     localDir=repo.split("/")[-1][0:-4]
     # clone if needed

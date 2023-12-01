@@ -1548,21 +1548,45 @@ def coverageBackupRestore(variant):
 def coverage(exRun, lcovResultFile=None):
   import requests
 
-  # buildRepos
-  buildRepos=[
-    {"gitURL": "https://github.com/mbsim-env/fmatvec.git", "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/fmatvec/{sha}/{repofile}"},
-    {"gitURL": "https://github.com/mbsim-env/hdf5serie.git", "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/hdf5serie/{sha}/{repofile}"},
-    {"gitURL": "https://github.com/mbsim-env/openmbv.git", "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/openmbv/{sha}/{repofile}"},
-    {"gitURL": "https://github.com/mbsim-env/mbsim.git", "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/mbsim/{sha}/{repofile}"},
+  # allRepos
+  allRepos=[
+    { "gitURL": "https://github.com/mbsim-env/fmatvec.git", # */<localname>.git -> localname is the directory name of the repo
+      "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/fmatvec/{sha}/{repofile}",
+      "sourcefilelineURL": "https://github.com/mbsim-env/fmatvec/blob/{sha}/{repofile}#L{line}",
+      "repoURL": "https://github.com/mbsim-env/fmatvec",
+      "commitURL": "https://github.com/mbsim-env/fmatvec/commit/{sha}",
+      "branchURL": "https://github.com/mbsim-env/fmatvec/tree/{branch}",
+    },
+    { "gitURL": "https://github.com/mbsim-env/hdf5serie.git", # */<localname>.git -> localname is the directory name of the repo
+      "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/hdf5serie/{sha}/{repofile}",
+      "sourcefilelineURL": "https://github.com/mbsim-env/hdf5serie/blob/{sha}/{repofile}#L{line}",
+      "repoURL": "https://github.com/mbsim-env/hdf5serie",
+      "commitURL": "https://github.com/mbsim-env/hdf5serie/commit/{sha}",
+      "branchURL": "https://github.com/mbsim-env/hdf5serie/tree/{branch}",
+    },
+    { "gitURL": "https://github.com/mbsim-env/openmbv.git", # */<localname>.git -> localname is the directory name of the repo
+      "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/openmbv/{sha}/{repofile}",
+      "sourcefilelineURL": "https://github.com/mbsim-env/openmbv/blob/{sha}/{repofile}#L{line}",
+      "repoURL": "https://github.com/mbsim-env/openmbv",
+      "commitURL": "https://github.com/mbsim-env/openmbv/commit/{sha}",
+      "branchURL": "https://github.com/mbsim-env/openmbv/tree/{branch}",
+    },
+    { "gitURL": "https://github.com/mbsim-env/mbsim.git", # */<localname>.git -> localname is the directory name of the repo
+      "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/mbsim/{sha}/{repofile}",
+      "sourcefilelineURL": "https://github.com/mbsim-env/mbsim/blob/{sha}/{repofile}#L{line}",
+      "repoURL": "https://github.com/mbsim-env/mbsim",
+      "commitURL": "https://github.com/mbsim-env/mbsim/commit/{sha}",
+      "branchURL": "https://github.com/mbsim-env/mbsim/tree/{branch}",
+    },
   ]
-  buildRepos+=args.buildConfig.get("buildRepos", [])
+  allRepos+=args.buildConfig.get("addRepos", [])
 
   ret=0
   lcovFD=base.helper.MultiFile(args.printToConsole)
   # lcov "-d" arguments
   dirs=map(lambda x: ["-d", pj(args.sourceDir, x),
                       "-d", pj(args.sourceDir, x+args.binSuffix)],
-                     list(map(lambda repo: repo["gitURL"].split("/")[-1][0:-4], buildRepos)))
+                     list(map(lambda repo: repo["gitURL"].split("/")[-1][0:-4], allRepos)))
   dirs=["-d", args.prefix]+[v for il in dirs for v in il]
 
   # replace header map in lcov trace file
