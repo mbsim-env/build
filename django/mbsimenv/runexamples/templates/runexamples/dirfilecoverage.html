@@ -1,0 +1,64 @@
+{% extends "base/base.html" %}
+
+{% load static %}
+{% load octicons %}
+
+{% block title %}MBSim runexamples Coverage: {{run.buildType}}{% endblock %}
+
+{% block head %}
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
+<style>
+  *._linkpointer { cursor:pointer; }
+  *._hidden { visibility: hidden; }
+  *._displaynone { display: none; }
+</style>
+{% endblock %}
+
+{% block body %}
+<script src="{% static 'runexamples/dirfilecoverage.js' %}"> </script>
+
+<h1>MBSim Runexamples Per Directory/File Coverage</h1>
+
+<dl style="margin-right:0em;" class="row">
+  <dt class="col-2">Navigate</dt>
+  <dd class="col-10">
+    <a class="btn btn-info btn-xs" href="{% url "runexamples:run" run.id %}">
+      {% octicon "chevron-up" %} examples
+    </a>
+  </dd>
+</dl>
+
+<table class="table table-striped table-hover table-bordered table-sm">
+  <thead>
+    <tr>
+      <th class="col-lg">Directory/File</th>
+      <th style="text-align: center;" colspan="2">Line Coverage</th>
+      <th style="text-align: right;">Total Lines</th>
+    </tr>
+  </thead>
+  <tbody>
+    {% for item in htmltree %}
+      <tr class="{{item.hiddencount|yesno:"_displaynone,"}}" data-indent="{{item.indent}}" data-hiddencount="{{item.hiddencount}}">
+        <td>
+          <span style="padding-left:{{item.indent}}em"></span>
+          {% if item.href %}
+            <span style="font-size: 14pt" class="_hidden fa fa-fw"></span>
+          {% else %}
+          <span style="font-size: 14pt" class="_linkpointer _expandcollapsecontent _triangledown fa fa-fw fa-solid fa-caret-down {{item.collapsed|yesno:"_displaynone,"}}"></span>
+          <span style="font-size: 14pt" class="_linkpointer _expandcollapsecontent _triangleright fa fa-fw fa-solid fa-caret-right {{item.collapsed|yesno:",_displaynone"}}"></span>
+          {% endif %}
+          <span>{{item.icon}}</span> 
+          {% if item.href %}
+            <a href="{{item.href}}">{{item.name}}</a>
+          {% else %}
+            <span>{{item.name}}</span>
+          {% endif %}
+        </td>
+        <td>{% autoescape off %}{{ item.rateprogress }}{% endautoescape %}</td>
+        <td style="font-weight: bold; text-align: right; color: {{item.color}}">{{item.rate|floatformat:1}}%</td>
+        <td style="text-align: right;">{{item.totallines}}</td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+{% endblock %}

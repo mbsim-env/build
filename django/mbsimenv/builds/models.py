@@ -35,6 +35,8 @@ class Run(django.db.models.Model):
   command=django.db.models.TextField()
   startTime=AL(django.db.models.DateTimeField(), L.inline, L.list)
   endTime=django.db.models.DateTimeField(null=True, blank=True)
+
+  # NOTE the following fields are currently redundant to the corresponding fields of the ForeignKey ...
   fmatvecBranch=AL(django.db.models.CharField(max_length=50), L.inline, L.list, L.search)
   hdf5serieBranch=AL(django.db.models.CharField(max_length=50), L.inline, L.list, L.search)
   openmbvBranch=AL(django.db.models.CharField(max_length=50), L.inline, L.list, L.search)
@@ -67,6 +69,9 @@ class Run(django.db.models.Model):
   hdf5serieUpdateDate=django.db.models.DateTimeField(null=True)
   openmbvUpdateDate=django.db.models.DateTimeField(null=True)
   mbsimUpdateDate=django.db.models.DateTimeField(null=True)
+  # NOTE ... "repos". If none of the above fields are used anymore we can/should delete these fields!
+  # repos = related ForeignKey
+
   # tools = related ForeignKey
   toolsFailed=django.db.models.PositiveIntegerField(default=0) # just a cached value for performance of filterFailed
   # examples = related ForeignKey
@@ -169,3 +174,22 @@ class Tool(django.db.models.Model):
   docOutput=django.db.models.TextField(blank=True)
   xmldocOK=django.db.models.BooleanField(null=True, blank=True)
   xmldocOutput=django.db.models.TextField(blank=True)
+
+class Repos(django.db.models.Model):
+  id=django.db.models.AutoField(primary_key=True)
+  run=django.db.models.ForeignKey(Run, on_delete=django.db.models.CASCADE, related_name='repos')
+  repoName=AL(django.db.models.CharField(max_length=50), L.inline, L.list)
+  branch=AL(django.db.models.CharField(max_length=50), L.inline, L.list, L.search)
+  triggered=django.db.models.BooleanField(default=False)
+  updateOK=django.db.models.BooleanField(null=True, blank=True)
+  updateOutput=django.db.models.TextField()
+  updateCommitID=AL(django.db.models.CharField(max_length=50), L.inline, L.list)
+  updateMsg=django.db.models.CharField(max_length=100)
+  updateAuthor=django.db.models.CharField(max_length=30)
+  updateDate=django.db.models.DateTimeField(null=True)
+  gitURL=django.db.models.CharField(max_length=200)
+  sourcefileURL=django.db.models.CharField(max_length=200)
+  sourcefilelineURL=django.db.models.CharField(max_length=200)
+  repoURL=django.db.models.CharField(max_length=200)
+  commitURL=django.db.models.CharField(max_length=200)
+  branchURL=django.db.models.CharField(max_length=200)

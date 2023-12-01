@@ -20,4 +20,6 @@ urlpatterns = [
   base.helper.urls_path('db/refUpdate/<str:exampleName>/', runexamples.views.refUpdate, name='ref_update', robots=False),
   base.helper.urls_path('chart/differenceplot/<int:id>/', runexamples.views.chartDifferencePlot, name='chart_differenceplot', robots=False),
   base.helper.urls_path('allExampleStatic/', runexamples.views.allExampleStatic, name='allExampleStatic'),
+  base.helper.urls_path('dirfilecoverage/<int:id>/', runexamples.views.DirFileCoverage.as_view(), name='dirfilecoverage', robots=False),
+  base.helper.urls_path('filecoverage/<int:id>/<int:prefixIdx>/<str:absfile>/', runexamples.views.FileCoverage.as_view(), name='filecoverage', robots=False),
 ]

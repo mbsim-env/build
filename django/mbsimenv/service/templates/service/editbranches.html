@@ -25,10 +25,8 @@
     {% if not forloop.first %}
       {% autoescape off %}{{ forloop.last|yesno:" and ,&#44; " }}{% endautoescape %}
     {% endif %}
-    <a href="https://github.com/mbsim-env/{{ repo }}">
-      <span class="badge badge-success">
-       &nbsp;{% octicon "repo" %}&nbsp;{{ repo }}
-      </span>
+    <a href="{{ repo.repoURL }}">
+      <span class="badge badge-success">&nbsp;{% octicon "repo" %}&nbsp;{{ repo }}</span>
     </a>
   {% endfor %}.
   However, each branch combination (except
@@ -54,7 +52,7 @@
           <th>Remove</th>
           {% for repo in repoList %}
             <th>
-              <a href="https://github.com/mbsim-env/{{ repo }}">
+              <a href="{{ repo.repoURL }}">
                 <span class="badge badge-success">{% octicon "repo" %}&nbsp;{{ repo }}</span>
               </a>
             </th>
@@ -75,7 +73,7 @@
     <dl style="margin-right:0em;" class="row">
       {% for repo in repoList %}
         <dt class="col-2">
-          <a href="https://github.com/mbsim-env/{{ repo }}">
+          <a href="{{ repo.repoURL }}">
             <span class="badge badge-success">{% octicon "repo" %}&nbsp;{{ repo }}</span>
           </a>
         </dt>

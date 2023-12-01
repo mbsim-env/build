@@ -22,14 +22,6 @@ on:
         required: true
       filestoragePassword:
         required: true
-      codecovUploadToken_fmatvec:
-        required: true
-      codecovUploadToken_hdf5serie:
-        required: true
-      codecovUploadToken_openmbv:
-        required: true
-      codecovUploadToken_mbsim:
-        required: true
 env:
   # tagname and servername of remote mbsimenv server
   MBSIMENVTAGNAME: latest
@@ -44,10 +36,6 @@ env:
   mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
   mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
   mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
-  mbsimenvsec_codecovUploadToken_fmatvec: ${{secrets.codecovUploadToken_fmatvec}}
-  mbsimenvsec_codecovUploadToken_hdf5serie: ${{secrets.codecovUploadToken_hdf5serie}}
-  mbsimenvsec_codecovUploadToken_openmbv: ${{secrets.codecovUploadToken_openmbv}}
-  mbsimenvsec_codecovUploadToken_mbsim: ${{secrets.codecovUploadToken_mbsim}}
 jobs:
   getBuildMatrix:
     name: "."

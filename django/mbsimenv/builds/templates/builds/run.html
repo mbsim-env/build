@@ -142,47 +142,39 @@
     </tr>
   </thead>
   <tbody>
-    {% for repo in repoList %}
-      {% cycle "fmatvecUpdateOutput" "hdf5serieUpdateOutput" "openmbvUpdateOutput" "mbsimUpdateOutput" as repoUpdateOutput silent %}
-      {% cycle run.fmatvecBranch run.hdf5serieBranch run.openmbvBranch run.mbsimBranch as repoBranch silent %}
-      {% cycle run.fmatvecTriggered run.hdf5serieTriggered run.openmbvTriggered run.mbsimTriggered as repoTriggered silent %}
-      {% cycle run.fmatvecUpdateOK run.hdf5serieUpdateOK run.openmbvUpdateOK run.mbsimUpdateOK as repoUpdateOK silent %}
-      {% cycle run.fmatvecUpdateAuthor run.hdf5serieUpdateAuthor run.openmbvUpdateAuthor run.mbsimUpdateAuthor as repoUpdateAuthor silent %}
-      {% cycle run.fmatvecUpdateDate run.hdf5serieUpdateDate run.openmbvUpdateDate run.mbsimUpdateDate as repoUpdateDate silent %}
-      {% cycle run.fmatvecUpdateCommitID run.hdf5serieUpdateCommitID run.openmbvUpdateCommitID run.mbsimUpdateCommitID as repoUpdateCommitID silent %}
-      {% cycle run.fmatvecUpdateMsg run.hdf5serieUpdateMsg run.openmbvUpdateMsg run.mbsimUpdateMsg as repoUpdateMsg silent %}
+    {% for repo in repos %}
       <tr>
         <td>
-          <a href="https://github.com/mbsim-env/{{ repo }}"><span class="badge badge-success">{% octicon "repo" %}&nbsp;{{ repo }}</span></a>
+          <a href="{{ repo.repoURL }}"><span class="badge badge-success">{% octicon "repo" %}&nbsp;{{ repo.repoName }}</span></a>
         </td>
         <td>
-          <a href="https://github.com/mbsim-env/{{ repo }}/tree/{{ repoBranch }}">
-            <span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{ repoBranch }}</span>
+          <a href="{{ repo.branchURLEvaluated }}">
+            <span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{ repo.branch }}</span>
           </a>
         </td>
         {% if run.fmatvecUpdateOK is not None or run.hdf5serieUpdateOK is not None or run.openmbvUpdateOK is not None or run.mbsimUpdateOK is not None %}
-          <td class="table-{{ repoUpdateOK|yesno:"success,danger," }}">
-            {% if repoUpdateOK is not None %}
-              <span class="text-{{ repoUpdateOK|yesno:"success,danger" }}">
-                {% if repoUpdateOK %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}
+          <td class="table-{{ repo.updateOK|yesno:"success,danger," }}">
+            {% if repo.updateOK is not None %}
+              <span class="text-{{ repo.updateOK|yesno:"success,danger" }}">
+                {% if repo.updateOK %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}
               </span>&nbsp;
-              <a href="{% url "base:textFieldFromDB" "builds" "Run" run.id repoUpdateOutput %}">{{ repoUpdateOK|yesno:"passed,failed" }}</a>
+              <a href="{% url "base:textFieldFromDB" "builds" "Repos" repo.id "updateOutput" %}">{{ repo.updateOK|yesno:"passed,failed" }}</a>
             {% endif %}
           </td>
         {% endif %}
-        <td {% if repoTriggered %}class="table-info"{%endif%}>
-          <a class="text-nowrap" href="https://github.com/mbsim-env/{{ repo }}/commit/{{ repoUpdateCommitID }}">
-            <code>{{ repoUpdateCommitID|truncatechars:8 }}</code>
+        <td {% if repo.triggered %}class="table-info"{%endif%}>
+          <a class="text-nowrap" href="{{ repo.commitURLEvaluated }}">
+            <code>{{ repo.updateCommitID|truncatechars:8 }}</code>
           </a>
         </td>
-        <td {% if repoTriggered %}class="table-info"{%endif%}>
-          <i>{{repoUpdateAuthor}}</i>
+        <td {% if repo.triggered %}class="table-info"{%endif%}>
+          <i>{{repo.updateAuthor}}</i>
         </td>
-        <td {% if repoTriggered %}class="table-info"{%endif%}>
-          <span class="DATETIME">{{repoUpdateDate|date:'c'}}</span>
+        <td {% if repo.triggered %}class="table-info"{%endif%}>
+          <span class="DATETIME">{{repo.updateDate|date:'c'}}</span>
         </td>
-        <td class="text-break {% if repoTriggered %}table-info{%endif%}">
-          {{repoUpdateMsg}}
+        <td class="text-break {% if repo.triggered %}table-info{%endif%}">
+          {{repo.updateMsg}}
         </td>
       </tr>
     {% endfor %}

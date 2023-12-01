@@ -1,0 +1,78 @@
+{% extends "base/base.html" %}
+
+{% load static %}
+{% load octicons %}
+
+{% block title %}MBSim runexamples Coverage: {{run.buildType}}{% endblock %}
+
+{% block body %}
+
+<h1>MBSim Runexamples Per File Coverage</h1>
+
+<dl style="margin-right:0em;" class="row">
+  <dt class="col-2">File</dt>
+  <dd class="col-10">{{absfile}}</dd>
+  <dt class="col-2">File source</dt>
+  <dd class="col-10"><a href="{{filesource}}">{{filesource}}</a></dd>
+  <dt class="col-2">Coverage</dt>
+  <dd class="col-10">
+    {% autoescape off %}{{ rateprogress }}{% endautoescape %}
+    <span class="font-weight-bold" style="color: {{color}}">{{rate|floatformat:1}}%
+  </dd>
+  <dt class="col-2">Navigate</dt>
+  <dd class="col-10">
+    <a class="btn btn-info btn-xs" href="{% url "runexamples:dirfilecoverage" run.id %}">
+      {% octicon "chevron-up" %} dir coverage
+    </a>
+  </dd>
+</dl>
+
+<table>
+  <thead>
+    <tr style="border-top: 1px solid #dee2e6; border-bottom: 2px solid #dee2e6;">
+      <th style="padding: 0pt; padding-left: 0.5em; padding-right: 0.5em; border-left: 1px solid #dee2e6; text-align: right;">Call-Count</th>
+      <th style="padding: 0pt; padding-left: 0.5em; padding-right: 0.5em; border-left: 1px solid #dee2e6; border-right: 1px solid #dee2e6; text-align: right;">Line-Nr</th>
+      <th style="padding: 0pt; padding-left: 0.5em; padding-right: 0.5em; border-right: 1px solid #dee2e6;">Source</th>
+    </tr>
+  </thead>
+  <tbody style="font-size: 11pt">
+    {% for item in htmltree %}
+      <tr
+      {% if forloop.last %}
+        style="border-bottom: 1px solid #dee2e6;"
+      {% endif %}
+      >
+        <td class=
+          {% if item.callcount == 0 %}
+            "table-danger"
+          {% elif item.callcount > 0 %}
+            "table-success"
+          {% else %}
+            ""
+          {% endif %}
+          style="padding: 0pt; padding-left: 0.5em; padding-right: 0.5em; border-left: 1px solid #dee2e6; text-align: right;">
+          {% if item.callcount >= 0 %}
+            <span style="white-space: pre;">{{item.callcount}}</span>
+          {% endif %}
+        </td>
+        <td class=
+          {% if item.callcount == 0 %}
+            "table-danger"
+          {% elif item.callcount > 0 %}
+            "table-success"
+          {% else %}
+            ""
+          {% endif %}
+          style="padding: 0pt; padding-left: 0.5em; padding-right: 0.5em; border-left: 1px solid #dee2e6; border-right: 1px solid #dee2e6; text-align: right;">
+          <span style="white-space: pre;">{{item.linenr}}</span>
+        </td>
+        <td style="padding: 0pt; padding-left: 0.5em; padding-right: 0.5em; border-right: 1px solid #dee2e6;"
+          class="text-monospace">
+          <span style="white-space: pre;">{{item.line}}</span>
+        </td>
+      </tr>
+    {% endfor %}
+  </tbody>
+</table>
+
+{% endblock %}
