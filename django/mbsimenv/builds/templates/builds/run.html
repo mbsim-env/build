@@ -158,7 +158,7 @@
               <span class="text-{{ repo.updateOK|yesno:"success,danger" }}">
                 {% if repo.updateOK %}{% octicon "check" %}{% else %}{% octicon "stop" %}{% endif %}
               </span>&nbsp;
-              <a href="{% url "base:textFieldFromDB" "builds" "Run" run.id repo.updateOutput %}">{{ repo.updateOK|yesno:"passed,failed" }}</a>
+              <a href="{% url "base:textFieldFromDB" "builds" "Repos" repo.id "updateOutput" %}">{{ repo.updateOK|yesno:"passed,failed" }}</a>
             {% endif %}
           </td>
         {% endif %}
