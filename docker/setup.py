@@ -300,8 +300,8 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfil
   if tagMultistageImage:
     fromRE=re.compile("^ *FROM .* AS (.*)$")
     multistageNameImage=[]
-    with open(path+"/"+dockerfile if dockerfile else path+"/Dockerfile", "r") as f:
-      for line in f.readlines():
+    with open(path+"/"+dockerfile if dockerfile else path+"/Dockerfile", "rt") as f:
+      for line in f:
         match=fromRE.match(line)
         if match:
           multistageName=match.group(1).lower()

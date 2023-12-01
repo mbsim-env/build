@@ -836,7 +836,7 @@ def lcovColor(rate):
 def readLCov(f, stopAfterFile=None):
   lcovdata=[]
   readNextFile=True
-  for lcovLine in f.readlines():
+  for lcovLine in f:
     if lcovLine.startswith("SF:"):
       if not readNextFile:
         return lcovdata
