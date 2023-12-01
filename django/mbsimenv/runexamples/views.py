@@ -836,7 +836,8 @@ def lcovColor(rate):
 def readLCov(f, stopAfterFile=None):
   lcovdata=[]
   readNextFile=True
-  for lcovLine in f:
+  for lcovLine_ in f:
+    lcovLine = lcovLine_.decode("utf-8")
     if lcovLine.startswith("SF:"):
       if not readNextFile:
         return lcovdata
@@ -877,7 +878,7 @@ class DirFileCoverage(base.views.Base):
     return context
   def prepareCoverageData(self):
     # read lcov file and save in lcovdata dict
-    with self.run.coverageFile.open("rt") as f:
+    with self.run.coverageFile.open("rb") as f:
       lcovdata=readLCov(f)
 
     # a heuristic to detect the prefix dir (the smallest dir which contains a subdir fmatvec, hdf5serie, openbmv and mbsim
