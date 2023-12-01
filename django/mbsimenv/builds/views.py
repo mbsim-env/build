@@ -12,6 +12,7 @@ import threading
 import os
 import datetime
 import mbsimenvSecrets
+import tempfile
 from octicons.templatetags.octicons import octicon
 from django.db.models import Q
 
@@ -62,7 +63,7 @@ class Run(base.views.Base):
     context['examplesAllOK']=examplesAllOK
     context['releaseFileSuffix']="linux64.tar.bz2" if self.run.buildType=="linux64-dailyrelease" else "win64.zip"
     context['releaseTagSuffix']="linux64" if self.run.buildType=="linux64-dailyrelease" else "win64"
-    context['releaseDistributionPossible']=base.helper.getExecutorID(self.run.executor)=="GITHUBACTION"
+    context['releaseDistributionPossible']=base.helper.getExecutorID(self.run.executor)=="GITHUBACTION" or os.environ["MBSIMENVTAGNAME"]!="latest"
 
     allBranches=builds.models.Run.objects.filter(buildType=self.run.buildType).\
                   values("fmatvecBranch", "hdf5serieBranch", "openmbvBranch", "mbsimBranch").distinct()
@@ -319,12 +320,30 @@ def releaseDistribution(request, run_id):
   r.releaseFileName=relArchiveName
   r.releaseDebugFileName=relArchiveDebugName
   r.save()
-  with run.distributionFile.open("rb") as fi:
-    with r.releaseFile.open("wb") as fo:
-      base.helper.copyFile(fi, fo)
-  with run.distributionDebugFile.open("rb") as fi:
-    with r.releaseDebugFile.open("wb") as fo:
-      base.helper.copyFile(fi, fo)
+
+  # copying from django FileField to django FileField does not work for some reason
+  try:
+    tempF=tempfile.NamedTemporaryFile(mode='wb', delete=False)
+    with run.distributionFile.open("rb") as fi:
+      base.helper.copyFile(fi, tempF)
+    tempF.close()
+    with open(tempF.name, "rb") as fi:
+      with r.releaseFile.open("wb") as fo:
+        base.helper.copyFile(fi, fo)
+  finally:
+    os.unlink(tempF.name)
+
+  try:
+    tempF=tempfile.NamedTemporaryFile(mode='wb', delete=False)
+    with run.distributionDebugFile.open("rb") as fi:
+      base.helper.copyFile(fi, tempF)
+    tempF.close()
+    with open(tempF.name, "rb") as fi:
+      with r.releaseDebugFile.open("wb") as fo:
+        base.helper.copyFile(fi, fo)
+  finally:
+    os.unlink(tempF.name)
+
   return django.http.HttpResponse()
 
 def runDistributionFileBuildtypeBranch(request, buildtype, fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch):

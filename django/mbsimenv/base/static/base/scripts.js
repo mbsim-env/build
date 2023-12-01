@@ -75,8 +75,8 @@ function initDatatable(id, url, colNames, args, doneCallback) {
 // url: the url to call
 // inData: json object send to the server
 // doneFunc: called on success as doneFunc(outData) with outData the json result of the server
-// failFunc: called on failure as failfFunc(reason, message) with reason the http error code string and message the http content
-// alwaysFunc: called in any case [optional] as failfFunc()
+// failFunc: called on failure as failFunc(reason, message) with reason the http error code string and message the http content
+// alwaysFunc: called in any case [optional] as alwaysFunc()
 function ajaxCall(url, inData, doneFunc, failFunc, alwaysFunc) {
   $.ajax({
     url: url,
