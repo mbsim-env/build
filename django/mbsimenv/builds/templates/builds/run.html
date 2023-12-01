@@ -145,10 +145,10 @@
     {% for repo in repos %}
       <tr>
         <td>
-          <a href="https://github.com/mbsim-env/{{ repo.repoName }}"><span class="badge badge-success">{% octicon "repo" %}&nbsp;{{ repo.repoName }}</span></a>
+          <a href="{{ repo.gitURL }}"><span class="badge badge-success">{% octicon "repo" %}&nbsp;{{ repo.repoName }}</span></a>
         </td>
         <td>
-          <a href="https://github.com/mbsim-env/{{ repo.repoName }}/tree/{{ repo.branch }}">
+          <a href="{{ repo.branchURLEvaluated }}">
             <span class="badge badge-primary">{% octicon "git-branch" %}&nbsp;{{ repo.branch }}</span>
           </a>
         </td>
@@ -163,7 +163,7 @@
           </td>
         {% endif %}
         <td {% if repo.triggered %}class="table-info"{%endif%}>
-          <a class="text-nowrap" href="https://github.com/mbsim-env/{{ repo.repoName }}/commit/{{ repo.updateCommitID }}">
+          <a class="text-nowrap" href="{{ repo.commitURLEvaluated }}">
             <code>{{ repo.updateCommitID|truncatechars:8 }}</code>
           </a>
         </td>

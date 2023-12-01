@@ -54,7 +54,10 @@ class Run(base.views.Base):
     context['run']=self.run
     context['runBuildTypeIcon']=base.helper.buildTypeIcon(self.run.buildType)
     # just a list which can be used to loop over in the template
-    context['repos']=list(self.run.repos.all())
+    context['repos']=self.run.repos.values()
+    for repo in context['repos']:
+      repo["branchURLEvaluated"]=repo["branchURL"].format(branch=repo["branch"])
+      repo["commitURLEvaluated"]=repo["commitURL"].format(sha=repo["updateCommitID"])
     context['examples']=examples
     context['examplesAllOK']=examplesAllOK
     context['releaseFileSuffix']="linux64.tar.bz2" if self.run.buildType=="linux64-dailyrelease" else "win64.zip"

@@ -591,6 +591,10 @@ def repoUpdate(run, buildInfo):
     repos.updateDate=datetime.datetime.strptime(authorDatePy36, '%Y-%m-%dT%H:%M:%S%z')
     repos.gitURL=repoDict["gitURL"]
     repos.sourcefileURL=repoDict["sourcefileURL"]
+    repos.sourcefilelineURL=repoDict["sourcefilelineURL"]
+    repos.repoURL=repoDict["repoURL"]
+    repos.commitURL=repoDict["commitURL"]
+    repos.branchURL=repoDict["branchURL"]
     repos.save()
     # NOTE end
     run.save()
