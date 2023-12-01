@@ -145,7 +145,7 @@
     {% for repo in repos %}
       <tr>
         <td>
-          <a href="{{ repo.gitURL }}"><span class="badge badge-success">{% octicon "repo" %}&nbsp;{{ repo.repoName }}</span></a>
+          <a href="{{ repo.repoURL }}"><span class="badge badge-success">{% octicon "repo" %}&nbsp;{{ repo.repoName }}</span></a>
         </td>
         <td>
           <a href="{{ repo.branchURLEvaluated }}">
