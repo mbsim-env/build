@@ -925,8 +925,8 @@ class DirFileCoverage(base.views.Base):
     # convert treeroot to html content
     def convertToHTMLTree(treenode, collapseAtIndent, htmltree, indent=0):
       treenode_children=treenode[CHILDREN]
-      for filenamepart in treenode_children:
-        treenode_children_p=treenode_children[filenamepart]
+      for filenamepart, treenode_children_p in sorted(treenode_children.items(),
+          key=lambda x: ("1" if len(x[1][CHILDREN])!=0 else "2")+"|"+x[0]): # loop through sorted first by dir/file and alphanumerical
         totalLines=treenode_children_p[TOTALLINES]
         coveredLines=treenode_children_p[COVEREDLINES]
         rate=1 if totalLines==0 else coveredLines/totalLines

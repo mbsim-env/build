@@ -47,11 +47,10 @@
           <span style="font-size: 14pt" class="_linkpointer _expandcollapsecontent _triangledown fa fa-fw fa-solid fa-caret-down {{item.collapsed|yesno:"_displaynone,"}}"></span>
           <span style="font-size: 14pt" class="_linkpointer _expandcollapsecontent _triangleright fa fa-fw fa-solid fa-caret-right {{item.collapsed|yesno:",_displaynone"}}"></span>
           {% endif %}
-          <span>{{item.icon}}</span> 
           {% if item.href %}
-            <a href="{{item.href}}">{{item.name}}</a>
+            <a href="{{item.href}}">{{item.icon}}&nbsp;{{item.name}}</a>
           {% else %}
-            <span>{{item.name}}</span>
+            <span class="_linkpointer _expandcollapsecontent">{{item.icon}}&nbsp;{{item.name}}</span>
           {% endif %}
         </td>
         <td>{% autoescape off %}{{ item.rateprogress }}{% endautoescape %}</td>
