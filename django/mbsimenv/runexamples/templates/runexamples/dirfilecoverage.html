@@ -36,7 +36,7 @@
       <th style="text-align: right;">Total Lines</th>
     </tr>
   </thead>
-  <tbody>
+  <tbody id="dirfiletable">
     {% for item in htmltree %}
       <tr class="{{item.hiddencount|yesno:"_displaynone,"}}" data-indent="{{item.indent}}" data-hiddencount="{{item.hiddencount}}">
         <td>
@@ -48,7 +48,7 @@
           <span style="font-size: 14pt" class="_linkpointer _expandcollapsecontent _triangleright fa fa-fw fa-solid fa-caret-right {{item.collapsed|yesno:",_displaynone"}}"></span>
           {% endif %}
           {% if item.href %}
-            <a href="{{item.href}}">{{item.icon}}&nbsp;{{item.name}}</a>
+            <a href="{{item.href}}" onclick="saveScrollState()">{{item.icon}}&nbsp;{{item.name}}</a>
           {% else %}
             <span class="_linkpointer _expandcollapsecontent">{{item.icon}}&nbsp;{{item.name}}</span>
           {% endif %}

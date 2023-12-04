@@ -2,7 +2,7 @@
 
 // example table
 function initExampleTable(url) {
-  return initDatatable('exampleTable', url, [
+  var ret = initDatatable('exampleTable', url, [
     "example",
     "run",
     "time",
@@ -20,6 +20,11 @@ function initExampleTable(url) {
       "search": "Filter 'Example':",
     },
   });
+  ret.on('draw', function() {
+    if(window.location.href.endsWith("#coverage"))
+      window.scrollTo(0, $("#coverage").offset().top);
+  });
+  return ret;
 }
 
 function changeRefUpdate(input, url, exampleName) {
