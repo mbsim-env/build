@@ -178,7 +178,7 @@ class SessionSerializer:
       return d
     return json.loads(data.decode('utf-8'), object_hook=objSer)
 
-# A file object which prints to a internal string buffer an optionally to a secon file
+# A file object which prints to a internal string buffer an optionally to a second file
 class MultiFile(object):
   def __init__(self, fileObj=None):
     self.data=""
@@ -192,7 +192,7 @@ class MultiFile(object):
       self.fileObj.flush()
   def close(self):
     if self.fileObj and self.fileObj!=sys.stdout and self.fileObj!=sys.stderr:
-      f.close()
+      self.fileObj.close()
   def getData(self):
     return self.data
 
@@ -213,29 +213,16 @@ def killSubprocessCall(proc, f, killed, timeout):
     proc.kill()
 
 def subprocessCheckOutput(comm, f=None):
-  p=subprocess.run(comm, check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+  p=subprocess.Popen(comm, text=True, errors="backslashreplace", stdout=subprocess.PIPE)
+  out=p.stdout.read()
+  ret=p.wait()
+  if ret!=0:
+    raise subprocess.CalledProcessError(ret, str(comm))
   if f is not None:
-    f.write(p.stderr.decode('utf-8'))
-  return p.stdout
+    f.write(out)
+  return out
 
-# decode the bytes b to utf-8 replacing invalid bytes with {{0x??}}
-# returns a tuple containing the utf-8 decoded string and none processed bytes
-# (none processed bytes can happen if the input b ends in the middle of a utf-8 multi-byte char)
-def decodeUTF8(b):
-  try:
-    u=b.decode("utf-8")
-    return u, b""
-  except UnicodeDecodeError as ex:
-    if ex.reason=="unexpected end of data":
-      return b[:ex.start].decode("utf-8"), b[ex.start:]
-    ustart=b[:ex.start].decode("utf-8")
-    uerr=""
-    for c in b[ex.start:ex.end]:
-      uerr+="{{"+hex(c)+"}}"
-    urest, brest=decodeUTF8(b[ex.end:])
-    return ustart+uerr+urest, brest
-
-# subprocess call with MultiFile output
+# subprocess call with timeout
 def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   # remove core dumps from previous runs
   for coreFile in glob.glob("core.*")+glob.glob("vgcore.*"):
@@ -244,47 +231,27 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   print("\nCalling command\n%s\nwith cwd\n%s\nat %s\n"%(" ".join(map(lambda x: "'"+x+"'", args)), os.getcwd(), startTime), file=f)
   # start the program to execute
   try:
-    proc=subprocess.Popen(args, stderr=subprocess.STDOUT, stdout=subprocess.PIPE, bufsize=-1, env=env)
+    proc=subprocess.Popen(args, text=True, errors="backslashreplace", stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=env)
   except OSError as ex:
     f.write("\n\n\n******************** FAILED TO START PROCESS ********************\n")
     f.write(str(ex)+"\n")
     return 1
-  # a guard for the maximal execution time for the starte program
+  # a guard for the maximal execution time for the started program
   guard=None
   killed=threading.Event()
   if maxExecutionTime>0:
     guard=threading.Timer(maxExecutionTime*60, killSubprocessCall, args=(proc, f, killed, maxExecutionTime))
     guard.start()
-  # make stdout none blocking
-  fd=proc.stdout.fileno()
-  try:
-    import fcntl
-    fcntl.fcntl(fd, fcntl.F_SETFL, fcntl.fcntl(fd, fcntl.F_GETFL) | os.O_NONBLOCK)
-  except:
-    pass
   # read all output
-  dataNP=b'' # not already processed bytes (required since we read 100 bytes which may break a unicode multi byte character)
-  sleepTime=0.01
   stopByRE=False
   while proc.poll() is None:
-    time.sleep(sleepTime)
-    if sleepTime<0.5: sleepTime=sleepTime*1.01
-    try:
-      data=dataNP+proc.stdout.read()
-    except:
-      continue
-    dataNP=b''
-    if b"\n" not in data: # process only full lines
-      dataNP=data
-      continue
+    line=proc.stdout.readline()
     # remove carrige returns
-    data=re.sub(b"\n.*\r", b"\n", data)
-    data=re.sub(b"^.*\r", b"", data)
-    # decode all data possible
-    dataLine, dataNP=decodeUTF8(data)
-    print(dataLine, end="", file=f)
+    line=re.sub("\n.*\r", "\n", line)
+    line=re.sub("^.*\r", "", line)
+    print(line, end="", file=f)
     # check stop regex
-    if stopRE is not None and stopRE.search(dataLine) is not None:
+    if stopRE is not None and stopRE.search(line) is not None:
       stopByRE=True
       break
   if stopByRE:
@@ -295,9 +262,6 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
     time.sleep(1)
     if proc.poll() is None:
       proc.kill()
-  # print not yet processed data
-  dataLine, dataNP=decodeUTF8(dataNP+b" ")
-  print(dataLine, end="", file=f)
   # wait for the call program to exit
   ret=proc.wait()
   endTime=django.utils.timezone.now()
@@ -325,7 +289,7 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   # remove core dumps (these require a lot of disc space)
   for coreFile in glob.glob("core.*")+glob.glob("vgcore.*"):
     os.remove(coreFile)
-  # return the return value ot the called programm
+  # return the return value of the called programm
   return ret
 subprocessCall.timedOutErrorCode=1000000
 subprocessCall.stopByREErrorCode=1000001

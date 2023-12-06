@@ -556,11 +556,11 @@ def repoUpdate(run, buildInfo):
       retlocal+=abs(base.helper.subprocessCall(["git", "checkout", "-q", branch], repoUpdFD))
       repoUpdFD.flush()
     # get branch and commit
-    branch=base.helper.subprocessCheckOutput(["git", "rev-parse", "--abbrev-ref", "HEAD"], repoUpdFD).decode('utf-8').rstrip()
-    commitidfull[repo]=base.helper.subprocessCheckOutput(["git", "log", "-n", "1", "--format=%H", "HEAD"], repoUpdFD).decode('utf-8').rstrip()
-    commitsub=base.helper.subprocessCheckOutput(["git", "log", "-n", "1", "--format=%s", "HEAD"], repoUpdFD).decode('utf-8').rstrip()
-    authorName=base.helper.subprocessCheckOutput(["git", "log", "-n", "1", "--format=%an", "HEAD"], repoUpdFD).decode('utf-8').rstrip()
-    authorDate=base.helper.subprocessCheckOutput(["git", "log", "-n", "1", "--format=%aI", "HEAD"], repoUpdFD).decode('utf-8').rstrip()
+    branch=base.helper.subprocessCheckOutput(["git", "rev-parse", "--abbrev-ref", "HEAD"], repoUpdFD).rstrip()
+    commitidfull[repo]=base.helper.subprocessCheckOutput(["git", "log", "-n", "1", "--format=%H", "HEAD"], repoUpdFD).rstrip()
+    commitsub=base.helper.subprocessCheckOutput(["git", "log", "-n", "1", "--format=%s", "HEAD"], repoUpdFD).rstrip()
+    authorName=base.helper.subprocessCheckOutput(["git", "log", "-n", "1", "--format=%an", "HEAD"], repoUpdFD).rstrip()
+    authorDate=base.helper.subprocessCheckOutput(["git", "log", "-n", "1", "--format=%aI", "HEAD"], repoUpdFD).rstrip()
     ret+=retlocal
     # save
     # NOTE the following fields are currently stored redundant, see models.py
@@ -831,7 +831,7 @@ def existsTarget(tool, target):
   if cmake:
     targetExists=False
     try:
-      for line in base.helper.subprocessCheckOutput(["ninja", "-t", "targets"]).decode('utf-8').splitlines():
+      for line in base.helper.subprocessCheckOutput(["ninja", "-t", "targets"]).splitlines():
         if line.startswith(target+":"):
           targetExists=True;
           break
