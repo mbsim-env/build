@@ -968,7 +968,7 @@ class FileCoverage(base.views.Base):
     context['run']=self.run
 
     # get line coverage
-    with self.run.coverageFile.open("rt") as f:
+    with self.run.coverageFile.open("rb") as f:
       lcovdata=readLCov(f, stopAfterFile=self.absfile)
     linecoverage=lcovdata[-1][1][readLCov.LINECOVERAGE]
 
