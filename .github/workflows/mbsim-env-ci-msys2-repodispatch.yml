@@ -32,10 +32,14 @@ jobs:
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
       - name: "mfmf monitor resources"
         run: while [ 1 ]; do date && free && df && sleep 10s; done &> /tmp/resout & echo $! > /tmp/respid
-      - name: "Install msys2 packages"
+      - name: "Update msys2 part 1"
         run: >
-          pacman --noconfirm -Syuu &&
-          pacman --noconfirm -Syuu &&
+          pacman --noconfirm -Syuu
+      - name: "Update msys2 part 2"
+        run: >
+          pacman --noconfirm -Syuu
+      - name: "Install msys2 packages and cleanup"
+        run: >
           pacman --noconfirm -S
           dos2unix
           patch
