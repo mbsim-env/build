@@ -14,7 +14,8 @@ env:
   MBSIMENVFILESTORAGE: www.mbsim-env.de:1122
   # get secrets
 #  mbsimenvsec_githubAccessToken: ${{secrets.githubAccessToken}} not provided for now to avoid adding git commit statuses
-  mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}} mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
+  mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
+  mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
   mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
   GH_TOKEN: ${{github.token}} # needed for gh-actions-cache
 jobs:
