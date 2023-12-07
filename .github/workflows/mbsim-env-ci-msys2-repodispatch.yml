@@ -14,8 +14,7 @@ env:
   MBSIMENVFILESTORAGE: www.mbsim-env.de:1122
   # get secrets
 #  mbsimenvsec_githubAccessToken: ${{secrets.githubAccessToken}} not provided for now to avoid adding git commit statuses
-  mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
-  mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
+  mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}} mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
   mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
   GH_TOKEN: ${{github.token}} # needed for gh-actions-cache
 jobs:
@@ -27,14 +26,16 @@ jobs:
         shell: C:\msys64\usr\bin\bash.exe -l {0}
     steps:
       - name: "Init msys2 (and install procps needed for free command)"
-        run: pacman -S --noconfirm procps
+        run: pacman --noconfirm -S procps
       - name: "Dump resources"
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
       - name: "mfmf monitor resources"
         run: while [ 1 ]; do date && free && df && sleep 10s; done &> /tmp/resout & echo $! > /tmp/respid
       - name: "Install msys2 packages"
         run: >
-          pacman -S --noconfirm
+          pacman --noconfirm -Syuu &&
+          pacman --noconfirm -Syuu &&
+          pacman --noconfirm -S
           dos2unix
           patch
           mingw-w64-ucrt-x86_64-arpack
@@ -57,7 +58,7 @@ jobs:
           mingw-w64-ucrt-x86_64-python-paramiko
           mingw-w64-ucrt-x86_64-qwt-qt5
           mingw-w64-ucrt-x86_64-diffutils
-          mingw-w64-ucrt-x86_64-soqt
+          mingw-w64-ucrt-x86_64-soqt-qt5
           mingw-w64-ucrt-x86_64-spooles
           mingw-w64-ucrt-x86_64-swig
           mingw-w64-ucrt-x86_64-xalan-c
@@ -73,7 +74,8 @@ jobs:
           mingw-w64-ucrt-x86_64-python-cffi
           mingw-w64-ucrt-x86_64-python-defusedxml
           mingw-w64-ucrt-x86_64-python-oauthlib
-          mingw-w64-ucrt-x86_64-python-requests-oauthlib
+          mingw-w64-ucrt-x86_64-python-requests-oauthlib &&
+          pacman --noconfirm -Scc
       - name: "Install mesa for software OpenGL (only needed to run GUI programs in VMs)"
         run: >
           mkdir mesa && cd mesa &&
