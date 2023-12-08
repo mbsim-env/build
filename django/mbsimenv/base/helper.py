@@ -213,7 +213,7 @@ def killSubprocessCall(proc, f, killed, timeout):
     proc.kill()
 
 def subprocessCheckOutput(comm, f=None):
-  p=subprocess.Popen(comm, universal_newlines=True, errors="backslashreplace", stdout=subprocess.PIPE)
+  p=subprocess.Popen(comm, universal_newlines=True, encoding="utf-8", errors="backslashreplace", stdout=subprocess.PIPE)
   out=p.stdout.read()
   ret=p.wait()
   if ret!=0:
@@ -231,7 +231,7 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   print("\nCalling command\n%s\nwith cwd\n%s\nat %s\n"%(" ".join(map(lambda x: "'"+x+"'", args)), os.getcwd(), startTime), file=f)
   # start the program to execute
   try:
-    proc=subprocess.Popen(args, universal_newlines=True, errors="backslashreplace", stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=env)
+    proc=subprocess.Popen(args, universal_newlines=True, encoding="utf-8", errors="backslashreplace", stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=env)
   except OSError as ex:
     f.write("\n\n\n******************** FAILED TO START PROCESS ********************\n")
     f.write(str(ex)+"\n")
