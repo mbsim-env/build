@@ -34,7 +34,8 @@ jobs:
         run: while [ 1 ]; do date && free && df && sleep 10s; done &> /tmp/resout & echo $! > /tmp/respid
       - name: "Update msys2 part 1"
         run: >
-          pacman --noconfirm -Syuu
+          # this may update msys2-runtime which closed also the current process -> do not read a failure as error
+          pacman --noconfirm -Syuu || true
       - name: "Update msys2 part 2"
         run: >
           pacman --noconfirm -Syuu
