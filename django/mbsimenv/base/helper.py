@@ -213,10 +213,13 @@ def killSubprocessCall(proc, f, killed, timeout):
     proc.kill()
 
 def subprocessCheckOutput(comm, f=None):
+  print("mfmf1",comm)
   p=subprocess.Popen(comm, universal_newlines=True, errors="backslashreplace", stdout=subprocess.PIPE)
+  print("mfmf2",comm)
   out=p.stdout.read()
   ret=p.wait()
   if ret!=0:
+    print("mfmf3",comm)
     raise subprocess.CalledProcessError(ret, str(comm))
   if f is not None:
     f.write(out)
@@ -231,7 +234,9 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   print("\nCalling command\n%s\nwith cwd\n%s\nat %s\n"%(" ".join(map(lambda x: "'"+x+"'", args)), os.getcwd(), startTime), file=f)
   # start the program to execute
   try:
+    print("mfmf4",args)
     proc=subprocess.Popen(args, universal_newlines=True, errors="backslashreplace", stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=env)
+    print("mfmf5",args)
   except OSError as ex:
     f.write("\n\n\n******************** FAILED TO START PROCESS ********************\n")
     f.write(str(ex)+"\n")
@@ -277,12 +282,16 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   # check for core dump file
   exeRE=re.compile("^.*LSB core file.*, *from '([^']*)' *,.*$")
   for coreFile in glob.glob("core.*")+glob.glob("vgcore.*"):
+    print("mfmf6",["file", coreFile])
     m=exeRE.match(subprocess.check_output(["file", coreFile]).decode('utf-8'))
+    print("mfmf7",["file", coreFile])
     if m is None:
       f.write("\n\n\nCORE DUMP file found but cannot extract executalbe name!\n\n\n")
       continue
     exe=m.group(1).split(" ")[0]
+    print("mfmf8",["gdb", "-q", "-n", "-ex", "bt", "-batch", exe, coreFile])
     out=subprocess.check_output(["gdb", "-q", "-n", "-ex", "bt", "-batch", exe, coreFile]).decode('utf-8')
+    print("mfmf9",["gdb", "-q", "-n", "-ex", "bt", "-batch", exe, coreFile])
     f.write("\n\n\n******************** START: CORE DUMP BACKTRACE OF "+exe+" ********************\n\n\n")
     f.write(out)
     f.write("\n\n\n******************** END: CORE DUMP BACKTRACE ********************\n\n\n")

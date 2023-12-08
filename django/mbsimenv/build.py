@@ -137,11 +137,20 @@ def mainDocPage():
     with tempfile.NamedTemporaryFile(mode='wt') as pwfile:
       pwfile.write(params["password"])
       pwfile.flush()
-      if subprocess.call(["sshpass", "-f"+pwfile.name, "rsync", "-a", "--delete",
+      print("mfmf10",["sshpass", "-f"+pwfile.name, "rsync", "-a", "--delete",
+                          "-e", "ssh -p "+str(params["port"])+" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+                          src+"/",
+                          params["username"]+"@"+params["hostname"]+":"+dst+"/"])
+      mfmf=subprocess.call(["sshpass", "-f"+pwfile.name, "rsync", "-a", "--delete",
                           "-e", "ssh -p "+str(params["port"])+" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
                           src+"/",
                           params["username"]+"@"+params["hostname"]+":"+dst+"/"],
-                          stderr=subprocess.STDOUT)!=0:
+                          stderr=subprocess.STDOUT)
+      print("mfmf11",["sshpass", "-f"+pwfile.name, "rsync", "-a", "--delete",
+                          "-e", "ssh -p "+str(params["port"])+" -o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null",
+                          src+"/",
+                          params["username"]+"@"+params["hostname"]+":"+dst+"/"])
+      if mfmf!=0:
         raise RuntimeError("rsync failed: "+msg)
 
   staticRuntimeDir="/data/webserverstatic"
@@ -968,7 +977,10 @@ def runexamples(run):
   print("Output of run example")
   print("")
   sys.stdout.flush()
-  return subprocess.call(command, stderr=subprocess.STDOUT)
+  print("mfmf12",comm)
+  mfmf=subprocess.call(command, stderr=subprocess.STDOUT)
+  print("mfmf13",comm)
+  return mfmf
 
 
 
