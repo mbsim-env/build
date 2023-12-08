@@ -818,8 +818,8 @@ def make(tool):
   try:
     print("mfmfa "+str(tool.makeOK))
     print("mfmfb "+str(tool.makeOutput))
+    print("mfmfc "+traceback.format_exc())
     tool.save()
-    print("mfmfc")
   except:
     import traceback
     print("mfmf1 "+str(tool.makeOK))
