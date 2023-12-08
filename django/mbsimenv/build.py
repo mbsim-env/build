@@ -816,9 +816,6 @@ def make(tool):
     # ... else just use the output of make
     tool.makeOutput=makeFD.getvalue()
   try:
-    print("mfmfa "+str(tool.makeOK))
-    print("mfmfb "+str(tool.makeOutput))
-    print("mfmfc "+traceback.format_exc())
     tool.save()
   except:
     import traceback
