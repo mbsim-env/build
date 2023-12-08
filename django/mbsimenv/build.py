@@ -815,7 +815,13 @@ def make(tool):
   else:
     # ... else just use the output of make
     tool.makeOutput=makeFD.getvalue()
-  tool.save()
+  try:
+    tool.save()
+  except:
+    import traceback
+    print("mfmf1 "+str(tool.makeOK))
+    print("mfmf2 "+str(tool.makeOutput))
+    print("mfmf3 "+traceback.format_exc())
   makeFD.close()
   ret=0
   if result!="done":
