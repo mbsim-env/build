@@ -777,46 +777,69 @@ def configure(tool):
 
 
 def make(tool):
+  print("mfmf1");sys.stdout.flush()
   makeFD=io.StringIO()
   run=0
+  print("mfmf2");sys.stdout.flush()
   cmake=not os.path.exists(pj(args.sourceDir, tool.toolName, "configure.ac"))
+  print("mfmf3");sys.stdout.flush()
   buildCmd=[args.makeProg] if not cmake else ["ninja", "-v"]
+  print("mfmf4");sys.stdout.flush()
   try:
+    print("mfmf5");sys.stdout.flush()
     if not args.disableMake:
+      print("mfmf6");sys.stdout.flush()
       run=1
       # build
       errStr=""
+      print("mfmf7");sys.stdout.flush()
       if not args.disableMakeClean:
         print("\n\nRUNNING clean\n", file=makeFD); makeFD.flush()
         if base.helper.subprocessCall(buildCmd+["clean"], makeFD)!=0:
           errStr=errStr+"clean failed; "
       print("\n\nRUNNING build\n", file=makeFD); makeFD.flush()
+      print("mfmf8");sys.stdout.flush()
       if base.helper.subprocessCall(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["-j", str(args.j)],
                          makeFD)!=0:
         errStr=errStr+"build failed; "
+      print("mfmf9");sys.stdout.flush()
       if not args.disableMakeInstall:
         print("\n\nRUNNING install\n", file=makeFD); makeFD.flush()
         if base.helper.subprocessCall(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["install"], makeFD)!=0:
           errStr=errStr+"install failed; "
+      print("mfmf10");sys.stdout.flush()
       if errStr!="": raise RuntimeError(errStr)
+      print("mfmf11");sys.stdout.flush()
     else:
       print("make disabled", file=makeFD); makeFD.flush()
 
     result="done"
   except Exception as ex:
+    print("mfmf12");sys.stdout.flush()
     result=str(ex)
+    print("mfmf13");sys.stdout.flush()
+  print("mfmf14");sys.stdout.flush()
   if not args.disableMake:
+    print("mfmf15");sys.stdout.flush()
     tool.makeOK=result=="done"
+    print("mfmf16");sys.stdout.flush()
   # configure was disable but needs to be run then ...
   if tool.configureOK is None and tool.configureOutput!="":
     # ... copy the output from configureOutput to makeOutput and append the output of make
+    print("mfmf17");sys.stdout.flush()
     tool.makeOutput=tool.configureOutput+"\n\n\n\n\n"+makeFD.getvalue()
     tool.configureOutput=""
+    print("mfmf18");sys.stdout.flush()
   else:
     # ... else just use the output of make
+    print("mfmf19");sys.stdout.flush()
     tool.makeOutput=makeFD.getvalue()
+    print("mfmf20");sys.stdout.flush()
+  print("mfmf21");sys.stdout.flush()
   tool.save()
+  print("mfmf22");sys.stdout.flush()
   makeFD.close()
+  print("mfmf23");sys.stdout.flush()
   ret=0
   if result!="done":
     ret=ret+1
