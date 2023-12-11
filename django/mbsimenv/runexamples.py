@@ -1600,6 +1600,7 @@ def coverage(exRun, lcovResultFile=None):
       print(line, end="")
 
   tempDir=tempfile.mkdtemp()
+  covRate=0
   try:
     # run lcov: init counters
     ret=ret+abs(base.helper.subprocessCall(["lcov", "-q", "-c", "--no-external", "-i", "--ignore-errors", "graph", "-o", pj(tempDir, "cov.trace.base")]+dirs, lcovFD))
@@ -1633,7 +1634,6 @@ def coverage(exRun, lcovResultFile=None):
       return 0
 
     # get coverage rate
-    covRate=0
     linesRE=re.compile("^ *lines\.*: *([0-9]+\.[0-9]+)% ")
     for line in reversed(lcovFD.getData().splitlines()):
       m=linesRE.match(line)
@@ -1648,14 +1648,28 @@ def coverage(exRun, lcovResultFile=None):
     exRun.coverageOutput=lcovFD.getData().replace("\0", "&#00;")
     exRun.coverageFileName="cov.trace.final"
     exRun.save()
+    # save coverage file to prefix dir
+    shutil.copyfile(pj(tempDir, "cov.trace.final"), args.prefix+"/cov.trace.final")
     with exRun.coverageFile.open("wb") as fo:
       with open(pj(tempDir, exRun.coverageFileName), "rb") as fi:
         base.helper.copyFile(fi, fo)
 
-    # save coverage file to prefix dir
-    shutil.copyfile(pj(tempDir, "cov.trace.final"), args.prefix+"/cov.trace.final")
-
     return 1 if ret!=0 else 0
+  except:
+    lcovFD.close()
+    exRun.coverageOK=False
+    exRun.coverageRate=covRate
+    exRun.coverageOutput=lcovFD.getData().replace("\0", "&#00;")
+    exRun.coverageFileName="cov.trace.final"
+    exRun.save()
+    try:
+      # save coverage file to prefix dir
+      shutil.copyfile(pj(tempDir, "cov.trace.final"), args.prefix+"/cov.trace.final")
+      with exRun.coverageFile.open("wb") as fo:
+        with open(pj(tempDir, exRun.coverageFileName), "rb") as fi:
+          base.helper.copyFile(fi, fo)
+    except:
+      pass
   finally:
     if not os.path.isfile("/.dockerenv"): # keep the temp dir when running in docker
       shutil.rmtree(tempDir)
