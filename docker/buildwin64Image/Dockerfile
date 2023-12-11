@@ -131,7 +131,7 @@ RUN sed -i -re "s/^ *if *\((.*)&& *have_window_system *\( *\)(.*)$/if(have_windo
   /3rdparty/local/lib/octave/$OCTAVEVERSION/oct/x86_64-w64-mingw32/PKG_ADD
 
 # coin
-ARG COINBRANCH=CI-builds
+ARG COINBRANCH=v4.0.2
 WORKDIR /3rdparty
 RUN git clone https://github.com/coin3d/coin.git
 WORKDIR /3rdparty/coin
@@ -143,7 +143,7 @@ RUN make -j $JOBS
 RUN make install
 
 # soqt
-ARG SOQTBRANCH=CI-builds
+ARG SOQTBRANCH=v1.6.1
 WORKDIR /3rdparty
 RUN git clone https://github.com/coin3d/soqt.git
 WORKDIR /3rdparty/soqt
