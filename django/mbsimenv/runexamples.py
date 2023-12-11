@@ -1587,6 +1587,7 @@ def coverage(exRun, lcovResultFile=None):
   dirs=map(lambda x: ["-d", pj(args.sourceDir, x),
                       "-d", pj(args.sourceDir, x+args.binSuffix)],
                      list(map(lambda repo: repo["gitURL"].split("/")[-1][0:-4], allRepos)))
+  dirs=filter(lambda x: os.path.isdir(x[1]), dirs)
   dirs=["-d", args.prefix]+[v for il in dirs for v in il]
 
   # replace header map in lcov trace file
