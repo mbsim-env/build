@@ -30,6 +30,7 @@ import runexamples
 import builds
 import json
 import io
+import itertools
 
 if django.VERSION[0]!=3:
   print("Need django version 3. This is django version "+django.__version__)
@@ -1584,11 +1585,10 @@ def coverage(exRun, lcovResultFile=None):
   ret=0
   lcovFD=base.helper.MultiFile(args.printToConsole)
   # lcov "-d" arguments
-  dirs=map(lambda x: ["-d", pj(args.sourceDir, x),
-                      "-d", pj(args.sourceDir, x+args.binSuffix)],
-                     list(map(lambda repo: repo["gitURL"].split("/")[-1][0:-4], allRepos)))
-  dirs=filter(lambda x: os.path.isdir(x[1]), dirs)
-  dirs=["-d", args.prefix]+[v for il in dirs for v in il]
+  dirs=itertools.chain(map(lambda repo: pj(args.sourceDir, repo["gitURL"].split("/")[-1][0:-4]               ), allRepos),
+                       map(lambda repo: pj(args.sourceDir, repo["gitURL"].split("/")[-1][0:-4]+args.binSuffix), allRepos))
+  dirs=filter(lambda x: os.path.isdir(x), dirs)
+  dirs=["-d", args.prefix]+sum([["-d", x] for x in dirs], [])
 
   # replace header map in lcov trace file
   def lcovAdjustFileNames(lcovFilename):
