@@ -55,7 +55,17 @@ class Run(base.views.Base):
     context['run']=self.run
     context['runBuildTypeIcon']=base.helper.buildTypeIcon(self.run.buildType)
     # just a list which can be used to loop over in the template
-    context['repos']=self.run.repos.values()
+    def repoSortKey(repoName):
+      if repoName=="fmatvec":
+        return "1"
+      if repoName=="hdf5serie":
+        return "2"
+      if repoName=="openmbv":
+        return "3"
+      if repoName=="mbsim":
+        return "4"
+      return "5|"+repoName
+    context['repos']=sorted(self.run.repos.values(), key=lambda x: repoSortKey(x["repoName"]))
     for repo in context['repos']:
       repo["branchURLEvaluated"]=repo["branchURL"].format(branch=repo["branch"])
       repo["commitURLEvaluated"]=repo["commitURL"].format(sha=repo["updateCommitID"])
@@ -66,7 +76,8 @@ class Run(base.views.Base):
     context['releaseDistributionPossible']=base.helper.getExecutorID(self.run.executor)=="GITHUBACTION" or os.environ["MBSIMENVTAGNAME"]!="latest"
 
     allBranches=builds.models.Run.objects.filter(buildType=self.run.buildType).\
-                  values("fmatvecBranch", "hdf5serieBranch", "openmbvBranch", "mbsimBranch").distinct()
+                  order_by("fmatvecBranch", "hdf5serieBranch", "openmbvBranch", "mbsimBranch").\
+                  values  ("fmatvecBranch", "hdf5serieBranch", "openmbvBranch", "mbsimBranch").distinct()
     ab=[]
     for x in allBranches:
       if x["fmatvecBranch"]!="" and x["hdf5serieBranch"]!="" and x["openmbvBranch"]!="" and x["mbsimBranch"]!="":

@@ -25,7 +25,7 @@ class Home(base.views.Base):
   def get_context_data(self, **kwargs):
     context=super().get_context_data(**kwargs)
     context["navbar"]["buildsystem"]=True
-    context['manuals']=service.models.Manual.objects.all()
+    context['manuals']=service.models.Manual.objects.order_by("manualName")
     if service.models.Info.objects.all().count()==1:
       context['info']=service.models.Info.objects.all()[0]
     context["hostname"]=os.environ.get('MBSIMENVSERVERNAME', 'localhost')
@@ -127,7 +127,7 @@ class DataTableEditBranches(base.views.DataTable):
 
   # return the queryset to display [required]
   def queryset(self):
-    return getattr(service.models, self.model).objects.all()
+    return getattr(service.models, self.model).objects.order_by("fmatvecBranch", "hdf5serieBranch", "openmbvBranch", "mbsimBranch")
 
   # return the field name in the dataset using for search/filter [required]
   def searchField(self):
