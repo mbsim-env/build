@@ -30,6 +30,7 @@ import runexamples
 import builds
 import json
 import io
+import itertools
 
 if django.VERSION[0]!=3:
   print("Need django version 3. This is django version "+django.__version__)
@@ -158,6 +159,39 @@ debugOpts.add_argument("--runID", default=None, type=int, help="The id of the ru
 # parse command line options
 args = argparser.parse_args()
 normalRun=not args.pre and not args.post and not args.partition
+
+# allRepos
+allRepos=[
+  { "gitURL": "https://github.com/mbsim-env/fmatvec.git", # */<localname>.git -> localname is the directory name of the repo
+    "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/fmatvec/{sha}/{repofile}",
+    "sourcefilelineURL": "https://github.com/mbsim-env/fmatvec/blob/{sha}/{repofile}#L{line}",
+    "repoURL": "https://github.com/mbsim-env/fmatvec",
+    "commitURL": "https://github.com/mbsim-env/fmatvec/commit/{sha}",
+    "branchURL": "https://github.com/mbsim-env/fmatvec/tree/{branch}",
+  },
+  { "gitURL": "https://github.com/mbsim-env/hdf5serie.git", # */<localname>.git -> localname is the directory name of the repo
+    "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/hdf5serie/{sha}/{repofile}",
+    "sourcefilelineURL": "https://github.com/mbsim-env/hdf5serie/blob/{sha}/{repofile}#L{line}",
+    "repoURL": "https://github.com/mbsim-env/hdf5serie",
+    "commitURL": "https://github.com/mbsim-env/hdf5serie/commit/{sha}",
+    "branchURL": "https://github.com/mbsim-env/hdf5serie/tree/{branch}",
+  },
+  { "gitURL": "https://github.com/mbsim-env/openmbv.git", # */<localname>.git -> localname is the directory name of the repo
+    "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/openmbv/{sha}/{repofile}",
+    "sourcefilelineURL": "https://github.com/mbsim-env/openmbv/blob/{sha}/{repofile}#L{line}",
+    "repoURL": "https://github.com/mbsim-env/openmbv",
+    "commitURL": "https://github.com/mbsim-env/openmbv/commit/{sha}",
+    "branchURL": "https://github.com/mbsim-env/openmbv/tree/{branch}",
+  },
+  { "gitURL": "https://github.com/mbsim-env/mbsim.git", # */<localname>.git -> localname is the directory name of the repo
+    "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/mbsim/{sha}/{repofile}",
+    "sourcefilelineURL": "https://github.com/mbsim-env/mbsim/blob/{sha}/{repofile}#L{line}",
+    "repoURL": "https://github.com/mbsim-env/mbsim",
+    "commitURL": "https://github.com/mbsim-env/mbsim/commit/{sha}",
+    "branchURL": "https://github.com/mbsim-env/mbsim/tree/{branch}",
+  },
+]
+allRepos+=args.buildConfig.get("addRepos", [])
 
 # override args.filter if given in buildConfig
 exampleFilters = args.buildConfig.get("exampleFilters", None)
@@ -297,6 +331,9 @@ def main():
     setGithubStatus(exRun, "pending")
   else:
     exRun=runexamples.models.Run.objects.filter(id=args.runID).select_related("build_run").get()
+
+  if args.sourceDir is not None:
+    exRun.sourceDir=args.sourceDir
 
   if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
     s=base.helper.startLocalServer(args.localServerPort, django.conf.settings.MBSIMENV_TYPE=="localdocker")
@@ -1518,8 +1555,7 @@ def validateXML(ex):
 def getHeaderMap():
   # collect all header files in repos and hash it
   repoHeader={}
-  repos=["fmatvec", "hdf5serie", "openmbv", "mbsim"]
-  for repo in repos:
+  for repo in map(lambda repo: repo["gitURL"].split("/")[-1][0:-4], allRepos):
     for root, _, files in os.walk(pj(args.sourceDir, repo)):
       for f in files:
         if f.endswith(".h"):
@@ -1536,7 +1572,7 @@ def getHeaderMap():
 
 # restore or backup the coverage files in the build directories
 def coverageBackupRestore(variant):
-  for t in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
+  for t in map(lambda repo: repo["gitURL"].split("/")[-1][0:-4], allRepos):
     d=pj(args.sourceDir, t+args.binSuffix)
     for root, _, files in os.walk(d):
       for f in sorted(files):
@@ -1551,47 +1587,13 @@ def coverageBackupRestore(variant):
 def coverage(exRun, lcovResultFile=None):
   import requests
 
-  # allRepos
-  allRepos=[
-    { "gitURL": "https://github.com/mbsim-env/fmatvec.git", # */<localname>.git -> localname is the directory name of the repo
-      "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/fmatvec/{sha}/{repofile}",
-      "sourcefilelineURL": "https://github.com/mbsim-env/fmatvec/blob/{sha}/{repofile}#L{line}",
-      "repoURL": "https://github.com/mbsim-env/fmatvec",
-      "commitURL": "https://github.com/mbsim-env/fmatvec/commit/{sha}",
-      "branchURL": "https://github.com/mbsim-env/fmatvec/tree/{branch}",
-    },
-    { "gitURL": "https://github.com/mbsim-env/hdf5serie.git", # */<localname>.git -> localname is the directory name of the repo
-      "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/hdf5serie/{sha}/{repofile}",
-      "sourcefilelineURL": "https://github.com/mbsim-env/hdf5serie/blob/{sha}/{repofile}#L{line}",
-      "repoURL": "https://github.com/mbsim-env/hdf5serie",
-      "commitURL": "https://github.com/mbsim-env/hdf5serie/commit/{sha}",
-      "branchURL": "https://github.com/mbsim-env/hdf5serie/tree/{branch}",
-    },
-    { "gitURL": "https://github.com/mbsim-env/openmbv.git", # */<localname>.git -> localname is the directory name of the repo
-      "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/openmbv/{sha}/{repofile}",
-      "sourcefilelineURL": "https://github.com/mbsim-env/openmbv/blob/{sha}/{repofile}#L{line}",
-      "repoURL": "https://github.com/mbsim-env/openmbv",
-      "commitURL": "https://github.com/mbsim-env/openmbv/commit/{sha}",
-      "branchURL": "https://github.com/mbsim-env/openmbv/tree/{branch}",
-    },
-    { "gitURL": "https://github.com/mbsim-env/mbsim.git", # */<localname>.git -> localname is the directory name of the repo
-      "sourcefileURL": "https://raw.githubusercontent.com/mbsim-env/mbsim/{sha}/{repofile}",
-      "sourcefilelineURL": "https://github.com/mbsim-env/mbsim/blob/{sha}/{repofile}#L{line}",
-      "repoURL": "https://github.com/mbsim-env/mbsim",
-      "commitURL": "https://github.com/mbsim-env/mbsim/commit/{sha}",
-      "branchURL": "https://github.com/mbsim-env/mbsim/tree/{branch}",
-    },
-  ]
-  allRepos+=args.buildConfig.get("addRepos", [])
-
   ret=0
   lcovFD=base.helper.MultiFile(args.printToConsole)
   # lcov "-d" arguments
-  dirs=map(lambda x: ["-d", pj(args.sourceDir, x),
-                      "-d", pj(args.sourceDir, x+args.binSuffix)],
-                     list(map(lambda repo: repo["gitURL"].split("/")[-1][0:-4], allRepos)))
-  dirs=filter(lambda x: os.path.isdir(x[1]), dirs)
-  dirs=["-d", args.prefix]+[v for il in dirs for v in il]
+  dirs=itertools.chain(map(lambda repo: pj(args.sourceDir, repo["gitURL"].split("/")[-1][0:-4]               ), allRepos),
+                       map(lambda repo: pj(args.sourceDir, repo["gitURL"].split("/")[-1][0:-4]+args.binSuffix), allRepos))
+  dirs=filter(lambda x: os.path.isdir(x), dirs)
+  dirs=["-d", args.prefix]+sum([["-d", x] for x in dirs], [])
 
   # replace header map in lcov trace file
   def lcovAdjustFileNames(lcovFilename):

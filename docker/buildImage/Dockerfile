@@ -169,8 +169,8 @@ RUN make install
 
 # coin
 WORKDIR /3rdparty
+ARG COINBRANCH=v4.0.2
 RUN git clone https://github.com/coin3d/coin.git
-ARG COINBRANCH=CI-builds
 RUN (cd coin; git checkout $COINBRANCH)
 RUN mkdir /3rdparty/coin-build
 WORKDIR /3rdparty/coin-build
@@ -181,8 +181,8 @@ RUN make install
 
 # soqt
 WORKDIR /3rdparty
+ARG SOQTBRANCH=v1.6.1
 RUN git clone https://github.com/coin3d/soqt.git
-ARG SOQTBRANCH=CI-builds
 RUN (cd soqt; git checkout $SOQTBRANCH)
 RUN mkdir /3rdparty/soqt-build
 WORKDIR /3rdparty/soqt-build

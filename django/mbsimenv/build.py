@@ -471,7 +471,7 @@ def addAllDepencencies():
  
 def sortBuildTools(buildTools, orderedBuildTools):
   upToDate=set(toolDependencies)-buildTools
-  for bt in buildTools:
+  for bt in sorted(buildTools):
     if len(toolDependencies[bt][1]-upToDate)==0:
       orderedBuildTools.append(bt)
       upToDate.add(bt)

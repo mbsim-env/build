@@ -38,6 +38,7 @@ class Run(django.db.models.Model):
   endTime=django.db.models.DateTimeField(null=True, blank=True)
   # examples = related ForeignKey
   examplesFailed=django.db.models.PositiveIntegerField(default=0) # just a cached value for performance of filterFailed
+  sourceDir=django.db.models.CharField(max_length=100, null=True, blank=True)
   coverageOK=django.db.models.BooleanField(null=True, blank=True)
   coverageRate=django.db.models.FloatField(null=True, blank=True)
   coverageOutput=django.db.models.TextField(blank=True)

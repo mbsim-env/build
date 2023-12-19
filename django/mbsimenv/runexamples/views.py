@@ -888,21 +888,7 @@ class DirFileCoverage(base.views.Base):
     with self.run.coverageFile.open("rb") as f:
       lcovdata=readLCov(f)
 
-    # a heuristic to detect the prefix dir (the smallest dir which contains a subdir fmatvec, hdf5serie, openbmv and mbsim
-    fmatvecIdx = set()
-    hdf5serieIdx = set()
-    openmbvIdx = set()
-    mbsimIdx = set()
-    for absfile, _ in lcovdata:
-      fmatvecIdx.update([idx for idx, ele in enumerate(absfile.split("/")) if ele == "fmatvec"])
-      hdf5serieIdx.update([idx for idx, ele in enumerate(absfile.split("/")) if ele == "hdf5serie"])
-      openmbvIdx.update([idx for idx, ele in enumerate(absfile.split("/")) if ele == "openmbv"])
-      mbsimIdx.update([idx for idx, ele in enumerate(absfile.split("/")) if ele == "mbsim"])
-    prefixIdx=0
-    while True:
-      prefixIdx+=1
-      if prefixIdx in fmatvecIdx and prefixIdx in hdf5serieIdx and prefixIdx in openmbvIdx and prefixIdx in mbsimIdx:
-        break
+    prefixIdx=len(self.run.sourceDir.split("/"))
 
     # create per hierarchical dir/file line coverage from lcovdata and save to treeroot
     CHILDREN=0
