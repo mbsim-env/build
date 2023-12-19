@@ -114,6 +114,8 @@ cfgOpts.add_argument("--atol", default=2e-5, type=float,
   help="Absolute tolerance. Channel comparing failed if for at least ONE datapoint the abs. AND rel. toleranz is violated [default: %(default)s]")
 cfgOpts.add_argument("--rtol", default=2e-5, type=float,
   help="Relative tolerance. Channel comparing failed if for at least ONE datapoint the abs. AND rel. toleranz is violated [default: %(default)s]")
+cfgOpts.add_argument("--rtolminmax", default=None, type=float,
+  help="Relative tolerance relative to the reference max-min value of the complete channel. Takes precidence over --atol/--rtol")
 cfgOpts.add_argument("--disableRun", action="store_true", help="disable running the example on action 'report'")
 cfgOpts.add_argument("--disableMakeClean", action="store_true", help="disable make clean on action 'report'")
 cfgOpts.add_argument("--checkGUIs", action="store_true", help="Try to check/start the GUIs and exit after a short time.")
@@ -1277,8 +1279,9 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
         # check for difference
         refObjCol=getColumn(refObj,column)
         curObjCol=getColumn(curObj,column)
-        if refObjCol.shape[0]!=curObjCol.shape[0] or not numpy.all(numpy.isclose(curObjCol, refObjCol, rtol=args.rtol,
-                         atol=args.atol, equal_nan=True)):
+        if (refObjCol.shape[0]!=curObjCol.shape[0]) or \
+           (args.rtolminmax is None and not numpy.all(numpy.isclose(curObjCol, refObjCol, rtol=args.rtol, atol=args.atol, equal_nan=True))) or \
+           (args.rtolminmax is not None and not numpy.all(numpy.isclose(curObjCol, refObjCol, rtol=0, atol=(numpy.max(refObjCol)-numpy.min(refObjCol)) * args.rtolminmax, equal_nan=True))):
           nrFailed[0]+=1
           cmpRes.result=runexamples.models.CompareResult.Result.FAILED
           saveFileIfNotAlreadyDone(cmpResFile, h5CurFile)

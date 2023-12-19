@@ -63,7 +63,7 @@ class Run(base.views.Base):
     context['examplesAllOK']=examplesAllOK
     context['releaseFileSuffix']="linux64.tar.bz2" if self.run.buildType=="linux64-dailyrelease" else "win64.zip"
     context['releaseTagSuffix']="linux64" if self.run.buildType=="linux64-dailyrelease" else "win64"
-    context['releaseDistributionPossible']=base.helper.getExecutorID(self.run.executor)=="GITHUBACTION" or os.environ["MBSIMENVTAGNAME"]!="latest"
+    context['releaseDistributionPossible']=base.helper.getExecutorID(self.run.executor)=="GITHUBACTION" or os.environ.get("MBSIMENVTAGNAME", "localhost")!="latest"
 
     allBranches=builds.models.Run.objects.filter(buildType=self.run.buildType).\
                   values("fmatvecBranch", "hdf5serieBranch", "openmbvBranch", "mbsimBranch").distinct()
