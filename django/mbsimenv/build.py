@@ -539,7 +539,7 @@ def repoUpdate(run, buildInfo):
     os.environ["GIT_COMMITTER_NAME"]="dummy"
     os.environ["GIT_COMMITTER_EMAIL"]="dummy"
 
-    branchSplit=getattr(args, repo+"Branch", "").split("*")
+    branchSplit=getattr(args, repo+"Branch", "master").split("*")
     if not args.disableUpdate:
       # write repUpd output to report dir
       print('Fetch remote repository '+repo+":", file=repoUpdFD)
@@ -550,9 +550,9 @@ def repoUpdate(run, buildInfo):
       base.helper.subprocessCall(["git", "branch", "-q", "-D", branch], repoUpdFD)
       retlocal+=abs(base.helper.subprocessCall(["git", "fetch", "-q", "-f", "--depth", "1", "origin", sha+":"+branch], repoUpdFD))
     # set branch based on args
-    if getattr(args, repo+'Branch', "")!="":
+    if getattr(args, repo+'Branch', "master")!="":
       branch=branchSplit[0]
-      print('Checkout branch '+getattr(args, repo+'Branch', "")+' in repository '+repo+":", file=repoUpdFD)
+      print('Checkout branch '+getattr(args, repo+'Branch', "master")+' in repository '+repo+":", file=repoUpdFD)
       retlocal+=abs(base.helper.subprocessCall(["git", "checkout", "-q", branch], repoUpdFD))
       repoUpdFD.flush()
     # get branch and commit
