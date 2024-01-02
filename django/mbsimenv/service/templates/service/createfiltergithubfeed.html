@@ -6,7 +6,7 @@
 
 {% block head %}
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fortawesome/fontawesome-free@6.1.1/css/all.min.css" integrity="sha256-DfWjNxDkM94fVBWx1H5BMMp0Zq7luBlV8QRcSES7s+0=" crossorigin="anonymous">
-<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"> </script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js" integrity="sha384-3zSEDfvllQohrq0PHL1fOXJuC/jSOO34H46t6UQfobFOmxE5BpjjaIJY5F2/bMnU"> </script>
 {% endblock %}
 
 {% block body %}
@@ -22,11 +22,11 @@
 
     $('.CHANGE').on('keyup mouseleave', function(e) {
       if($("#USERNAME").val()=="" &&
-         $("#URL").val().match(new RegExp("^https://github.com/organizations/[^/]+/([^\.]+).private.atom?.*"))) {
-        var user=$("#URL").val().replace(new RegExp("^https://github.com/organizations/[^/]+/([^\.]+).private.atom?.*"), "$1");
+         $("#URL").val().match(new RegExp("^https://github.com/organizations/[^/]+/([^.]+).private.atom?.*"))) {
+        var user=$("#URL").val().replace(new RegExp("^https://github.com/organizations/[^/]+/([^.]+).private.atom?.*"), "$1");
         $("#USERNAME").val(user);
       }
-      var url="{% url 'service:filtergithubfeed' %}?url="+encodeURIComponent($("#URL").val())+"&username="+$("#USERNAME").val();
+      var url="{% url 'service:filtergithubfeed' %}?url="+encodeURIComponent($("#URL").val())+"&username="+encodeURIComponent($("#USERNAME").val());
       $("#FILTEREDURL").text("https://{{ hostname }}"+url);
       $("#FILTEREDURL").attr("href", url);
       filteredQRCode.clear();
