@@ -751,6 +751,13 @@ def chartDifferencePlot(request, id):
   import tempfile
   import numpy
 
+  def toUTF8(x):
+    if type(x)==bytes:
+      return x.decode("utf-8")
+    if type(x)==list:
+      return list(map(lambda e: toUTF8(e), x))
+    return x
+
   ref=None
   cur=None
   absErr=None
@@ -767,7 +774,7 @@ def chartDifferencePlot(request, id):
         dataset=h5F[compareResult.dataset]
         timeCur=dataset[:,0].reshape((dataset.shape[0],1))
         try:
-          colIdx=dataset.attrs["Column Label"].tolist().index(compareResult.label.encode("utf-8"))
+          colIdx=toUTF8(dataset.attrs["Column Label"].tolist()).index(toUTF8(compareResult.label))
           cur=dataset[:,colIdx]
         except ValueError:
           pass
@@ -789,7 +796,7 @@ def chartDifferencePlot(request, id):
         dataset=h5F[compareResult.dataset]
         timeRef=dataset[:,0].reshape((dataset.shape[0],1))
         try:
-          colIdx=dataset.attrs["Column Label"].tolist().index(compareResult.label.encode("utf-8"))
+          colIdx=toUTF8(dataset.attrs["Column Label"].tolist()).index(toUTF8(compareResult.label))
           ref=dataset[:,colIdx]
         except ValueError:
           pass
