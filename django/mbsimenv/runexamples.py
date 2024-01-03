@@ -765,6 +765,7 @@ def runExample(exRun, globalVars, example):
         guiFile=fmiCosimFile()
       # run gui tests
       def runGUI(files, tool, ex, exOK, exOutput):
+        retLocal=0
         if len(files)==0:
           return []
         # at least on Windows (wine) the DISPLAY is not found sometimes (unknown why). Hence, try this number of times before reporting an error
@@ -783,14 +784,18 @@ def runExample(exRun, globalVars, example):
         retv=valgrindOutputAndAdaptRet("guitest_"+tool, ex)
         if retv!=0: ret=1
         if ret!=0:
-          runExampleRet=1
+          retLocal=1
         outFD.close()
         setattr(ex, exOK, runexamples.models.Example.GUITestResult.PASSED if ret==0 else (runexamples.models.Example.GUITestResult.WARNING if base.helper.subprocessOtherFailure(ret) else runexamples.models.Example.GUITestResult.FAILED))
         setattr(ex, exOutput, outFD.getData().replace("\0", "&#00;"))
         ex.save()
-      runGUI(ombvFiles, "openmbv", ex, "guiTestOpenmbvOK", "guiTestOpenmbvOutput")
-      runGUI(h5pFiles, "h5plotserie", ex, "guiTestHdf5serieOK", "guiTestHdf5serieOutput")
-      runGUI([guiFile] if guiFile else [], "mbsimgui", ex, "guiTestMbsimguiOK", "guiTestMbsimguiOutput")
+        return retLocal
+      if runGUI(ombvFiles, "openmbv", ex, "guiTestOpenmbvOK", "guiTestOpenmbvOutput"):
+        runExampleRet=1
+      if runGUI(h5pFiles, "h5plotserie", ex, "guiTestHdf5serieOK", "guiTestHdf5serieOutput"):
+        runExampleRet=1
+      if runGUI([guiFile] if guiFile else [], "mbsimgui", ex, "guiTestMbsimguiOK", "guiTestMbsimguiOutput"):
+        runExampleRet=1
 
     if not args.disableCompare and canCompare:
       # compare the result with the reference
