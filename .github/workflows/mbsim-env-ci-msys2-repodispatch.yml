@@ -32,12 +32,10 @@ jobs:
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
       - name: "mfmf monitor resources"
         run: while [ 1 ]; do date && free && df && sleep 10s; done &> /tmp/resout & echo $! > /tmp/respid
-      - run: which pacman
-      - run: cygpath -w $(which pacman)
       - name: "Update msys2 part 1"
         # this may update msys2-runtime which closed also the current bash -> run in a cmd
         shell: cmd
-        run: pacman --noconfirm -Syuu
+        run: C:\msys64\usr\bin\pacman.exe --noconfirm -Syuu
       - name: "Update msys2 part 2"
         run: pacman --noconfirm -Syuu
       - name: "Install msys2 packages and cleanup"
