@@ -76,7 +76,6 @@ jobs:
           mingw-w64-ucrt-x86_64-python-cryptography
           mingw-w64-ucrt-x86_64-python-cffi
           mingw-w64-ucrt-x86_64-python-defusedxml
-          mingw-w64-ucrt-x86_64-fltk
           mingw-w64-ucrt-x86_64-python-oauthlib
           mingw-w64-ucrt-x86_64-python-requests-oauthlib &&
           pacman --noconfirm -Scc

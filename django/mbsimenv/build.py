@@ -815,7 +815,7 @@ def make(tool):
     tool.configureOutput=""
   else:
     # ... else just use the output of make
-    tool.makeOutput=makeFD.getvalue()
+    tool.makeOutput=makeFD.getvalue()[0:1000]
   try:
     print("mfmfa"); sys.stdout.flush()
     tool.save()
