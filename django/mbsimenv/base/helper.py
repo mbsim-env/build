@@ -213,6 +213,7 @@ def killSubprocessCall(proc, f, killed, timeout):
     proc.kill()
 
 def subprocessCheckOutput(comm, f=None):
+  print("mfmf1 "+str(comm))
   p=subprocess.Popen(comm, universal_newlines=True, encoding="utf-8", errors="backslashreplace", stdout=subprocess.PIPE)
   out=p.stdout.read()
   ret=p.wait()
@@ -231,6 +232,7 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   print("\nCalling command\n%s\nwith cwd\n%s\nat %s\n"%(" ".join(map(lambda x: "'"+x+"'", args)), os.getcwd(), startTime), file=f)
   # start the program to execute
   try:
+    print("mfmf2 "+str(args))
     proc=subprocess.Popen(args, universal_newlines=True, encoding="utf-8", errors="backslashreplace", stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=env)
   except OSError as ex:
     f.write("\n\n\n******************** FAILED TO START PROCESS ********************\n")
@@ -277,11 +279,13 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   # check for core dump file
   exeRE=re.compile("^.*LSB core file.*, *from '([^']*)' *,.*$")
   for coreFile in glob.glob("core.*")+glob.glob("vgcore.*"):
+    print("mfmf3 "+str(["file", coreFile]))
     m=exeRE.match(subprocess.check_output(["file", coreFile]).decode('utf-8'))
     if m is None:
       f.write("\n\n\nCORE DUMP file found but cannot extract executalbe name!\n\n\n")
       continue
     exe=m.group(1).split(" ")[0]
+    print("mfmf4 "+str(["gdb", "-q", "-n", "-ex", "bt", "-batch", exe, coreFile]))
     out=subprocess.check_output(["gdb", "-q", "-n", "-ex", "bt", "-batch", exe, coreFile]).decode('utf-8')
     f.write("\n\n\n******************** START: CORE DUMP BACKTRACE OF "+exe+" ********************\n\n\n")
     f.write(out)
@@ -319,6 +323,7 @@ def startLocalServer(port, onlyGetServerInfo=False):
       env=os.environ.copy()
       env['DJANGO_SETTINGS_MODULE']='mbsimenv.settings_'+django.conf.settings.MBSIMENV_TYPE
       preexec_fn=os.setpgrp if os.name=="posix" else None
+      print("mfmf4 "+str([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../manage.py", "runserver", "--insecure", "--noreload", "0.0.0.0:"+str(port)]))
       p=subprocess.Popen([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../manage.py",
                           "runserver", "--insecure", "--noreload", "0.0.0.0:"+str(port)],
                           preexec_fn=preexec_fn, env=env)
