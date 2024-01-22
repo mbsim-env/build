@@ -810,6 +810,7 @@ def make(tool):
     print("mfmfE1"+str(ex)); sys.stdout.flush()
     result=str(ex)
     print("mfmfE2"+str(ex)); sys.stdout.flush()
+    print("mfmfE3"+str(makeFD.getvalue())); sys.stdout.flush()
   if not args.disableMake:
     tool.makeOK=result=="done"
   print("mfmfa"); sys.stdout.flush()
@@ -827,7 +828,12 @@ def make(tool):
     tool.makeOutput=makeFD.getvalue()
     print("mfmff"); sys.stdout.flush()
   print("mfmfg"); sys.stdout.flush()
-  tool.save()
+  try:
+    tool.save()
+  except Exception as ex:
+    print("mfmfEEE "+str(ex)); sys.stdout.flush()
+  except:
+    print("mfmfEEEE"); sys.stdout.flush()
   print("mfmfh"); sys.stdout.flush()
   makeFD.close()
   print("mfmfi"); sys.stdout.flush()
