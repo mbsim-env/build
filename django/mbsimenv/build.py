@@ -812,30 +812,30 @@ def make(tool):
     print("mfmfE2"+str(ex)); sys.stdout.flush()
   if not args.disableMake:
     tool.makeOK=result=="done"
-  print("mfmfa"+str(ex)); sys.stdout.flush()
+  print("mfmfa"); sys.stdout.flush()
   # configure was disable but needs to be run then ...
   if tool.configureOK is None and tool.configureOutput!="":
-    print("mfmfb"+str(ex)); sys.stdout.flush()
+    print("mfmfb"); sys.stdout.flush()
     # ... copy the output from configureOutput to makeOutput and append the output of make
     tool.makeOutput=tool.configureOutput+"\n\n\n\n\n"+makeFD.getvalue()
-    print("mfmfc"+str(ex)); sys.stdout.flush()
+    print("mfmfc"); sys.stdout.flush()
     tool.configureOutput=""
-    print("mfmfd"+str(ex)); sys.stdout.flush()
+    print("mfmfd"); sys.stdout.flush()
   else:
     # ... else just use the output of make
-    print("mfmfe"+str(ex)); sys.stdout.flush()
+    print("mfmfe"); sys.stdout.flush()
     tool.makeOutput=makeFD.getvalue()
-    print("mfmff"+str(ex)); sys.stdout.flush()
-  print("mfmfg"+str(ex)); sys.stdout.flush()
+    print("mfmff"); sys.stdout.flush()
+  print("mfmfg"); sys.stdout.flush()
   tool.save()
-  print("mfmfh"+str(ex)); sys.stdout.flush()
+  print("mfmfh"); sys.stdout.flush()
   makeFD.close()
-  print("mfmfi"+str(ex)); sys.stdout.flush()
+  print("mfmfi"); sys.stdout.flush()
   ret=0
-  print("mfmfj"+str(ex)); sys.stdout.flush()
+  print("mfmfj"); sys.stdout.flush()
   if result!="done":
     ret=ret+1
-  print("mfmfk"+str(ex)); sys.stdout.flush()
+  print("mfmfk"); sys.stdout.flush()
   return ret, run
 
 
