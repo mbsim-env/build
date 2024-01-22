@@ -796,52 +796,38 @@ def make(tool):
         errStr=errStr+"build failed; "
       if not args.disableMakeInstall:
         print("\n\nRUNNING install\n", file=makeFD); makeFD.flush()
-        print("mfmf1 "+str(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["install"])); sys.stdout.flush()
         if base.helper.subprocessCall(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["install"], makeFD)!=0:
-          print("mfmf2"); sys.stdout.flush()
           errStr=errStr+"install failed; "
-        print("mfmf3"); sys.stdout.flush()
       if errStr!="": raise RuntimeError(errStr)
     else:
       print("make disabled", file=makeFD); makeFD.flush()
 
     result="done"
   except Exception as ex:
-    print("mfmfE1"+str(ex)); sys.stdout.flush()
     result=str(ex)
-    print("mfmfE2"+str(ex)); sys.stdout.flush()
     print("mfmfE3"+str(makeFD.getvalue())); sys.stdout.flush()
   if not args.disableMake:
     tool.makeOK=result=="done"
-  print("mfmfa"); sys.stdout.flush()
   # configure was disable but needs to be run then ...
   if tool.configureOK is None and tool.configureOutput!="":
-    print("mfmfb"); sys.stdout.flush()
     # ... copy the output from configureOutput to makeOutput and append the output of make
     tool.makeOutput=tool.configureOutput+"\n\n\n\n\n"+makeFD.getvalue()
-    print("mfmfc"); sys.stdout.flush()
     tool.configureOutput=""
-    print("mfmfd"); sys.stdout.flush()
   else:
     # ... else just use the output of make
-    print("mfmfe"); sys.stdout.flush()
     tool.makeOutput=makeFD.getvalue()
-    print("mfmff"); sys.stdout.flush()
-  print("mfmfg"); sys.stdout.flush()
   try:
+    print("mfmfa"); sys.stdout.flush()
     tool.save()
+    print("mfmfb"); sys.stdout.flush()
   except Exception as ex:
-    print("mfmfEEE "+str(ex)); sys.stdout.flush()
+    print("mfmfc "+str(ex)); sys.stdout.flush()
   except:
-    print("mfmfEEEE"); sys.stdout.flush()
-  print("mfmfh"); sys.stdout.flush()
+    print("mfmfd"); sys.stdout.flush()
   makeFD.close()
-  print("mfmfi"); sys.stdout.flush()
   ret=0
-  print("mfmfj"); sys.stdout.flush()
   if result!="done":
     ret=ret+1
-  print("mfmfk"); sys.stdout.flush()
   return ret, run
 
 
