@@ -817,7 +817,7 @@ def make(tool):
     result="done"
     print("mfmfx"); sys.stdout.flush()
   except Exception as ex:
-    print("mfmfy"); sys.stdout.flush()
+    print("mfmfy "+str(ex)); sys.stdout.flush()
     result=str(ex)
   print("mfmfz"); sys.stdout.flush()
   if not args.disableMake:
