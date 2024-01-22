@@ -30,8 +30,6 @@ jobs:
         run: pacman --noconfirm -S procps
       - name: "Dump resources"
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
-      - name: "mfmf monitor resources"
-        run: while [ 1 ]; do date && free && df && sleep 10s; done &> /tmp/resout & echo $! > /tmp/respid
       - name: "Update msys2 part 1"
         # this may update msys2-runtime which closed also the current bash -> run in a cmd
         shell: cmd
@@ -147,9 +145,6 @@ jobs:
           gh extension install actions/gh-actions-cache &&
           KEYS=$(gh actions-cache list --key ccache-msys2ucrt64-- --order desc --sort created-at --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1) &&
           for KEY in $KEYS; do gh actions-cache delete $KEY --confirm --repo ${{github.repository}} --branch ${{github.ref_name}}; done
-      - name: "mfmf monitor resources end"
-        if: ${{always()}}
-        run: cat /tmp/resout; kill $(cat /tmp/respid)
       - name: "Dump resources"
         if: ${{always()}}
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo

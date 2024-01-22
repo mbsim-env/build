@@ -652,8 +652,11 @@ def build(toolName, run):
 
   # make
   print(", make", end="")
+  print("mfmfa")
   sys.stdout.flush()
+  print("mfmfb")
   failed, run=make(tool)
+  print("mfmfE")
   nrFailed+=failed
   nrRun+=run
 
@@ -777,34 +780,51 @@ def configure(tool):
 
 
 def make(tool):
+  print("mfmfc")
   makeFD=io.StringIO()
+  print("mfmfd")
   run=0
+  print("mfmfe")
   cmake=not os.path.exists(pj(args.sourceDir, tool.toolName, "configure.ac"))
+  print("mfmff")
   buildCmd=[args.makeProg] if not cmake else ["ninja", "-v"]
+  print("mfmfg")
   try:
+    print("mfmfh")
     if not args.disableMake:
+      print("mfmfA")
       run=1
       # build
       errStr=""
+      print("mfmfB")
       if not args.disableMakeClean:
         print("\n\nRUNNING clean\n", file=makeFD); makeFD.flush()
         if base.helper.subprocessCall(buildCmd+["clean"], makeFD)!=0:
           errStr=errStr+"clean failed; "
+      print("mfmfC")
       print("\n\nRUNNING build\n", file=makeFD); makeFD.flush()
       if base.helper.subprocessCall(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["-j", str(args.j)],
                          makeFD)!=0:
         errStr=errStr+"build failed; "
+      print("mfmfD")
       if not args.disableMakeInstall:
         print("\n\nRUNNING install\n", file=makeFD); makeFD.flush()
         if base.helper.subprocessCall(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["install"], makeFD)!=0:
           errStr=errStr+"install failed; "
+      print("mfmfE")
       if errStr!="": raise RuntimeError(errStr)
+      print("mfmfF")
     else:
       print("make disabled", file=makeFD); makeFD.flush()
 
+    print("mfmfi")
     result="done"
+    print("mfmfj")
   except Exception as ex:
+    print("mfmfx")
     result=str(ex)
+    print("mfmfy")
+  print("mfmfz")
   if not args.disableMake:
     tool.makeOK=result=="done"
   # configure was disable but needs to be run then ...
