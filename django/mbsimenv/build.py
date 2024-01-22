@@ -653,9 +653,7 @@ def build(toolName, run):
   # make
   print(", make", end="")
   sys.stdout.flush()
-  print("mfmfa"); sys.stdout.flush()
   failed, run=make(tool)
-  print("mfmfE"); sys.stdout.flush()
   nrFailed+=failed
   nrRun+=run
 
@@ -779,47 +777,37 @@ def configure(tool):
 
 
 def make(tool):
-  print("mfmfb"); sys.stdout.flush()
   makeFD=io.StringIO()
-  print("mfmfc"); sys.stdout.flush()
   run=0
-  print("mfmfd"); sys.stdout.flush()
   cmake=not os.path.exists(pj(args.sourceDir, tool.toolName, "configure.ac"))
-  print("mfmfe"); sys.stdout.flush()
   buildCmd=[args.makeProg] if not cmake else ["ninja", "-v"]
-  print("mfmff"); sys.stdout.flush()
   try:
     if not args.disableMake:
-      print("mfmfg"); sys.stdout.flush()
       run=1
       # build
       errStr=""
-      print("mfmfh"); sys.stdout.flush()
       if not args.disableMakeClean:
-        print("mfmfi"); sys.stdout.flush()
         print("\n\nRUNNING clean\n", file=makeFD); makeFD.flush()
-        print("mfmfj"); sys.stdout.flush()
         if base.helper.subprocessCall(buildCmd+["clean"], makeFD)!=0:
           errStr=errStr+"clean failed; "
-        print("mfmfk"); sys.stdout.flush()
       print("\n\nRUNNING build\n", file=makeFD); makeFD.flush()
       if base.helper.subprocessCall(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["-j", str(args.j)],
                          makeFD)!=0:
         errStr=errStr+"build failed; "
       if not args.disableMakeInstall:
         print("\n\nRUNNING install\n", file=makeFD); makeFD.flush()
+        print("mfmf1 "+str(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["install"])); sys.stdout.flush()
         if base.helper.subprocessCall(buildCmd+["-k"]+([] if not cmake else [str(1000000)])+["install"], makeFD)!=0:
+          print("mfmf2"); sys.stdout.flush()
           errStr=errStr+"install failed; "
+        print("mfmf3"); sys.stdout.flush()
       if errStr!="": raise RuntimeError(errStr)
     else:
       print("make disabled", file=makeFD); makeFD.flush()
 
     result="done"
-    print("mfmfx"); sys.stdout.flush()
   except Exception as ex:
-    print("mfmfy "+str(ex)); sys.stdout.flush()
     result=str(ex)
-  print("mfmfz"); sys.stdout.flush()
   if not args.disableMake:
     tool.makeOK=result=="done"
   # configure was disable but needs to be run then ...
