@@ -125,7 +125,7 @@ def databases(mbsimenv_type):
         'PASSWORD': mbsimenvSecrets.getSecrets("postgresPassword"),
         'HOST': databaseServerAndPort()[0],
         'PORT': databaseServerAndPort()[1],
-        'CONN_MAX_AGE': 30,
+        'CONN_MAX_AGE': 0, # MISSING: switch to e.g. 5 or 10 together with CONN_HEALTH_CHECKs=True when using django >=5.0
       }
     }
   return DATABASES
