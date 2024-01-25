@@ -225,7 +225,7 @@ def subprocessCheckOutput(comm, f=None):
 # subprocess call with timeout
 def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   # remove core dumps from previous runs
-  for coreFile in ["core"]+glob.glob("core.*")+glob.glob("vgcore.*"):
+  for coreFile in glob.glob("core")+glob.glob("core.*")+glob.glob("vgcore.*"):
     os.remove(coreFile)
   startTime=django.utils.timezone.now()
   print("\nCalling command\n%s\nwith cwd\n%s\nat %s\n"%(" ".join(map(lambda x: "'"+x+"'", args)), os.getcwd(), startTime), file=f)
@@ -276,7 +276,7 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
     return subprocessCall.stopByREErrorCode # return to indicate that the program was terminated/killed due to a stop regex
   # check for core dump file
   exeRE=re.compile("^.*LSB core file.*from '([^']*)'.*$")
-  for coreFile in ["core"]+glob.glob("core.*")+glob.glob("vgcore.*"):
+  for coreFile in glob.glob("core")+glob.glob("core.*")+glob.glob("vgcore.*"):
     m=exeRE.match(subprocess.check_output(["file", coreFile]).decode('utf-8'))
     if m is None:
       f.write("\n\n\nCORE DUMP file found but cannot extract executalbe name!\n\n\n")
@@ -287,7 +287,7 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
     f.write(out)
     f.write("\n\n\n******************** END: CORE DUMP BACKTRACE ********************\n\n\n")
   # remove core dumps (these require a lot of disc space)
-  for coreFile in ["core"]+glob.glob("core.*")+glob.glob("vgcore.*"):
+  for coreFile in glob.glob("core")+glob.glob("core.*")+glob.glob("vgcore.*"):
     os.remove(coreFile)
   # return the return value of the called programm
   return ret
