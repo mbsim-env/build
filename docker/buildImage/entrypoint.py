@@ -95,6 +95,7 @@ if args.buildType == "linux64-ci" or args.buildType.startswith("linux64-dailydeb
   os.environ["CXXFLAGS"]="-O0 -g"
   os.environ["CFLAGS"]="-O0 -g"
   os.environ["FFLAGS"]="-O0 -g"
+  os.environ['LDFLAGS']="-no-pie" # valgrind vdcore.* files need -no-pie to work with gdb
 elif args.buildType.startswith("linux64-dailyrelease"):
   BUILDTYPE="Release"
   os.environ["CXXFLAGS"]="-g -O2 -DNDEBUG"

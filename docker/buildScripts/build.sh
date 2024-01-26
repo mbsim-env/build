@@ -74,6 +74,7 @@ if [ $BT == "Debug" ]; then
   export CXXFLAGS="-O0 -g"
   export CFLAGS="-O0 -g"
   export FFLAGS="-O0 -g"
+  export LDFLAGS="-no-pie" # valgrind vdcore.* files need -no-pie to work with gdb
 elif [ $BT == "Release" ]; then
   export CXXFLAGS="-g -O2 -DNDEBUG"
   export CFLAGS="-g -O2 -DNDEBUG"
