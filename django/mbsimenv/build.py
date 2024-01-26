@@ -805,7 +805,6 @@ def make(tool):
     result="done"
   except Exception as ex:
     result=str(ex)
-    print("mfmfmfmf "+str(makeFD.getvalue())); sys.stdout.flush()
   if not args.disableMake:
     tool.makeOK=result=="done"
   # configure was disable but needs to be run then ...
@@ -816,7 +815,7 @@ def make(tool):
   else:
     # ... else just use the output of make
     tool.makeOutput=makeFD.getvalue()
-  tool.save()
+#mfmf  tool.save()
   makeFD.close()
   ret=0
   if result!="done":
