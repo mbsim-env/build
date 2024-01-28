@@ -33,6 +33,7 @@ jobs:
 
 
       - name: "mfmf"
+        shell: cmd
         run: choco install procmon
       - shell: cmd
         run: Procmon.exe /AcceptEula /quiet /minimized /backingfile c:\out.pml
