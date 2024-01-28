@@ -132,8 +132,10 @@ jobs:
 
 
       - shell: cmd
+        if: ${{always()}}
         run: Procmon.exe /terminate
       - uses: actions/upload-artifact@v3
+        if: ${{always()}}
         with:
           name: procmon
           retention-days: 1
