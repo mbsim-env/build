@@ -116,32 +116,8 @@ jobs:
             ccache-msys2ucrt64--
       - name: "Set ccache size and zeroing ccache statistics"
         run: ccache -M 5G && ccache -z
-
-
-      - name: "run with procmon"
-        shell: cmd
-        run: choco install procmon
-      - shell: cmd
-        run: Procmon.exe /AcceptEula /quiet /minimized /backingfile c:\out.pml
-      - shell: cmd
-        run: Procmon.exe /waitforidle
-
-
       - name: "Start build.sh"
         run: ./build/msys2ucrt64Build/build.sh --buildSystemRun --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
-
-
-      - shell: cmd
-        if: ${{always()}}
-        run: Procmon.exe /terminate
-      - uses: actions/upload-artifact@v3
-        if: ${{always()}}
-        with:
-          name: procmon
-          retention-days: 1
-          path: c:\out.pml
-
-
       - name: "Dump link to MBSim-Env server"
         if: ${{always()}}
         shell: python
