@@ -63,7 +63,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
     shift
   done
   
-  export LDFLAGS="-L/usr/lib64/boost169"
+  export LDFLAGS="$LDFLAGS -L/usr/lib64/boost169"
   # run in mbsimenv/build docker image
   # -e PATH= is the PATH in the container appended by :/mbsim-env/local-docker/bin and prefixed by .:
   # -e LD_LIBRARY_PATH= is the LD_LIBRARY_PATH in the container prefixed by /mbsim-env/local-docker/lib:/mbsim-env/local-docker/lib64:

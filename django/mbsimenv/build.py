@@ -309,12 +309,9 @@ def main():
 
   # enable coverage
   if args.coverage:
-    if not "CFLAGS" in os.environ: os.environ["CFLAGS"]=""
-    if not "CXXFLAGS" in os.environ: os.environ["CXXFLAGS"]=""
-    if not "LDFLAGS"  in os.environ: os.environ["LDFLAGS" ]=""
-    os.environ["CFLAGS"]=os.environ["CFLAGS"]+" --coverage"
-    os.environ["CXXFLAGS"]=os.environ["CXXFLAGS"]+" --coverage"
-    os.environ["LDFLAGS" ]=os.environ["LDFLAGS" ]+" --coverage -lgcov"
+    os.environ["CFLAGS"]=os.environ.get("CFLAGS", "")+" --coverage"
+    os.environ["CXXFLAGS"]=os.environ.get("CXXFLAGS", "")+" --coverage"
+    os.environ["LDFLAGS" ]=os.environ.get("LDFLAGS", "")+" --coverage -lgcov"
 
   # start messsage
   print("Started build process.")
