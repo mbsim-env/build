@@ -212,7 +212,7 @@ def main():
     connection=django.db.connections[kwargs["using"]]
     connection.ensure_connection()
     if not connection.is_usable(): connection.close()
-    django.db.close_old_connections()
+#    django.db.close_old_connections()
     django.db.connections.close_all()
 #mfmf
 #    connection=django.db.connections[kwargs["using"]]
