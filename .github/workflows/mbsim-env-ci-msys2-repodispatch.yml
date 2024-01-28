@@ -30,6 +30,24 @@ jobs:
         run: pacman --noconfirm -S procps
       - name: "Dump resources"
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
+
+
+      - name: "mfmf"
+        run: choco install procmon
+      - shell: cmd
+        run: Procmon.exe /AcceptEula /quiet /minimized /backingfile c:\out.pml
+      - shell: cmd
+        run: Procmon.exe /waitforidle
+      - run: echo DUMMYRUN
+      - shell: cmd
+        run: Procmon.exe /terminate
+      - uses: actions/upload-artifact@v3
+        with:
+          name: procmon
+          retention-days: 1
+          path: c:\out.pml
+
+
       - name: "Update msys2 part 1"
         # this may update msys2-runtime which closed also the current bash -> run in a cmd
         shell: cmd
