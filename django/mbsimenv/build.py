@@ -208,7 +208,6 @@ def main():
   # (to avoid connection failures between two save() on the same model when a large time is in-between;
   #  e.g. firewalls may drop such TCP connections)
   def closeUnusableConnection(**kwargs):
-    django.db.close_old_connections()
     connection=django.db.connections[kwargs["using"]]
     connection.ensure_connection()
     if not connection.is_usable(): connection.close()
