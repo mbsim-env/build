@@ -208,10 +208,18 @@ def main():
   # (to avoid connection failures between two save() on the same model when a large time is in-between;
   #  e.g. firewalls may drop such TCP connections)
   def closeUnusableConnection(**kwargs):
+#mfmf
     connection=django.db.connections[kwargs["using"]]
     connection.ensure_connection()
-    if not connection.is_usable():
-      connection.close()
+    if not connection.is_usable(): connection.close()
+    django.db.close_old_connections()
+    django.db.connections.close_all()
+#mfmf
+#    connection=django.db.connections[kwargs["using"]]
+#    connection.ensure_connection()
+#    if not connection.is_usable():
+#      connection.close()
+#mfmf
   django.db.models.signals.pre_save.connect(closeUnusableConnection)
 
   if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
