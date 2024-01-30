@@ -87,7 +87,7 @@ jobs:
           cmd //c systemwidedeploy.cmd 1 &&
           cd .. && rm -rf mesa
       - name: "Install pip packages"
-        run: pip install --upgrade pip && pip install django==3.2 django-allauth==0.47 django-octicons==1.0
+        run: pip install --upgrade pip && pip install django==3.2.23 django-allauth==0.47 django-octicons==1.0
       - name: "Add git and gh to msys2 path"
         run: echo 'PATH="$PATH:/c/Program Files/Git/bin:/c/Program Files/GitHub CLI"' >> ~/.bash_profile
       - name: "Clone all git repos"
