@@ -39,7 +39,7 @@ RUNEXAMPLESARGS+=("--checkGUIs")
 export CC="ccache gcc"
 export CXX="ccache g++"
 
-gdb -ex run -ex bt -ex quit --args python3 $(dirname $0)/../django/mbsimenv/build.py \
+python3 $(dirname $0)/../django/mbsimenv/build.py \
   "${ARGS[@]}" \
   "$@" \
   --sourceDir $BASEDIR --binSuffix=-msys2ucrt64 --prefix $BASEDIR/local-msys2ucrt64 --buildType msys2ucrt64 \
