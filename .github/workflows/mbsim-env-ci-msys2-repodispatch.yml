@@ -56,7 +56,6 @@ jobs:
           mingw-w64-ucrt-x86_64-python-sympy
           mingw-w64-ucrt-x86_64-python-h5py
           mingw-w64-ucrt-x86_64-python-psutil
-          mingw-w64-ucrt-x86_64-python-psycopg2
           mingw-w64-ucrt-x86_64-python-pygithub
           mingw-w64-ucrt-x86_64-python-paramiko
           mingw-w64-ucrt-x86_64-qwt-qt5
@@ -88,7 +87,7 @@ jobs:
           cmd //c systemwidedeploy.cmd 1 &&
           cd .. && rm -rf mesa
       - name: "Install pip packages"
-        run: pip install --upgrade pip && pip install django==3.2.23 django-allauth==0.47 django-octicons==1.0
+        run: pip install --upgrade pip && pip install psycopg2==2.6.2 django==3.2.23 django-allauth==0.47 django-octicons==1.0
       - name: "Add git and gh to msys2 path"
         run: echo 'PATH="$PATH:/c/Program Files/Git/bin:/c/Program Files/GitHub CLI"' >> ~/.bash_profile
       - name: "Clone all git repos"
