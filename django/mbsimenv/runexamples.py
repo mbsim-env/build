@@ -1390,7 +1390,7 @@ def compareExample(ex):
             cmpRes.compareResultFile=cmpResFile
             cmpRes.dataset=datasetName
             cmpRes.result=runexamples.models.CompareResult.Result.DATASETNOTINREF
-            saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile):
+            saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
             nrFailed[0]+=1
           # close h5 files
           h5CurFile.close()
