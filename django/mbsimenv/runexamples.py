@@ -1225,6 +1225,15 @@ def executeFMISrcExample(ex, executeFD):
 
 
 
+def saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile):
+  if not cmpResFile.h5File:
+    # save the file only the first time
+    cmpResFile.h5FileName=cmpResFile.h5Filename # this calls save on the dataset cmpResFile -> it will be skipped for bulk_create later on 
+    with cmpResFile.h5File.open("wb") as fw:
+      with open(h5CurFile.filename, "rb") as fr:
+        base.helper.copyFile(fr, fw)
+    cmpResFile.save()
+
 # return column col from arr as a column Vector if asColumnVector == True or as a row vector
 # arr may be of shape vector or a matrix
 def getColumn(arr, col, asColumnVector=True):
@@ -1243,15 +1252,6 @@ def getColumn(arr, col, asColumnVector=True):
 def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, cmpRess, datasetName, refObj):
   import numpy
   import h5py
-
-  def saveFileIfNotAlreadyDone(cmpResFile, h5CurFile):
-    if not cmpResFile.h5File:
-      # save the file only the first time
-      cmpResFile.h5FileName=cmpResFile.h5Filename # this calls save on the dataset cmpResFile -> it will be skipped for bulk_create later on 
-      with cmpResFile.h5File.open("wb") as fw:
-        with open(h5CurFile.filename, "rb") as fr:
-          base.helper.copyFile(fr, fw)
-      cmpResFile.save()
 
   if isinstance(refObj, h5py.Dataset):
     # add to refMemberNames
@@ -1303,15 +1303,15 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
       # if if curObj[:,column] does not exitst
       if column>=curObjCols:
         cmpRes.result=runexamples.models.CompareResult.Result.LABELNOTINCUR
-        saveFileIfNotAlreadyDone(cmpResFile, h5CurFile)
+        saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
         nrFailed[0]+=1
       if not column<curObjCols or refLabels[column]!=curLabels[column]:
         cmpRes.result=runexamples.models.CompareResult.Result.LABELDIFFER
-        saveFileIfNotAlreadyDone(cmpResFile, h5CurFile)
+        saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
         nrFailed[0]+=1
       if column>=curObjCols or curObj.shape[0]<=0 or curObj.shape[0]<=0: # not row in curObj or refObj
         cmpRes.result=runexamples.models.CompareResult.Result.LABELMISSING
-        saveFileIfNotAlreadyDone(cmpResFile, h5CurFile)
+        saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
         nrFailed[0]+=1
       else: # only if curObj and refObj contains data (rows)
         # check for difference
@@ -1325,7 +1325,7 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
                max((numpy.max(refObjCol)-numpy.min(refObjCol)) * args.rtolminmax, args.atol), equal_nan=True))):
           nrFailed[0]+=1
           cmpRes.result=runexamples.models.CompareResult.Result.FAILED
-          saveFileIfNotAlreadyDone(cmpResFile, h5CurFile)
+          saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
     # check for labels/columns in current but not in reference
     for label in curLabels[len(refLabels):]:
       cmpRes=runexamples.models.CompareResult()
@@ -1334,7 +1334,7 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
       cmpRes.dataset=datasetName
       cmpRes.label=label
       cmpRes.result=runexamples.models.CompareResult.Result.LABELNOTINREF
-      saveFileIfNotAlreadyDone(cmpResFile, h5CurFile)
+      saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
       nrFailed[0]+=1
 
 def appendDatasetName(curMemberNames, datasetName, curObj):
@@ -1390,6 +1390,7 @@ def compareExample(ex):
             cmpRes.compareResultFile=cmpResFile
             cmpRes.dataset=datasetName
             cmpRes.result=runexamples.models.CompareResult.Result.DATASETNOTINREF
+            saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile):
             nrFailed[0]+=1
           # close h5 files
           h5CurFile.close()
