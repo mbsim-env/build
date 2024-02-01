@@ -92,6 +92,7 @@ def currentRunexampleNrFailed(request, buildtype):
 # a svg badge with the coverage rate
 def currentCoverageRate(request, buildtype):
   run=runexamples.models.Run.objects.getCurrent(buildtype, "master", "master", "master", "master")
+  run=runexamples.models.Run.objects.get(id=97)
   if run is None:
     context={"nr": "n/a", "color": getColor("secondary")}
   elif run.endTime is None:
@@ -101,7 +102,7 @@ def currentCoverageRate(request, buildtype):
   else:
     context={
       "nr": str(int(round(run.coverageRate)))+"%",
-      "color": getColor("danger" if run.coverageRate<70 else ("warning" if run.coverageRate<90 else "success")),
+      "color": base.helper.lcovColor(run.coverageRate/100),
     }
   return django.shortcuts.render(request, 'service/nrbadge.svg', context, content_type="image/svg+xml")
 

@@ -16,6 +16,7 @@ import importlib.util
 import octicons.templatetags.octicons
 import hashlib
 import allauth
+import colorsys
 
 # a dummy context object doing just nothing (e.g. usefull as a dummy lock(mutext) object.
 class NullContext(object):
@@ -416,3 +417,11 @@ def handleRecoverableError(title, message):
     print("::error title="+title+"::"+message)
   else:
     print("ERROR: "+title+"\n"+message)
+
+def lcovColor(rate):
+  rateMin=0.7
+  if rate<rateMin:
+    r=0
+  else:
+    r=(rate-rateMin)/(1-rateMin)
+  return "#"+"".join(map(lambda x: hex(int(x*255))[2:].zfill(2),colorsys.hsv_to_rgb(r*2/6, 0.62, 0.83)))
