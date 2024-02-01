@@ -76,6 +76,7 @@ jobs:
           mingw-w64-ucrt-x86_64-python-cffi
           mingw-w64-ucrt-x86_64-python-defusedxml
           mingw-w64-ucrt-x86_64-python-oauthlib
+          unzip
           mingw-w64-ucrt-x86_64-python-requests-oauthlib &&
           pacman --noconfirm -Scc
       - name: "Install mesa for software OpenGL (only needed to run GUI programs in VMs)"
