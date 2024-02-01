@@ -77,6 +77,7 @@ jobs:
           mingw-w64-ucrt-x86_64-python-cffi
           mingw-w64-ucrt-x86_64-python-defusedxml
           mingw-w64-ucrt-x86_64-python-oauthlib
+          mingw-w64-ucrt-x86_64-gdb
           mingw-w64-ucrt-x86_64-python-requests-oauthlib &&
           pacman --noconfirm -Scc
       - name: "Downgrade openssl to 3.1.4-1"
@@ -85,12 +86,6 @@ jobs:
           wget --no-verbose https://repo.msys2.org/mingw/ucrt64/mingw-w64-ucrt-x86_64-openssl-3.1.4-1-any.pkg.tar.zst &&
           pacman --noconfirm -U mingw-w64-ucrt-x86_64-openssl-3.1.4-1-any.pkg.tar.zst &&
           cd .. && rm -rf openssl
-      - name: "Downgrade cmake to 3.28.1-1"
-        run: >
-          mkdir cmake && cd cmake &&
-          wget --no-verbose https://repo.msys2.org/mingw/ucrt64/mingw-w64-ucrt-x86_64-cmake-3.28.1-1-any.pkg.tar.zst &&
-          pacman --noconfirm -U mingw-w64-ucrt-x86_64-cmake-3.28.1-1-any.pkg.tar.zst &&
-          cd .. && rm -rf cmake
       - name: "Install mesa for software OpenGL (only needed to run GUI programs in VMs)"
         run: >
           mkdir mesa && cd mesa &&
