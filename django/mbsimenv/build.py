@@ -741,7 +741,7 @@ def configure(tool):
       else:
         cmakeCmd=shutil.which("cmake3")
         if cmakeCmd is None: cmakeCmd="cmake"
-        command=["gdb", "-ex", "run", "-ex", "bt", "-ex", "quit", "--args"]+[cmakeCmd, pj(args.sourceDir, tool.toolName), "-GNinja", "-DCMAKE_INSTALL_PREFIX="+args.prefix]
+        command=[cmakeCmd, pj(args.sourceDir, tool.toolName), "-GNinja", "-DCMAKE_INSTALL_PREFIX="+args.prefix]
         command.extend(args.passToCMake)
         command.extend(args.buildConfig.get("cmake", []))
         if base.helper.subprocessCall(command, configureFD)!=0:
