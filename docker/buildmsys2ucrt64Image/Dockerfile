@@ -1,77 +1,102 @@
+# escape=`
 # buildmsys2ucrt64 image: this image is used to build mbsim-env for Windows
 
 FROM mcr.microsoft.com/windows/servercore:ltsc2019
 
 # install msys2
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
-RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; \
-  Invoke-WebRequest -UseBasicParsing -uri "https://github.com/msys2/msys2-installer/releases/download/nightly-x86_64/msys2-base-x86_64-latest.sfx.exe" -OutFile msys2.exe; \
-  .\msys2.exe -y -oC:\; \
-  Remove-Item msys2.exe ; \
-  function msys() { C:\msys64\usr\bin\bash.exe @('-lc') + @Args; } \
-  msys ' '; \
-  msys 'pacman --noconfirm -Syuu'; \
-  msys 'pacman --noconfirm -Syuu'; \
+RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; `
+  Invoke-WebRequest -UseBasicParsing -uri "https://github.com/msys2/msys2-installer/releases/download/nightly-x86_64/msys2-base-x86_64-latest.sfx.exe" -OutFile msys2.exe; `
+  .\msys2.exe -y -oC:\; `
+  Remove-Item msys2.exe ; `
+  function msys() { C:\msys64\usr\bin\bash.exe @('-lc') + @Args; } `
+  msys ' '; `
+  msys 'pacman --noconfirm -Syuu'; `
+  msys 'pacman --noconfirm -Syuu'; `
   msys 'pacman --noconfirm -Scc';
 
-## set msys2 as default shell: you NEED TO use e.g.: RUN "ls -l && ls test" (with the double quotes)
-## we cannot use something like entrypoint_sys2.bat as wrapper script since e.g. "&&" is not passed as argument by docker Windows
-#ENV MSYSTEM=UCRT64 CHERE_INVOKING=yes
-#SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
-#
-## install msys2 pacman
-#RUN "pacman --noconfirm -S \
-#  dos2unix \
-#  git \
-#  patch \
-#  mingw-w64-ucrt-x86_64-arpack \
-#  mingw-w64-ucrt-x86_64-autotools \
-#  mingw-w64-ucrt-x86_64-boost \
-#  mingw-w64-ucrt-x86_64-cmake \
-#  mingw-w64-ucrt-x86_64-doxygen \
-#  mingw-w64-ucrt-x86_64-gcc \
-#  mingw-w64-ucrt-x86_64-graphviz \
-#  mingw-w64-ucrt-x86_64-hdf5 \
-#  mingw-w64-ucrt-x86_64-octave \
-#  mingw-w64-ucrt-x86_64-openblas \
-#  mingw-w64-ucrt-x86_64-python-numpy \
-#  mingw-w64-ucrt-x86_64-python-sympy \
-#  mingw-w64-ucrt-x86_64-qwt-qt5 \
-#  mingw-w64-ucrt-x86_64-soqt \
-#  mingw-w64-ucrt-x86_64-spooles \
-#  mingw-w64-ucrt-x86_64-swig \
-#  mingw-w64-ucrt-x86_64-xalan-c \
-#  mingw-w64-ucrt-x86_64-xerces-c \
-#  mingw-w64-ucrt-x86_64-ccache \
-#  mingw-w64-ucrt-x86_64-python-requests \
-#  mingw-w64-ucrt-x86_64-python-pip \
-#  mingw-w64-ucrt-x86_64-python-pygithub \
-#  which \
-#  file \
-#  mingw-w64-ucrt-x86_64-python-h5py \
-#  mingw-w64-ucrt-x86_64-python-pytz \
-#  mingw-w64-ucrt-x86_64-python-sqlparse \
-#  mingw-w64-ucrt-x86_64-python-psutil \
-#  mingw-w64-ucrt-x86_64-libarchive \
-#  mingw-w64-ucrt-x86_64-diffutils \
-#  mingw-w64-ucrt-x86_64-python-psycopg2 \
-#  mingw-w64-ucrt-x86_64-sqlite3 \
-#  mingw-w64-ucrt-x86_64-python-asgiref \
-#  mingw-w64-ucrt-x86_64-python-tzdata \
-#  mingw-w64-ucrt-x86_64-python-bcrypt \
-#  mingw-w64-ucrt-x86_64-python-cryptography \
-#  mingw-w64-ucrt-x86_64-python-pynacl \
-#  mingw-w64-ucrt-x86_64-python-six \
-#  && pacman --noconfirm -Scc"
-## mfmf java must be installed
-#
-## install using pip
-#RUN "pip install django==3.2 django-allauth==0.48 django-octicons==1.0 paramiko==2.9"
-#
-## patch swig
-#RUN "mkdir /context"
-#COPY docker/buildmsys2ucrt64Image/swig.git.patch c:/msys64/context/swig.git.patch
-#RUN "cd /ucrt64/share/swig/4.1.1 && patch -p2 < /context/swig.git.patch"
+# set msys2 as default shell: you NEED TO use e.g.: RUN "ls -l && ls test" (with the double quotes)
+# we cannot use something like entrypoint_sys2.bat as wrapper script since e.g. "&&" is not passed as argument by docker Windows
+ENV MSYSTEM=UCRT64 CHERE_INVOKING=yes
+SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
+
+# install msys2 using pacman
+RUN "pacman --noconfirm -S `
+  dos2unix `
+  patch `
+  mingw-w64-ucrt-x86_64-arpack `
+  mingw-w64-ucrt-x86_64-autotools `
+  mingw-w64-ucrt-x86_64-boost `
+  mingw-w64-ucrt-x86_64-cmake `
+  mingw-w64-ucrt-x86_64-doxygen `
+  mingw-w64-ucrt-x86_64-gcc `
+  mingw-w64-ucrt-x86_64-graphviz `
+  mingw-w64-ucrt-x86_64-hdf5 `
+  mingw-w64-ucrt-x86_64-octave `
+  mingw-w64-ucrt-x86_64-openblas `
+  mingw-w64-ucrt-x86_64-7zip `
+  mingw-w64-ucrt-x86_64-python-numpy `
+  mingw-w64-ucrt-x86_64-python-sympy `
+  mingw-w64-ucrt-x86_64-python-h5py `
+  mingw-w64-ucrt-x86_64-python-psutil `
+  mingw-w64-ucrt-x86_64-python-pygithub `
+  mingw-w64-ucrt-x86_64-python-paramiko `
+  mingw-w64-ucrt-x86_64-qwt-qt5 `
+  mingw-w64-ucrt-x86_64-diffutils `
+  mingw-w64-ucrt-x86_64-soqt-qt5 `
+  mingw-w64-ucrt-x86_64-spooles `
+  mingw-w64-ucrt-x86_64-swig `
+  mingw-w64-ucrt-x86_64-xalan-c `
+  mingw-w64-ucrt-x86_64-xerces-c `
+  mingw-w64-ucrt-x86_64-ccache `
+  mingw-w64-ucrt-x86_64-python-pip `
+  mingw-w64-ucrt-x86_64-python-asgiref `
+  mingw-w64-ucrt-x86_64-python-pytz `
+  mingw-w64-ucrt-x86_64-python-sqlparse `
+  mingw-w64-ucrt-x86_64-python-requests `
+  mingw-w64-ucrt-x86_64-python-pyjwt `
+  mingw-w64-ucrt-x86_64-python-cryptography `
+  mingw-w64-ucrt-x86_64-python-cffi `
+  mingw-w64-ucrt-x86_64-python-defusedxml `
+  mingw-w64-ucrt-x86_64-python-oauthlib `
+  mingw-w64-ucrt-x86_64-python-psycopg2 `
+  mingw-w64-ucrt-x86_64-python-requests-oauthlib && `
+  pacman --noconfirm -Scc"
+
+# Install mesa for software OpenGL (only needed to run GUI programs in VMs)
+RUN "mkdir mesa && cd mesa && `
+  wget --no-verbose https://github.com/pal1000/mesa-dist-win/releases/download/23.1.9/mesa3d-23.1.9-release-msvc.7z && `
+  7z x mesa3d-23.1.9-release-msvc.7z && `
+  cmd //c systemwidedeploy.cmd 1 && `
+  cd .. && for i in {1..30}; do sleep 1; echo Try $i; rm -rf mesa && break; done"
+
+# Install pip packages
+RUN "pip install --upgrade pip && pip install django==3.2 django-allauth==0.47 django-octicons==1.0"
+
+
+# patch swig
+RUN "mkdir /context"
+COPY docker/buildmsys2ucrt64Image/swig.git.patch c:/msys64/context/swig.git.patch
+RUN "cd /ucrt64/share/swig/4.1.1 && patch -p2 < /context/swig.git.patch"
+
+SHELL ["powershell", "-Command"]
+RUN Invoke-WebRequest -Uri "https://github.com/microsoft/winget-cli/releases/download/v1.6.3482/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" -OutFile "WinGet.msixbundle"
+RUN Add-AppxPackage "WinGet.msixbundle"
+RUN winget -h
+SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
+RUN "winget -h"
+
+# Add git and gh to msys2 path
+#RUN "echo 'PATH=\"$PATH:/c/Program Files/Git/bin:/c/Program Files/GitHub CLI\"' >> ~/.bash_profile"
+
+
+
+
+
+
+
+##mfmf merge with above pacman
+#RUN "pacman --noconfirm -S mingw-w64-ucrt-x86_64-7zip"
 #
 ## ccache for autotools
 ## ccache for cmake
