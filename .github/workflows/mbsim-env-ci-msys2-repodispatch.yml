@@ -98,7 +98,7 @@ jobs:
           git clone -q --depth 1 https://github.com/mbsim-env/openmbv.git &&
           git clone -q --depth 1 https://github.com/mbsim-env/mbsim.git
       - name: "patch swig"
-        run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $HOME/build/msys2ucrt64Build/swig.git.patch
+        run: cd /ucrt64/share/swig/4.1.1 && patch -p2 < $HOME/build/docker/buildmsys2ucrt64Image/swig.git.patch
       - name: "Create build UUID"
         shell: python
         id: matrixUUID
