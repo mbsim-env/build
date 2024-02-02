@@ -80,8 +80,13 @@ COPY docker/buildmsys2ucrt64Image/swig.git.patch c:/msys64/context/swig.git.patc
 RUN "cd /ucrt64/share/swig/4.1.1 && patch -p2 < /context/swig.git.patch"
 
 SHELL ["powershell", "-Command"]
-RUN Invoke-WebRequest -Uri "https://github.com/microsoft/winget-cli/releases/download/v1.6.3482/Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle" -OutFile "WinGet.msixbundle"
-RUN Add-AppxPackage "WinGet.msixbundle"
+RUN $progressPreference = 'silentlyContinue'
+RUN Invoke-WebRequest -Uri https://aka.ms/getwinget -OutFile Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
+RUN Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -OutFile Microsoft.VCLibs.x64.14.00.Desktop.appx
+RUN Invoke-WebRequest -Uri https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.7.3/Microsoft.UI.Xaml.2.7.x64.appx -OutFile Microsoft.UI.Xaml.2.7.x64.appx
+RUN Add-AppxPackage Microsoft.VCLibs.x64.14.00.Desktop.appx
+RUN Add-AppxPackage Microsoft.UI.Xaml.2.7.x64.appx
+RUN Add-AppxPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
 RUN winget -h
 SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
 RUN "winget -h"
