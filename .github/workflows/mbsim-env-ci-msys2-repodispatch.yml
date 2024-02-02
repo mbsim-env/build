@@ -76,8 +76,7 @@ jobs:
           mingw-w64-ucrt-x86_64-python-cffi
           mingw-w64-ucrt-x86_64-python-defusedxml
           mingw-w64-ucrt-x86_64-python-oauthlib
-          mingw-w64-ucrt-x86_64-postgresql
-          unzip
+          mingw-w64-ucrt-x86_64-python-psycopg2
           mingw-w64-ucrt-x86_64-python-requests-oauthlib &&
           pacman --noconfirm -Scc
       - name: "Install mesa for software OpenGL (only needed to run GUI programs in VMs)"
@@ -89,10 +88,6 @@ jobs:
           cd .. && rm -rf mesa
       - name: "Install pip packages"
         run: pip install --upgrade pip && pip install django==3.2 django-allauth==0.47 django-octicons==1.0
-      - name: "Install self made psycopg2"
-        run: >
-          wget https://raw.githubusercontent.com/friedrichatgc/buildci/master/dl/psycopg2-2.9.9.mingw_x86_64_ucrt.zip &&
-          unzip -d /c/ psycopg2-2.9.9.mingw_x86_64_ucrt.zip
       - name: "Add git and gh to msys2 path"
         run: echo 'PATH="$PATH:/c/Program Files/Git/bin:/c/Program Files/GitHub CLI"' >> ~/.bash_profile
       - name: "Clone all git repos"
