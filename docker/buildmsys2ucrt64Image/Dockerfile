@@ -126,4 +126,5 @@ CMD []
 # call this script when running the container
 # (start python3 with inside of the msys2 environment)
 COPY docker/buildmsys2ucrt64Image/entrypoint_msys2.bat c:/msys64/context/entrypoint_msys2.bat
+USER ContainerUser
 ENTRYPOINT ["c:\\msys64\\context\\entrypoint_msys2.bat", "/ucrt64/bin/python3", "/context/entrypoint.py"]
