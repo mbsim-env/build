@@ -7,7 +7,7 @@ import subprocess
 import sys
 import psutil
 import django
-sys.path.append("/context/mbsimenv")
+sys.path.append("c:/msys64/context/mbsimenv")
 import service
 
 # arguments

@@ -71,74 +71,59 @@ RUN "mkdir mesa && cd mesa && `
   cd .. && for i in {1..30}; do sleep 1; echo Try $i; rm -rf mesa && break; done"
 
 # Install pip packages
-RUN "pip install --upgrade pip && pip install django==3.2 django-allauth==0.47 django-octicons==1.0"
-
+RUN "python.exe -m pip install --upgrade pip==24.0 && python.exe -m pip install django==3.2 django-allauth==0.47 django-octicons==1.0"
 
 # patch swig
 RUN "mkdir /context"
 COPY docker/buildmsys2ucrt64Image/swig.git.patch c:/msys64/context/swig.git.patch
 RUN "cd /ucrt64/share/swig/4.1.1 && patch -p2 < /context/swig.git.patch"
 
-SHELL ["powershell", "-Command"]
-RUN $progressPreference = 'silentlyContinue'
-RUN Invoke-WebRequest -Uri https://aka.ms/getwinget -OutFile Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
-RUN Invoke-WebRequest -Uri https://aka.ms/Microsoft.VCLibs.x64.14.00.Desktop.appx -OutFile Microsoft.VCLibs.x64.14.00.Desktop.appx
-RUN Invoke-WebRequest -Uri https://github.com/microsoft/microsoft-ui-xaml/releases/download/v2.7.3/Microsoft.UI.Xaml.2.7.x64.appx -OutFile Microsoft.UI.Xaml.2.7.x64.appx
-RUN Add-AppxPackage Microsoft.VCLibs.x64.14.00.Desktop.appx
-RUN Add-AppxPackage Microsoft.UI.Xaml.2.7.x64.appx
-RUN Add-AppxPackage Microsoft.DesktopAppInstaller_8wekyb3d8bbwe.msixbundle
-RUN winget -h
-SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
-RUN "winget -h"
+# install msys2 using pacman (mfmf merge with above)
+RUN "pacman --noconfirm -S unzip && pacman --noconfirm -Scc"
 
-# Add git and gh to msys2 path
-#RUN "echo 'PATH=\"$PATH:/c/Program Files/Git/bin:/c/Program Files/GitHub CLI\"' >> ~/.bash_profile"
+#install git
+RUN "wget https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/MinGit-2.43.0-64-bit.zip && `
+  unzip -d /c/git MinGit-2.43.0-64-bit.zip && rm -f MinGit-2.43.0-64-bit.zip"
+# (mfmf move up)
+ENV HOME=/home/user
+RUN "echo 'PATH=\"$PATH:/c/git/mingw64/bin\"' >> ~/.bash_profile"
 
+# ccache for autotools
+# ccache for cmake
+ENV CC="ccache gcc" `
+    CXX="ccache g++" `
+    CMAKE_CXX_COMPILER_LAUNCHER=ccache `
+    CMAKE_C_COMPILER_LAUNCHER=ccache `
+    CCACHE_DIR=/mbsim-ccache
 
+# enable swig interface to mbsim
+ENV MBSIM_SWIG=1
 
+# set labels
+LABEL org.label-schema.schema-version="1.0" `
+  org.label-schema.name="mbsimenv/buildmsys2ucrt64" `
+  org.label-schema.description="Automatic build (win64 using msys2-ucrt64) for the MBSim-Environment." `
+  org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/buildmsys2ucrt64Image" `
+  org.label-schema.vendor="MBSim-Environment"
 
+# create volume direcotires
+RUN "mkdir /mbsim-env /mbsim-ccache"
 
+# copy
+COPY docker/buildImage/distribute.py            c:/msys64/context/distribute.py
+COPY docker/buildmsys2ucrt64Image/entrypoint.py c:/msys64/context/entrypoint.py
+COPY django/mbsimenv/build.py                   c:/msys64/context/mbsimenv/build.py
+COPY django/mbsimenv/runexamples.py             c:/msys64/context/mbsimenv/runexamples.py
+COPY django/mbsimenv/mbsimenvSecrets.py         c:/msys64/context/mbsimenv/mbsimenvSecrets.py
+COPY django/mbsimenv/mbsimenv                   c:/msys64/context/mbsimenv/mbsimenv
+COPY django/mbsimenv/base                       c:/msys64/context/mbsimenv/base
+COPY django/mbsimenv/builds                     c:/msys64/context/mbsimenv/builds
+COPY django/mbsimenv/runexamples                c:/msys64/context/mbsimenv/runexamples
+COPY django/mbsimenv/service                    c:/msys64/context/mbsimenv/service
 
-
-##mfmf merge with above pacman
-#RUN "pacman --noconfirm -S mingw-w64-ucrt-x86_64-7zip"
-#
-## ccache for autotools
-## ccache for cmake
-#ENV CC="ccache gcc" \
-#    CXX="ccache g++" \
-#    CMAKE_CXX_COMPILER_LAUNCHER=ccache \
-#    CMAKE_C_COMPILER_LAUNCHER=ccache \
-#    CCACHE_DIR=/mbsim-ccache
-#
-## enable swig interface to mbsim
-#ENV MBSIM_SWIG=1
-#
-## set labels
-#LABEL org.label-schema.schema-version="1.0" \
-#  org.label-schema.name="mbsimenv/buildmsys2ucrt64" \
-#  org.label-schema.description="Automatic build (win64 using msys2-ucrt64) for the MBSim-Environment." \
-#  org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/buildmsys2ucrt64Image" \
-#  org.label-schema.vendor="MBSim-Environment"
-#
-## create volume direcotires
-#RUN "mkdir /mbsim-env /mbsim-ccache"
-#
-## copy
-#COPY docker/buildImage/distribute.py            c:/msys64/context/distribute.py
-#COPY docker/buildmsys2ucrt64Image/entrypoint.py c:/msys64/context/entrypoint.py
-#COPY django/mbsimenv/build.py                   c:/msys64/context/mbsimenv/build.py
-#COPY django/mbsimenv/runexamples.py             c:/msys64/context/mbsimenv/runexamples.py
-#COPY django/mbsimenv/mbsimenvSecrets.py         c:/msys64/context/mbsimenv/mbsimenvSecrets.py
-#COPY django/mbsimenv/mbsimenv                   c:/msys64/context/mbsimenv/mbsimenv
-#COPY django/mbsimenv/base                       c:/msys64/context/mbsimenv/base
-#COPY django/mbsimenv/builds                     c:/msys64/context/mbsimenv/builds
-#COPY django/mbsimenv/runexamples                c:/msys64/context/mbsimenv/runexamples
-#COPY django/mbsimenv/service                    c:/msys64/context/mbsimenv/service
-#
-## these are the default arguments when running the container
-#CMD []
-## call this script when running the container
-## (start python3 with inside of the msys2 environment)
-#COPY docker/buildmsys2ucrt64Image/entrypoint_msys2.bat c:/msys64/context/entrypoint_msys2.bat
-#ENTRYPOINT ["c:\\msys64\\context\\entrypoint_msys2.bat", "/ucrt64/bin/python3", "/context/entrypoint.py"]
+# these are the default arguments when running the container
+CMD []
+# call this script when running the container
+# (start python3 with inside of the msys2 environment)
+COPY docker/buildmsys2ucrt64Image/entrypoint_msys2.bat c:/msys64/context/entrypoint_msys2.bat
+ENTRYPOINT ["c:\\msys64\\context\\entrypoint_msys2.bat", "/ucrt64/bin/python3", "/context/entrypoint.py"]
