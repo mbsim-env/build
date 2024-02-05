@@ -116,8 +116,8 @@ if args.buildRunID is not None:
 
 # run build
 ret=subprocess.call(
-  ["/context/mbsimenv/build.py"]+ARGS+[
-  "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun",
+  ["c:/msys64/ucrt64/bin/python.exe", "c:/mbsim-env/build/django/mbsimenv/build.py"]+ARGS+[
+  "--sourceDir", "c:/mbsim-env", "--binSuffix=-dockermsys2ucrt64", "--prefix", "c:/mbsim-env/local-dockermsys2ucrt64", "-j", str(args.jobs), "--buildSystemRun",
   "--fmatvecBranch", args.fmatvecBranch,
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
   "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix",
@@ -132,8 +132,6 @@ ret=subprocess.call(
   "--with-boost-regex-lib=boost_regex-mt",
   "--with-boost-timer-lib=boost_timer-mt",
   "--with-boost-date-time-lib=boost_date_time-mt",
-  "--with-qwt-inc-prefix=/ucrt64/include/qwt-qt5",
-  "--with-qwt-lib-name=qwt-qt5",
   "--passToCMake",
   "-DSPOOLES_INCLUDE_DIRS=/ucrt64/include/spooles",
   "-DSPOOLES_LIBRARIES=/ucrt64/lib/libspooles.a",

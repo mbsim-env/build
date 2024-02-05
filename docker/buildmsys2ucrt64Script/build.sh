@@ -113,111 +113,23 @@ while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1
   --passToConfigure \
   --enable-shared --disable-static \
   --enable-python \
-  --with-hdf5-prefix=/3rdparty/local \
-  --with-qmake=/usr/bin/x86_64-w64-mingw32-qmake-qt5 \
-  --with-qwt-inc-prefix=/usr/x86_64-w64-mingw32/sys-root/mingw/include/qt5/qwt --with-qwt-lib-name=qwt-qt5 \
-  --with-windres=x86_64-w64-mingw32-windres \
-  --with-mkoctfile=/3rdparty/local/bin/mkoctfile.exe \
-  --with-javajniosdir=/context/java_jni \
-  --with-pythonversion=3.4 \
-  --with-boost-filesystem-lib=boost_filesystem-mt-x64 \
-  --with-boost-thread-lib=boost_thread-mt-x64 \
-  --with-boost-program-options-lib=boost_program_options-mt-x64 \
-  --with-boost-system-lib=boost_system-mt-x64 \
-  --with-boost-regex-lib=boost_regex-mt-x64 \
-  --with-boost-date-time-lib=boost_date_time-mt-x64 \
-  --with-boost-timer-lib=boost_timer-mt-x64 \
-  --with-boost-chrono-lib=boost_chrono-mt-x64 \
-  CXXFLAGS="$CXXFLAGS" \
-  CFLAGS="$CFLAGS" \
-  FFLAGS="$FFLAGS" \
-  PYTHON_CFLAGS="-I/3rdparty/local/python-win64/include -DMS_WIN64" \
-  PYTHON_LIBS="-L/3rdparty/local/python-win64/libs -L/3rdparty/local/python-win64 -lpython36" \
-  PYTHON_BIN="/3rdparty/local/python-win64/python.exe" \
-  COIN_LIBS="-L/3rdparty/local/lib -lCoin" \
-  COIN_CFLAGS=-I/3rdparty/local/include \
-  SOQT_LIBS="-L/3rdparty/local/lib -lSoQt" \
-  SOQT_CFLAGS=-I/3rdparty/local/include \
+  --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 \
+  --with-qwt-lib-name=qwt-qt5 \
+  --with-boost-system-lib=boost_system-mt \
+  --with-boost-filesystem-lib=boost_filesystem-mt \
+  --with-boost-chrono-lib=boost_chrono-mt \
+  --with-boost-thread-lib=boost_thread-mt \
+  --with-boost-program-options-lib=boost_program_options-mt \
+  --with-boost-regex-lib=boost_regex-mt \
+  --with-boost-timer-lib=boost_timer-mt \
+  --with-boost-date-time-lib=boost_date_time-mt \
   "${CONFIGUREARGS[@]}" \
   --passToCMake \
-  -DCMAKE_TOOLCHAIN_FILE=/mbsim-env/build/docker/buildwin64Image/toolchain-mingw64.cmake \
-  -DBLAS_LIBRARIES=/3rdparty/local/lib/libopenblas.dll.a -DBLAS=1 \
-  -DLAPACK_LIBRARIES=/3rdparty/local/lib/libopenblas.dll.a -DLAPACK=1 \
-  -DARPACK_INCLUDE_DIRS=/3rdparty/local/include/arpack -DARPACK_LIBRARIES=/3rdparty/local/lib/libarpack.dll.a \
-  -DSPOOLES_INCLUDE_DIRS=/3rdparty/local/include/spooles -DSPOOLES_LIBRARIES=/3rdparty/local/lib/spooles.a \
-  -DBOOST_ROOT=/usr/x86_64-w64-mingw32/sys-root/mingw \
-  -DBoost_ARCHITECTURE=-x64 \
+  -DSPOOLES_INCLUDE_DIRS=/ucrt64/include/spooles \
+  -DSPOOLES_LIBRARIES=/ucrt64/lib/libspooles.a \
   -DCMAKE_BUILD_TYPE=$BT \
   -DCMAKE_CXX_FLAGS_${BT^^}="$CXXFLAGS" \
   -DCMAKE_C_FLAGS_${BT^^}="$CFLAGS" \
   -DCMAKE_Fortran_FLAGS_${BT^^}="$FFLAGS" \
   "${CMAKEARGS[@]}" \
   "${RUNEXAMPLEARGS[@]}"
-
-####################mfmf
-#BASEDIR=$(pwd)
-#
-#export MBSIM_SWIG=1
-#export PATH=$BASEDIR/local-msys2ucrt64/bin:$PATH
-#
-#if (return 0 2>/dev/null); then
-#  echo "Script is sources! (just setting envvars)"
-#  return
-#fi
-#
-#
-#
-#export CXXFLAGS="-O0 -g"
-#export CFLAGS="-O0 -g"
-#export FFLAGS="-O0 -g"
-#export FCFLAGS="-O0 -g"
-#export LDFLAGS="-no-pie" # valgrind vdcore.* files need -no-pie to work with gdb
-#
-#ARGS=()
-#ARGS+=("--disableUpdate")
-##ARGS+=("--disableConfigure")
-#ARGS+=("--disableMakeClean")
-##ARGS+=("--disableMake")
-##ARGS+=("--disableMakeCheck")
-##ARGS+=("--disableDoxygen")
-##ARGS+=("--disableXMLDoc")
-##ARGS+=("--disableRunExamples")
-#ARGS+=("--enableDistribution")
-#
-#RUNEXAMPLESARGS=()
-#RUNEXAMPLESARGS+=("--checkGUIs")
-##RUNEXAMPLESARGS+=("xmlflat/hierachical_modelling")
-##RUNEXAMPLESARGS+=("xml/hierachical_modelling")
-#
-#
-#
-#export CC="ccache gcc"
-#export CXX="ccache g++"
-#
-#python3 $(dirname $0)/../django/mbsimenv/build.py \
-#  "${ARGS[@]}" \
-#  "$@" \
-#  --sourceDir $BASEDIR --binSuffix=-msys2ucrt64 --prefix $BASEDIR/local-msys2ucrt64 --buildType msys2ucrt64 \
-#  --passToConfigure \
-#  --disable-static \
-#  --with-boost-system-lib=boost_system-mt \
-#  --with-boost-filesystem-lib=boost_filesystem-mt \
-#  --with-boost-chrono-lib=boost_chrono-mt \
-#  --with-boost-thread-lib=boost_thread-mt \
-#  --with-boost-program-options-lib=boost_program_options-mt \
-#  --with-boost-regex-lib=boost_regex-mt \
-#  --with-boost-timer-lib=boost_timer-mt \
-#  --with-boost-date-time-lib=boost_date_time-mt \
-#  --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 \
-#  --with-qwt-lib-name=qwt-qt5 \
-#  --passToCMake \
-#  -DSPOOLES_INCLUDE_DIRS=/ucrt64/include/spooles \
-#  -DSPOOLES_LIBRARIES=/ucrt64/lib/libspooles.a \
-#  -DCMAKE_EXPORT_COMPILE_COMMANDS=1 \
-#  -DCMAKE_BUILD_TYPE=Release \
-#  -DCMAKE_CXX_FLAGS_RELEASE="$CXXFLAGS" \
-#  -DCMAKE_C_FLAGS_RELEASE="$CFLAGS" \
-#  -DCMAKE_Fortran_FLAGS_RELEASE="$FFLAGS" \
-#  -DCMAKE_CXX_COMPILER_LAUNCHER=ccache \
-#  --passToRunexamples \
-#  "${RUNEXAMPLESARGS[@]}"

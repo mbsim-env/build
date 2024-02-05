@@ -64,11 +64,8 @@ if [ "$BASENAME" == "mbsbd" ]; then
   done
   
   # run in mbsimenv/buildmsys2ucrt64 docker image
-#mfmf  # -e PATH= is the PATH in the container appended by :/mbsim-env/local-dockerwin64/bin and prefixed by .:
-#mfmf  # -e PKG_CONFIG_PATH= is the PKG_CONFIG_PATH in the container appended by :/mbsim-env/local-dockerwin64/lib/pkgconfig:/mbsim-env/local-dockerwin64/lib64/pkgconfig
-#mfmf  # -e LD_LIBRARY_PATH= ...
-#mfmf      -e PATH=".:/home/dockeruser/.local/bin:/home/dockeruser/bin:/usr/lib64/ccache:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/mbsim-env/local-dockerwin64/bin" \
-#mfmf      -e PKG_CONFIG_PATH="/3rdparty/local/lib/pkgconfig:/usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig:/mbsim-env/local-dockerwin64/lib/pkgconfig:/mbsim-env/local-dockerwin64/lib64/pkgconfig" \
+  # -e PATH= is the PATH in the container appended by :/mbsim-env/local-dockermsys2ucrt64/bin and prefixed by .:
+  # -e PKG_CONFIG_PATH= is the PKG_CONFIG_PATH in the container appended by :/mbsim-env/local-dockermsys2ucrt64/lib/pkgconfig:/mbsim-env/local-dockermsys2ucrt64/lib64/pkgconfig
   mkdir -p "$MBSIMENVDIR/.ccache" "$MBSIMENVDIR/.home"
   function callDocker {
     MBSIMENVDIR_WIN=$(cygpath -w $MBSIMENVDIR)
@@ -78,7 +75,9 @@ if [ "$BASENAME" == "mbsbd" ]; then
       -v "$MBSIMENVDIR_WIN/.ccache":c:/mbsim-ccache \
       -v "$MBSIMENVDIR_WIN/.home":c:/tmp/home \
       -e GIT_COMMITTER_NAME=dummy -e GIT_COMMITTER_EMAIL=dummy \
-      -e HOME=/tmp/home \
+      -e HOME=/c/tmp/home \
+      -e PATH=".:/ucrt64/bin:/usr/local/bin:/usr/bin:/bin:/c/Windows/System32:/c/Windows:/c/Windows/System32/Wbem:/c/Windows/System32/WindowsPowerShell/v1.0/:/usr/bin/site_perl:/usr/bin/vendor_perl:/usr/bin/ore_perl:/c/git/mingw64/bin:/mbsim-env/local-dockermsys2ucrt64/bin" \
+      -e PKG_CONFIG_PATH="/ucrt64/lib/pkgconfig:/ucrt64/share/pkgconfig:/mbsim-env/local-dockermsys2ucrt64/lib/pkgconfig:/mbsim-env/local-dockermsys2ucrt64/lib64/pkgconfig" \
       -e MBSIM_SET_MINIMAL_TEND \
       -e MBXMLUTILS_DEACTIVATE_BLOCK \
       -w "$CURDIR" \
