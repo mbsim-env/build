@@ -9,7 +9,6 @@ import urllib
 import math
 import os
 import datetime
-import colorsys
 import requests
 from octicons.templatetags.octicons import octicon
 
@@ -832,14 +831,6 @@ def allExampleStatic(request):
 
 
 
-def lcovColor(rate):
-  rateMin=0.7
-  if rate<rateMin:
-    r=0
-  else:
-    r=(rate-rateMin)/(1-rateMin)
-  return "#"+"".join(map(lambda x: hex(int(x*255))[2:].zfill(2),colorsys.hsv_to_rgb(r*2/6, 1, 0.75)))
-
 def readLCov(f, stopAfterFile=None):
   lcovdata=[]
   readNextFile=True
@@ -923,7 +914,7 @@ class DirFileCoverage(base.views.Base):
         totalLines=treenode_children_p[TOTALLINES]
         coveredLines=treenode_children_p[COVEREDLINES]
         rate=1 if totalLines==0 else coveredLines/totalLines
-        color=lcovColor(rate)
+        color=base.helper.lcovColor(rate)
         if len(treenode_children_p[CHILDREN])==0:
           icon=octicon("file", height="16")
           href=django.urls.reverse('runexamples:filecoverage', args=[self.run.id, prefixIdx, treenode_children_p[ABSFILE]])
@@ -969,7 +960,7 @@ class FileCoverage(base.views.Base):
     coveredLines=sum(1 for _ in filter(lambda linecoverage_item: linecoverage_item[1]>0, linecoverage))
     rate=1 if totalLines==0 else coveredLines/totalLines
     context['rate']=rate*100
-    color=lcovColor(rate)
+    color=base.helper.lcovColor(rate)
     context['color']=color
     context['rateprogress']=inlineProgressBar(rate, color, 200, 18)
 

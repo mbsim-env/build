@@ -1,0 +1,99 @@
+#!/bin/bash
+
+# base variables
+BASENAME=$(basename $0)
+DIRNAME=$(dirname $0)
+
+if [ "$BASENAME" == "mbsbd" ]; then
+  # direct run (not via a link)
+
+  SCRIPTDIR=$(readlink -f $DIRNAME)
+  MBSIMENVDIR=$(readlink -f "$SCRIPTDIR"/../../..)
+  
+  # help
+  if [ $# -le 0 ]; then
+    echo "This script is not intended to be used directly! Start one of the following symbolic links instead:"
+    (cd $DIRNAME; find * -type l)
+    echo ""
+    echo "This will start the corresponding script/program in a mbsimenv/buildmsys2ucrt64 Docker container."
+    echo "If you don't know Docker consider a mbsimenv/buildmsys2ucrt64 container as a virtual machine with mbsimenv installed."
+    echo "All arguments are passed to the command running in the container."
+    exit 0
+  fi
+  
+  # check docker
+  if ! docker version > /dev/null; then
+    echo 'Cannot run docker. Please install and enable docker as the current user or'
+    echo '(not recommended) run this script as root.'
+  fi
+
+  MBSIMENVTAGNAME=${MBSIMENVTAGNAME:-latest}
+
+  # convert the absolute path stored in PABS to the corresponding docker path
+  function convertPABS {
+    PCANO=$(readlink -m $PABS)
+    if [ "${PCANO:0:${#MBSIMENVDIR}}" == "$MBSIMENVDIR" ]; then
+      PABS=/mbsim-env${PCANO:${#MBSIMENVDIR}}
+    else
+      echo "ERROR: The path $PABS is not a subdir of $MBSIMENVDIR. This cannot be handled by $BASENAME."
+      echo "If you mean a native path in the Docker container prefix this argument with DOCKERDIR:"
+      exit 1
+    fi
+  }
+  
+  # convert cur dir
+  PABS=$PWD; convertPABS; CURDIR=$PABS
+  
+  #convert args
+  INTERACTIVE=""
+  ARGS=()
+  while [ $# -ge 1 ]; do
+    if [ "_$1" == "_MBSIMENV_INTERACTIVE" ]; then
+      INTERACTIVE="-ti"
+    elif [ "${1:0:1}" == "/" ]; then
+      # convert absolute path
+      PABS=$1; convertPABS
+      ARGS+=("$PABS")
+    elif [ "${1:0:10}" == "DOCKERDIR:" ]; then
+      ARGS+=("${1:10}")
+    else
+      # keep everything else
+      ARGS+=("$1")
+    fi
+    shift
+  done
+  
+  # run in mbsimenv/buildmsys2ucrt64 docker image
+#mfmf  # -e PATH= is the PATH in the container appended by :/mbsim-env/local-dockerwin64/bin and prefixed by .:
+#mfmf  # -e PKG_CONFIG_PATH= is the PKG_CONFIG_PATH in the container appended by :/mbsim-env/local-dockerwin64/lib/pkgconfig:/mbsim-env/local-dockerwin64/lib64/pkgconfig
+#mfmf  # -e LD_LIBRARY_PATH= ...
+#mfmf      -e PATH=".:/home/dockeruser/.local/bin:/home/dockeruser/bin:/usr/lib64/ccache:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/mbsim-env/local-dockerwin64/bin" \
+#mfmf      -e PKG_CONFIG_PATH="/3rdparty/local/lib/pkgconfig:/usr/x86_64-w64-mingw32/sys-root/mingw/lib/pkgconfig:/mbsim-env/local-dockerwin64/lib/pkgconfig:/mbsim-env/local-dockerwin64/lib64/pkgconfig" \
+  mkdir -p "$MBSIMENVDIR/.ccache" "$MBSIMENVDIR/.home"
+  function callDocker {
+    MBSIMENVDIR_WIN=$(cygpath -w $MBSIMENVDIR)
+    docker run --init --entrypoint= --rm \
+      $INTERACTIVE \
+      -v "$MBSIMENVDIR_WIN":c:/mbsim-env \
+      -v "$MBSIMENVDIR_WIN/.ccache":c:/mbsim-ccache \
+      -v "$MBSIMENVDIR_WIN/.home":c:/tmp/home \
+      -e GIT_COMMITTER_NAME=dummy -e GIT_COMMITTER_EMAIL=dummy \
+      -e HOME=/tmp/home \
+      -e MBSIM_SET_MINIMAL_TEND \
+      -e MBXMLUTILS_DEACTIVATE_BLOCK \
+      -w "$CURDIR" \
+      mbsimenv/buildmsys2ucrt64:$MBSIMENVTAGNAME \
+      "${ARGS[@]}"
+  }
+  if [ "_$INTERACTIVE" == "_" ]; then
+    callDocker 1> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g") 2> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g" >&2)
+  else
+    callDocker
+  fi
+
+else
+  # run via a link
+
+  $DIRNAME/mbsbd $BASENAME "$@"
+
+fi

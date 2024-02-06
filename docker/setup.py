@@ -138,18 +138,23 @@ def waitContainer(container, prefix=""):
 
 runningContainers=set()
 
-allServices=[ # must be in order
-  "database",
-  "filestorage",
-  "build",
-  "buildwin64",
-  "builddoc",
-  "builddocker",
-  "proxy",
-  "webserver",
-  "webapp",
-  "webapprun",
-]
+if sys.platform=="linux":
+  allServices=[ # must be in order
+    "database",
+    "filestorage",
+    "build",
+    "buildwin64",
+    "builddoc",
+    "builddocker",
+    "proxy",
+    "webserver",
+    "webapp",
+    "webapprun",
+  ]
+else:
+  allServices=[ # must be in order
+    "buildmsys2ucrt64",
+  ]
 
 global args
 args=None
@@ -355,6 +360,13 @@ def build(s, jobs=psutil.cpu_count(False), fd=sys.stdout, baseDir=scriptdir, cac
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=baseDir+"/..",
       dockerfile="docker/buildwin64Image/Dockerfile",
+      rm=False)
+
+  elif s=="buildmsys2ucrt64":
+    return buildImage(tag="mbsimenv/buildmsys2ucrt64:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
+      buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
+      path=baseDir+"/..",
+      dockerfile="docker/buildmsys2ucrt64Image/Dockerfile",
       rm=False)
 
   elif s=="builddoc":
