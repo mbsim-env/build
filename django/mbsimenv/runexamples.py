@@ -1354,6 +1354,7 @@ def compareExample(ex):
     refFiles=[]
   cmpResFiles=[]
   cmpRess=[]
+  invalidRefFiles=[]
   for refFile in refFiles:
     # open h5 files
     with refFile.h5File.open("rb") as djangoF:
@@ -1361,7 +1362,12 @@ def compareExample(ex):
         tempF=tempfile.NamedTemporaryFile(mode='wb', delete=False)
         base.helper.copyFile(djangoF, tempF)
         tempF.close()
-        h5RefFile=h5py.File(tempF.name, "r")
+        h5RefFile = None
+        try:
+          h5RefFile=h5py.File(tempF.name, "r")
+        except:
+          invalidRefFiles.append(refFile.h5FileName)
+          continue
         cmpResFile=runexamples.models.CompareResultFile()
         cmpResFiles.append(cmpResFile) # -> append to bulk_create later on
         cmpResFile.example=ex
@@ -1395,7 +1401,7 @@ def compareExample(ex):
           # close h5 files
           h5CurFile.close()
       finally:
-        h5RefFile.close()
+        if h5RefFile is not None: h5RefFile.close()
         os.unlink(tempF.name)
   base.helper.bulk_create(runexamples.models.CompareResultFile, cmpResFiles, refresh=True)
   # files in current but not in reference
@@ -1404,7 +1410,7 @@ def compareExample(ex):
   curFiles.extend(glob.glob("*.mbsh5"))
   curFiles.extend(glob.glob("*.ombvh5"))
   for curFile in curFiles:
-    if not any(map(lambda x: x.h5FileName==curFile, refFiles)):
+    if not any(map(lambda x: x.h5FileName==curFile and curFile not in invalidRefFiles, refFiles)):
       cmpResFile=runexamples.models.CompareResultFile()
       cmpResFile.example=ex
       cmpResFile.h5Filename=curFile
