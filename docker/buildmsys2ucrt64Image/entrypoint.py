@@ -78,9 +78,9 @@ if args.buildType.startswith("win64-dailyrelease"):
   
 elif args.buildType == "win64-ci":
   BUILDTYPE="Debug"
-  os.environ['CXXFLAGS']=os.environ.get('CXXFLAGS', '')+" -O0 -g -gdwarf-2"
-  os.environ['CFLAGS']=os.environ.get('CFLAGS', '')+" -O0 -g -gdwarf-2"
-  os.environ['FFLAGS']=os.environ.get('FFLAGS', '')+" -O0 -g -gdwarf-2"
+  os.environ['CXXFLAGS']=os.environ.get('CXXFLAGS', '')+" -Og -g -gdwarf-2"
+  os.environ['CFLAGS']=os.environ.get('CFLAGS', '')+" -Og -g -gdwarf-2"
+  os.environ['FFLAGS']=os.environ.get('FFLAGS', '')+" -Og -g -gdwarf-2"
   ARGS=["--disableDoxygen", "--disableXMLDoc"]
   RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--disableMakeClean", "--exeExt", ".exe", "--filter", "'basic' in labels"]
 

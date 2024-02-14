@@ -92,9 +92,9 @@ if build:
 # compile flags
 if args.buildType == "linux64-ci" or args.buildType.startswith("linux64-dailydebug"):
   BUILDTYPE="Debug"
-  os.environ["CXXFLAGS"]="-O0 -g"
-  os.environ["CFLAGS"]="-O0 -g"
-  os.environ["FFLAGS"]="-O0 -g"
+  os.environ["CXXFLAGS"]="-Og -g"
+  os.environ["CFLAGS"]="-Og -g"
+  os.environ["FFLAGS"]="-Og -g"
   os.environ['LDFLAGS']="-no-pie" # valgrind vdcore.* files need -no-pie to work with gdb
 elif args.buildType.startswith("linux64-dailyrelease"):
   BUILDTYPE="Release"

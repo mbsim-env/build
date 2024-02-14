@@ -71,9 +71,9 @@ mkdir -p $MBSIMENVDIR/.home
 # debug or release build
 # set envvar for configure build and pass to --passToCMake for cmake builds, see below
 if [ $BT == "Debug" ]; then
-  export CXXFLAGS="-g -O0 -gdwarf-2"
-  export CFLAGS="-g -O0 -gdwarf-2"
-  export FFLAGS="-g -O0 -gdwarf-2"
+  export CXXFLAGS="-g -Og -gdwarf-2"
+  export CFLAGS="-g -Og -gdwarf-2"
+  export FFLAGS="-g -Og -gdwarf-2"
   export LDFLAGS="-no-pie" # valgrind vdcore.* files need -no-pie to work with gdb
 elif [ $BT == "Release" ]; then
   export CXXFLAGS="-g -O2 -gdwarf-2 -DNDEBUG"
@@ -167,10 +167,10 @@ while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1
 #
 #
 #
-#export CXXFLAGS="-O0 -g"
-#export CFLAGS="-O0 -g"
-#export FFLAGS="-O0 -g"
-#export FCFLAGS="-O0 -g"
+#export CXXFLAGS="-Og -g"
+#export CFLAGS="-Og -g"
+#export FFLAGS="-Og -g"
+#export FCFLAGS="-Og -g"
 #export LDFLAGS="-no-pie" # valgrind vdcore.* files need -no-pie to work with gdb
 #
 #ARGS=()
