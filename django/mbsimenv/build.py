@@ -545,12 +545,12 @@ def repoUpdate(run, buildInfo):
       retlocal+=abs(base.helper.subprocessCall(["git", "checkout", "-q", "HEAD~0"], repoUpdFD))
       base.helper.subprocessCall(["git", "branch", "-q", "-D", branch], repoUpdFD)
       retlocal+=abs(base.helper.subprocessCall(["git", "fetch", "-q", "-f", "--depth", "1", "origin", sha+":"+branch], repoUpdFD))
-    # set branch based on args
-    if getattr(args, repo+'Branch', "master")!="":
-      branch=branchSplit[0]
-      print('Checkout branch '+getattr(args, repo+'Branch', "master")+' in repository '+repo+":", file=repoUpdFD)
-      retlocal+=abs(base.helper.subprocessCall(["git", "checkout", "-q", branch], repoUpdFD))
-      repoUpdFD.flush()
+      # set branch based on args
+      if getattr(args, repo+'Branch', "master")!="":
+        branch=branchSplit[0]
+        print('Checkout branch '+getattr(args, repo+'Branch', "master")+' in repository '+repo+":", file=repoUpdFD)
+        retlocal+=abs(base.helper.subprocessCall(["git", "checkout", "-q", branch], repoUpdFD))
+        repoUpdFD.flush()
     # get branch and commit
     branch=base.helper.subprocessCheckOutput(["git", "rev-parse", "--abbrev-ref", "HEAD"], repoUpdFD).rstrip()
     commitidfull[repo]=base.helper.subprocessCheckOutput(["git", "log", "-n", "1", "--format=%H", "HEAD"], repoUpdFD).rstrip()

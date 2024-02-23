@@ -12,10 +12,10 @@ fi
 
 
 
-export CXXFLAGS="-O0 -g"
-export CFLAGS="-O0 -g"
-export FFLAGS="-O0 -g"
-export FCFLAGS="-O0 -g"
+export CXXFLAGS="-Og -g"
+export CFLAGS="-Og -g"
+export FFLAGS="-Og -g"
+export FCFLAGS="-Og -g"
 export LDFLAGS="-no-pie" # valgrind vdcore.* files need -no-pie to work with gdb
 
 ARGS=()

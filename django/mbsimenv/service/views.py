@@ -92,7 +92,6 @@ def currentRunexampleNrFailed(request, buildtype):
 # a svg badge with the coverage rate
 def currentCoverageRate(request, buildtype):
   run=runexamples.models.Run.objects.getCurrent(buildtype, "master", "master", "master", "master")
-  run=runexamples.models.Run.objects.get(id=97)
   if run is None:
     context={"nr": "n/a", "color": getColor("secondary")}
   elif run.endTime is None:
