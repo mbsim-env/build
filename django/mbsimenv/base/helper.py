@@ -385,6 +385,8 @@ def addFieldLabel(field, *args):
   return field
 
 def bulk_create(model, objs, refresh=True):
+  if type(model._meta.pk)!=django.db.models.AutoField:
+    raise RuntimeError("base.helper.bulk_create can only be called for models with django.db.models.AutoField as primary key.");
   # workaround for  django>=3.2 issue https://code.djangoproject.com/ticket/33649
   # (this issue is considered a feature since django>=3.2)
   # remove objects where the PK is already set

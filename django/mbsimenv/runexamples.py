@@ -361,13 +361,16 @@ def main():
           if os.path.splitext(f)[1]==".gcda": os.remove(pj(d, f))
 
   if args.pre:
-    # create all examples in ExampleStatic
+    # create all examples in ExampleStatic (we cannot use base.helper.bulk_create for this)
     esl=[]
     for example in directories:
-      es=runexamples.models.ExampleStatic(exampleName=example)
+      esF=runexamples.models.ExampleStatic.objects.filter(exampleName=example)
+      if esF.count()>0:
+        es=esF[0]
+      else:
+        es=runexamples.models.ExampleStatic(exampleName=example)
       esl.append(es)
     # update "queued" flag to True
-    base.helper.bulk_create(runexamples.models.ExampleStatic, esl, refresh=False)
     for es in esl:
       es.queued=True
     # needes since django.db.models.signals.pre_save.connect(...) is not called by bulk_update
