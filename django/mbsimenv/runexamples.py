@@ -369,6 +369,7 @@ def main():
         es=esF[0]
       else:
         es=runexamples.models.ExampleStatic(exampleName=example)
+        es.save()
       esl.append(es)
     # update "queued" flag to True
     for es in esl:
