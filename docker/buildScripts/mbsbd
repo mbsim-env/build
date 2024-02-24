@@ -93,7 +93,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
       "${ARGS[@]}"
   }
   if [ "_$INTERACTIVE" == "_" ]; then
-    callDocker 1> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g") 2> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g" > /dev/stderr)
+    callDocker 1> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g") 2> >(sed -re "s+/mbsim-env/+$MBSIMENVDIR/+g" >&2)
   else
     callDocker
   fi
