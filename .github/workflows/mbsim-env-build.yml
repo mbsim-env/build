@@ -223,8 +223,8 @@ jobs:
         run: >
           (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcda" >  ${{github.workspace}}/local-cov.files) &&
           (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcno" >> ${{github.workspace}}/local-cov.files) &&
-          tar -czf ${{github.workspace}}/local-cov.tar.gz -C ${{github.workspace}}/mbsim-env/
-          local/ -T ${{github.workspace}}/local-cov.files;
+          (cd ${{github.workspace}}/mbsim-env/ && 7z a -spf ${{github.workspace}}/local-cov.7z
+          local/ @${{github.workspace}}/local-cov.files);
           rm -f ${{github.workspace}}/local-cov.files
       - name: "Artifact: upload prefix and coverage-files"
         if: ${{always() && inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
@@ -232,7 +232,7 @@ jobs:
         with:
           name: mbsim-env-local-cov
           retention-days: 1
-          path: ${{github.workspace}}/local-cov.tar.gz
+          path: ${{github.workspace}}/local-cov.7z
       - name: "Cache save: ccache"
         if: ${{always() && !fromJson(steps.whatToDo.outputs.data).skip}}
         uses: actions/cache/save@v3

@@ -84,7 +84,7 @@ jobs:
         if: ${{inputs.downloadArtifactLocalLcov}}
         run: >
           mkdir -m 777 -p ${{github.workspace}}/mbsim-env/ &&
-          tar -xzf ${{github.workspace}}/local-cov.tar.gz -C ${{github.workspace}}/mbsim-env/ &&
+          (cd ${{github.workspace}}/mbsim-env/ && 7z x ${{github.workspace}}/local-cov.7z) &&
           chmod -R 777 ${{github.workspace}}/mbsim-env # the docker user id is different than the current user id
       - name: "Artifact: download lcov-files"
         if: ${{inputs.downloadArtifactLcovdata}}
