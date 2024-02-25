@@ -2,7 +2,6 @@ name: CI (Repo-Dispatch)
 on:
   repository_dispatch:
     types: [ci]
-  workflow_dispatch:
 env:
   # tagname and servername of remote mbsimenv server
   MBSIMENVTAGNAME: latest

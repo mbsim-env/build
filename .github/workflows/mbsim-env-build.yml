@@ -84,7 +84,7 @@ jobs:
         run: |
           import requests
           import json
-          if ${{github.run_attempt}}>1:
+          if ${{github.run_attempt}}>1 or ${{github.event_name}}=="workflow_dispatch":
             data={
               "skip": False,
               "runID": None,
