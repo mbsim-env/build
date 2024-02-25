@@ -108,7 +108,7 @@ jobs:
           with open(r"${{github.output}}", "at") as o:
             print("matrixUUID="+str(uuid.uuid4()), file=o)
       - name: "Cache restore: ccache"
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ${{env.CCACHE_DIR}}
           key: ccache-msys2ucrt64--${{steps.matrixUUID.outputs.matrixUUID}}
@@ -135,7 +135,7 @@ jobs:
         run: ccache -s
       - name: "Cache save: ccache"
         if: ${{always()}}
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           path: ${{env.CCACHE_DIR}}
           key: ccache-msys2ucrt64--${{steps.matrixUUID.outputs.matrixUUID}}

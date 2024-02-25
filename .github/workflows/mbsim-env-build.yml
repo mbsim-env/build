@@ -160,7 +160,7 @@ jobs:
             print("matrixUUID="+str(uuid.uuid4()), file=o)
       - name: "Cache restore: ccache"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
-        uses: actions/cache/restore@v3
+        uses: actions/cache/restore@v4
         with:
           path: ${{github.workspace}}/mbsim-ccache
           key: ccache-${{matrix.data.os.buildType}}--${{steps.matrixUUID.outputs.matrixUUID}}
@@ -218,7 +218,7 @@ jobs:
             print("jobs.build.steps.buildDetails.outputs.buildInfo:\n"+json.dumps(buildInfo, indent=2))
             with open("${{github.output}}", "at") as o:
               print("buildInfo="+json.dumps(buildInfo), file=o)
-      - name: "Artifact: tar/compress prefix and coverage-files"
+      - name: "Artifact: zip prefix and coverage-files"
         if: ${{always() && inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
         run: >
           (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcda" >  ${{github.workspace}}/local-cov.files) &&
@@ -226,16 +226,16 @@ jobs:
           (cd ${{github.workspace}}/mbsim-env/ && 7z a -spf ${{github.workspace}}/local-cov.7z
           local/ @${{github.workspace}}/local-cov.files);
           rm -f ${{github.workspace}}/local-cov.files
-      - name: "Artifact: upload prefix and coverage-files"
+      - name: "Artifact: upload zip of prefix and coverage-files"
         if: ${{always() && inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: mbsim-env-local-cov
           retention-days: 1
           path: ${{github.workspace}}/local-cov.7z
       - name: "Cache save: ccache"
         if: ${{always() && !fromJson(steps.whatToDo.outputs.data).skip}}
-        uses: actions/cache/save@v3
+        uses: actions/cache/save@v4
         with:
           path: ${{github.workspace}}/mbsim-ccache
           key: ccache-${{matrix.data.os.buildType}}--${{steps.matrixUUID.outputs.matrixUUID}}

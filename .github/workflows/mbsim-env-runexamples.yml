@@ -74,13 +74,13 @@ jobs:
           echo "$[($BEFORE-$AFTER)/1000000]GB freed"
       - name: "Dump resources"
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
-      - name: "Artifact: download prefix and coverage-files"
+      - name: "Artifact: download zip of prefix and coverage-files"
         if: ${{inputs.downloadArtifactLocalLcov}}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: mbsim-env-local-cov
           path: ${{github.workspace}}
-      - name: "Artifact: untar/uncompress prefix and coverage-files"
+      - name: "Artifact: unzip prefix and coverage-files"
         if: ${{inputs.downloadArtifactLocalLcov}}
         run: >
           mkdir -m 777 -p ${{github.workspace}}/mbsim-env/ &&
@@ -88,10 +88,11 @@ jobs:
           chmod -R 777 ${{github.workspace}}/mbsim-env # the docker user id is different than the current user id
       - name: "Artifact: download lcov-files"
         if: ${{inputs.downloadArtifactLcovdata}}
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
-          name: mbsim-env-covdata
           path: ${{github.workspace}}/mbsim-env/local
+          pattern: mbsim-env-covdata-*
+          merge-multiple: true
       - name: "Artifact: uncompress lcov-files"
         if: ${{inputs.downloadArtifactLcovdata}}
         run: >
@@ -157,11 +158,20 @@ jobs:
           shopt -s nullglob &&
           touch ${{github.workspace}}/mbsim-env/local/dummylcov &&
           gzip ${{github.workspace}}/mbsim-env/local/dummylcov ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*
+      - name: "Create UUID for artifact upload"
+        if: ${{always() && inputs.uploadArtifactLcovdata}}
+        shell: python
+        id: artivactUploadUUID
+        run: |
+          import uuid
+          print("jobs.runexamples.steps.artivactUploadUUID.outputs.artivactUploadUUID:\n"+str(uuid.uuid4()))
+          with open("${{github.output}}", "at") as o:
+            print("artivactUploadUUID="+str(uuid.uuid4()), file=o)
       - name: "Artifact: upload lcov-files"
         if: ${{always() && inputs.uploadArtifactLcovdata}}
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
-          name: mbsim-env-covdata
+          name: mbsim-env-covdata-${{steps.artivactUploadUUID.outputs.artivactUploadUUID}}
           retention-days: 1
           path: ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*.gz
       - name: "Dump resources"
