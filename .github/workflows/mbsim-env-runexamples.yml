@@ -93,13 +93,6 @@ jobs:
           path: ${{github.workspace}}/mbsim-env/local
           pattern: mbsim-env-covdata-*
           merge-multiple: true
-      - name: "Artifact: uncompress lcov-files"
-        if: ${{inputs.downloadArtifactLcovdata}}
-        run: >
-          shopt -s nullglob &&
-          touch ${{github.workspace}}/mbsim-env/local/dummylcov &&
-          gzip ${{github.workspace}}/mbsim-env/local/dummylcov &&
-          gunzip ${{github.workspace}}/mbsim-env/local/dummylcov.gz ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*.gz
       - name: "Docker: pull image"
         run: >
           docker image pull mbsimenv/build:${{env.MBSIMENVTAGNAME}} &&
@@ -152,12 +145,6 @@ jobs:
             print("jobs.runexamples.steps.runexamplesDetails.outputs.runexamplesInfo:\n"+json.dumps(runexamplesInfo, indent=2))
             with open("${{github.output}}", "at") as o:
               print("runexamplesInfo="+json.dumps(runexamplesInfo), file=o)
-      - name: "Artifact: compress lcov-files"
-        if: ${{always() && inputs.uploadArtifactLcovdata}}
-        run: >
-          shopt -s nullglob &&
-          touch ${{github.workspace}}/mbsim-env/local/dummylcov &&
-          gzip ${{github.workspace}}/mbsim-env/local/dummylcov ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*
       - name: "Create UUID for artifact upload"
         if: ${{always() && inputs.uploadArtifactLcovdata}}
         shell: python
@@ -173,7 +160,8 @@ jobs:
         with:
           name: mbsim-env-covdata-${{steps.artivactUploadUUID.outputs.artivactUploadUUID}}
           retention-days: 1
-          path: ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*.gz
+          compression-level: 9
+          path: ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*
       - name: "Dump resources"
         if: ${{always()}}
         run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo

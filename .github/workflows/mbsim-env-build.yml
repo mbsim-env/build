@@ -232,6 +232,7 @@ jobs:
         with:
           name: mbsim-env-local-cov
           retention-days: 1
+          compression-level: 0
           path: ${{github.workspace}}/local-cov.7z
       - name: "Cache save: ccache"
         if: ${{always() && !fromJson(steps.whatToDo.outputs.data).skip}}
