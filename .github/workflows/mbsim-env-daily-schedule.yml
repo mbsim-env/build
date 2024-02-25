@@ -2,6 +2,7 @@ name: Daily (Schedule)
 on:
   schedule:
     - cron: '36 23 * * *'
+  workflow_dispatch:
 concurrency: 
   group: mbsim-env-daily
   cancel-in-progress: true
