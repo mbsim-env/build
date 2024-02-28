@@ -258,6 +258,9 @@ def main():
   if os.name=="nt":
     os.environ["PLATFORM"]="Windows"
 
+  if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
+    localServer=base.helper.startLocalServer(args.localServerPort, django.conf.settings.MBSIMENV_TYPE=="localdocker")
+
   if normalRun or args.pre:
     removeOldBuilds()
 
@@ -335,10 +338,9 @@ def main():
     exRun.sourceDir=args.sourceDir
 
   if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
-    s=base.helper.startLocalServer(args.localServerPort, django.conf.settings.MBSIMENV_TYPE=="localdocker")
-    print("Runexample info is avaiable at: http://%s:%d%s"%(s["hostname"], s["port"],
+    print("Runexample info is avaiable at: http://%s:%d%s"%(localServer["hostname"], localServer["port"],
           django.urls.reverse("runexamples:current_buildtype", args=[args.buildType])))
-    print("                              = http://%s:%d%s"%(s["hostname"], s["port"],
+    print("                              = http://%s:%d%s"%(localServer["hostname"], localServer["port"],
           django.urls.reverse("runexamples:run", args=[exRun.id])))
     print("")
     sys.stdout.flush()
