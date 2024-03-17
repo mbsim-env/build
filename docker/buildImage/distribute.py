@@ -565,9 +565,6 @@ def main():
   print("Add prefix dir of mbsim-env")
   sys.stdout.flush()
   addFileToDist(args.prefix, "mbsim-env")
-  # add DRI drivers (see openmbv/mainwindow.cc)
-  if platform=="linux":
-    addFileToDist("/usr/lib64/dri", "mbsim-env/lib/dri")
   # add octave
   addOctave()
   # add python
