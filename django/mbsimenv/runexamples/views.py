@@ -933,6 +933,7 @@ class DirFileCoverage(base.views.Base):
             "rate": rate*100,
             "rateprogress": inlineProgressBar(rate, color, 200, 15),
             "totallines": totalLines,
+            "uncoveredlines": totalLines-coveredLines,
           })
         convertToHTMLTree(treenode_children_p, collapseAtIndent, htmltree, indent+1)
     htmltree=[]

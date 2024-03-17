@@ -99,11 +99,10 @@ def installDistribution():
     # we connect to webserver instead of MBSIMENVSERVERNAME to avoid IPv6 problems.
     # this requires to skip cert verification since the hostname is different.
     r=requests.get(url, stream=True, verify=False)
-    with open("/tmp/distributionFile.tar.bz2", 'wb') as f:
+    with open("/tmp/distributionFile.7z", 'wb') as f:
       for chunk in r.iter_content(chunk_size=32768): 
         f.write(chunk)
-    subprocess.check_call(['tar', "--no-same-owner", "--no-same-permissions", '-xjf', '/tmp/distributionFile.tar.bz2',
-                           '-C', "/mbsim-env/distribution/"+data["buildRunID"]])
+    subprocess.check_call(['7z', 'x', '/tmp/distributionFile.7z'], cwd="/mbsim-env/distribution/"+data["buildRunID"])
 
 def checkoutMbsim():
   with FileLock("/mbsim-env/.mbsim.lock"):

@@ -34,6 +34,7 @@
       <th class="col-lg">Directory/File</th>
       <th style="text-align: center;" colspan="2">Line Coverage</th>
       <th style="text-align: right;">Total Lines</th>
+      <th style="text-align: right;">Uncovered Lines</th>
     </tr>
   </thead>
   <tbody id="dirfiletable">
@@ -56,6 +57,7 @@
         <td>{% autoescape off %}{{ item.rateprogress }}{% endautoescape %}</td>
         <td style="font-weight: bold; text-align: right; color: {{item.color}}">{{item.rate|floatformat:1}}%</td>
         <td style="text-align: right;">{{item.totallines}}</td>
+        <td style="text-align: right;">{{item.uncoveredlines}}</td>
       </tr>
     {% endfor %}
   </tbody>

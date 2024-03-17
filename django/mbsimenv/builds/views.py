@@ -71,7 +71,7 @@ class Run(base.views.Base):
       repo["commitURLEvaluated"]=repo["commitURL"].format(sha=repo["updateCommitID"])
     context['examples']=examples
     context['examplesAllOK']=examplesAllOK
-    context['releaseFileSuffix']="linux64.tar.bz2" if self.run.buildType=="linux64-dailyrelease" else "win64.zip"
+    context['releaseFileSuffix']="linux64.7z" if self.run.buildType=="linux64-dailyrelease" else "win64.7z"
     context['releaseTagSuffix']="linux64" if self.run.buildType=="linux64-dailyrelease" else "win64"
     context['releaseDistributionPossible']=base.helper.getExecutorID(self.run.executor)=="GITHUBACTION" or os.environ.get("MBSIMENVTAGNAME", "localhost")!="latest"
 
@@ -253,8 +253,8 @@ def releaseDistribution(request, run_id):
   releaseVersion=json.loads(request.body)["releaseVersion"]
   platform="win64" if run.buildType=="win64-dailyrelease" else "linux64"
   tagName="release/"+releaseVersion+"-"+platform
-  relArchiveName="mbsim-env-release-"+releaseVersion+"-"+platform+(".zip" if run.buildType=="win64-dailyrelease" else ".tar.bz2")
-  relArchiveDebugName="mbsim-env-release-"+releaseVersion+"-"+platform+"-debug"+(".zip" if run.buildType=="win64-dailyrelease" else ".tar.bz2")
+  relArchiveName="mbsim-env-release-"+releaseVersion+"-"+platform+".7z"
+  relArchiveDebugName="mbsim-env-release-"+releaseVersion+"-"+platform+"-debug"+".7z"
   # check data
   if run.buildType!="win64-dailyrelease" and run.buildType!="linux64-dailyrelease":
     return django.http.HttpResponseBadRequest("Illegal build type for release.")

@@ -5,8 +5,7 @@ import argparse
 import os
 import sys
 import fnmatch
-import tarfile
-import zipfile
+import py7zr
 import subprocess
 import time
 import re
@@ -103,7 +102,7 @@ def addFileToDist(name, arcname, addDepLibs=True):
   if os.path.islink(name):
     if platform=="win":
       return
-    distArchive.add(name, arcname) # add link
+    distArchive.write(name, arcname) # add link
     link=os.readlink(name) # add also the reference
     if "/" in link: # but only if to the same dire
       raise RuntimeError("Only links to the same dir are supported but "+name+" points to "+link+".")
@@ -131,21 +130,13 @@ def addFileToDist(name, arcname, addDepLibs=True):
             if platform=="linux":
               if re.search('ELF [0-9]+-bit LSB', content) is not None:
                 adaptRPATH(tmpDir+"/"+basename, name)
-              distArchive.add(tmpDir+"/"+basename, arcname)
-              # only add debug files of mbsim-env
-              if name.startswith("/mbsim-env/"):
-                debugArchive.add(tmpDir+"/"+basename+".debug", arcname+".debug")
-            if platform=="win":
-              distArchive.write(tmpDir+"/"+basename, arcname)
-              # only add debug files of mbsim-env
-              if name.startswith("/mbsim-env/"):
-                debugArchive.write(tmpDir+"/"+basename+".debug", arcname+".debug")
+            distArchive.write(tmpDir+"/"+basename, arcname)
+            # only add debug files of mbsim-env
+            if name.startswith("/mbsim-env/"):
+              debugArchive.write(tmpDir+"/"+basename+".debug", arcname+".debug")
           except:
             print("Failed to strip: "+name+". Adding unstripped.")
-            if platform=="linux":
-              distArchive.add(name, arcname)
-            else:
-              distArchive.write(name, arcname)
+            distArchive.write(name, arcname)
           finally:
             if os.path.exists(tmpDir+"/"+basename): os.remove(tmpDir+"/"+basename)
             if os.path.exists(tmpDir+"/"+basename+".debug"): os.remove(tmpDir+"/"+basename+".debug")
@@ -156,9 +147,7 @@ def addFileToDist(name, arcname, addDepLibs=True):
           if platform=="linux":
             if re.search('ELF [0-9]+-bit LSB', content) is not None:
               adaptRPATH(tmpDir+"/"+basename, name)
-            distArchive.add(tmpDir+"/"+basename, arcname)
-          if platform=="win":
-            distArchive.write(tmpDir+"/"+basename, arcname)
+          distArchive.write(tmpDir+"/"+basename, arcname)
       finally:
         shutil.rmtree(tmpDir)
       # add also all dependent libs to the lib/bin dir
@@ -171,10 +160,7 @@ def addFileToDist(name, arcname, addDepLibs=True):
           addFileToDist(deplib, "mbsim-env/"+subdir+"/"+os.path.basename(deplib), False)
     else:
       # none binary file
-      if platform=="linux":
-        distArchive.add(name, arcname)
-      if platform=="win":
-        distArchive.write(name, arcname)
+      distArchive.write(name, arcname)
   # dir -> add recursively
   elif os.path.isdir(name):
     for dirpath, dirnames, filenames in os.walk(name):
@@ -185,15 +171,16 @@ def addFileToDist(name, arcname, addDepLibs=True):
 addFileToDist.content=set()
 
 def addStrToDist(text, arcname, exeBit=False):
-  if platform=="linux":
-    tarinfo=tarfile.TarInfo(arcname)
-    tarinfo.size=len(text)
-    tarinfo.mtime=time.time()
-    if exeBit:
-      tarinfo.mode=0o755
-    distArchive.addfile(tarinfo, io.BytesIO(text.encode('utf8')))
-  if platform=="win":
-    distArchive.writestr(arcname, text)
+  try:
+    tempF=tempfile.NamedTemporaryFile(mode='wt', delete=False)
+    tempF.write(text)
+    tempF.close()
+    if platform=="linux":
+      if exeBit:
+        os.chmod(tempF.name, 0o755)
+    distArchive.write(tempF.name, arcname)
+  finally:
+    os.unlink(tempF.name)
 
 
 
@@ -547,15 +534,13 @@ def main():
 
   global distArchive, debugArchive
   if platform=="linux":
-    distArchiveName="mbsim-env-linux64-shared-build-xxx.tar.bz2"
-    debugArchiveName="mbsim-env-linux64-shared-build-xxx-debug.tar.bz2"
-    distArchive=tarfile.open(args.outDir+"/"+distArchiveName, mode='w:bz2')
-    debugArchive=tarfile.open(args.outDir+"/"+debugArchiveName, mode='w:bz2')
+    distArchiveName="mbsim-env-linux64-shared-build-xxx.7z"
+    debugArchiveName="mbsim-env-linux64-shared-build-xxx-debug.7z"
   if platform=="win":
-    distArchiveName="mbsim-env-win64-shared-build-xxx.zip"
-    debugArchiveName="mbsim-env-win64-shared-build-xxx-debug.zip"
-    distArchive=zipfile.ZipFile(args.outDir+"/"+distArchiveName, mode='w', compression=zipfile.ZIP_DEFLATED)
-    debugArchive=zipfile.ZipFile(args.outDir+"/"+debugArchiveName, mode='w', compression=zipfile.ZIP_DEFLATED)
+    distArchiveName="mbsim-env-win64-shared-build-xxx.7z"
+    debugArchiveName="mbsim-env-win64-shared-build-xxx-debug.7z"
+  distArchive=py7zr.SevenZipFile(args.outDir+"/"+distArchiveName, mode='w')
+  debugArchive=py7zr.SevenZipFile(args.outDir+"/"+debugArchiveName, mode='w')
  
   # add special files
   addReadme()
