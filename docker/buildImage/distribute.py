@@ -5,21 +5,49 @@ import argparse
 import os
 import sys
 import fnmatch
-import py7zr
 import subprocess
-import time
 import re
 import shutil
 import tempfile
 import codecs
-import io
 
 args=None
 platform=None
 distArchive=None
 debugArchive=None
 
-
+# a ZipFile like class for 7z (but only for compression and it writes first to a temp-dir and compresses at close())
+class SevenZipFile:
+  def __init__(self, file, mode="r"):
+    self.file = None
+    if mode!="w":
+      raise RuntimeError("SevenZipFile only support mode='w'")
+    self.file = file
+    self.tmpdir = tempfile.TemporaryDirectory()
+  def __enter__(self):
+    return self
+  def __del__(self):
+    if self.file is not None:
+      self.close()
+  def __exit__(self, type, value, traceback):
+    if self.file is not None:
+      self.close()
+  def close(self):
+    if os.path.exists(self.file):
+      os.remove(self.file)
+    subprocess.check_call(["7z", "a", os.path.abspath(self.file), "."], cwd=self.tmpdir.name, stdout=subprocess.DEVNULL)
+    self.file=None
+    self.tmpdir=None
+  def _createDir(self, arcname):
+    os.makedirs(self.tmpdir.name+os.path.sep+os.path.dirname(arcname), exist_ok=True)
+  def add(self, name, arcname):
+    self._createDir(arcname)
+    shutil.copyfile(name, self.tmpdir.name+os.path.sep+arcname)
+  write = add
+  def writestr(self, arcname, string):
+    self._createDir(arcname)
+    with open(self.tmpdir.name+os.path.sep+arcname, "wt") as f:
+      f.write(string)
 
 def config():
   # detect platform
@@ -539,8 +567,8 @@ def main():
   if platform=="win":
     distArchiveName="mbsim-env-win64-shared-build-xxx.7z"
     debugArchiveName="mbsim-env-win64-shared-build-xxx-debug.7z"
-  distArchive=py7zr.SevenZipFile(args.outDir+"/"+distArchiveName, mode='w')
-  debugArchive=py7zr.SevenZipFile(args.outDir+"/"+debugArchiveName, mode='w')
+  distArchive=SevenZipFile(args.outDir+"/"+distArchiveName, mode='w')
+  debugArchive=SevenZipFile(args.outDir+"/"+debugArchiveName, mode='w')
  
   # add special files
   addReadme()
