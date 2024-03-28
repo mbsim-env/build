@@ -25,12 +25,15 @@ if args.mbsimBranch is not None and args.mbsimBranch!="":
   if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
     ret=ret+1
     print("git checkout detached failed.")
+    sys.stdout.flush()
   if subprocess.call(["git", "fetch", "-q", "-f", "--depth", "1", "origin", sha+":"+sha])!=0:
     ret=ret+1
     print("git fetch failed.")
+    sys.stdout.flush()
   if subprocess.call(["git", "checkout", "-q", sha])!=0:
     ret=ret+1
     print("git checkout of branch "+args.mbsimBranch+" failed.")
+    sys.stdout.flush()
 
 # run builddoc.py
 subprocess.check_call(["/context/mbsimenv/builddoc.py", "--buildSystemRun"], cwd="/mbsim-env/mbsim/manuals")

@@ -311,12 +311,14 @@ def startLocalServer(port, onlyGetServerInfo=False):
     builds.models.Run.objects.count()
   except django.db.utils.OperationalError:
     print("No table found in database. Run Django migration. (only done the first time)")
+    sys.stdout.flush()
     django.core.management.call_command("migrate", interactive=False, traceback=True, no_color=True)
   # start server
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
     result=sock.connect_ex(('localhost',port))
     if result!=0:
       print("No server is running. Starting server. (only done the first time)")
+      sys.stdout.flush()
       env=os.environ.copy()
       env['DJANGO_SETTINGS_MODULE']='mbsimenv.settings_'+django.conf.settings.MBSIMENV_TYPE
       preexec_fn=os.setpgrp if os.name=="posix" else None
@@ -328,6 +330,7 @@ def startLocalServer(port, onlyGetServerInfo=False):
     else:
       p=None
       print("A server is already running. Skipping starting another one.")
+      sys.stdout.flush()
 
   with open(pidfile, "r") as f:
     localserver=json.load(f)
@@ -338,12 +341,18 @@ def tooltip(text, tooltip):
 
 def copyFile(fi, fo, returnSHA1HexDigest=False):
   if type(fi)==bytes:
+    print("Start writing a binary array to Django file storage.")
+    sys.stdout.flush()
     fo.write(fi)
+    print("Finished writing a binary array to Django file storage.")
+    sys.stdout.flush()
     if returnSHA1HexDigest:
       return hashlib.sha1(fi).hexdigest()
   else:
     if returnSHA1HexDigest:
       m=hashlib.sha1()
+    print("Start writing/reading to/from Django file storage.")
+    sys.stdout.flush()
     while True:
       data=fi.read(32768)
       if len(data)==0:
@@ -351,6 +360,8 @@ def copyFile(fi, fo, returnSHA1HexDigest=False):
       fo.write(data)
       if returnSHA1HexDigest:
         m.update(data)
+    print("Finished writing/reading to/from Django file storage.")
+    sys.stdout.flush()
     if returnSHA1HexDigest:
       return m.hexdigest()
 
@@ -419,6 +430,7 @@ def handleRecoverableError(title, message):
     print("::error title="+title+"::"+message)
   else:
     print("ERROR: "+title+"\n"+message)
+  sys.stdout.flush()
 
 def lcovColor(rate):
   rateMin=0.7
