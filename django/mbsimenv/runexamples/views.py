@@ -690,27 +690,27 @@ class DataTableCompareResult(base.views.DataTable):
         return prefixSuccess+'passed'
     return prefixDanger+'<a href="%s">failed</a>'%(url)
   def colSortKey_result(self, ds):
-    if ds.result==runexamples.models.CompareResult.Result.FAILED:
-      return -9
     if ds.result==runexamples.models.CompareResult.Result.FILENOTINCUR:
-      return -8
+      return -8e100
     if ds.result==runexamples.models.CompareResult.Result.FILENOTINREF:
-      return -7
+      return -7e100
     if ds.result==runexamples.models.CompareResult.Result.DATASETNOTINCUR:
-      return -6
+      return -6e100
     if ds.result==runexamples.models.CompareResult.Result.DATASETNOTINREF:
-      return -5
+      return -5e100
     if ds.result==runexamples.models.CompareResult.Result.LABELNOTINCUR:
-      return -4
+      return -4e100
     if ds.result==runexamples.models.CompareResult.Result.LABELNOTINREF:
-      return -3
+      return -3e100
     if ds.result==runexamples.models.CompareResult.Result.LABELDIFFER:
-      return -2
+      return -2e100
     if ds.result==runexamples.models.CompareResult.Result.LABELMISSING:
-      return -1
+      return -1e100
+    if ds.result==runexamples.models.CompareResult.Result.FAILED:
+      return -ds.rtolminmax
     if ds.result==runexamples.models.CompareResult.Result.PASSED:
-      return -0
-    return 1
+      return 1
+    return 2
   def colClass_result(self, ds):
     if ds.result==runexamples.models.CompareResult.Result.FILENOTINCUR or ds.result==runexamples.models.CompareResult.Result.FILENOTINREF or \
        ds.result==runexamples.models.CompareResult.Result.DATASETNOTINCUR or ds.result==runexamples.models.CompareResult.Result.DATASETNOTINREF:

@@ -341,6 +341,7 @@ class CompareResult(django.db.models.Model):
   dataset=AL(django.db.models.CharField(max_length=200), L.inline, L.list, L.search)
   label=AL(django.db.models.CharField(max_length=100), L.inline, L.list, L.search)
   result=django.db.models.IntegerField(choices=Result.choices)
+  rtolminmax=django.db.models.FloatField(default=0)
 
   def getCurrent(self):
     if self.compareResultFile.example.run.build_run:
