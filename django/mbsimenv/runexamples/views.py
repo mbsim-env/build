@@ -691,22 +691,23 @@ class DataTableCompareResult(base.views.DataTable):
     return prefixDanger+'<a href="%s">failed</a>'%(url)
   def colSortKey_result(self, ds):
     if ds.result==runexamples.models.CompareResult.Result.FILENOTINCUR:
-      return -8e100
+      return -9e100
     if ds.result==runexamples.models.CompareResult.Result.FILENOTINREF:
-      return -7e100
+      return -8e100
     if ds.result==runexamples.models.CompareResult.Result.DATASETNOTINCUR:
-      return -6e100
+      return -7e100
     if ds.result==runexamples.models.CompareResult.Result.DATASETNOTINREF:
-      return -5e100
+      return -6e100
     if ds.result==runexamples.models.CompareResult.Result.LABELNOTINCUR:
-      return -4e100
+      return -5e100
     if ds.result==runexamples.models.CompareResult.Result.LABELNOTINREF:
-      return -3e100
+      return -4e100
     if ds.result==runexamples.models.CompareResult.Result.LABELDIFFER:
-      return -2e100
+      return -3e100
     if ds.result==runexamples.models.CompareResult.Result.LABELMISSING:
-      return -1e100
+      return -2e100
     if ds.result==runexamples.models.CompareResult.Result.FAILED:
+      # ds.rtolminmax is 1e100 if the number of points differ
       return -ds.rtolminmax
     if ds.result==runexamples.models.CompareResult.Result.PASSED:
       return 1
