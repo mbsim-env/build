@@ -109,7 +109,7 @@ function initCompareResultTable(url) {
     'pageLength': 25,
     'order': [],
     "language": {
-      "search": "Filter 'H5 File':",
+      "search": "Filter 'Dataset':",
     },
   });
 }

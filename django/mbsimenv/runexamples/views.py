@@ -631,7 +631,7 @@ class DataTableCompareResult(base.views.DataTable):
 
   # return the field name in the dataset using for search/filter [required]
   def searchField(self):
-    return "compareResultFile__h5Filename"
+    return "dataset"
 
   # return the "data", "sort key" and "class" for columns ["data":required; "sort key" and "class":optional]
 
