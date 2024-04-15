@@ -5,19 +5,15 @@ import argparse
 import os
 import subprocess
 import sys
-import datetime
-import codecs
 import json
-import re
 import time
-import glob
 import django
-import hashlib
 sys.path.append("/context/mbsimenv")
 import runexamples
 import service
 import base
 import psutil
+import tempfile
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -184,9 +180,16 @@ if build or args.runExamplesPre:
           ref=runexamples.models.ExampleStaticReference()
           ref.exampleStatic=exStatic
           ref.h5FileName=rfCur.h5FileName
-          with rfCur.h5File.open("rb") as fi:
-            with ref.h5File.open("wb") as fo:
-              ref.h5FileSHA1=base.helper.copyFile(fi, fo, returnSHA1HexDigest=True)
+          try:
+            tempF=tempfile.NamedTemporaryFile(mode='wb', delete=False)
+            with rfCur.h5File.open("rb") as fi:
+              base.helper.copyFile(fi, tempF)
+            tempF.close()
+            with open(tempF.name, "rb") as fi:
+              with ref.h5File.open("wb") as fo:
+                ref.h5FileSHA1=base.helper.copyFile(fi, fo, returnSHA1HexDigest=True)
+          finally:
+            os.unlink(tempF.name)
           ref.save()
         # set ref time
         exStatic.refTime=exCur.time
