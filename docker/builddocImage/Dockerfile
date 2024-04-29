@@ -43,4 +43,4 @@ USER dockeruser:dockeruser
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
-ENTRYPOINT ["/context/entrypoint.py"]
+ENTRYPOINT ["timeout", "-k", "30s", "1h", "/context/entrypoint.py"]
