@@ -347,18 +347,12 @@ def tooltip(text, tooltip):
 
 def copyFile(fi, fo, returnSHA1HexDigest=False):
   if type(fi)==bytes:
-    print("Start writing a binary array to Django file storage.")
-    sys.stdout.flush()
     fo.write(fi)
-    print("Finished writing a binary array to Django file storage.")
-    sys.stdout.flush()
     if returnSHA1HexDigest:
       return hashlib.sha1(fi).hexdigest()
   else:
     if returnSHA1HexDigest:
       m=hashlib.sha1()
-    print("Start writing/reading to/from Django file storage.")
-    sys.stdout.flush()
     while True:
       data=fi.read(32768)
       if len(data)==0:
@@ -366,8 +360,6 @@ def copyFile(fi, fo, returnSHA1HexDigest=False):
       fo.write(data)
       if returnSHA1HexDigest:
         m.update(data)
-    print("Finished writing/reading to/from Django file storage.")
-    sys.stdout.flush()
     if returnSHA1HexDigest:
       return m.hexdigest()
 
