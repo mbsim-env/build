@@ -1331,6 +1331,10 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
                max((numpy.max(refObjCol)-numpy.min(refObjCol)) * args.rtolminmax, args.atol), equal_nan=True))):
           nrFailed[0]+=1
           cmpRes.result=runexamples.models.CompareResult.Result.FAILED
+          if refObjCol.shape[0]==curObjCol.shape[0]:
+            cmpRes.rtolminmax = max(abs(refObjCol-curObjCol))/(numpy.max(refObjCol)-numpy.min(refObjCol))
+          else:
+            cmpRes.rtolminmax = 1e100
           saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
     # check for labels/columns in current but not in reference
     for label in curLabels[len(refLabels):]:

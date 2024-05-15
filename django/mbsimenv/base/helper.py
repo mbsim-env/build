@@ -198,20 +198,26 @@ class MultiFile(object):
     return self.data
 
 # kill the called subprocess
-def killSubprocessCall(proc, f, killed, timeout):
+def termSubprocessCall(proc, f, killed, timeout):
   killed.set()
   f.write("\n\n\n******************** START: MESSAGE FROM subprocessCall.py ********************\n")
   f.write("The maximal execution time (%d min) has reached (option --maxExecutionTime),\n"%(timeout))
   f.write("but the program is still running. Terminating the program now.\n")
   f.write("******************** END: MESSAGE FROM subprocessCall.py **********************\n\n\n\n")
-  proc.terminate()
-  time.sleep(30)
-  # if proc has not terminated after 30 seconds kill it
-  if proc.poll() is None:
+
+  def killSubprocessCall(proc, f):
     f.write("\n\n\n******************** START: MESSAGE FROM subprocessCall.py ********************\n")
     f.write("Program has not terminated after 30 seconds, killing the program now.\n")
     f.write("******************** END: MESSAGE FROM subprocessCall.py **********************\n\n\n\n")
     proc.kill()
+  maxExecutionTimeKillThread=threading.Timer(30, killSubprocessCall, args=(proc, f))
+  maxExecutionTimeKillThread.start()
+
+  proc.terminate()
+
+  while maxExecutionTimeKillThread.is_alive() and proc.poll() is None:
+    time.sleep(1)
+  maxExecutionTimeKillThread.cancel()
 
 def subprocessCheckOutput(comm, f=None):
   p=subprocess.Popen(comm, universal_newlines=True, encoding="utf-8", errors="backslashreplace", stdout=subprocess.PIPE)
@@ -237,12 +243,12 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
     f.write("\n\n\n******************** FAILED TO START PROCESS ********************\n")
     f.write(str(ex)+"\n")
     return 1
-  # a guard for the maximal execution time for the started program
-  guard=None
+  # a maxExecutionTimeThread for the maximal execution time for the started program
+  maxExecutionTimeThread=None
   killed=threading.Event()
   if maxExecutionTime>0:
-    guard=threading.Timer(maxExecutionTime*60, killSubprocessCall, args=(proc, f, killed, maxExecutionTime))
-    guard.start()
+    maxExecutionTimeThread=threading.Timer(maxExecutionTime*60, termSubprocessCall, args=(proc, f, killed, maxExecutionTime))
+    maxExecutionTimeThread.start()
   # read all output
   stopByRE=False
   while proc.poll() is None:
@@ -267,12 +273,12 @@ def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
   ret=proc.wait()
   endTime=django.utils.timezone.now()
   print("\nEnded at %s after %s with exit-code %d\n"%(endTime, endTime-startTime, ret), file=f)
-  # stop the execution time guard thread
+  # stop the execution time maxExecutionTimeThread thread
   if maxExecutionTime>0:
     if killed.isSet():
       return subprocessCall.timedOutErrorCode # return to indicate that the program was terminated/killed due to a timeout
     else:
-      guard.cancel()
+      maxExecutionTimeThread.cancel()
   if stopByRE:
     return subprocessCall.stopByREErrorCode # return to indicate that the program was terminated/killed due to a stop regex
   # check for core dump file
@@ -311,12 +317,14 @@ def startLocalServer(port, onlyGetServerInfo=False):
     builds.models.Run.objects.count()
   except django.db.utils.OperationalError:
     print("No table found in database. Run Django migration. (only done the first time)")
+    sys.stdout.flush()
     django.core.management.call_command("migrate", interactive=False, traceback=True, no_color=True)
   # start server
   with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
     result=sock.connect_ex(('localhost',port))
     if result!=0:
       print("No server is running. Starting server. (only done the first time)")
+      sys.stdout.flush()
       env=os.environ.copy()
       env['DJANGO_SETTINGS_MODULE']='mbsimenv.settings_'+django.conf.settings.MBSIMENV_TYPE
       preexec_fn=os.setpgrp if os.name=="posix" else None
@@ -328,6 +336,7 @@ def startLocalServer(port, onlyGetServerInfo=False):
     else:
       p=None
       print("A server is already running. Skipping starting another one.")
+      sys.stdout.flush()
 
   with open(pidfile, "r") as f:
     localserver=json.load(f)
@@ -419,6 +428,7 @@ def handleRecoverableError(title, message):
     print("::error title="+title+"::"+message)
   else:
     print("ERROR: "+title+"\n"+message)
+  sys.stdout.flush()
 
 def lcovColor(rate):
   rateMin=0.7

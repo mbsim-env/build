@@ -135,6 +135,7 @@ if not args.noSSL:
   CERTDIR="/sslconfig/live/mbsim-env"
   while not os.path.exists(CERTDIR+"/cert.pem") or not os.path.exists(CERTDIR+"/privkey.pem"):
     print("Waiting for ssl certificate.")
+    sys.stdout.flush()
     time.sleep(0.5)
   with open("/database/postgresql.conf", "a") as f:
     print("ssl = on", file=f)

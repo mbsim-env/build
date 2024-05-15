@@ -5,19 +5,15 @@ import argparse
 import os
 import subprocess
 import sys
-import datetime
-import codecs
 import json
-import re
 import time
-import glob
 import django
-import hashlib
 sys.path.append("/context/mbsimenv")
 import runexamples
 import service
 import base
 import psutil
+import tempfile
 
 # arguments
 argparser=argparse.ArgumentParser(
@@ -71,6 +67,7 @@ while True:
     break
   except django.db.utils.OperationalError:
     print("Waiting for database to startup. Retry in 0.5s")
+    sys.stdout.flush()
     time.sleep(0.5)
 django.db.connections.close_all()
 
@@ -159,6 +156,7 @@ if build or args.runExamplesPre:
     if runCur is not None:
       for exStatic in runexamples.models.ExampleStatic.objects.filter(update=True):
         print("Updating example "+exStatic.exampleName+" with example runID="+str(runCur.id))
+        sys.stdout.flush()
         exCur=runCur.examples.get(exampleName=exStatic.exampleName)
         if exCur is None:
           continue
@@ -182,9 +180,16 @@ if build or args.runExamplesPre:
           ref=runexamples.models.ExampleStaticReference()
           ref.exampleStatic=exStatic
           ref.h5FileName=rfCur.h5FileName
-          with rfCur.h5File.open("rb") as fi:
-            with ref.h5File.open("wb") as fo:
-              ref.h5FileSHA1=base.helper.copyFile(fi, fo, returnSHA1HexDigest=True)
+          try:
+            tempF=tempfile.NamedTemporaryFile(mode='wb', delete=False)
+            with rfCur.h5File.open("rb") as fi:
+              base.helper.copyFile(fi, tempF)
+            tempF.close()
+            with open(tempF.name, "rb") as fi:
+              with ref.h5File.open("wb") as fo:
+                ref.h5FileSHA1=base.helper.copyFile(fi, fo, returnSHA1HexDigest=True)
+          finally:
+            os.unlink(tempF.name)
           ref.save()
         # set ref time
         exStatic.refTime=exCur.time
@@ -201,6 +206,7 @@ if build:
   
   print("Zeroing ccache statistics.")
   subprocess.call(["ccache", "-z"])
+  sys.stdout.flush()
 
   if args.buildRunID is not None:
     ARGS.append("--buildRunID")
@@ -268,16 +274,20 @@ if build:
     if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
       ret=ret+1
       print("git checkout detached failed.")
+      sys.stdout.flush()
     if subprocess.call(["git", "fetch", "-q", "-f", "--depth", "1", "origin", sha+":"+sha])!=0:
       ret=ret+1
       print("git fetch failed.")
+      sys.stdout.flush()
     if subprocess.call(["git", "checkout", "-q", sha])!=0:
       ret=ret+1
       print("git checkout of branch "+args.mbsimBranch+" failed.")
+      sys.stdout.flush()
     for repo in [{"gitURL": "https://github.com/mbsim-env/mbsim.git"}]+args.buildConfig.get("addRepos", []):
       localDir=repo["gitURL"].split("/")[-1][0:-4]
       os.chdir("/mbsim-env/"+localDir+"-valgrind")
       print('Update remote repository '+repo["gitURL"]+":")
+      sys.stdout.flush()
       if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
         ret=ret+1
       if subprocess.call(["git", "fetch", "-q", "-f", "--depth", "1", "origin", "master:master"])!=0:
@@ -346,12 +356,15 @@ def runExamplesPartition(ARGS, pullExampleRepos, pullAll):
     if subprocess.call(["git", "checkout", "-q", "HEAD~0"])!=0:
       ret=ret+1
       print("git checkout detached failed.")
+      sys.stdout.flush()
     if subprocess.call(["git", "fetch", "-q", "-f", "--depth", "1", "origin", sha+":"+sha])!=0:
       ret=ret+1
       print("git fetch failed.")
+      sys.stdout.flush()
     if subprocess.call(["git", "checkout", "-q", sha])!=0:
       ret=ret+1
       print("git checkout of branch "+branch+" failed.")
+      sys.stdout.flush()
     sys.stdout.flush()
 
   os.makedirs("/mbsim-env/mbsim/examples", exist_ok=True)

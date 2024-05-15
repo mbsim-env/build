@@ -50,6 +50,7 @@ while True:
     break
   except django.db.utils.OperationalError:
     print("Waiting for database to startup. Retry in 0.5s")
+    sys.stdout.flush()
     time.sleep(0.5)
 django.db.connections.close_all()
 
@@ -112,6 +113,7 @@ os.environ['PKG_CONFIG_PATH']=((os.environ['PKG_CONFIG_PATH']+":") if 'PKG_CONFI
 subprocess.call(["ccache", "-M", str(args.ccacheSize)+"G"])
 print("Zeroing ccache statistics.")
 subprocess.call(["ccache", "-z"])
+sys.stdout.flush()
 
 if args.buildRunID is not None:
   ARGS.append("--buildRunID")
