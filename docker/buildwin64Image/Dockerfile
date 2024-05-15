@@ -238,7 +238,7 @@ COPY django/mbsimenv/runexamples        /context/mbsimenv/runexamples
 COPY django/mbsimenv/service            /context/mbsimenv/service                     
 
 # use a unpriviliged user to run the container
-RUN yum install -y 7z
+RUN yum install -y p7zip-plugins
 USER dockeruser:dockeruser
 
 # these are the default arguments when running the container

@@ -42,7 +42,8 @@ class SevenZipFile:
     os.makedirs(self.tmpdir.name+os.path.sep+os.path.dirname(arcname), exist_ok=True)
   def add(self, name, arcname):
     self._createDir(arcname)
-    shutil.copyfile(name, self.tmpdir.name+os.path.sep+arcname)
+    shutil.copyfile(name, self.tmpdir.name+os.path.sep+arcname, follow_symlinks=False)
+    shutil.copymode(name, self.tmpdir.name+os.path.sep+arcname, follow_symlinks=False)
   write = add
   def writestr(self, arcname, string):
     self._createDir(arcname)

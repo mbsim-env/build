@@ -31,7 +31,7 @@ function releaseDistribution(url) {
     }
     else {
       $("#releaseButton").attr("disabled", "disabled");
-      var noti=new Notification("<small>Pending release distribution. Please wait, at least 1 or 2 minutes.</small>");
+      var noti=new Notification("<small>Pending release distribution. Please wait, at least 1 or 2 minutes until this message disappears.</small>");
       ajaxCall(url, {releaseVersion: $("#releaseVersion").val()}, function() {
         // done
         noti.success("<small>Successfully released</small>");

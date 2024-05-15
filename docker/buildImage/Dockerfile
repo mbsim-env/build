@@ -302,7 +302,7 @@ RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser d
 RUN ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/g++ && ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/c++
 
 # use a unpriviliged user to run the container
-RUN yum install -y 7z
+RUN yum install -y p7zip-plugins
 USER dockeruser:dockeruser
 
 # these are the default arguments when running the container
