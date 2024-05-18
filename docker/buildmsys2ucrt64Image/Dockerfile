@@ -37,7 +37,7 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
 ENV MSYSTEM=UCRT64 CHERE_INVOKING=yes
 SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
 
-RUN "pacman --noconfirm -S mingw-w64-ucrt-x86_64-7zip mingw-w64-ucrt-x86_64-swig unzip && pacman --noconfirm -Scc"
+RUN "pacman --noconfirm -S patch mingw-w64-ucrt-x86_64-7zip mingw-w64-ucrt-x86_64-swig unzip && pacman --noconfirm -Scc"
 
 # Install mesa for software OpenGL (only needed to run GUI programs in VMs)
 RUN "mkdir mesa && cd mesa && `
@@ -59,7 +59,6 @@ RUN "echo 'PATH=\"$PATH:/c/git/mingw64/bin\"' >> ~/.bash_profile"
 # install msys2 using pacman
 RUN "pacman --noconfirm -S `
   dos2unix `
-  patch `
   mingw-w64-ucrt-x86_64-arpack `
   mingw-w64-ucrt-x86_64-autotools `
   mingw-w64-ucrt-x86_64-boost `
