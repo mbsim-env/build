@@ -3,6 +3,23 @@
 
 FROM mcr.microsoft.com/windows/servercore:ltsc2019
 
+# set labels
+LABEL org.label-schema.schema-version="1.0" `
+  org.label-schema.name="mbsimenv/buildmsys2ucrt64" `
+  org.label-schema.description="Automatic build (win64 using msys2-ucrt64) for the MBSim-Environment." `
+  org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/buildmsys2ucrt64Image" `
+  org.label-schema.vendor="MBSim-Environment"
+
+# ccache for autotools
+# ccache for cmake
+ENV CC="ccache gcc" `
+    CXX="ccache g++" `
+    CMAKE_CXX_COMPILER_LAUNCHER=ccache `
+    CMAKE_C_COMPILER_LAUNCHER=ccache `
+    CCACHE_DIR=/mbsim-ccache `
+    MBSIM_SWIG=1 `
+    HOME=/home/user
+
 # install msys2
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; `
@@ -20,6 +37,25 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
 ENV MSYSTEM=UCRT64 CHERE_INVOKING=yes
 SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
 
+RUN "pacman --noconfirm -S mingw-w64-ucrt-x86_64-7zip mingw-w64-ucrt-x86_64-swig unzip && pacman --noconfirm -Scc"
+
+# Install mesa for software OpenGL (only needed to run GUI programs in VMs)
+RUN "mkdir mesa && cd mesa && `
+  wget --no-verbose https://github.com/pal1000/mesa-dist-win/releases/download/23.1.9/mesa3d-23.1.9-release-msvc.7z && `
+  7z x mesa3d-23.1.9-release-msvc.7z && `
+  cmd //c systemwidedeploy.cmd 1 && `
+  cd .. && for i in {1..30}; do sleep 1; echo Try $i; rm -rf mesa && break; done"
+
+# patch swig
+RUN "mkdir /context"
+COPY docker/buildmsys2ucrt64Image/swig.git.patch c:/msys64/context/swig.git.patch
+RUN "cd /ucrt64/share/swig/4.2.1 && patch -p2 < /context/swig.git.patch"
+
+#install git
+RUN "wget https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/MinGit-2.43.0-64-bit.zip && `
+  unzip -d /c/git MinGit-2.43.0-64-bit.zip && rm -f MinGit-2.43.0-64-bit.zip"
+RUN "echo 'PATH=\"$PATH:/c/git/mingw64/bin\"' >> ~/.bash_profile"
+
 # install msys2 using pacman
 RUN "pacman --noconfirm -S `
   dos2unix `
@@ -34,7 +70,6 @@ RUN "pacman --noconfirm -S `
   mingw-w64-ucrt-x86_64-hdf5 `
   mingw-w64-ucrt-x86_64-octave `
   mingw-w64-ucrt-x86_64-openblas `
-  mingw-w64-ucrt-x86_64-7zip `
   mingw-w64-ucrt-x86_64-python-numpy `
   mingw-w64-ucrt-x86_64-python-sympy `
   mingw-w64-ucrt-x86_64-python-h5py `
@@ -45,7 +80,6 @@ RUN "pacman --noconfirm -S `
   mingw-w64-ucrt-x86_64-diffutils `
   mingw-w64-ucrt-x86_64-soqt-qt5 `
   mingw-w64-ucrt-x86_64-spooles `
-  mingw-w64-ucrt-x86_64-swig `
   mingw-w64-ucrt-x86_64-xalan-c `
   mingw-w64-ucrt-x86_64-xerces-c `
   mingw-w64-ucrt-x86_64-ccache `
@@ -63,48 +97,8 @@ RUN "pacman --noconfirm -S `
   mingw-w64-ucrt-x86_64-python-requests-oauthlib && `
   pacman --noconfirm -Scc"
 
-# Install mesa for software OpenGL (only needed to run GUI programs in VMs)
-RUN "mkdir mesa && cd mesa && `
-  wget --no-verbose https://github.com/pal1000/mesa-dist-win/releases/download/23.1.9/mesa3d-23.1.9-release-msvc.7z && `
-  7z x mesa3d-23.1.9-release-msvc.7z && `
-  cmd //c systemwidedeploy.cmd 1 && `
-  cd .. && for i in {1..30}; do sleep 1; echo Try $i; rm -rf mesa && break; done"
-
 # Install pip packages
 RUN "python.exe -m pip install --upgrade pip==24.0 && python.exe -m pip install django==3.2 django-allauth==0.47 django-octicons==1.0"
-
-# patch swig
-RUN "mkdir /context"
-COPY docker/buildmsys2ucrt64Image/swig.git.patch c:/msys64/context/swig.git.patch
-RUN "cd /ucrt64/share/swig/4.1.1 && patch -p2 < /context/swig.git.patch"
-
-# install msys2 using pacman (mfmf merge with above)
-RUN "pacman --noconfirm -S unzip && pacman --noconfirm -Scc"
-
-#install git
-RUN "wget https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/MinGit-2.43.0-64-bit.zip && `
-  unzip -d /c/git MinGit-2.43.0-64-bit.zip && rm -f MinGit-2.43.0-64-bit.zip"
-# (mfmf move up)
-ENV HOME=/home/user
-RUN "echo 'PATH=\"$PATH:/c/git/mingw64/bin\"' >> ~/.bash_profile"
-
-# ccache for autotools
-# ccache for cmake
-ENV CC="ccache gcc" `
-    CXX="ccache g++" `
-    CMAKE_CXX_COMPILER_LAUNCHER=ccache `
-    CMAKE_C_COMPILER_LAUNCHER=ccache `
-    CCACHE_DIR=/mbsim-ccache
-
-# enable swig interface to mbsim
-ENV MBSIM_SWIG=1
-
-# set labels
-LABEL org.label-schema.schema-version="1.0" `
-  org.label-schema.name="mbsimenv/buildmsys2ucrt64" `
-  org.label-schema.description="Automatic build (win64 using msys2-ucrt64) for the MBSim-Environment." `
-  org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/buildmsys2ucrt64Image" `
-  org.label-schema.vendor="MBSim-Environment"
 
 # create volume direcotires
 RUN "mkdir /mbsim-env /mbsim-ccache"
