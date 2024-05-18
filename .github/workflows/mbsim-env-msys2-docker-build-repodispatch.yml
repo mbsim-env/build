@@ -1,6 +1,9 @@
 name: MSYS2 Docker Build (Repo-Dispatch)
 on:
   push:
+env:
+  # get secrets
+  mbsimenvsec_dockerhubAccessToken: ${{secrets.dockerhubAccessToken}}
 jobs:
   build:
     name: "msys2-docker-build"
@@ -9,7 +12,7 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@v4
       - name: "Docker login"
-        run: docker login -u fm12 -p ${{secrets.dockerhubAccessToken}}
+        run: echo $Env:mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
       - name: "Docker pull"
         run: docker pull mbsimenv/buildmsys2ucrt64:latest
       - name: "Docker build"
