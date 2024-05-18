@@ -48,8 +48,8 @@ RUN "mkdir mesa && cd mesa && `
 
 # patch swig
 RUN "mkdir /context"
-COPY docker/buildmsys2ucrt64Image/swig.git.patch c:/msys64/context/swig.git.patch
-RUN "cd /ucrt64/share/swig/4.2.1 && patch -p2 < /context/swig.git.patch"
+#mfmf COPY docker/buildmsys2ucrt64Image/swig.git.patch c:/msys64/context/swig.git.patch
+#mfmf RUN "cd /ucrt64/share/swig/4.2.1 && patch -p2 < /context/swig.git.patch"
 
 #install git
 RUN "wget https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/MinGit-2.43.0-64-bit.zip && `
