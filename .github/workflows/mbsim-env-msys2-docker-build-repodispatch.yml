@@ -1,0 +1,23 @@
+name: MSYS2 Docker Build (Repo-Dispatch)
+on:
+  push:
+jobs:
+  build:
+    name: "msys2-docker-build"
+    runs-on: windows-2019
+    steps:
+      - name: "Dump resources"
+        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
+      - name: "Checkout"
+        uses: actions/checkout@v4
+      - name: "Docker login"
+        run: docker login -u fm12 -p ${{secrets.dockerhubAccessToken}}
+      - name: "Docker pull"
+        run: docker pull mbsimenv/buildmsys2ucrt64:latest
+      - name: "Docker build"
+        run: docker build -t mbsimenv/buildmsys2ucrt64:latest --cache-from mbsimenv/buildmsys2ucrt64:latest -f docker/buildmsys2ucrt64Image/Dockerfile .
+      - name: "Docker push"
+        run: docker push mbsimenv/buildmsys2ucrt64:latest
+      - name: "Dump resources"
+        if: ${{always()}}
+        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
