@@ -1,0 +1,55 @@
+name: MSYS2 Build (Repo-Dispatch)
+on:
+  push:
+env:
+  # set the CPU type for OpenBLAS to avoid CPU dependent results (e.g. with/without AVX512)
+  OPENBLAS_CORETYPE: Haswell
+  # tagname and servername of remote mbsimenv server
+  MBSIMENVTAGNAME: latest
+  MBSIMENVSERVERNAME: www.mbsim-env.de
+  # connect to this server:port for www, database and filestorage
+  MBSIMENVWWW: www.mbsim-env.de:443
+  MBSIMENVDATABASE: www.mbsim-env.de:5432
+  MBSIMENVFILESTORAGE: www.mbsim-env.de:1122
+  # get secrets
+  mbsimenvsec_githubAccessToken: ${{secrets.githubAccessToken}}
+  mbsimenvsec_mbsimenvAccessToken: ${{secrets.mbsimenvAccessToken}}
+  mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
+  mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
+  mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
+jobs:
+  build:
+    name: "msys2-build"
+    runs-on: windows-2019
+    steps:
+      - name: "Docker: pull image"
+        run: >
+          docker image pull mbsimenv/buildmsys2ucrt64:latest &&
+          mkdir -m 777 -p ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
+      - name: "Docker: run container"
+        run: >
+          docker run
+          --init
+          --label buildtype=msys2win64
+          --env OPENBLAS_CORETYPE
+          --env MBSIMENVDATABASE
+          --env MBSIMENVFILESTORAGE
+          --env MBSIMENVSERVERNAME
+          --env MBSIMENVTAGNAME
+          --env MBSIMENVIMAGEID=$(docker image inspect -f "{{.Id}}" mbsimenv/buildmsys2ucrt64:latest)
+          --env mbsimenvsec_githubAccessToken
+          --env mbsimenvsec_mbsimenvAccessToken
+          --env mbsimenvsec_djangoSecretKey
+          --env mbsimenvsec_postgresPassword
+          --env mbsimenvsec_filestoragePassword
+          -v ${{github.workspace}}/mbsim-env:/mbsim-env
+          -v ${{github.workspace}}/mbsim-ccache:/mbsim-ccache
+          mbsimenv/buildmsys2ucrt64:latest
+          --buildType msys2win64
+          --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
+          ${{github.run_attempt>1 && '--forceBuild' || ''}}
+          --ccacheSize 5
+          --fmatvecBranch master
+          --hdf5serieBranch master
+          --openmbvBranch master
+          --mbsimBranch master

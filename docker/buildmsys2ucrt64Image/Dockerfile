@@ -46,11 +46,6 @@ RUN "mkdir mesa && cd mesa && `
   cmd //c systemwidedeploy.cmd 1 && `
   cd .. && for i in {1..30}; do sleep 1; echo Try $i; rm -rf mesa && break; done"
 
-# patch swig
-RUN "mkdir /context"
-#mfmf COPY docker/buildmsys2ucrt64Image/swig.git.patch c:/msys64/context/swig.git.patch
-#mfmf RUN "cd /ucrt64/share/swig/4.2.1 && patch -p2 < /context/swig.git.patch"
-
 #install git
 RUN "wget https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/MinGit-2.43.0-64-bit.zip && `
   unzip -d /c/git MinGit-2.43.0-64-bit.zip && rm -f MinGit-2.43.0-64-bit.zip"
@@ -103,6 +98,7 @@ RUN "python.exe -m pip install --upgrade pip==24.0 && python.exe -m pip install 
 RUN "mkdir /mbsim-env /mbsim-ccache"
 
 # copy
+RUN "mkdir /context"
 COPY docker/buildImage/distribute.py            c:/msys64/context/distribute.py
 COPY docker/buildmsys2ucrt64Image/entrypoint.py c:/msys64/context/entrypoint.py
 COPY django/mbsimenv/build.py                   c:/msys64/context/mbsimenv/build.py
