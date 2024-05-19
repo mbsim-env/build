@@ -72,8 +72,9 @@ jobs:
           --env mbsimenvsec_filestoragePassword
           -v ${{github.workspace}}\mbsim-env:c:\msys64\mbsim-env
           -v ${{github.workspace}}\mbsim-ccache:c:\msys64\mbsim-ccache
-          --entrypoint c:/msys64/ucrt64/bin/python3
+          --entrypoint c:/msys64/context/entrypoint_msys2.bat
           mbsimenv/buildmsys2ucrt64:latest
+          timeout -k 30s 5h /ucrt64/bin/python3 /context/entrypoint.py
           c:/msys64/context/entrypoint.py
           --buildType msys2win64
           --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
