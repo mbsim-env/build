@@ -27,6 +27,33 @@ jobs:
       #          docker image pull mbsimenv/buildmsys2ucrt64:latest &&
       #          mkdir ${{github.workspace}}\mbsim-env &&
       #          mkdir ${{github.workspace}}\mbsim-ccache
+      #      - name: "Docker: run container"
+      #        run: >
+      #          docker run
+      #          --init
+      #          --label buildtype=msys2win64
+      #          --env OPENBLAS_CORETYPE
+      #          --env MBSIMENVDATABASE
+      #          --env MBSIMENVFILESTORAGE
+      #          --env MBSIMENVSERVERNAME
+      #          --env MBSIMENVTAGNAME
+      #          --env MBSIMENVIMAGEID=$(docker image inspect -f "{{.Id}}" mbsimenv/buildmsys2ucrt64:latest)
+      #          --env mbsimenvsec_githubAccessToken
+      #          --env mbsimenvsec_mbsimenvAccessToken
+      #          --env mbsimenvsec_djangoSecretKey
+      #          --env mbsimenvsec_postgresPassword
+      #          --env mbsimenvsec_filestoragePassword
+      #          -v ${{github.workspace}}\mbsim-env:c:\msys64\mbsim-env
+      #          -v ${{github.workspace}}\mbsim-ccache:c:\msys64\mbsim-ccache
+      #          mbsimenv/buildmsys2ucrt64:latest
+      #          --buildType msys2win64
+      #          --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
+      #          ${{github.run_attempt>1 && '--forceBuild' || ''}}
+      #          --ccacheSize 5
+      #          --fmatvecBranch master
+      #          --hdf5serieBranch master
+      #          --openmbvBranch master
+      #          --mbsimBranch master
       - name: "Docker: run container"
         run: >
           docker run
@@ -37,7 +64,7 @@ jobs:
           --env MBSIMENVFILESTORAGE
           --env MBSIMENVSERVERNAME
           --env MBSIMENVTAGNAME
-          --env MBSIMENVIMAGEID=$(docker image inspect -f "{{.Id}}" mbsimenv/buildmsys2ucrt64:latest)
+          --env MBSIMENVIMAGEID=$(docker image inspect -f "{{.Id}}" mcr.microsoft.com/windows/servercore:ltsc2019)
           --env mbsimenvsec_githubAccessToken
           --env mbsimenvsec_mbsimenvAccessToken
           --env mbsimenvsec_djangoSecretKey
