@@ -78,10 +78,3 @@ jobs:
           -v ${{github.workspace}}\mbsim-ccache:c:\msys64\mbsim-ccache
           --entrypoint powershell
           mcr.microsoft.com/windows/servercore:ltsc2019
-          --buildType msys2win64
-          ${{github.run_attempt>1 && '--forceBuild' || ''}}
-          --ccacheSize 5
-          --fmatvecBranch master
-          --hdf5serieBranch master
-          --openmbvBranch master
-          --mbsimBranch master
