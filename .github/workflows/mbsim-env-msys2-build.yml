@@ -74,4 +74,12 @@ jobs:
           -v ${{github.workspace}}\mbsim-ccache:c:\msys64\mbsim-ccache
           --entrypoint c:/msys64/ucrt64/bin/python3
           mbsimenv/buildmsys2ucrt64:latest
-          -c print(99)
+          c:/msys64/context/entrypoint.py
+          --buildType msys2win64
+          --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
+          ${{github.run_attempt>1 && '--forceBuild' || ''}}
+          --ccacheSize 5
+          --fmatvecBranch master
+          --hdf5serieBranch master
+          --openmbvBranch master
+          --mbsimBranch master
