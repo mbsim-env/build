@@ -25,7 +25,7 @@ jobs:
       - name: "Docker: pull image"
         run: >
           docker image pull mbsimenv/buildmsys2ucrt64:latest &&
-          mkdir ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
+          mkdir ${{github.workspace}}\mbsim-env ${{github.workspace}}\mbsim-ccache
       - name: "Docker: run container"
         run: >
           docker run
