@@ -37,11 +37,14 @@ jobs:
           --env MBSIMENVFILESTORAGE
           --env MBSIMENVSERVERNAME
           --env MBSIMENVTAGNAME
+          --env MBSIMENVIMAGEID=$(docker image inspect -f "{{.Id}}" mbsimenv/buildmsys2ucrt64:latest)
           --env mbsimenvsec_githubAccessToken
           --env mbsimenvsec_mbsimenvAccessToken
           --env mbsimenvsec_djangoSecretKey
           --env mbsimenvsec_postgresPassword
           --env mbsimenvsec_filestoragePassword
+          -v ${{github.workspace}}\mbsim-env:c:\msys64\mbsim-env
+          -v ${{github.workspace}}\mbsim-ccache:c:\msys64\mbsim-ccache
           mcr.microsoft.com/windows/servercore:ltsc2019
           --buildType msys2win64
           --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
