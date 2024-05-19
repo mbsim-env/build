@@ -54,6 +54,10 @@ jobs:
       #          --hdf5serieBranch master
       #          --openmbvBranch master
       #          --mbsimBranch master
+      - name: "mfmf"
+        run: >
+          mkdir ${{github.workspace}}\mbsim-env &&
+          mkdir ${{github.workspace}}\mbsim-ccache
       - name: "Docker: run container"
         run: >
           docker run
