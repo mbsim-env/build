@@ -22,11 +22,11 @@ jobs:
     name: "msys2-build"
     runs-on: windows-2019
     steps:
-      - name: "Docker: pull image"
-        run: >
-          docker image pull mbsimenv/buildmsys2ucrt64:latest &&
-          mkdir ${{github.workspace}}\mbsim-env &&
-          mkdir ${{github.workspace}}\mbsim-ccache
+      #      - name: "Docker: pull image"
+      #        run: >
+      #          docker image pull mbsimenv/buildmsys2ucrt64:latest &&
+      #          mkdir ${{github.workspace}}\mbsim-env &&
+      #          mkdir ${{github.workspace}}\mbsim-ccache
       - name: "Docker: run container"
         run: >
           docker run
@@ -45,7 +45,8 @@ jobs:
           --env mbsimenvsec_filestoragePassword
           -v ${{github.workspace}}\mbsim-env:c:\msys64\mbsim-env
           -v ${{github.workspace}}\mbsim-ccache:c:\msys64\mbsim-ccache
-          mbsimenv/buildmsys2ucrt64:latest
+      --entrypoint powershell
+      mcr.microsoft.com/windows/servercore:ltsc2019
           --buildType msys2win64
           --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
           ${{github.run_attempt>1 && '--forceBuild' || ''}}
