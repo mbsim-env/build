@@ -72,6 +72,6 @@ jobs:
           --env mbsimenvsec_filestoragePassword
           -v ${{github.workspace}}\mbsim-env:c:\msys64\mbsim-env
           -v ${{github.workspace}}\mbsim-ccache:c:\msys64\mbsim-ccache
-          --entrypoint c:\msys2\ucrt64\bin\python3
+          --entrypoint c:/msys2/ucrt64/bin/python3
           mbsimenv/buildmsys2ucrt64:latest
           -c print(99)
