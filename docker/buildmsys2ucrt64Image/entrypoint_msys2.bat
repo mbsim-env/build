@@ -18,3 +18,5 @@ c:\msys64\usr\bin\bash.exe -l -c "ls -l /context/entrypoint.py"
 echo mfmff
 c:\msys64\usr\bin\bash.exe -l -c "%*"
 echo mfmfg
+c:\msys64\usr\bin\bash.exe -l -c "/ucrt64/bin/python3 /context/entrypoint.py"
+echo mfmfh
