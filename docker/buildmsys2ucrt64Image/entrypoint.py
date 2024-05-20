@@ -118,7 +118,7 @@ if args.buildRunID is not None:
 
 # run build
 ret=subprocess.call(
-  ["c:/msys64/ucrt64/bin/python.exe", "c:/mbsim-env/build/django/mbsimenv/build.py"]+ARGS+[
+  ["c:/msys64/ucrt64/bin/python.exe", "c:/msys64/context/mbsimenv/build.py"]+ARGS+[
   "--sourceDir", "c:/msys64/mbsim-env", "--binSuffix=-dockermsys2ucrt64", "--prefix", "c:/msys64/mbsim-env/local-dockermsys2ucrt64", "-j", str(args.jobs), "--buildSystemRun",
   "--fmatvecBranch", args.fmatvecBranch,
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
