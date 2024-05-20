@@ -31,7 +31,7 @@ jobs:
         run: >
           docker run
           --init
-          --label buildtype=msys2win64
+          --label buildtype=msys2win64-ci
           --env OPENBLAS_CORETYPE
           --env MBSIMENVDATABASE
           --env MBSIMENVFILESTORAGE
@@ -46,7 +46,7 @@ jobs:
           -v ${{github.workspace}}\mbsim-env:c:\msys64\mbsim-env
           -v ${{github.workspace}}\mbsim-ccache:c:\msys64\mbsim-ccache
           mbsimenv/buildmsys2ucrt64:latest
-          --buildType msys2win64
+          --buildType msys2win64-ci
           --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
           ${{github.run_attempt>1 && '--forceBuild' || ''}}
           --ccacheSize 5

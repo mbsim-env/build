@@ -37,7 +37,7 @@ if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="
   raise RuntimeError("Envvar MBSIMENVSERVERNAME is not defined.")
 
 # check buildtype
-if not args.buildType.startswith("msys2win64"):
+if args.buildType!="msys2win64-ci" and args.buildType!="msys2win64-dailyrelease":
   raise RuntimeError("Unknown build type "+args.buildType+".")
 
 os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
@@ -69,7 +69,7 @@ for repo in [
       stdout=sys.stdout, stderr=sys.stderr)
 
 # args
-if args.buildType.startswith("win64-dailyrelease"):
+if args.buildType == "msys2win64-dailyrelease":
   BUILDTYPE="Release"
   os.environ['CXXFLAGS']=os.environ.get('CXXFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
   os.environ['CFLAGS']=os.environ.get('CFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
@@ -77,7 +77,7 @@ if args.buildType.startswith("win64-dailyrelease"):
   ARGS=["--enableDistribution"]
   RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--exeExt", ".exe", "--filter", "'basic' in labels"]
   
-elif args.buildType == "win64-ci":
+elif args.buildType == "msys2win64-ci":
   BUILDTYPE="Debug"
   os.environ['CXXFLAGS']=os.environ.get('CXXFLAGS', '')+" -Og -g -gdwarf-2"
   os.environ['CFLAGS']=os.environ.get('CFLAGS', '')+" -Og -g -gdwarf-2"
