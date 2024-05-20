@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+print("mfmf1")
 # imports
 import argparse
 import os
@@ -9,13 +10,16 @@ import psutil
 import django
 import time
 import json
+print("mfmf1")
 sys.path.append("c:/msys64/context/mbsimenv")
 import service
+print("mfmf1")
 
 # arguments
 argparser=argparse.ArgumentParser(
   formatter_class=argparse.ArgumentDefaultsHelpFormatter,
   description="Entrypoint for container mbsimenv/buildmsys2ucrt64.")
+print("mfmf1")
   
 argparser.add_argument("--buildType", type=str, required=True, help="The build type")
 argparser.add_argument("--executor", type=str, required=True, help="The executor of this build")
@@ -31,17 +35,21 @@ argparser.add_argument("--buildRunID", default=None, type=int, help="The id of t
 argparser.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")
 
 args=argparser.parse_args()
+print("mfmf1")
 
 # check environment
 if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="":
   raise RuntimeError("Envvar MBSIMENVSERVERNAME is not defined.")
 
+print("mfmf1")
 # check buildtype
 if args.buildType!="msys2win64-ci" and args.buildType!="msys2win64-dailyrelease":
   raise RuntimeError("Unknown build type "+args.buildType+".")
 
 os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
+print("mfmf1")
 django.setup()
+print("mfmf1")
 
 # wait for database server
 while True:
@@ -52,7 +60,9 @@ while True:
     print("Waiting for database to startup. Retry in 0.5s")
     sys.stdout.flush()
     time.sleep(0.5)
+print("mfmf1")
 django.db.connections.close_all()
+print("mfmf1")
 
 # run
 
@@ -67,6 +77,7 @@ for repo in [
   if not os.path.isdir("c:/msys64/mbsim-env/"+localDir):
       subprocess.check_call(["git", "clone", "-q", "--depth", "1", repo], cwd="c:/msys64/mbsim-env",
       stdout=sys.stdout, stderr=sys.stderr)
+print("mfmf1")
 
 # args
 if args.buildType == "msys2win64-dailyrelease":
@@ -98,15 +109,18 @@ elif args.buildType == "msys2win64-ci":
   #mfmf  info.save()
 else:
   raise RuntimeError("Unknown build type "+args.buildType)
+print("mfmf1")
   
 # pass arguments to build.py
 if args.forceBuild:
   ARGS.append('--forceBuild')
+print("mfmf1")
 
 # env
 os.environ['PKG_CONFIG_PATH']=((os.environ['PKG_CONFIG_PATH']+":") if 'PKG_CONFIG_PATH' in os.environ else "")+\
                               "/mbsim-env/local/lib/pkgconfig:/mbsim-env/local/lib64/pkgconfig"
 
+print("mfmf1")
 subprocess.call(["ccache", "-M", str(args.ccacheSize)+"G"])
 print("Zeroing ccache statistics.")
 subprocess.call(["ccache", "-z"])
