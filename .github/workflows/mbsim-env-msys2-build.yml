@@ -32,10 +32,12 @@ jobs:
       #mfmf
       #- name: "Docker: pull image"
       #  run: >
-      #    docker image pull mbsimenv/buildmsys2ucrt64:latest &&
-      #    mkdir ${{github.workspace}}\mbsim-env &&
-      #    mkdir ${{github.workspace}}\mbsim-ccache
+      #    docker image pull mbsimenv/buildmsys2ucrt64:latest
       #mfmf
+      - name: "Docker: create bind mount points"
+        run: >
+          mkdir ${{github.workspace}}\mbsim-env &&
+          mkdir ${{github.workspace}}\mbsim-ccache
       - name: "Docker: run container"
         run: >
           docker run
