@@ -116,6 +116,4 @@ CMD []
 # (start python3 with inside of the msys2 environment)
 COPY docker/buildmsys2ucrt64Image/entrypoint_msys2.bat c:/msys64/context/entrypoint_msys2.bat
 USER ContainerUser
-RUN "ls -l /context/entrypoint_msys2.bat; ls -l /ucrt64/bin/python3*; ls -l /context/entrypoint.py; ls -l /usr/bin/bash.exe; ls -l" #mfmf
-RUN "ls -l /c/msys64/context/entrypoint_msys2.bat; ls -l /c/msys64/ucrt64/bin/python3*; ls -l /c/msys64/context/entrypoint.py; ls -l /c/msys64/usr/bin/bash.exe; ls -l" #mfmf
 ENTRYPOINT ["c:/msys64/context/entrypoint_msys2.bat", "/ucrt64/bin/python3", "/context/entrypoint.py"]
