@@ -116,5 +116,6 @@ CMD []
 # (start python3 with inside of the msys2 environment)
 COPY docker/buildmsys2ucrt64Image/entrypoint_msys2.bat c:/msys64/context/entrypoint_msys2.bat
 USER ContainerUser
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 RUN setx PATH '%PATH%;c:/git/mingw64/bin' # mfmf move to git install
 ENTRYPOINT ["c:/msys64/ucrt64/bin/python3", "c:/msys64/context/entrypoint.py"]
