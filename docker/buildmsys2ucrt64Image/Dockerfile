@@ -110,6 +110,7 @@ COPY django/mbsimenv/builds                     c:/msys64/context/mbsimenv/build
 COPY django/mbsimenv/runexamples                c:/msys64/context/mbsimenv/runexamples
 COPY django/mbsimenv/service                    c:/msys64/context/mbsimenv/service
 
+RUN "python.exe -m pip install django-allauth==0.55"
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
