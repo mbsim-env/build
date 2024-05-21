@@ -65,7 +65,7 @@ for repo in [
             ]+list(map(lambda repo: repo["gitURL"], args.buildConfig.get("addRepos", []))):
   localDir=repo.split("/")[-1][0:-4]
   if not os.path.isdir("c:/msys64/mbsim-env/"+localDir):
-      subprocess.check_call(["git", "clone", "-q", "--depth", "1", repo], cwd="c:/msys64/mbsim-env",
+      subprocess.check_call(["c:/git/cmd/git", "clone", "-q", "--depth", "1", repo], cwd="c:/msys64/mbsim-env",
       stdout=sys.stdout, stderr=sys.stderr)
 
 # args
