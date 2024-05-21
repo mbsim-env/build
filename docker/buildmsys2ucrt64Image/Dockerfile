@@ -49,7 +49,7 @@ RUN "mkdir mesa && cd mesa && `
 #install git
 RUN "wget https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/MinGit-2.43.0-64-bit.zip && `
   unzip -d /c/git MinGit-2.43.0-64-bit.zip && rm -f MinGit-2.43.0-64-bit.zip"
-RUN "echo 'PATH=\"$PATH:/c/git/cmd/bin\"' >> ~/.bash_profile"
+RUN "echo 'PATH=\"$PATH:/c/git/cmd\"' >> ~/.bash_profile"
 
 # install msys2 using pacman
 RUN "pacman --noconfirm -S `
