@@ -49,6 +49,7 @@ RUN "mkdir mesa && cd mesa && `
 # install git
 RUN "wget https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/MinGit-2.43.0-64-bit.zip && `
   unzip -d /c/git MinGit-2.43.0-64-bit.zip && rm -f MinGit-2.43.0-64-bit.zip"
+RUN "echo 'PATH=\"$PATH:/c/git/cmd\"' >> ~/.bash_profile"
 
 # install msys2 using pacman
 RUN "pacman --noconfirm -S `
@@ -92,8 +93,6 @@ RUN "pacman --noconfirm -S `
 
 # Install pip packages
 RUN "python.exe -m pip install --upgrade pip==24.0 && python.exe -m pip install django==3.2 django-allauth==0.47 django-octicons==1.0"
-
-RUN "echo 'PATH=\"$PATH:/c/git/cmd\"' >> ~/.bash_profile"
 
 # create volume directories
 RUN "mkdir /mbsim-env /mbsim-ccache"
