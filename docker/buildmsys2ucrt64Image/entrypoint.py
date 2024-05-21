@@ -31,6 +31,16 @@ argparser.add_argument("--buildRunID", default=None, type=int, help="The id of t
 argparser.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")
 
 args=argparser.parse_args()
+print(subprocess.call(["git", "-h"], cwd="c:/msys64/mbsim-env", stdout=sys.stdout, stderr=sys.stderr))
+print(subprocess.call(["git.exe", "-h"], cwd="c:/msys64/mbsim-env", stdout=sys.stdout, stderr=sys.stderr))
+print(subprocess.call(["c:/git/cmd/git", "-h"], cwd="c:/msys64/mbsim-env", stdout=sys.stdout, stderr=sys.stderr))
+print(subprocess.call(["c:/git/cmd/git.exe", "-h"], cwd="c:/msys64/mbsim-env", stdout=sys.stdout, stderr=sys.stderr))
+print(subprocess.call(["c:/git/mingw64/bin/git", "-h"], cwd="c:/msys64/mbsim-env", stdout=sys.stdout, stderr=sys.stderr))
+print(subprocess.call(["c:/git/mingw64/bin/git.exe", "-h"], cwd="c:/msys64/mbsim-env", stdout=sys.stdout, stderr=sys.stderr))
+import shutil
+print(shutil.which("git"))
+print(shutil.which("git.exe"))
+print(os.environ["PATH"])
 
 # check environment
 if "MBSIMENVSERVERNAME" not in os.environ or os.environ["MBSIMENVSERVERNAME"]=="":
