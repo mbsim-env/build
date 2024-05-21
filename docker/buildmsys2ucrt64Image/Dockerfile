@@ -94,7 +94,7 @@ RUN "pacman --noconfirm -S `
 # Install pip packages
 RUN "python.exe -m pip install --upgrade pip==24.0 && python.exe -m pip install django==3.2 django-allauth==0.47 django-octicons==1.0"
 
-# create volume direcotires
+# create volume directories
 RUN "mkdir /mbsim-env /mbsim-ccache"
 
 # copy
