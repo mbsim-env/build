@@ -65,7 +65,7 @@ for repo in [
             ]+list(map(lambda repo: repo["gitURL"], args.buildConfig.get("addRepos", []))):
   localDir=repo.split("/")[-1][0:-4]
   if not os.path.isdir("c:/msys64/mbsim-env/"+localDir):
-      subprocess.check_call(["c:/git/cmd/git", "clone", "-q", "--depth", "1", repo], cwd="c:/msys64/mbsim-env",
+      subprocess.check_call(["git", "clone", "-q", "--depth", "1", repo], cwd="c:/msys64/mbsim-env",
       stdout=sys.stdout, stderr=sys.stderr)
 
 # args
@@ -136,8 +136,8 @@ ret=subprocess.call(
   "--with-boost-timer-lib=boost_timer-mt",
   "--with-boost-date-time-lib=boost_date_time-mt",
   "--passToCMake",
-  "-DSPOOLES_INCLUDE_DIRS=/ucrt64/include/spooles",
-  "-DSPOOLES_LIBRARIES=/ucrt64/lib/libspooles.a",
+  "-DSPOOLES_INCLUDE_DIRS=c:/msys64/ucrt64/include/spooles",
+  "-DSPOOLES_LIBRARIES=c:/msys64/ucrt64/lib/libspooles.a",
   "-DCMAKE_BUILD_TYPE="+BUILDTYPE,
   "-DCMAKE_CXX_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["CXXFLAGS"],
   "-DCMAKE_C_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["CFLAGS"],
