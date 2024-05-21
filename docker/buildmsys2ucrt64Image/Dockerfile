@@ -114,6 +114,6 @@ COPY django/mbsimenv/service                    c:/msys64/context/mbsimenv/servi
 CMD []
 # call this script when running the container
 # (start python3 with inside of the msys2 environment)
-COPY docker/buildmsys2ucrt64Image/entrypoint_msys2.bat c:/msys64/context/entrypoint_msys2.bat
+COPY docker/buildmsys2ucrt64Image/entrypoint_msys2.py c:/msys64/context/entrypoint_msys2.py
 USER ContainerUser
-ENTRYPOINT ["c:/msys64/context/entrypoint_msys2.bat", "/ucrt64/bin/python3", "/context/entrypoint.py"]
+ENTRYPOINT ["c:/msys64/ucrt64/bin/python3", "c:/msys64/context/entrypoint_msys2.py", "/ucrt64/bin/python3", "/context/entrypoint.py"]
