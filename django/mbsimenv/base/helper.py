@@ -17,6 +17,7 @@ import octicons.templatetags.octicons
 import hashlib
 import allauth
 import colorsys
+import shutil
 
 # a dummy context object doing just nothing (e.g. usefull as a dummy lock(mutext) object.
 class NullContext(object):
