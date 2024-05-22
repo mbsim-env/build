@@ -93,6 +93,10 @@ RUN "pacman --noconfirm -S `
 
 # Install pip packages
 RUN "python.exe -m pip install --upgrade pip==24.0 && python.exe -m pip install django==3.2 django-allauth==0.63 django-octicons==1.0"
+# mfmf move up START
+RUN "python.exe -m pip install django-allauth==0.55"
+RUN "pacman --noconfirm -S mingw-w64-ucrt-x86_64-gcc-fortran"
+# mfmf move up END
 
 # create volume directories
 RUN "mkdir /mbsim-env /mbsim-ccache"
@@ -110,8 +114,6 @@ COPY django/mbsimenv/builds                     c:/msys64/context/mbsimenv/build
 COPY django/mbsimenv/runexamples                c:/msys64/context/mbsimenv/runexamples
 COPY django/mbsimenv/service                    c:/msys64/context/mbsimenv/service
 
-# mfmf move up
-RUN "python.exe -m pip install django-allauth==0.55"
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
