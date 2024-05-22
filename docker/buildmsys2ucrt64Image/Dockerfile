@@ -112,8 +112,16 @@ COPY django/mbsimenv/service                    c:/msys64/context/mbsimenv/servi
 
 # mfmf move up
 RUN "python.exe -m pip install django-allauth==0.55"
+#mfmf
+RUN "set | grep CHERE"
+RUN "pwd"
 RUN "pwd; bash --login -c pwd"
 RUN "cd /tmp; pwd; bash --login -c pwd"
+WORKDIR c:/msys64/context
+RUN "pwd"
+RUN "pwd; bash --login -c pwd"
+RUN "cd /tmp; pwd; bash --login -c pwd"
+#mfmf
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
