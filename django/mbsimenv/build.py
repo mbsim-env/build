@@ -35,10 +35,6 @@ if not hasattr(octicons, '__version__') or hasattr(octicons, 'default_app_config
 toolDependencies=dict()
 docDir=None
 args=None
-if os.name=="posix":
-  bash=[] # on posix the shebang handels this
-else:
-  bash=[shutil.which("bash"), "--login"] # .. on one posix we consider to use bash always
 
 def parseArguments():
   # command line option definition
@@ -696,37 +692,37 @@ def configure(tool):
         os.chdir(savedDir)
         os.chdir(pj(args.sourceDir, tool.toolName))
         print("\n\nRUNNING aclocal\n", file=configureFD); configureFD.flush()
-        if base.helper.subprocessCall(bash+["aclocal", "--force"], configureFD)!=0:
+        if base.helper.subprocessCall(["aclocal", "--force"], configureFD, runInBash=True)!=0:
           raise RuntimeError("aclocal failed")
         print("\n\nRUNNING autoheader\n", file=configureFD); configureFD.flush()
-        if base.helper.subprocessCall(bash+["autoheader", "--force"], configureFD)!=0:
+        if base.helper.subprocessCall(["autoheader", "--force"], configureFD, runInBash=True)!=0:
           raise RuntimeError("autoheader failed")
         print("\n\nRUNNING libtoolize\n", file=configureFD); configureFD.flush()
-        if base.helper.subprocessCall(bash+["libtoolize", "-c", "--force"], configureFD)!=0:
+        if base.helper.subprocessCall(["libtoolize", "-c", "--force"], configureFD, runInBash=True)!=0:
           raise RuntimeError("libtoolize failed")
         print("\n\nRUNNING automake\n", file=configureFD); configureFD.flush()
-        if base.helper.subprocessCall(bash+["automake", "-a", "-c", "-f"], configureFD)!=0:
+        if base.helper.subprocessCall(["automake", "-a", "-c", "-f"], configureFD, runInBash=True)!=0:
           raise RuntimeError("automake failed")
         print("\n\nRUNNING autoconf\n", file=configureFD); configureFD.flush()
-        if base.helper.subprocessCall(bash+["autoconf", "--force"], configureFD)!=0:
+        if base.helper.subprocessCall(["autoconf", "--force"], configureFD, runInBash=True)!=0:
           raise RuntimeError("autoconf failed")
         print("\n\nRUNNING autoreconf\n", file=configureFD); configureFD.flush()
-        if base.helper.subprocessCall(bash+["autoreconf", "--force"], configureFD)!=0:
+        if base.helper.subprocessCall(["autoreconf", "--force"], configureFD, runInBash=True)!=0:
           raise RuntimeError("autoreconf failed")
       # configure
       os.chdir(savedDir)
       os.chdir(pj(args.sourceDir, buildTool(tool.toolName)))
       print("\n\nRUNNING configure\n", file=configureFD); configureFD.flush()
       if args.prefix is None:
-        if base.helper.subprocessCall(bash+["./config.status", "--recheck"], configureFD)!=0:
+        if base.helper.subprocessCall(["./config.status", "--recheck"], configureFD, runInBash=True)!=0:
           raise RuntimeError("configure failed")
       else:
-        command=bash+[os.path.relpath(pj(args.sourceDir, tool.toolName, "configure")), "--prefix", args.prefix] # use relpath to configure script to avoid Windows/Unix path problems with msys2
+        command=[os.path.relpath(pj(args.sourceDir, tool.toolName, "configure")), "--prefix", args.prefix] # use relpath to configure script to avoid Windows/Unix path problems with msys2
         command.extend(args.passToConfigure)
         pkgConfigDir=os.path.normpath(pj(args.prefix, "lib", "pkgconfig"))
         if "PKG_CONFIG_PATH" in os.environ:
           pkgConfigDir=pkgConfigDir+os.pathsep+os.environ["PKG_CONFIG_PATH"]
-        if base.helper.subprocessCall(command+["PKG_CONFIG_PATH="+pkgConfigDir], configureFD)!=0:
+        if base.helper.subprocessCall(command+["PKG_CONFIG_PATH="+pkgConfigDir], configureFD, runInBash=True)!=0:
           raise RuntimeError("configure failed")
     elif cmake and (not args.disableConfigure or not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName), "CMakeCache.txt"))):
       run=1

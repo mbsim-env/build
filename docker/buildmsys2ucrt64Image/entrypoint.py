@@ -12,13 +12,6 @@ import json
 sys.path.append("c:/msys64/context/mbsimenv")
 import service
 
-#mfmf
-import shutil
-print(shutil.which("gcc"))
-import os
-print(os.environ.get("CHERE_INVOKING", "notfound"))
-print(os.environ.get("MSYSTEM", "notfound"))
-#mfmf
 # arguments
 argparser=argparse.ArgumentParser(
   formatter_class=argparse.ArgumentDefaultsHelpFormatter,
