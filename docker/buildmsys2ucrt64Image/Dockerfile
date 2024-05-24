@@ -3,23 +3,6 @@
 
 FROM mcr.microsoft.com/windows/servercore:ltsc2019
 
-# set labels
-LABEL org.label-schema.schema-version="1.0" `
-  org.label-schema.name="mbsimenv/buildmsys2ucrt64" `
-  org.label-schema.description="Automatic build (win64 using msys2-ucrt64) for the MBSim-Environment." `
-  org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/buildmsys2ucrt64Image" `
-  org.label-schema.vendor="MBSim-Environment"
-
-# ccache for autotools
-# ccache for cmake
-ENV CC="ccache gcc" `
-    CXX="ccache g++" `
-    CMAKE_CXX_COMPILER_LAUNCHER=ccache `
-    CMAKE_C_COMPILER_LAUNCHER=ccache `
-    CCACHE_DIR=/mbsim-ccache `
-    MBSIM_SWIG=1 `
-    HOME=/home/user
-
 # install msys2
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; `
@@ -37,6 +20,7 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
 ENV MSYSTEM=UCRT64 CHERE_INVOKING=yes
 SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
 
+# install msys2 packages needed to install other tools
 RUN "pacman --noconfirm -S patch mingw-w64-ucrt-x86_64-7zip mingw-w64-ucrt-x86_64-swig unzip && pacman --noconfirm -Scc"
 
 # Install mesa for software OpenGL (only needed to run GUI programs in VMs)
@@ -51,7 +35,7 @@ RUN "wget https://github.com/git-for-windows/git/releases/download/v2.43.0.windo
   unzip -d /c/git MinGit-2.43.0-64-bit.zip && rm -f MinGit-2.43.0-64-bit.zip"
 RUN "echo 'PATH=\"$PATH:/c/git/cmd\"' >> ~/.bash_profile"
 
-# install msys2 using pacman
+# install msys2 packages
 RUN "pacman --noconfirm -S `
   dos2unix `
   mingw-w64-ucrt-x86_64-arpack `
@@ -70,6 +54,9 @@ RUN "pacman --noconfirm -S `
   mingw-w64-ucrt-x86_64-python-psutil `
   mingw-w64-ucrt-x86_64-python-pygithub `
   mingw-w64-ucrt-x86_64-python-paramiko `
+  mingw-w64-ucrt-x86_64-pyside2 `
+  mingw-w64-ucrt-x86_64-pyside2-tools `
+  mingw-w64-ucrt-x86_64-python-scipy `
   mingw-w64-ucrt-x86_64-qwt-qt5 `
   mingw-w64-ucrt-x86_64-diffutils `
   mingw-w64-ucrt-x86_64-soqt-qt5 `
@@ -92,10 +79,26 @@ RUN "pacman --noconfirm -S `
   pacman --noconfirm -Scc"
 
 # Install pip packages
-RUN "python.exe -m pip install --upgrade pip==24.0 && python.exe -m pip install django==3.2 django-allauth==0.63 django-octicons==1.0"
+RUN "python.exe -m pip install --upgrade pip==24.0 && python.exe -m pip install django==3.2 django-allauth==0.55 django-octicons==1.0"
 
 # create volume directories
 RUN "mkdir /mbsim-env /mbsim-ccache"
+
+# set labels
+LABEL org.label-schema.schema-version="1.0" `
+  org.label-schema.name="mbsimenv/buildmsys2ucrt64" `
+  org.label-schema.description="Automatic build (win64 using msys2-ucrt64) for the MBSim-Environment." `
+  org.label-schema.vcs-url="https://github.com/mbsim-env/build/tree/master/docker/buildmsys2ucrt64Image" `
+  org.label-schema.vendor="MBSim-Environment"
+
+# ccache for autotools and cmake
+ENV CC="ccache gcc" `
+    CXX="ccache g++" `
+    CMAKE_CXX_COMPILER_LAUNCHER=ccache `
+    CMAKE_C_COMPILER_LAUNCHER=ccache `
+    CCACHE_DIR=/mbsim-ccache `
+    MBSIM_SWIG=1 `
+    HOME=/home/user
 
 # copy
 RUN "mkdir /context"
@@ -110,10 +113,6 @@ COPY django/mbsimenv/builds                     c:/msys64/context/mbsimenv/build
 COPY django/mbsimenv/runexamples                c:/msys64/context/mbsimenv/runexamples
 COPY django/mbsimenv/service                    c:/msys64/context/mbsimenv/service
 
-# mfmf move up
-RUN "python.exe -m pip install django-allauth==0.55"
-RUN "pwd; bash --login -c pwd"
-RUN "cd /tmp; pwd; bash --login -c pwd"
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
