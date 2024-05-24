@@ -18,6 +18,7 @@ env:
   mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
   mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
   mbsimenvsec_dockerhubAccessToken: ${{secrets.dockerhubAccessToken}}
+  GH_TOKEN: ${{github.token}} # needed for gh-actions-cache
 jobs:
   build:
     name: "msys2-build"
@@ -44,6 +45,21 @@ jobs:
         run: >
           mkdir ${{github.workspace}}\mbsim-env &&
           mkdir ${{github.workspace}}\mbsim-ccache
+      - name: "Create build UUID"
+        shell: python
+        id: matrixUUID
+        run: |
+          import uuid
+          print("jobs.build.steps.matrixUUID.outputs.matrixUUID:\n"+str(uuid.uuid4()))
+          with open(r"${{github.output}}", "at") as o:
+            print("matrixUUID="+str(uuid.uuid4()), file=o)
+      - name: "Cache restore: ccache"
+        uses: actions/cache/restore@v4
+        with:
+          path: ${{github.workspace}}\mbsim-ccache
+          key: ccache-msys2win64-ci--${{steps.matrixUUID.outputs.matrixUUID}}
+          restore-keys: |
+            ccache-msys2win64-ci--
       - name: "Docker: run container"
         run: >
           docker run
@@ -71,3 +87,14 @@ jobs:
           --hdf5serieBranch master
           --openmbvBranch master
           --mbsimBranch master
+      - name: "Cache save: ccache"
+        uses: actions/cache/save@v4
+        with:
+          path: ${{github.workspace}}/mbsim-ccache
+          key: ccache-msys2win64-ci--${{steps.matrixUUID.outputs.matrixUUID}}
+      - name: "Cache remove-old: ccache"
+        shell: C:\msys64\usr\bin\bash.exe -l {0}
+        run: >
+          gh extension install actions/gh-actions-cache &&
+          KEYS=$(gh actions-cache list --key ccache-msys2win64-ci-- --order desc --sort created-at --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1) &&
+          for KEY in $KEYS; do gh actions-cache delete $KEY --confirm --repo ${{github.repository}} --branch ${{github.ref_name}}; done
