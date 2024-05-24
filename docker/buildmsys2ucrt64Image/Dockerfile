@@ -17,7 +17,7 @@ RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tl
 
 # set msys2 as default shell: you NEED TO use e.g.: RUN "ls -l && ls test" (with the double quotes)
 # we cannot use something like entrypoint_sys2.bat as wrapper script since e.g. "&&" is not passed as argument by docker Windows
-ENV MSYSTEM=UCRT64 CHERE_INVOKING=yes
+ENV MSYSTEM=UCRT64 CHERE_INVOKING=yes HOME=/home/user
 SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
 
 # install msys2 packages needed to install other tools
@@ -99,8 +99,7 @@ ENV CC="ccache gcc" `
     CMAKE_CXX_COMPILER_LAUNCHER=ccache `
     CMAKE_C_COMPILER_LAUNCHER=ccache `
     CCACHE_DIR=/mbsim-ccache `
-    MBSIM_SWIG=1 `
-    HOME=/home/user
+    MBSIM_SWIG=1
 
 # copy
 RUN "mkdir /context"
