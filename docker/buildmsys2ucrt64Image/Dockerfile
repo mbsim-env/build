@@ -50,13 +50,14 @@ RUN "pacman --noconfirm -S `
   mingw-w64-ucrt-x86_64-openblas `
   mingw-w64-ucrt-x86_64-python-numpy `
   mingw-w64-ucrt-x86_64-python-sympy `
+  mingw-w64-ucrt-x86_64-python-scipy `
+  mingw-w64-ucrt-x86_64-python-matplotlib `
   mingw-w64-ucrt-x86_64-python-h5py `
   mingw-w64-ucrt-x86_64-python-psutil `
   mingw-w64-ucrt-x86_64-python-pygithub `
   mingw-w64-ucrt-x86_64-python-paramiko `
   mingw-w64-ucrt-x86_64-pyside2 `
   mingw-w64-ucrt-x86_64-pyside2-tools `
-  mingw-w64-ucrt-x86_64-python-scipy `
   mingw-w64-ucrt-x86_64-qwt-qt5 `
   mingw-w64-ucrt-x86_64-diffutils `
   mingw-w64-ucrt-x86_64-soqt-qt5 `
