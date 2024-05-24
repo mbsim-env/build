@@ -1,7 +1,7 @@
 # escape=`
 # buildmsys2ucrt64 image: this image is used to build mbsim-env for Windows
 
-FROM mcr.microsoft.com/windows/servercore:ltsc2019
+FROM buildmsys2ucrt64base:latest
 
 # install msys2
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
