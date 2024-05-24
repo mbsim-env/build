@@ -25,14 +25,15 @@ jobs:
       #mfmf
       - name: "Checkout"
         uses: actions/checkout@v4
+      - name: "Docker pull base"
+        run: docker pull mbsimenv/buildmsys2ucrt64base:latest
       - name: "Docker pull"
         run: docker pull mbsimenv/buildmsys2ucrt64:latest
       - name: "Docker build"
         run: docker build -t mbsimenv/buildmsys2ucrt64:latest --cache-from mbsimenv/buildmsys2ucrt64:latest -f docker/buildmsys2ucrt64Image/Dockerfile .
       #mfmf
       #- name: "Docker: pull image"
-      #  run: >
-      #    docker image pull mbsimenv/buildmsys2ucrt64:latest
+      #  run: docker pull mbsimenv/buildmsys2ucrt64:latest
       #mfmf
       - name: "Docker: create bind mount points"
         run: >
