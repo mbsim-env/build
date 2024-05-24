@@ -17,6 +17,7 @@ env:
   mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
   mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
   mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
+  mbsimenvsec_dockerhubAccessToken: ${{secrets.dockerhubAccessToken}}
 jobs:
   build:
     name: "msys2-build"
@@ -25,12 +26,16 @@ jobs:
       #mfmf
       - name: "Checkout"
         uses: actions/checkout@v4
+      - name: "Docker login"
+        run: echo $Env:mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
       - name: "Docker pull base"
         run: docker pull mbsimenv/buildmsys2ucrt64base:latest
       - name: "Docker pull"
         run: docker pull mbsimenv/buildmsys2ucrt64:latest
       - name: "Docker build"
         run: docker build -t mbsimenv/buildmsys2ucrt64:latest --cache-from mbsimenv/buildmsys2ucrt64:latest -f docker/buildmsys2ucrt64Image/Dockerfile .
+      - name: "Docker push"
+        run: docker push mbsimenv/buildmsys2ucrt64:latest
       #mfmf
       #- name: "Docker: pull image"
       #  run: docker pull mbsimenv/buildmsys2ucrt64:latest
