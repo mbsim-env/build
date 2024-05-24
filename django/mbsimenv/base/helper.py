@@ -17,6 +17,7 @@ import octicons.templatetags.octicons
 import hashlib
 import allauth
 import colorsys
+import shutil
 
 # a dummy context object doing just nothing (e.g. usefull as a dummy lock(mutext) object.
 class NullContext(object):
@@ -230,15 +231,25 @@ def subprocessCheckOutput(comm, f=None):
   return out
 
 # subprocess call with timeout
-def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None):
+def subprocessCall(args, f, env=os.environ, maxExecutionTime=0, stopRE=None, runInBash=False):
+  if runInBash and os.name!="posix":
+    # if a bash command is run and we are on a none posix system we call bash explicitly
+    bash=[shutil.which("bash"), "--login"]
+    subprocessEnv = env.copy()
+    subprocessEnv["CHERE_INVOKING"] = "yes"
+  else:
+    # on posix the shebang handles this
+    bash=[]
+    subprocessEnv = env
+
   # remove core dumps from previous runs
   for coreFile in glob.glob("core")+glob.glob("core.*")+glob.glob("vgcore.*"):
     os.remove(coreFile)
   startTime=django.utils.timezone.now()
-  print("\nCalling command\n%s\nwith cwd\n%s\nat %s\n"%(" ".join(map(lambda x: "'"+x+"'", args)), os.getcwd(), startTime), file=f)
+  print("\nCalling command\n%s\nwith cwd\n%s\nat %s\n"%(" ".join(map(lambda x: "'"+x+"'", bash+args)), os.getcwd(), startTime), file=f)
   # start the program to execute
   try:
-    proc=subprocess.Popen(args, universal_newlines=True, encoding="utf-8", errors="backslashreplace", stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=env)
+    proc=subprocess.Popen(bash+args, universal_newlines=True, encoding="utf-8", errors="backslashreplace", stderr=subprocess.STDOUT, stdout=subprocess.PIPE, env=subprocessEnv)
   except OSError as ex:
     f.write("\n\n\n******************** FAILED TO START PROCESS ********************\n")
     f.write(str(ex)+"\n")

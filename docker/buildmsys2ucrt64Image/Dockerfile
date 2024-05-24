@@ -75,6 +75,7 @@ RUN "pacman --noconfirm -S `
   mingw-w64-ucrt-x86_64-python-defusedxml `
   mingw-w64-ucrt-x86_64-python-oauthlib `
   mingw-w64-ucrt-x86_64-python-psycopg2 `
+  mingw-w64-ucrt-x86_64-gcc-fortran `
   mingw-w64-ucrt-x86_64-python-requests-oauthlib && `
   pacman --noconfirm -Scc"
 
