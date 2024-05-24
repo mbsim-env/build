@@ -97,6 +97,6 @@ jobs:
         if: ${{always()}}
         shell: C:\msys64\usr\bin\bash.exe -l {0}
         run: >
-          gh extension install actions/gh-actions-cache &&
-          KEYS=$(gh actions-cache list --key ccache-msys2win64-ci-- --order desc --sort created-at --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1) &&
-          for KEY in $KEYS; do gh actions-cache delete $KEY --confirm --repo ${{github.repository}} --branch ${{github.ref_name}}; done
+          /c/Program\ Files/GitHub\ CLI/gh extension install actions/gh-actions-cache &&
+          KEYS=$(/c/Program\ Files/GitHub\ CLI/gh actions-cache list --key ccache-msys2win64-ci-- --order desc --sort created-at --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1) &&
+          for KEY in $KEYS; do /c/Program\ Files/GitHub\ CLI/gh actions-cache delete $KEY --confirm --repo ${{github.repository}} --branch ${{github.ref_name}}; done

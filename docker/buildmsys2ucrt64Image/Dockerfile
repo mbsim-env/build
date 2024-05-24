@@ -96,8 +96,6 @@ LABEL org.label-schema.schema-version="1.0" `
 # ccache for autotools and cmake
 ENV CC="ccache gcc" `
     CXX="ccache g++" `
-    CMAKE_CXX_COMPILER_LAUNCHER=ccache `
-    CMAKE_C_COMPILER_LAUNCHER=ccache `
     CCACHE_DIR=/mbsim-ccache `
     MBSIM_SWIG=1
 
