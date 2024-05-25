@@ -75,7 +75,7 @@ if args.buildType == "msys2win64-dailyrelease":
   os.environ['CFLAGS']=os.environ.get('CFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
   os.environ['FFLAGS']=os.environ.get('FFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
   ARGS=["--enableDistribution"]
-  RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--exeExt", ".exe", "--filter", "'basic' in labels"]
+  RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--filter", "'basic' in labels"]
   
 elif args.buildType == "msys2win64-ci":
   BUILDTYPE="Debug"
@@ -83,7 +83,7 @@ elif args.buildType == "msys2win64-ci":
   os.environ['CFLAGS']=os.environ.get('CFLAGS', '')+" -Og -g -gdwarf-2"
   os.environ['FFLAGS']=os.environ.get('FFLAGS', '')+" -Og -g -gdwarf-2"
   ARGS=["--disableDoxygen", "--disableXMLDoc"]
-  RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--disableMakeClean", "--exeExt", ".exe", "--filter", "'basic' in labels"]
+  RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--disableMakeClean", "--filter", "'basic' in labels"]
 
   #mfmf# get current/last image ID
   #mfmfcurImageID=os.environ.get("MBSIMENVIMAGEID", None)
