@@ -56,7 +56,7 @@ jobs:
       - name: "Cache restore: ccache"
         uses: actions/cache/restore@v4
         with:
-          path: ${{github.workspace}}\mbsim-ccache
+          path: ${{github.workspace}}/mbsim-ccache
           key: ccache-msys2win64-ci--${{steps.matrixUUID.outputs.matrixUUID}}
           enableCrossOsArchive: true
           restore-keys: |
