@@ -115,7 +115,7 @@ jobs:
           restore-keys: |
             ccache-msys2ucrt64--
       - name: "Set ccache size and zeroing ccache statistics"
-        run: ccache -M 5G && ccache -z
+        run: ccache -M 1G && ccache -z
       - name: "Start build.sh"
         run: ./build/msys2ucrt64Build/build.sh --buildSystemRun --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
       - name: "Dump link to MBSim-Env server"

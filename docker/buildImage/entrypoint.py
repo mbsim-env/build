@@ -30,7 +30,7 @@ argparser.add_argument("--mbsimBranch", type=str, default="master", help="mbsim 
 argparser.add_argument("--jobs", "-j", type=int, default=psutil.cpu_count(False), help="Number of jobs to run in parallel")
 argparser.add_argument('--forceBuild', action="store_true", help="Passed to buily.py if existing")
 argparser.add_argument("--valgrindExamples", action="store_true", help="Run examples also with valgrind.")
-argparser.add_argument("--ccacheSize", default=10, type=int, help="Maximal ccache size in GB.")
+argparser.add_argument("--ccacheSize", default=10, type=float, help="Maximal ccache size in GB.")
 argparser.add_argument("--disableRunExamples", action="store_true", help="Do not run examples")
 argparser.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")
 
@@ -142,7 +142,7 @@ if build:
 os.environ['PKG_CONFIG_PATH']=((os.environ['PKG_CONFIG_PATH']+":") if 'PKG_CONFIG_PATH' in os.environ else "")+\
                               "/mbsim-env/local/lib/pkgconfig:/mbsim-env/local/lib64/pkgconfig"
 
-subprocess.call(["ccache", "-M", str(args.ccacheSize)+"G"])
+subprocess.call(["ccache", "-M", f"{args.ccacheSize:f}G"])
 
 if build or args.runExamplesPre:
   # update references of examples

@@ -26,7 +26,7 @@ argparser.add_argument("--openmbvBranch", type=str, default="master", help="open
 argparser.add_argument("--mbsimBranch", type=str, default="master", help="mbsim branch")
 argparser.add_argument("--jobs", "-j", type=int, default=psutil.cpu_count(False), help="Number of jobs to run in parallel")
 argparser.add_argument('--forceBuild', action="store_true", help="Passed to buily.py if existing")
-argparser.add_argument("--ccacheSize", default=10, type=int, help="Maximal ccache size in GB.")
+argparser.add_argument("--ccacheSize", default=10, type=float, help="Maximal ccache size in GB.")
 argparser.add_argument("--buildRunID", default=None, type=int, help="The id of the builds.model.Run dataset this example run belongs to.")
 argparser.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")
 
@@ -108,7 +108,7 @@ os.environ['PKG_CONFIG_PATH']=((os.environ['PKG_CONFIG_PATH']+";") if 'PKG_CONFI
                               "c:/msys64/mbsim-env/local/lib/pkgconfig;c:/msys64/mbsim-env/local/lib64/pkgconfig"
 os.environ["PATH"]="c:/msys64/mbsim-env/local/bin;"+os.environ["PATH"]
 
-subprocess.call(["ccache", "-M", str(args.ccacheSize)+"G"])
+subprocess.call(["ccache", "-M", f"{args.ccacheSize:f}G"])
 print("Zeroing ccache statistics.")
 subprocess.call(["ccache", "-z"])
 sys.stdout.flush()
