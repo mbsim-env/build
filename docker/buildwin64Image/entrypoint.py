@@ -171,7 +171,7 @@ ret=subprocess.call(
 subprocess.check_call(["wineserver", "-k"], stdout=sys.stdout, stderr=sys.stderr) # kill wine server
 
 print("Dump ccache statistics:")
-subprocess.call(["ccache", "-s"])
+subprocess.call(["ccache", "-sv"])
 sys.stdout.flush()
 
 if ret!=0:

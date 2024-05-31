@@ -244,7 +244,7 @@ if build:
     stdout=sys.stdout, stderr=sys.stderr)
   
   print("Dump ccache statistics:")
-  subprocess.call(["ccache", "-s"])
+  subprocess.call(["ccache", "-sv"])
   sys.stdout.flush()
   
   # read build info

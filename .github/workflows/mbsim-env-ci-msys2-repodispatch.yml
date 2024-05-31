@@ -132,7 +132,7 @@ jobs:
             print("https://${{env.MBSIMENVSERVERNAME}}/builds/run/"+str(buildInfo["buildRunID"])+"/")
       - name: "Dump ccache statistics"
         if: ${{always()}}
-        run: ccache -s
+        run: ccache -sv
       - name: "Cache save: ccache"
         if: ${{always()}}
         uses: actions/cache/save@v4
