@@ -105,8 +105,8 @@ if args.forceBuild:
 
 # env
 os.environ['PKG_CONFIG_PATH']=((os.environ['PKG_CONFIG_PATH']+";") if 'PKG_CONFIG_PATH' in os.environ else "")+\
-                              r"c:\msys64\mbsim-env\local\lib\pkgconfig;c:\msys64\mbsim-env\local\lib64\pkgconfig"
-os.environ["PATH"]=r"c:\msys64\mbsim-env\local\bin;"+os.environ["PATH"]
+                              "c:/msys64/mbsim-env/local/lib/pkgconfig;c:/msys64/mbsim-env/local/lib64/pkgconfig"
+os.environ["PATH"]="c:/msys64/mbsim-env/local/bin;"+os.environ["PATH"]
 import shutil; print("mfmf1 "+str(shutil.which("mbsimxml")))#mfmf
 import shutil; print("mfmf2 "+str(shutil.which("mbsimxml.exe")))#mfmf
 
@@ -122,7 +122,7 @@ if args.buildRunID is not None:
 # run build
 ret=subprocess.call(
   ["c:/msys64/ucrt64/bin/python.exe", "c:/msys64/context/mbsimenv/build.py"]+ARGS+[
-  "--sourceDir", "c:/msys64/mbsim-env", "--binSuffix=-dockermsys2ucrt64", "--prefix", "c:/msys64/mbsim-env/local-dockermsys2ucrt64", "-j", str(args.jobs), "--buildSystemRun",
+  "--sourceDir", "c:/msys64/mbsim-env", "--binSuffix=-build", "--prefix", "c:/msys64/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun",
   "--fmatvecBranch", args.fmatvecBranch,
   "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
   "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix",
