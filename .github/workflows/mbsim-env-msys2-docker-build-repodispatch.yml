@@ -28,6 +28,8 @@ jobs:
         run: docker pull mbsimenv/buildmsys2ucrt64base:latest
       - name: "Docker pull"
         run: docker pull mbsimenv/buildmsys2ucrt64:latest
+#      - name: "Docker build base"
+#        run: docker build -t mbsimenv/buildmsys2ucrt64base:latest --cache-from mbsimenv/buildmsys2ucrt64base:latest -f docker/buildmsys2ucrt64baseImage/Dockerfile .
       - name: "Docker build"
         run: docker build -t mbsimenv/buildmsys2ucrt64:latest --cache-from mbsimenv/buildmsys2ucrt64:latest -f docker/buildmsys2ucrt64Image/Dockerfile .
       - name: "Docker push"

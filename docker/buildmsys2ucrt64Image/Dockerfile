@@ -23,12 +23,12 @@ SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
 # install msys2 packages needed to install other tools
 RUN "pacman --noconfirm -S patch mingw-w64-ucrt-x86_64-7zip mingw-w64-ucrt-x86_64-swig unzip && pacman --noconfirm -Scc"
 
-# Install mesa for software OpenGL (only needed to run GUI programs in VMs)
-RUN "mkdir mesa && cd mesa && `
-  wget --no-verbose https://github.com/pal1000/mesa-dist-win/releases/download/23.1.9/mesa3d-23.1.9-release-msvc.7z && `
-  7z x mesa3d-23.1.9-release-msvc.7z && `
-  cmd //c systemwidedeploy.cmd 1 && `
-  cd .. && for i in {1..30}; do sleep 1; echo Try $i; rm -rf mesa && break; done"
+## Install mesa for software OpenGL (only needed to run GUI programs in VMs)
+#RUN "mkdir mesa && cd mesa && `
+#  wget --no-verbose https://github.com/pal1000/mesa-dist-win/releases/download/23.1.9/mesa3d-23.1.9-release-msvc.7z && `
+#  7z x mesa3d-23.1.9-release-msvc.7z && `
+#  cmd //c systemwidedeploy.cmd 1 && `
+#  cd .. && for i in {1..30}; do sleep 1; echo Try $i; rm -rf mesa && break; done"
 
 # install git
 RUN "wget https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/MinGit-2.43.0-64-bit.zip && `

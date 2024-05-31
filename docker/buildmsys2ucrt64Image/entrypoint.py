@@ -107,8 +107,6 @@ if args.forceBuild:
 os.environ['PKG_CONFIG_PATH']=((os.environ['PKG_CONFIG_PATH']+";") if 'PKG_CONFIG_PATH' in os.environ else "")+\
                               "c:/msys64/mbsim-env/local/lib/pkgconfig;c:/msys64/mbsim-env/local/lib64/pkgconfig"
 os.environ["PATH"]="c:/msys64/mbsim-env/local/bin;"+os.environ["PATH"]
-import shutil; print("mfmf1 "+str(shutil.which("mbsimxml")))#mfmf
-import shutil; print("mfmf2 "+str(shutil.which("mbsimxml.exe")))#mfmf
 
 subprocess.call(["ccache", "-M", str(args.ccacheSize)+"G"])
 print("Zeroing ccache statistics.")
@@ -149,8 +147,6 @@ ret=subprocess.call(
   "-DCMAKE_Fortran_FLAGS_"+BUILDTYPE.upper()+"="+os.environ["FFLAGS"],
   "--passToRunexamples"]+RUNEXAMPLESARGS,
   stdout=sys.stdout, stderr=sys.stderr)
-import shutil; print("mfmf3 "+str(shutil.which("mbsimxml")))#mfmf
-import shutil; print("mfmf4 "+str(shutil.which("mbsimxml.exe")))#mfmf
 
 print("Dump ccache statistics:")
 subprocess.call(["ccache", "-sv"])
