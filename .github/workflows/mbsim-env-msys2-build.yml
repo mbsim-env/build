@@ -45,6 +45,10 @@ jobs:
         run: >
           mkdir ${{github.workspace}}\mbsim-env &&
           mkdir ${{github.workspace}}\mbsim-ccache
+      - name: "Docker: bind mount point permissions"
+        run: >
+          icacls.exe ${{github.workspace}}/mbsim-env /t /grant everyone:f &&
+          icacls.exe ${{github.workspace}}/mbsim-ccache /t /grant everyone:f
       - name: "Create build UUID"
         shell: python
         id: matrixUUID
@@ -61,6 +65,8 @@ jobs:
           enableCrossOsArchive: true
           restore-keys: |
             ccache-msys2win64-ci--
+      - name: "Cache: fix ccache file permissions"
+        run: icacls.exe ${{github.workspace}}/mbsim-ccache /t /grant everyone:f
       - name: "Docker: run container"
         run: >
           docker run

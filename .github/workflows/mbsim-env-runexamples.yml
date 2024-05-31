@@ -94,9 +94,11 @@ jobs:
           pattern: mbsim-env-covdata-*
           merge-multiple: true
       - name: "Docker: pull image"
-        run: >
-          docker image pull mbsimenv/build:${{env.MBSIMENVTAGNAME}} &&
-          mkdir -m 777 -p ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
+        run: docker image pull mbsimenv/build:${{env.MBSIMENVTAGNAME}}
+      - name: "Docker: create bind mount points"
+        run: mkdir ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
+      - name: "Docker: bind mount point permissions"
+        run: chmod 777 ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
       - name: "Docker: run container"
         run: >
           docker run

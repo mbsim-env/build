@@ -146,9 +146,13 @@ jobs:
             print("data="+json.dumps(data), file=o)
       - name: "Docker: pull image"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
-        run: >
-          docker image pull ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}} &&
-          mkdir -m 777 -p ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
+        run: docker image pull ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}}
+      - name: "Docker: create bind mount points"
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
+        run: mkdir ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
+      - name: "Docker: bind mount point permissions"
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
+        run: chmod 777 ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
       - name: "Create build matrix UUID"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         shell: python
