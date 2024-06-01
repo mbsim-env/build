@@ -72,6 +72,8 @@ jobs:
           du=shutil.disk_usage(r"${{github.workspace}}")
           print(f"Disk: total={du.total/1024**3:.2f}GB used={du.used/1024**3:.2f}GB free={du.free/1024**3:.2f}GB")
           print(f"CPUs: {os.cpu_count()} (with hyperthreading)")
+      - name: "Install using pip"
+        run: pip install -y requests
       - name: "Dump build config"
         shell: python
         run: |
