@@ -96,7 +96,7 @@ jobs:
       - name: "Docker: pull image"
         run: docker image pull mbsimenv/build:${{env.MBSIMENVTAGNAME}}
       - name: "Docker: create bind mount points"
-        run: mkdir ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
+        run: mkdir -p ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
       - name: "Docker: bind mount point permissions"
         run: chmod 777 ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
       - name: "Docker: run container"

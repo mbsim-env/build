@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "MFMF: untested"
+
 set -e
 set -o pipefail
 

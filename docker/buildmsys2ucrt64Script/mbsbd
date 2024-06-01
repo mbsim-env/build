@@ -1,5 +1,7 @@
 #!/bin/bash
 
+echo "MFMF: untested"
+
 # base variables
 BASENAME=$(basename $0)
 DIRNAME=$(dirname $0)

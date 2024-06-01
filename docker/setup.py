@@ -153,6 +153,7 @@ if sys.platform=="linux":
   ]
 else:
   allServices=[ # must be in order
+    "buildmsys2ucrt64base",
     "buildmsys2ucrt64",
   ]
 
@@ -360,6 +361,13 @@ def build(s, jobs=psutil.cpu_count(False), fd=sys.stdout, baseDir=scriptdir, cac
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
       path=baseDir+"/..",
       dockerfile="docker/buildwin64Image/Dockerfile",
+      rm=False)
+
+  elif s=="buildmsys2ucrt64base":
+    return buildImage(tag="mbsimenv/buildmsys2ucrt64base:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
+      buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
+      path=baseDir+"/..",
+      dockerfile="docker/buildmsys2ucrt64baseImage/Dockerfile",
       rm=False)
 
   elif s=="buildmsys2ucrt64":
