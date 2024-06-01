@@ -26,6 +26,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   lcov \
   tigervnc-server \
   rh-git227-git \
+  p7zip-plugins \
   make \
   devtoolset-7-gcc devtoolset-7-gcc-c++ devtoolset-7-gcc-gfortran \
   libtool \
@@ -302,7 +303,6 @@ RUN groupadd -g 1065 dockeruser && useradd --no-log-init -u 1065 -g dockeruser d
 RUN ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/g++ && ln -s $(readlink /usr/lib64/ccache/gcc) /usr/lib64/ccache/c++
 
 # use a unpriviliged user to run the container
-RUN yum install -y p7zip-plugins
 USER dockeruser:dockeruser
 
 # these are the default arguments when running the container

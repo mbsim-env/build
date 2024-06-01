@@ -5,6 +5,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install \
   ccache \
   patch \
   make \
+  p7zip-plugins \
   mingw64-gcc \
   mingw64-gcc-c++ \
   mingw64-gcc-gfortran \
@@ -238,7 +239,6 @@ COPY django/mbsimenv/runexamples        /context/mbsimenv/runexamples
 COPY django/mbsimenv/service            /context/mbsimenv/service                     
 
 # use a unpriviliged user to run the container
-RUN yum install -y p7zip-plugins
 USER dockeruser:dockeruser
 
 # these are the default arguments when running the container
