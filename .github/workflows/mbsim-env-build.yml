@@ -276,9 +276,8 @@ jobs:
           subprocess.check_call(["gh", "extension", "install", "actions/gh-actions-cache"])
           for line in subprocess.check_output(["gh", "actions-cache", "list", "--key", "ccache-${{matrix.data.os.buildType}}--",
                                                "--order", "desc", "--sort", "created-at", "--repo", "${{github.repository}}",
-                                               "--branch", "${{github.ref_name}}"]).splitlines()[1:]:
+                                               "--branch", "${{github.ref_name}}"]).decode("utf-8").splitlines()[1:]:
             key = line.split("\t")[0]
-            print(key)
             subprocess.check_call(["gh", "actions-cache", "delete", key, "--confirm",
                                    "--repo", "${{github.repository}}", "--branch", "${{github.ref_name}}"])
       - name: "Dump resources"
