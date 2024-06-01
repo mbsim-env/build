@@ -46,7 +46,7 @@ env:
 jobs:
   build:
     name: "${{matrix.data.os.buildType}}: ${{matrix.data.branches.fmatvecBranch}} ${{matrix.data.branches.hdf5serieBranch}} ${{matrix.data.branches.openmbvBranch}} ${{matrix.data.branches.mbsimBranch}}"
-    runs-on: ubuntu-latest
+    runs-on: ${{matrix.data.os.runsOn}}
     outputs:
       whatToDo: ${{steps.whatToDo.outputs.data}}
       buildInfo: ${{steps.buildDetails.outputs.buildInfo}}
@@ -55,6 +55,7 @@ jobs:
       matrix: ${{fromJson(inputs.matrix)}}
     steps:
       - name: "Maximize disk space (remove unwanted pre-installed software)"
+        if: ${{startsWith(matrix.data.os.runsOn, 'ubuntu')}}
         run: |
           BEFORE=$(df --output=used / | tail -n 1)
           #echo "Remove .NET (~1GB/~3sec)" && sudo rm -rf /usr/share/dotnet
@@ -64,20 +65,29 @@ jobs:
           AFTER=$(df --output=used / | tail -n 1)
           echo "$[($BEFORE-$AFTER)/1000000]GB freed"
       - name: "Dump resources"
-        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
+        shell: python
+        run: |
+          import shutil
+          import os
+          du=shutil.disk_usage(r"${{github.workspace}}")
+          print(f"Disk: total={du.total/1024**3:.2f}GB used={du.used/1024**3:.2f}GB free={du.free/1024**3:.2f}GB")
+          print(f"CPUs: {os.cpu_count()} (with hyperthreading)")
       - name: "Dump build config"
-        run: >
-          echo -e " buildType       = ${{matrix.data.os.buildType}}
-                    image           = ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}}
-                    fmatvecBranch   = ${{matrix.data.branches.fmatvecBranch}}
-                    hdf5serieBranch = ${{matrix.data.branches.hdf5serieBranch}}
-                    openmbvBranch   = ${{matrix.data.branches.openmbvBranch}}
-                    mbsimBranch     = ${{matrix.data.branches.mbsimBranch}}
-                    args            = ${{matrix.data.os.args}}
-                    Triggered by repo = ${{github.repository}}
-                                 branch = ${{github.ref_name}}
-                                 sha = ${{github.sha}}
-                                 event = ${{github.event_name}}" | tr -s ' '
+        shell: python
+        run: |
+          print(r'''
+          buildType       = ${{matrix.data.os.buildType}}
+          image           = ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}}
+          runsOn          = ${{matrix.data.os.runsOn}}
+          fmatvecBranch   = ${{matrix.data.branches.fmatvecBranch}}
+          hdf5serieBranch = ${{matrix.data.branches.hdf5serieBranch}}
+          openmbvBranch   = ${{matrix.data.branches.openmbvBranch}}
+          mbsimBranch     = ${{matrix.data.branches.mbsimBranch}}
+          args            = ${{matrix.data.os.args}}
+          Triggered by repo = ${{github.repository}}
+                       branch = ${{github.ref_name}}
+                       sha = ${{github.sha}}
+                       event = ${{github.event_name}}'''
       - name: "Check what to do"
         id: whatToDo
         shell: python
@@ -142,17 +152,26 @@ jobs:
               raise RuntimeError("Failed to createUniqueRunID:\n"+response.text)
             data={"skip": skip, "runID": runID, "branches": branches}
           print("jobs.build.steps.whatToDo.outputs.data:\n"+json.dumps(data, indent=2))
-          with open("${{github.output}}", "at") as o:
+          with open(r"${{github.output}}", "at") as o:
             print("data="+json.dumps(data), file=o)
       - name: "Docker: pull image"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         run: docker image pull ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}}
       - name: "Docker: create bind mount points"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
-        run: mkdir ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
+        run: >
+          mkdir ${{github.workspace}}/mbsim-env &&
+          mkdir ${{github.workspace}}/mbsim-ccache
       - name: "Docker: bind mount point permissions"
-        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
-        run: chmod 777 ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip && startsWith(matrix.data.os.runsOn, 'ubuntu')}}
+        run: >
+          chmod 777 ${{github.workspace}}/mbsim-env &&
+          chmod 777 ${{github.workspace}}/mbsim-ccache
+      - name: "Docker: bind mount point permissions"
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip && !startsWith(matrix.data.os.runsOn, 'ubuntu')}}
+        run: >
+          icacls.exe ${{github.workspace}}/mbsim-env /t /grant everyone:f > NUL &&
+          icacls.exe ${{github.workspace}}/mbsim-ccache /t /grant everyone:f > NUL
       - name: "Create build matrix UUID"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         shell: python
@@ -160,7 +179,7 @@ jobs:
         run: |
           import uuid
           print("jobs.build.steps.matrixUUID.outputs.matrixUUID:\n"+str(uuid.uuid4()))
-          with open("${{github.output}}", "at") as o:
+          with open(r"${{github.output}}", "at") as o:
             print("matrixUUID="+str(uuid.uuid4()), file=o)
       - name: "Cache restore: ccache"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
@@ -171,8 +190,11 @@ jobs:
           restore-keys: |
             ccache-${{matrix.data.os.buildType}}--
       - name: "Cache: fix ccache file permissions"
-        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
-        run: chmod -R 777 ${{github.workspace}}/mbsim-ccache # the docker user id is different than the current user id
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip && startsWith(matrix.data.os.runsOn, 'ubuntu')}}
+        run: chmod -R 777 ${{github.workspace}}/mbsim-ccache
+      - name: "Cache: fix ccache file permissions"
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip && !startsWith(matrix.data.os.runsOn, 'ubuntu')}}
+        run: icacls.exe ${{github.workspace}}/mbsim-ccache /t /grant everyone:f > NUL
       - name: "Docker: run container"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         run: >
@@ -190,8 +212,8 @@ jobs:
           --env mbsimenvsec_djangoSecretKey
           --env mbsimenvsec_postgresPassword
           --env mbsimenvsec_filestoragePassword
-          -v ${{github.workspace}}/mbsim-env:/mbsim-env
-          -v ${{github.workspace}}/mbsim-ccache:/mbsim-ccache
+          -v ${{github.workspace}}/mbsim-env:${{matrix.data.os.mountBase}}/mbsim-env
+          -v ${{github.workspace}}/mbsim-ccache:${{matrix.data.os.mountBase}}/mbsim-ccache
           ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}}
           --buildType ${{matrix.data.os.buildType}}
           --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
@@ -210,17 +232,17 @@ jobs:
         run: |
           import json
           try:
-            with open("${{github.workspace}}/mbsim-env/local/.buildInfo.json", "r") as f:
+            with open(r"${{github.workspace}}/mbsim-env/local/.buildInfo.json", "r") as f:
               buildInfo=json.load(f)
           except:
             print("No buildInfo file found")
             print("jobs.build.steps.buildDetails.outputs.buildInfo:\n{}")
-            with open("${{github.output}}", "at") as o:
+            with open(r"${{github.output}}", "at") as o:
               print("buildInfo={}", file=o)
           else:
             print("https://${{env.MBSIMENVSERVERNAME}}/builds/run/"+str(buildInfo["buildRunID"])+"/")
             print("jobs.build.steps.buildDetails.outputs.buildInfo:\n"+json.dumps(buildInfo, indent=2))
-            with open("${{github.output}}", "at") as o:
+            with open(r"${{github.output}}", "at") as o:
               print("buildInfo="+json.dumps(buildInfo), file=o)
       - name: "Artifact: zip prefix and coverage-files"
         if: ${{always() && inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
@@ -246,10 +268,22 @@ jobs:
           key: ccache-${{matrix.data.os.buildType}}--${{steps.matrixUUID.outputs.matrixUUID}}
       - name: "Cache remove-old: ccache"
         if: ${{always() && !fromJson(steps.whatToDo.outputs.data).skip}}
-        run: >
-          gh extension install actions/gh-actions-cache &&
-          KEYS=$(gh actions-cache list --key ccache-${{matrix.data.os.buildType}}-- --order desc --sort created-at --repo ${{github.repository}} --branch ${{github.ref_name}} | tail -n +2 | cut -f1) &&
-          for KEY in $KEYS; do gh actions-cache delete $KEY --confirm --repo ${{github.repository}} --branch ${{github.ref_name}}; done
+        shell: python
+        run: |
+          import subprocess
+          subprocess.check_call(["gh", "extension", "install", "actions/gh-actions-cache"])
+          for line in subprocess.check_output(["gh", "actions-cache", "list", "--key", "ccache-${{matrix.data.os.buildType}}--",
+                                               "--order", "desc", "--sort", "created-at", "--repo", "${{github.repository}}",
+                                               "--branch", "${{github.ref_name}}"]).splitlines()[1:]:
+            key = line.split("\t")[0]
+            print(key)
+            subprocess.check_call(["gh", "actions-cache", "delete", key, "--confirm",
+                                   "--repo", "${{github.repository}}", "--branch", "${{github.ref_name}}"])
       - name: "Dump resources"
-        if: ${{always()}}
-        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
+        shell: python
+        run: |
+          import shutil
+          import os
+          du=shutil.disk_usage(r"${{github.workspace}}")
+          print(f"Disk: total={du.total/1024**3:.2f}GB used={du.used/1024**3:.2f}GB free={du.free/1024**3:.2f}GB")
+          print(f"CPUs: {os.cpu_count()} (with hyperthreading)")
