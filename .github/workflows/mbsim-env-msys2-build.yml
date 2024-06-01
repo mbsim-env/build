@@ -17,7 +17,7 @@ env:
   mbsimenvsec_djangoSecretKey: ${{secrets.djangoSecretKey}}
   mbsimenvsec_postgresPassword: ${{secrets.postgresPassword}}
   mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
-  mbsimenvsec_dockerhubAccessToken: ${{secrets.dockerhubAccessToken}}
+#mfmf  mbsimenvsec_dockerhubAccessToken: ${{secrets.dockerhubAccessToken}}
   GH_TOKEN: ${{github.token}} # needed for gh-actions-cache
 jobs:
   build:
@@ -25,25 +25,25 @@ jobs:
     runs-on: windows-2019
     steps:
       #mfmf
-      - name: "Checkout"
-        uses: actions/checkout@v4
-      - name: "Docker login"
-        run: echo $Env:mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
-#      - name: "Docker pull base"
-#        run: docker pull mbsimenv/buildmsys2ucrt64base:latest
-#      - name: "Docker build base"
-#        run: docker build -t mbsimenv/buildmsys2ucrt64base:latest --cache-from mbsimenv/buildmsys2ucrt64base:latest -f docker/buildmsys2ucrt64baseImage/Dockerfile .
-#      - name: "Docker push base"
-#        run: docker push mbsimenv/buildmsys2ucrt64base:latest
-      - name: "Docker pull build"
-        run: docker pull mbsimenv/buildmsys2ucrt64:latest
-      - name: "Docker build"
-        run: docker build -t mbsimenv/buildmsys2ucrt64:latest --cache-from mbsimenv/buildmsys2ucrt64:latest -f docker/buildmsys2ucrt64Image/Dockerfile .
-      - name: "Docker push build"
-        run: docker push mbsimenv/buildmsys2ucrt64:latest
+#      - name: "Checkout"
+#        uses: actions/checkout@v4
+#      - name: "Docker login"
+#        run: echo $Env:mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
+##      - name: "Docker pull base"
+##        run: docker pull mbsimenv/buildmsys2ucrt64base:latest
+##      - name: "Docker build base"
+##        run: docker build -t mbsimenv/buildmsys2ucrt64base:latest --cache-from mbsimenv/buildmsys2ucrt64base:latest -f docker/buildmsys2ucrt64baseImage/Dockerfile .
+##      - name: "Docker push base"
+##        run: docker push mbsimenv/buildmsys2ucrt64base:latest
+#      - name: "Docker pull build"
+#        run: docker pull mbsimenv/buildmsys2ucrt64:latest
+#      - name: "Docker build"
+#        run: docker build -t mbsimenv/buildmsys2ucrt64:latest --cache-from mbsimenv/buildmsys2ucrt64:latest -f docker/buildmsys2ucrt64Image/Dockerfile .
+#      - name: "Docker push build"
+#        run: docker push mbsimenv/buildmsys2ucrt64:latest
       #mfmf
-      #- name: "Docker: pull image"
-      #  run: docker pull mbsimenv/buildmsys2ucrt64:latest
+      - name: "Docker: pull image"
+        run: docker pull mbsimenv/buildmsys2ucrt64:latest
       #mfmf
       - name: "Docker: create bind mount points"
         run: >
@@ -87,8 +87,8 @@ jobs:
           --env mbsimenvsec_djangoSecretKey
           --env mbsimenvsec_postgresPassword
           --env mbsimenvsec_filestoragePassword
-          -v ${{github.workspace}}\mbsim-env:c:\msys64\mbsim-env
-          -v ${{github.workspace}}\mbsim-ccache:c:\msys64\mbsim-ccache
+          -v ${{github.workspace}}/mbsim-env:c:/msys64/mbsim-env
+          -v ${{github.workspace}}/mbsim-ccache:c:/msys64/mbsim-ccache
           mbsimenv/buildmsys2ucrt64:latest
           --buildType msys2win64-ci
           --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'

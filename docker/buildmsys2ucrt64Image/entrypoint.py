@@ -149,7 +149,7 @@ ret=subprocess.call(
   stdout=sys.stdout, stderr=sys.stderr)
 
 print("Dump ccache statistics:")
-subprocess.call(["ccache", "-sv"])
+subprocess.call(["ccache", "-s"])
 sys.stdout.flush()
 
 if ret!=0:
