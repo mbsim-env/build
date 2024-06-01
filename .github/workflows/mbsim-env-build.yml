@@ -87,7 +87,7 @@ jobs:
           Triggered by repo = ${{github.repository}}
                        branch = ${{github.ref_name}}
                        sha = ${{github.sha}}
-                       event = ${{github.event_name}}'''
+                       event = ${{github.event_name}}''')
       - name: "Check what to do"
         id: whatToDo
         shell: python
