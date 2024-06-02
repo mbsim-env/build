@@ -1,23 +1,12 @@
-name: MSYS2 Docker Build (Repo-Dispatch)
+name: Build MSYS2 Docker Image (Manual)
 on:
-  push:
-    paths:
-      - "docker/buildmsys2ucrt64Image/*"
-      - "docker/buildImage/distribute.py"
-      - "django/mbsimenv/build.py"
-      - "django/mbsimenv/runexamples.py"
-      - "django/mbsimenv/mbsimenvSecrets.py"
-      - "django/mbsimenv/mbsimenv"
-      - "django/mbsimenv/base"
-      - "django/mbsimenv/builds"
-      - "django/mbsimenv/runexamples"
-      - "django/mbsimenv/service"
+  workflow_dispatch:
 env:
   # get secrets
   mbsimenvsec_dockerhubAccessToken: ${{secrets.dockerhubAccessToken}}
 jobs:
   build:
-    name: "msys2-docker-build"
+    name: "Bulid MSYS2 Docker Image"
     runs-on: windows-2019
     steps:
       - name: "Checkout"

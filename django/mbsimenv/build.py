@@ -940,7 +940,7 @@ def runexamples(run):
     return 0
 
   # run example command
-  command=["python3", os.path.dirname(os.path.realpath(__file__))+"/runexamples.py", "-j", str(args.j), "--buildConfig", json.dumps(args.buildConfig)]
+  command=[sys.executable, os.path.dirname(os.path.realpath(__file__))+"/runexamples.py", "-j", str(args.j), "--buildConfig", json.dumps(args.buildConfig)]
   if args.prefix is not None:
     command.extend(["--prefix", args.prefix])
   if args.coverage:
@@ -969,8 +969,8 @@ def createDistribution(run):
 
   with tempfile.TemporaryDirectory() as tempDir:
     distLog=io.StringIO()
-    distributeErrorCode=base.helper.subprocessCall([sys.executable, "/context/distribute.py", "--outDir", tempDir,
-                                           args.prefix if args.prefix is not None else args.prefixAuto], distLog)
+    distributeErrorCode=base.helper.subprocessCall([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../distribute.py",
+                          "--outDir", tempDir, args.prefix if args.prefix is not None else args.prefixAuto], distLog)
     run.distributionOK=distributeErrorCode==0
     run.distributionOutput=distLog.getvalue()
     distLog.close()

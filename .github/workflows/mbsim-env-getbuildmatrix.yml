@@ -43,6 +43,8 @@ jobs:
     outputs:
       matrix: ${{steps.matrix.outputs.matrix}}
     steps:
+      - name: "Install using pip"
+        run: pip install requests
       - name: "Get branch combinations from MBSim-Env server"
         id: matrix
         shell: python
