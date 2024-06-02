@@ -1,0 +1,74 @@
+name: Build Docker Images (Manual)
+on:
+  workflow_dispatch:
+    inputs:
+      buildImage:
+        description: "Build the docker 'build' image"
+        required: true
+        default: false
+        type: boolean
+      buildwin64Image:
+        description: "Build the docker 'buildwin64' image"
+        required: true
+        default: false
+        type: boolean
+      buildmsys2ucrt64Image:
+        description: "Build the docker 'buildmsys2ucrt64' image"
+        required: true
+        default: true
+        type: boolean
+env:
+  # get secrets
+  mbsimenvsec_dockerhubAccessToken: ${{secrets.dockerhubAccessToken}}
+jobs:
+  buildImage:
+    name: "Bulid Linux Docker Image"
+    runs-on: ubuntu-latest
+    if: ${{inputs.buildImage}}
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+      - name: "Docker login"
+        run: echo $Env:mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
+      - name: "Docker pull build"
+        run: docker pull mbsimenv/build:latest
+      - name: "Docker build"
+        run: docker build -t mbsimenv/build:latest --cache-from mbsimenv/build:latest -f docker/buildImage/Dockerfile .
+      - name: "Docker push build"
+        run: docker push mbsimenv/build:latest
+  buildwin64Image:
+    name: "Bulid Windows-XC Docker Image"
+    runs-on: ubuntu-latest
+    if: ${{inputs.buildwin64Image}}
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+      - name: "Docker login"
+        run: echo $Env:mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
+      - name: "Docker pull build"
+        run: docker pull mbsimenv/buildwin64:latest
+      - name: "Docker build"
+        run: docker build -t mbsimenv/buildwin64:latest --cache-from mbsimenv/buildwin64:latest -f docker/buildwin64Image/Dockerfile .
+      - name: "Docker push build"
+        run: docker push mbsimenv/buildwin64:latest
+  buildmsys2ucrt64Image:
+    name: "Bulid MSYS2 Docker Image"
+    runs-on: windows-2019
+    if: ${{inputs.buildmsys2ucrt64Image}}
+    steps:
+      - name: "Checkout"
+        uses: actions/checkout@v4
+      - name: "Docker login"
+        run: echo $Env:mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
+#      - name: "Docker pull base"
+#        run: docker pull mbsimenv/buildmsys2ucrt64base:latest
+#      - name: "Docker build base"
+#        run: docker build -t mbsimenv/buildmsys2ucrt64base:latest --cache-from mbsimenv/buildmsys2ucrt64base:latest -f docker/buildmsys2ucrt64baseImage/Dockerfile .
+#      - name: "Docker push base"
+#        run: docker push mbsimenv/buildmsys2ucrt64base:latest
+      - name: "Docker pull build"
+        run: docker pull mbsimenv/buildmsys2ucrt64:latest
+      - name: "Docker build"
+        run: docker build -t mbsimenv/buildmsys2ucrt64:latest --cache-from mbsimenv/buildmsys2ucrt64:latest -f docker/buildmsys2ucrt64Image/Dockerfile .
+      - name: "Docker push build"
+        run: docker push mbsimenv/buildmsys2ucrt64:latest
