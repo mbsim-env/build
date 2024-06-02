@@ -7,7 +7,7 @@ on:
       repository:
         description: "Triggered repo"
         required: true
-        default: "mbsim"
+        default: "mbsim-env/mbsim"
         type: choice
         options:
         - "mbsim-env/fmatvec"
@@ -21,7 +21,7 @@ on:
         type: string
       sha:
         description: "Triggered sha in repo"
-        required: true
+        required: false
         default: ""
         type: string
 env:
