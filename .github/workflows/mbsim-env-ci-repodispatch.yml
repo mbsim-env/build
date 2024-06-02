@@ -2,6 +2,28 @@ name: CI (Repo-Dispatch)
 on:
   repository_dispatch:
     types: [ci]
+  workflow_dispatch:
+    inputs: # data equal to everything needed by mbsim-env-getbuildmatrix.yml from github.event.client_payload
+      repository:
+        description: "Triggered repo"
+        required: true
+        default: "mbsim"
+        type: choice
+        options:
+        - "mbsim-env/fmatvec"
+        - "mbsim-env/hdf5serie"
+        - "mbsim-env/openmbv"
+        - "mbsim-env/mbsim"
+      ref_name:
+        description: "Triggered branch in repo"
+        required: true
+        default: "master"
+        type: string
+      sha:
+        description: "Triggered sha in repo"
+        required: true
+        default: ""
+        type: string
 env:
   # tagname and servername of remote mbsimenv server
   MBSIMENVTAGNAME: latest
@@ -25,7 +47,7 @@ jobs:
     uses: ./.github/workflows/mbsim-env-getbuildmatrix.yml
     with:
       dailyRun: false
-      pushSource: ${{toJson(github.event.client_payload)}}
+      pushSource: ${{ (github.event_name == 'workflow_dispatch' && toJson(inputs)) || toJson(github.event.client_payload) }}
     secrets:
       githubAccessToken: ${{secrets.githubAccessToken}}
       mbsimenvAccessToken: ${{secrets.mbsimenvAccessToken}}
