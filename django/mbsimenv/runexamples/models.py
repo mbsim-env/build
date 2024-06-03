@@ -109,7 +109,7 @@ class ExampleManager(django.db.models.Manager):
       (Q(guiTestHdf5serieOK__isnull=False) & Q(guiTestHdf5serieOK=Example.GUITestResult.FAILED)) |
       (Q(guiTestOpenmbvOK__isnull=False)   & Q(guiTestOpenmbvOK=Example.GUITestResult.FAILED)) |
       (Q(guiTestMbsimguiOK__isnull=False)  & Q(guiTestMbsimguiOK=Example.GUITestResult.FAILED)) |
-      (Q(deprecatedNr__isnull=False)       & Q(deprecatedNr__gt=0)) |
+     #(Q(deprecatedNr__isnull=False)       & Q(deprecatedNr__gt=0)) | # do not treat deprecated messages as failures
       Q(resultsFailed__gt=0) |
       Q(xmlOutputsFailed__gt=0)
     )).distinct()
