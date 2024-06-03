@@ -62,7 +62,7 @@ jobs:
             "branches": 
               {"fmatvecBranch": "master", "hdf5serieBranch": "master", "openmbvBranch": "master", "mbsimBranch": "master"},
             "os":
-              {"buildType": "linux64-dailydebug", "image": "mbsimenv/build",  "args": "--disableRunExamples"},
+              {"buildType": "linux64-dailydebug", "image": "mbsimenv/build", "runsOn": "ubuntu-22.04", "mountBase": "", "args": "--disableRunExamples"},
           }]
         }
       uploadArtifactLocalLcov: true
@@ -238,7 +238,7 @@ jobs:
 
   buildDoc:
     name: "Build manuals"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     needs: buildPartitionedExamples
     if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     steps:

@@ -23,7 +23,7 @@ env:
 jobs:
   buildImage:
     name: "Bulid Linux Docker Image"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: ${{inputs.buildImage}}
     steps:
       - name: "Checkout"
@@ -38,7 +38,7 @@ jobs:
         run: docker push mbsimenv/build:latest
   buildwin64Image:
     name: "Bulid Windows-XC Docker Image"
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-22.04
     if: ${{inputs.buildwin64Image}}
     steps:
       - name: "Checkout"

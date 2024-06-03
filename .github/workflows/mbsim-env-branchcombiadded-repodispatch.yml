@@ -30,11 +30,15 @@ jobs:
           [{
             "branches": ${{toJson(github.event.client_payload.branches)}},
             "os":
-              {"buildType": "linux64-ci", "image": "mbsimenv/build", "args": ""}
+              {"buildType": "linux64-ci", "image": "mbsimenv/build", "runsOn": "ubuntu-22.04", "mountBase": "", "args": ""}
           }, {
             "branches": ${{toJson(github.event.client_payload.branches)}},
             "os":
-              {"buildType": "win64-ci", "image": "mbsimenv/buildwin64", "args": ""}
+              {"buildType": "win64-ci", "image": "mbsimenv/buildwin64", "runsOn": "ubuntu-22.04", "mountBase": "", "args": ""}
+          }, {
+            "branches": ${{toJson(github.event.client_payload.branches)}},
+            "os":
+              {"buildType": "msys2win64-ci", "image": "mbsimenv/buildmsys2ucrt64", "runsOn": "windows-2019", "mountBase": "c:/msys64", "args": ""}
           }]
         }
       uploadArtifactLocalLcov: false
@@ -57,15 +61,19 @@ jobs:
 #          [{
 #            "branches": ${{toJson(github.event.client_payload.branches)}},
 #            "os":
-#              {"buildType": "linux64-dailydebug", "image": "mbsimenv/build", "args": ""}
+#              {"buildType": "linux64-dailydebug", "image": "mbsimenv/build", "runsOn": "ubuntu-22.04", "mountBase": "", "args": ""}
 #          }, {
 #            "branches": ${{toJson(github.event.client_payload.branches)}},
 #            "os":
-#              {"buildType": "linux64-dailyrelease", "image": "mbsimenv/build", "args": ""}
+#              {"buildType": "linux64-dailyrelease", "image": "mbsimenv/build", "runsOn": "ubuntu-22.04", "mountBase": "", "args": ""}
 #          }, {
 #            "branches": ${{toJson(github.event.client_payload.branches)}},
 #            "os":
-#              {"buildType": "win64-dailyrelease", "image": "mbsimenv/buildwin64", "args": ""}
+#              {"buildType": "win64-dailyrelease", "image": "mbsimenv/buildwin64", "runsOn": "ubuntu-22.04", "mountBase": "", "args": ""}
+#          }, {
+#            "branches": ${{toJson(github.event.client_payload.branches)}},
+#            "os":
+#              {"buildType": "msys2win64-dailyrelease", "image": "mbsimenv/buildmsys2ucrt64", "runsOn": "windows-2019", "mountBase": "c:/msys64", "args": ""}
 #          }]
 #        }
 #      uploadArtifactLocalLcov: false
