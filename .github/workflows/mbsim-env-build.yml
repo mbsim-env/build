@@ -54,24 +54,6 @@ jobs:
       fail-fast: false
       matrix: ${{fromJson(inputs.matrix)}}
     steps:
-      - name: "Maximize disk space (remove unwanted pre-installed software)"
-        if: ${{startsWith(matrix.data.os.runsOn, 'ubuntu')}}
-        run: |
-          BEFORE=$(df --output=used / | tail -n 1)
-          #echo "Remove .NET (~1GB/~3sec)" && sudo rm -rf /usr/share/dotnet
-          echo "Remove Android (~12GB/70sec)" && sudo rm -rf /usr/local/lib/android
-          echo "Remove CodeQL (~8GB/1sec)" && sudo rm -rf /opt/hostedtoolcache/CodeQL
-          #echo "Remove Docker images (~4GB/15sec)" && sudo docker image prune --all --force > /dev/null
-          AFTER=$(df --output=used / | tail -n 1)
-          echo "$[($BEFORE-$AFTER)/1000000]GB freed"
-      - name: "Dump resources"
-        shell: python
-        run: |
-          import shutil
-          import os
-          du=shutil.disk_usage(r"${{github.workspace}}")
-          print(f"Disk: total={du.total/1024**3:.2f}GB used={du.used/1024**3:.2f}GB free={du.free/1024**3:.2f}GB")
-          print(f"CPUs: {os.cpu_count()} (with hyperthreading)")
       - name: "Install using pip"
         run: pip install requests
       - name: "Dump build config"
@@ -156,6 +138,24 @@ jobs:
           print("jobs.build.steps.whatToDo.outputs.data:\n"+json.dumps(data, indent=2))
           with open(r"${{github.output}}", "at") as o:
             print("data="+json.dumps(data), file=o)
+      - name: "Maximize disk space (remove unwanted pre-installed software) [Linux]"
+        if: ${{startsWith(matrix.data.os.runsOn, 'ubuntu')}}
+        run: |
+          BEFORE=$(df --output=used / | tail -n 1)
+          #echo "Remove .NET (~1GB/~3sec)" && sudo rm -rf /usr/share/dotnet
+          echo "Remove Android (~12GB/70sec)" && sudo rm -rf /usr/local/lib/android
+          echo "Remove CodeQL (~8GB/1sec)" && sudo rm -rf /opt/hostedtoolcache/CodeQL
+          #echo "Remove Docker images (~4GB/15sec)" && sudo docker image prune --all --force > /dev/null
+          AFTER=$(df --output=used / | tail -n 1)
+          echo "$[($BEFORE-$AFTER)/1000000]GB freed"
+      - name: "Dump resources"
+        shell: python
+        run: |
+          import shutil
+          import os
+          du=shutil.disk_usage(r"${{github.workspace}}")
+          print(f"Disk: total={du.total/1024**3:.2f}GB used={du.used/1024**3:.2f}GB free={du.free/1024**3:.2f}GB")
+          print(f"CPUs: {os.cpu_count()} (with hyperthreading)")
       - name: "Docker: pull image"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         run: docker image pull ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}}
@@ -164,12 +164,12 @@ jobs:
         run: >
           mkdir ${{github.workspace}}/mbsim-env &&
           mkdir ${{github.workspace}}/mbsim-ccache
-      - name: "Docker: bind mount point permissions"
+      - name: "Docker: bind mount point permissions [Linux]"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip && startsWith(matrix.data.os.runsOn, 'ubuntu')}}
         run: >
           chmod 777 ${{github.workspace}}/mbsim-env &&
           chmod 777 ${{github.workspace}}/mbsim-ccache
-      - name: "Docker: bind mount point permissions"
+      - name: "Docker: bind mount point permissions [Windows]"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip && !startsWith(matrix.data.os.runsOn, 'ubuntu')}}
         run: >
           icacls.exe ${{github.workspace}}/mbsim-env /t /grant everyone:f > NUL &&
@@ -191,10 +191,10 @@ jobs:
           key: ccache-${{matrix.data.os.buildType}}--${{steps.matrixUUID.outputs.matrixUUID}}
           restore-keys: |
             ccache-${{matrix.data.os.buildType}}--
-      - name: "Cache: fix ccache file permissions"
+      - name: "Cache: fix ccache file permissions [Linux]"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip && startsWith(matrix.data.os.runsOn, 'ubuntu')}}
         run: chmod -R 777 ${{github.workspace}}/mbsim-ccache
-      - name: "Cache: fix ccache file permissions"
+      - name: "Cache: fix ccache file permissions [Windows]"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip && !startsWith(matrix.data.os.runsOn, 'ubuntu')}}
         run: icacls.exe ${{github.workspace}}/mbsim-ccache /t /grant everyone:f > NUL
       - name: "Docker: run container"
