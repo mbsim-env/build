@@ -504,7 +504,7 @@ $INSTDIR/bin/.python-envvar "$@"
     pythonData=r'''@echo off
 set INSTDIR=%~dp0..
 set PYTHONHOME=%INSTDIR%
-set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages
+set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDIR%\lib\lib-dynload;%INSTDIR%\lib\site-packages
 "%INSTDIR%\bin\.python-envvar.exe" %*
 '''
     addStrToDist(pythonData, "mbsim-env/bin/python.bat", True)
@@ -528,7 +528,7 @@ $INSTDIR/bin/python -m pip "$@"
 set INSTDIR=%~dp0..
 set PIP_TARGET=%INSTDIR%\..\mbsim-env-python-site-packages
 set PYTHONHOME=%INSTDIR%
-set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages
+set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDIR%\lib\lib-dynload;%INSTDIR%\lib\site-packages
 "%INSTDIR%\bin\.python-envvar.exe" -m pip %*
 '''
     addStrToDist(pipData, "mbsim-env/bin/pip.bat", True)
