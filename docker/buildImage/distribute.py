@@ -494,6 +494,7 @@ def addPython():
     pythonData='''#!/bin/bash
 INSTDIR="$(readlink -f $(dirname $0)/..)"
 export LD_LIBRARY_PATH="$INSTDIR/lib"
+export PYTHONHOME=$INSTDIR
 export PYTHONPATH=$INSTDIR/../mbsim-env-python-site-packages
 $INSTDIR/bin/.python-envvar "$@"
 '''
@@ -502,6 +503,7 @@ $INSTDIR/bin/.python-envvar "$@"
   if platform=="win":
     pythonData=r'''@echo off
 set INSTDIR=%~dp0..
+set PYTHONHOME=%INSTDIR%
 set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages
 "%INSTDIR%\bin\.python-envvar.exe" %*
 '''
@@ -516,6 +518,7 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages
     pipData='''#!/bin/bash
 INSTDIR="$(readlink -f $(dirname $0)/..)"
 export PIP_TARGET=$INSTDIR/../mbsim-env-python-site-packages
+export PYTHONHOME=$INSTDIR
 export PYTHONPATH=$INSTDIR/../mbsim-env-python-site-packages
 $INSTDIR/bin/python -m pip "$@"
 '''
@@ -524,6 +527,7 @@ $INSTDIR/bin/python -m pip "$@"
     pipData=r'''@echo off
 set INSTDIR=%~dp0..
 set PIP_TARGET=%INSTDIR%\..\mbsim-env-python-site-packages
+set PYTHONHOME=%INSTDIR%
 set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages
 "%INSTDIR%\bin\.python-envvar.exe" -m pip %*
 '''
