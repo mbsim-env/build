@@ -13,7 +13,7 @@ import codecs
 
 def octVersion():
   if sys.platform=="win32":
-    return "9.2.0"
+    return "9.1.0"
   return "4.4.1"
 
 def pyVersion():
