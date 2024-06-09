@@ -11,6 +11,16 @@ import shutil
 import tempfile
 import codecs
 
+def octVersion():
+  if sys.platform=="win32":
+    return "9.2.0"
+  return "4.4.1"
+
+def pyVersion():
+  if sys.platform=="win32":
+    return "3.11"
+  return "3.6"
+
 args=None
 platform=None
 distArchive=None
@@ -218,7 +228,7 @@ def addReadme():
   sys.stdout.flush()
 
   if platform=="linux":
-    note="This binary Linux64 build requires a Linux 64-bit operating system with glibc >= 2.17."
+    note="This binary Linux64 build requires a Linux 64-bit operating system."
     scriptExt=""
   if platform=="win":
     note="This binary Win64 build requires a Windows 64-bit operating system."
@@ -430,12 +440,12 @@ def addOctave():
 
   if platform=="linux":
     tmpDir=tempfile.mkdtemp()
-    shutil.copy("/3rdparty/local/bin/octave-cli-4.4.1", tmpDir+"/octave-cli")
+    shutil.copy(f"/3rdparty/local/bin/octave-cli-{octVersion()}", tmpDir+"/octave-cli")
     subprocess.check_call(["patchelf", "--force-rpath", "--set-rpath", "$ORIGIN/../lib", tmpDir+"/octave-cli"])
     addFileToDist(tmpDir+"/octave-cli", "mbsim-env/bin/octave-cli")
   if platform=="win":
-    if os.path.exists("/3rdparty/local/bin/octave-cli-4.4.1.exe"):
-      addFileToDist("/3rdparty/local/bin/octave-cli-4.4.1.exe", "mbsim-env/bin/octave-cli.exe")
+    if os.path.exists(f"/3rdparty/local/bin/octave-cli-{octVersion()}.exe"):
+      addFileToDist(f"/3rdparty/local/bin/octave-cli-{octVersion()}.exe", "mbsim-env/bin/octave-cli.exe")
     if os.path.exists("c:/msys64/ucrt64/bin/octave-cli.exe"):
       addFileToDist("c:/msys64/ucrt64/bin/octave-cli.exe", "mbsim-env/bin/octave-cli.exe")
 
@@ -443,12 +453,12 @@ def addOctave():
   sys.stdout.flush()
 
   if platform=="linux":
-    addFileToDist("/3rdparty/local/lib/octave/4.4.1/oct/x86_64-pc-linux-gnu", "mbsim-env/lib/octave/4.4.1/oct/x86_64-pc-linux-gnu")
+    addFileToDist(f"/3rdparty/local/lib/octave/{octVersion()}/oct/x86_64-pc-linux-gnu", f"mbsim-env/lib/octave/{octVersion()}/oct/x86_64-pc-linux-gnu")
   if platform=="win":
-    if os.path.isdir("/3rdparty/local/lib/octave/4.4.1/oct/x86_64-w64-mingw32"):
-      addFileToDist("/3rdparty/local/lib/octave/4.4.1/oct/x86_64-w64-mingw32", "mbsim-env/lib/octave/4.4.1/oct/x86_64-w64-mingw32")
-    if os.path.isdir("c:/msys64/ucrt64/lib/octave/8.3.0/oct/x86_64-w64-mingw32"):
-      addFileToDist("c:/msys64/ucrt64/lib/octave/8.3.0/oct/x86_64-w64-mingw32", "mbsim-env/lib/octave/4.4.1/oct/x86_64-w64-mingw32")
+    if os.path.isdir(f"/3rdparty/local/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32"):
+      addFileToDist(f"/3rdparty/local/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32", f"mbsim-env/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32")
+    if os.path.isdir(f"c:/msys64/ucrt64/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32"):
+      addFileToDist(f"c:/msys64/ucrt64/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32", f"mbsim-env/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32")
 
 
 
@@ -457,14 +467,14 @@ def addPython():
   sys.stdout.flush()
 
   if platform=="linux":
-    subdir="lib64/python3.6"
-    pysrcdirs=["/usr/local/lib/python3.6", "/usr/lib64/python3.6", "/usr/lib/python3.6", ] # search packages in this order
+    subdir=f"lib64/python{pyVersion()}"
+    pysrcdirs=[f"/usr/local/lib/python{pyVersion()}", f"/usr/lib64/python{pyVersion()}", f"/usr/lib/python{pyVersion()}", ] # search packages in this order
   if platform=="win":
     subdir="lib"
     if os.path.isdir("/3rdparty/local/python-win64/Lib"):
       pysrcdirs=["/3rdparty/local/python-win64/Lib"] # search packages in this order
-    if os.path.isdir("c:/msys64/ucrt64/lib/python3.11/"):
-      pysrcdirs=["c:/msys64/ucrt64/lib/python3.11/"] # search packages in this order
+    if os.path.isdir(f"c:/msys64/ucrt64/lib/python{pyVersion()}/"):
+      pysrcdirs=[f"c:/msys64/ucrt64/lib/python{pyVersion()}/"] # search packages in this order
   sitePackages=[["pip", False],
                 ["setuptools", False],
                 ["numpy", False],
@@ -499,7 +509,7 @@ export PYTHONPATH=$INSTDIR/../mbsim-env-python-site-packages
 $INSTDIR/bin/.python-envvar "$@"
 '''
     addStrToDist(pythonData, "mbsim-env/bin/python", True)
-    addFileToDist("/usr/bin/python3.6", "mbsim-env/bin/.python-envvar")
+    addFileToDist(f"/usr/bin/python{pyVersion()}", "mbsim-env/bin/.python-envvar")
   if platform=="win":
     pythonData=r'''@echo off
 set INSTDIR=%~dp0..
