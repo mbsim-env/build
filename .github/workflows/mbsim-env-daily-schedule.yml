@@ -100,7 +100,7 @@ jobs:
     name: "E worker"
     uses: ./.github/workflows/mbsim-env-runexamples.yml
     needs: [buildPartitionedExamples, examplesPre]
-    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
+    if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
       matrix: |
         {"data": [
@@ -182,7 +182,7 @@ jobs:
     name: "E valgrind worker"
     uses: ./.github/workflows/mbsim-env-runexamples.yml
     needs: [buildPartitionedExamples, examplesPreValgrind]
-    if: ${{!fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
+    if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
       matrix: |
         {"data": [
