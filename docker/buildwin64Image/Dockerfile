@@ -1,5 +1,7 @@
 FROM fedora:31 AS fedoraBaseImage
 
+# use other mirror since the official CentOS mirror is removed since 2014-07-01
+#RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
 RUN yum --setopt=skip_missing_names_on_install=False -y install \
   git \
   ccache \
@@ -58,6 +60,8 @@ FROM fedoraBaseImage AS thirdpartyBuildImage
 
 ARG JOBS=4
 
+# use other mirror since the official CentOS mirror is removed since 2014-07-01
+#RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
 RUN yum --setopt=skip_missing_names_on_install=False -y install \
   wget \
   unzip \

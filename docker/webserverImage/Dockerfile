@@ -1,6 +1,8 @@
 # get noVNC
 FROM centos:centos7 AS temp
 ARG NOVNCBRANCH=v0.6.2
+# use other mirror since the official CentOS mirror is removed since 2014-07-01
+#RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
 RUN yum -y install http://li.nux.ro/download/nux/dextop/el7/x86_64/nux-dextop-release-0-5.el7.nux.noarch.rpm && \
   yum --setopt=skip_missing_names_on_install=False -y install \
   git \
@@ -26,6 +28,8 @@ RUN for V in /tmp/videos/*.webm; do ffmpeg -i $V -frames:v 1 ${V%.webm}.png; don
 # use the build image as base
 FROM centos:centos7
 
+# use other mirror since the official CentOS mirror is removed since 2014-07-01
+#RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
 # install software
 RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release centos-release-scl && \
   yum --setopt=skip_missing_names_on_install=False -y install \

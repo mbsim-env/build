@@ -12,6 +12,8 @@ ENV LD_LIBRARY_PATH=/osupdate/local/lib:/osupdate/local/lib64:/3rdparty/local/li
     PATH=/osupdate/local/bin:$PATH:/3rdparty/local/bin \
     XDG_RUNTIME_DIR=/run/user/$UID
 
+# use other mirror since the official CentOS mirror is removed since 2014-07-01
+#RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
 # install everything needed to build mbsim-env tools from centos7
 RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release centos-release-scl && \
   yum --setopt=skip_missing_names_on_install=False -y install \
@@ -91,6 +93,8 @@ FROM centosBaseImage AS thirdpartyBuildImage
 # configuration
 ARG JOBS=4
 
+# use other mirror since the official CentOS mirror is removed since 2014-07-01
+#RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
 # install additional packaged needed to build the tools not part of centos7
 RUN yum --setopt=skip_missing_names_on_install=False -y install \
   wget \
