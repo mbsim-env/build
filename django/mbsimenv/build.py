@@ -563,7 +563,7 @@ def repoUpdate(run, buildInfo):
         setattr(run, repo+"UpdateOK", retlocal==0)
       setattr(run, repo+"UpdateOutput", repoUpdFD.getvalue())
       setattr(run, repo+"UpdateCommitID", commitidfull[repo])
-      setattr(run, repo+"UpdateMsg", commitsub[:builds.models.Run._meta.get_field(repo+"UpdateMsg").max_length])
+      setattr(run, repo+"UpdateMsg", commitsub.encode("utf-8")[:builds.models.Run._meta.get_field(repo+"UpdateMsg").max_length].decode("utf-8", "ignore"))
       setattr(run, repo+"UpdateAuthor", authorName)
       authorDatePy36=re.sub("(:[0-9][0-9][+-][0-9][0-9]):([0-9][0-9])$", "\\1\\2", authorDate) # fix authorDate for Python 3.6
       setattr(run, repo+"UpdateDate", datetime.datetime.strptime(authorDatePy36, '%Y-%m-%dT%H:%M:%S%z'))
@@ -577,7 +577,7 @@ def repoUpdate(run, buildInfo):
       repos.updateOK=retlocal==0
     repos.updateOutput=repoUpdFD.getvalue()
     repos.updateCommitID=commitidfull[repo]
-    repos.updateMsg=commitsub[:builds.models.Repos._meta.get_field("updateMsg").max_length]
+    repos.updateMsg=commitsub.encode("utf-8")[:builds.models.Repos._meta.get_field("updateMsg").max_length].decode("utf-8", "ignore")
     repos.updateAuthor=authorName
     authorDatePy36=re.sub("(:[0-9][0-9][+-][0-9][0-9]):([0-9][0-9])$", "\\1\\2", authorDate) # fix authorDate for Python 3.6
     repos.updateDate=datetime.datetime.strptime(authorDatePy36, '%Y-%m-%dT%H:%M:%S%z')
