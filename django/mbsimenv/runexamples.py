@@ -1646,8 +1646,11 @@ def coverage(exRun, lcovResultFile=None):
                     covPartFinal, "-o", pj(tempDir, "cov.trace.total")], lcovFD))
     # run lcov: remove counters
     ret=ret+abs(base.helper.subprocessCall(["lcov", "-r", pj(tempDir, "cov.trace.total"),
-      "/mbsim-env/mbsim-*/kernel/swig/*", "/mbsim-env/openmbv-*/openmbvcppinterface/swig/java/*", # SWIG generated
-      "/mbsim-env/openmbv-*/openmbvcppinterface/swig/octave/*", "/mbsim-env/openmbv-*/openmbvcppinterface/swig/python/*", # SWIG generated
+      "/mbsim-env/mbsim-*/kernel/swig/*", # SWIG generated
+      "/mbsim-env/mbsim-*/modules/*/swig/*", # SWIG generated
+      "/mbsim-env/openmbv-*/openmbvcppinterface/swig/java/*", # SWIG generated
+      "/mbsim-env/openmbv-*/openmbvcppinterface/swig/octave/*", # SWIG generated
+      "/mbsim-env/openmbv-*/openmbvcppinterface/swig/python/*", # SWIG generated
       "/mbsim-env/openmbv-*/mbxmlutils/mbxmlutils/*", # SWIG generated
       "/mbsim-env/mbsim*/thirdparty/nurbs++/*/*", "*/include/nurbs++/*", "/mbsim-env/mbsim*/kernel/mbsim/numerics/csparse.*", # 3rd party
       "/mbsim-env/mbsim*/examples/*", # mbsim examples
