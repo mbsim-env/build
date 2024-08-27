@@ -1272,6 +1272,7 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
       cmpRes.compareResultFile=cmpResFile
       cmpRes.dataset=datasetName
       cmpRes.result=runexamples.models.CompareResult.Result.DATASETNOTINCUR
+      saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
       nrFailed[0]+=1
       return
     # get shape
