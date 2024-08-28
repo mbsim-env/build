@@ -92,4 +92,4 @@ class SimpleSFTPStorage(django.core.files.storage.Storage):
 
   def url(self, name):
     # just to enable the django admin page
-    return "dummy"
+    return django.urls.reverse("base:fileDownloadFromDBMedia", args=[name])

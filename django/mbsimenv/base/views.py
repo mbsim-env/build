@@ -109,6 +109,11 @@ def fileDownloadFromDB(request, app, model, id, field):
   name=getattr(obj, field+"Name")
   return django.http.FileResponse(f, as_attachment=True, filename=name)
 
+# download a file from the db media
+def fileDownloadFromDBMedia(request, name):
+  f=django.core.files.storage.default_storage.open(name, "rb")
+  return django.http.FileResponse(f, as_attachment=True, filename=name)
+
 # the impresusm page
 class Impressum(Base):
   template_name='base/impressum_disclaimer_datenschutz.html'
