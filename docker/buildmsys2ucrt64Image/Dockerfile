@@ -5,7 +5,7 @@ FROM mbsimenv/buildmsys2ucrt64base:latest
 
 # install msys2
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
-RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; `
+RUN [Net.ServicePointManager]::SecurityProtocol =  [Net.SecurityProtocolType]::Tls12; `
   Invoke-WebRequest -UseBasicParsing -uri "https://github.com/msys2/msys2-installer/releases/download/nightly-x86_64/msys2-base-x86_64-latest.sfx.exe" -OutFile msys2.exe; `
   .\msys2.exe -y -oC:\; `
   Remove-Item msys2.exe ; `
@@ -70,7 +70,7 @@ RUN "pacman --noconfirm -S `
   pacman --noconfirm -Scc"
 
 # Install pip packages
-RUN "python.exe -m pip install --upgrade pip==24.0 && python.exe -m pip install django==3.2 django-allauth==0.55 django-octicons==1.0"
+RUN "python.exe -m pip install django==3.2 django-allauth==0.55 django-octicons==1.0"
 
 # install git
 RUN "wget https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/MinGit-2.43.0-64-bit.zip && `
