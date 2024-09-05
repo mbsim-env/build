@@ -1,7 +1,7 @@
 # escape=`
 # buildmsys2ucrt64 image: this image is used to build mbsim-env for Windows
 
-FROM mbsimenv/buildmsys2ucrt64base@sha256:4a6f772e75953cd39dd3fc08b523796c6ea483875ffd6f2bb1bc5db6b6718f89
+FROM mbsimenv/buildmsys2ucrt64base:test
 
 # install msys2
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
@@ -70,7 +70,7 @@ RUN "pacman --noconfirm -S `
   pacman --noconfirm -Scc"
 
 # Install pip packages
-RUN "python.exe -m pip install django==3.2 django-allauth==0.55 django-octicons==1.0"
+RUN "python.exe -m pip install --upgrade pip==24.0 && python.exe -m pip install django==3.2 django-allauth==0.55 django-octicons==1.0"
 
 # install git
 RUN "wget https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/MinGit-2.43.0-64-bit.zip && `

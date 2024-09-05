@@ -81,8 +81,8 @@ jobs:
 #mfmf      - name: "Docker pull build"
 #mfmf        run: docker pull mbsimenv/buildmsys2ucrt64:latest
       - run: docker image pull mbsimenv/buildmsys2ucrt64@sha256:4a6f772e75953cd39dd3fc08b523796c6ea483875ffd6f2bb1bc5db6b6718f89
-      - run: docker run mbsimenv/buildmsys2ucrt64@sha256:4a6f772e75953cd39dd3fc08b523796c6ea483875ffd6f2bb1bc5db6b6718f89 || true
+      - run: docker image tag mbsimenv/buildmsys2ucrt64@sha256:4a6f772e75953cd39dd3fc08b523796c6ea483875ffd6f2bb1bc5db6b6718f89 mbsimenv/buildmsys2ucrt64:test
       - name: "Docker build"
-        run: docker build -t mbsimenv/buildmsys2ucrt64:latest --cache-from mbsimenv/buildmsys2ucrt64@sha256:4a6f772e75953cd39dd3fc08b523796c6ea483875ffd6f2bb1bc5db6b6718f89 -f docker/buildmsys2ucrt64Image/Dockerfile .
+        run: docker build -t mbsimenv/buildmsys2ucrt64:latest --cache-from mbsimenv/buildmsys2ucrt64:test -f docker/buildmsys2ucrt64Image/Dockerfile .
       - name: "Docker push build"
         run: docker push mbsimenv/buildmsys2ucrt64:latest
