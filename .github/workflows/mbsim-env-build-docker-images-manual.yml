@@ -56,29 +56,32 @@ jobs:
     runs-on: windows-2019
     if: ${{inputs.buildmsys2ucrt64Image}}
     steps:
+#mfmf      - name: "Docker login"
+#mfmf        run: echo $Env:mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
+#mfmf
+#mfmf      - run: docker image pull mbsimenv/buildmsys2ucrt64@sha256:4a6f772e75953cd39dd3fc08b523796c6ea483875ffd6f2bb1bc5db6b6718f89
+#mfmf      - run: docker image tag mbsimenv/buildmsys2ucrt64@sha256:4a6f772e75953cd39dd3fc08b523796c6ea483875ffd6f2bb1bc5db6b6718f89 mbsimenv/buildmsys2ucrt64:v1
+#mfmf      - run: docker image ls
+#mfmf      - run: docker pull mbsimenv/buildmsys2ucrt64:v1
+#mfmf
+#mfmf      - run: docker image pull mbsimenv/buildmsys2ucrt64@sha256:0919ea3578d2bd3402dffbc2be17e8d271c069fa5adc4c4ba8288aaa3a44887a
+#mfmf      - run: docker image tag mbsimenv/buildmsys2ucrt64@sha256:0919ea3578d2bd3402dffbc2be17e8d271c069fa5adc4c4ba8288aaa3a44887a mbsimenv/buildmsys2ucrt64:v2
+#mfmf      - run: docker image ls
+#mfmf      - run: docker pull mbsimenv/buildmsys2ucrt64:v2
+      - name: "Checkout"
+        uses: actions/checkout@v4
       - name: "Docker login"
         run: echo $Env:mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
-
-      - run: docker image pull mbsimenv/buildmsys2ucrt64@sha256:0919ea3578d2bd3402dffbc2be17e8d271c069fa5adc4c4ba8288aaa3a44887a
-      - run: docker image tag mbsimenv/buildmsys2ucrt64@sha256:0919ea3578d2bd3402dffbc2be17e8d271c069fa5adc4c4ba8288aaa3a44887a mbsimenv/buildmsys2ucrt64:v2
-      - run: docker image pull mbsimenv/buildmsys2ucrt64:v2
-
+#      - name: "Docker pull base"
+#        run: docker pull mbsimenv/buildmsys2ucrt64base:latest
+#      - name: "Docker build base"
+#        run: docker build -t mbsimenv/buildmsys2ucrt64base:latest --cache-from mbsimenv/buildmsys2ucrt64base:latest -f docker/buildmsys2ucrt64baseImage/Dockerfile .
+#      - name: "Docker push base"
+#        run: docker push mbsimenv/buildmsys2ucrt64base:latest
+#mfmf      - name: "Docker pull build"
+#mfmf        run: docker pull mbsimenv/buildmsys2ucrt64:latest
       - run: docker image pull mbsimenv/buildmsys2ucrt64@sha256:4a6f772e75953cd39dd3fc08b523796c6ea483875ffd6f2bb1bc5db6b6718f89
-      - run: docker image tag mbsimenv/buildmsys2ucrt64@sha256:4a6f772e75953cd39dd3fc08b523796c6ea483875ffd6f2bb1bc5db6b6718f89 mbsimenv/buildmsys2ucrt64:v1
-      - run: docker image pull mbsimenv/buildmsys2ucrt64:v1
-#      - name: "Checkout"
-#        uses: actions/checkout@v4
-#      - name: "Docker login"
-#        run: echo $Env:mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
-##      - name: "Docker pull base"
-##        run: docker pull mbsimenv/buildmsys2ucrt64base:latest
-##      - name: "Docker build base"
-##        run: docker build -t mbsimenv/buildmsys2ucrt64base:latest --cache-from mbsimenv/buildmsys2ucrt64base:latest -f docker/buildmsys2ucrt64baseImage/Dockerfile .
-##      - name: "Docker push base"
-##        run: docker push mbsimenv/buildmsys2ucrt64base:latest
-#      - name: "Docker pull build"
-#        run: docker pull mbsimenv/buildmsys2ucrt64:latest
-#      - name: "Docker build"
-#        run: docker build -t mbsimenv/buildmsys2ucrt64:latest --cache-from mbsimenv/buildmsys2ucrt64:latest -f docker/buildmsys2ucrt64Image/Dockerfile .
-#      - name: "Docker push build"
-#        run: docker push mbsimenv/buildmsys2ucrt64:latest
+      - name: "Docker build"
+        run: docker build -t mbsimenv/buildmsys2ucrt64:latest --cache-from mbsimenv/buildmsys2ucrt64@sha256:4a6f772e75953cd39dd3fc08b523796c6ea483875ffd6f2bb1bc5db6b6718f89 -f docker/buildmsys2ucrt64Image/Dockerfile .
+      - name: "Docker push build"
+        run: docker push mbsimenv/buildmsys2ucrt64:latest
