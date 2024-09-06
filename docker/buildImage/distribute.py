@@ -10,6 +10,7 @@ import re
 import shutil
 import tempfile
 import codecs
+import glob
 
 def octVersion():
   if sys.platform=="win32":
@@ -475,11 +476,17 @@ def addPython():
       pysrcdirs=["/3rdparty/local/python-win64/Lib"] # search packages in this order
     if os.path.isdir(f"c:/msys64/ucrt64/lib/python{pyVersion()}/"):
       pysrcdirs=[f"c:/msys64/ucrt64/lib/python{pyVersion()}/"] # search packages in this order
-  sitePackages=[["pip", False],
-                ["setuptools", False],
-                ["numpy", False],
-                ["sympy", False],
-                ["mpmath", False]]
+  sitePackages=[
+    ["pip", False], # pip and its deps
+      ["setuptools", False],
+      ["distlib", False],
+      ["_distutils_hack", False],
+      ["pkg_resources", False],
+    ["numpy", False], # numpy and its deps
+      ["mpmath", False],
+    ["sympy", False], # sympy and its deps
+      ["gmpy2", False],
+  ]
   for pysrcdir in pysrcdirs:
     # everything in pysrcdir except some special dirs
     for d in os.listdir(pysrcdir):
@@ -492,6 +499,8 @@ def addPython():
       if sp[1]==False and os.path.exists(pysrcdir+"/site-packages/"+sp[0]):
         sp[1]=True
         addFileToDist(pysrcdir+"/site-packages/"+sp[0], "mbsim-env/"+subdir+"/site-packages/"+sp[0])
+        for d in glob.glob(pysrcdir+"/site-packages/"+sp[0]+"-*"):
+          addFileToDist(d, "mbsim-env/"+subdir+"/site-packages/"+os.path.basename(d))
 
     # on Windows copy also the DLLs dir
     if platform=="win":
