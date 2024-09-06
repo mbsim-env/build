@@ -482,6 +482,7 @@ def addPython():
       ["distlib", False],
       ["_distutils_hack", False],
       ["pkg_resources", False],
+      ["distlib", False],
     ["numpy", False], # numpy and its deps
       ["mpmath", False],
     ["sympy", False], # sympy and its deps
