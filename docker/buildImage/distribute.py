@@ -477,16 +477,27 @@ def addPython():
     if os.path.isdir(f"c:/msys64/ucrt64/lib/python{pyVersion()}/"):
       pysrcdirs=[f"c:/msys64/ucrt64/lib/python{pyVersion()}/"] # search packages in this order
   sitePackages=[
-    ["pip", False], # pip and its deps
+    ["pip", False], # pip and its deps (needed to add python packages to a existing installation)
       ["setuptools", False],
       ["distlib", False],
       ["_distutils_hack", False],
       ["pkg_resources", False],
       ["distlib", False],
-    ["numpy", False], # numpy and its deps
+    ["numpy", False], # numpy and its deps (requirement by the python evaluator of MBXMLUtils)
       ["mpmath", False],
-    ["sympy", False], # sympy and its deps
+    ["sympy", False], # sympy and its deps (requirement by the python evaluator of MBXMLUtils to handle symbolic expressions)
       ["gmpy2", False],
+    ["matplotlib", False], # optional dependency
+      ["scipy", False],
+      ["PySide2", False],
+      ["cycler", False],
+      ["dateutil", False],
+      ["kiwisolver", False],
+      ["packaging", False],
+      ["PIL", False],
+      ["pyparsing", False],
+      ["shiboken2", False],
+      ["six", False],
   ]
   for pysrcdir in pysrcdirs:
     # everything in pysrcdir except some special dirs
@@ -497,10 +508,13 @@ def addPython():
         continue
       addFileToDist(pysrcdir+"/"+d, "mbsim-env/"+subdir+"/"+d)
     for sp in sitePackages:
-      if sp[1]==False and os.path.exists(pysrcdir+"/site-packages/"+sp[0]):
+      if sp[1]==False and (os.path.isdir(pysrcdir+"/site-packages/"+sp[0]) or os.path.isfile(pysrcdir+"/site-packages/"+sp[0]+".py")):
         sp[1]=True
-        addFileToDist(pysrcdir+"/site-packages/"+sp[0], "mbsim-env/"+subdir+"/site-packages/"+sp[0])
-        for d in glob.glob(pysrcdir+"/site-packages/"+sp[0]+"-*"):
+        if os.path.isdir(pysrcdir+"/site-packages/"+sp[0]): # site-package is a directory
+          addFileToDist(pysrcdir+"/site-packages/"+sp[0], "mbsim-env/"+subdir+"/site-packages/"+sp[0])
+        if os.path.isfile(pysrcdir+"/site-packages/"+sp[0]+".py"): # site-package is a .py file
+          addFileToDist(pysrcdir+"/site-packages/"+sp[0]+".py", "mbsim-env/"+subdir+"/site-packages/"+sp[0]+".py")
+        for d in glob.glob(pysrcdir+"/site-packages/"+sp[0]+"-*"): # add also the site-package companion files/dirs
           addFileToDist(d, "mbsim-env/"+subdir+"/site-packages/"+os.path.basename(d))
 
     # on Windows copy also the DLLs dir
