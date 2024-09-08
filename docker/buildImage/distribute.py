@@ -499,6 +499,55 @@ def addPython():
       ["shiboken2", False],
       ["six", False],
   ]
+  skipPyd=[
+    # skip these pyd files of PySide2
+    "Qt3DAnimation.*.pyd",
+    "Qt3DCore.*.pyd",
+    "Qt3DExtras.*.pyd",
+    "Qt3DInput.*.pyd",
+    "Qt3DLogic.*.pyd",
+    "Qt3DRender.*.pyd",
+    "QtCharts.*.pyd",
+    "QtDataVisualization.*.pyd",
+    "QtLocation.*.pyd",
+    "QtMultimedia.*.pyd",
+    "QtMultimediaWidgets.*.pyd",
+    "QtPositioning.*.pyd",
+    "QtQuickControls2.*.pyd",
+    "QtRemoteObjects.*.pyd",
+    "QtScript.*.pyd",
+    "QtScriptTools.*.pyd",
+    "QtScxml.*.pyd",
+    "QtSensors.*.pyd",
+    "QtSerialPort.*.pyd",
+    "QtTextToSpeech.*.pyd",
+    "QtWebChannel.*.pyd",
+    "QtWebSockets.*.pyd",
+    "QtWinExtras.*.pyd",
+    "Qt3DAnimation.*.so",
+    "Qt3DCore.*.so",
+    "Qt3DExtras.*.so",
+    "Qt3DInput.*.so",
+    "Qt3DLogic.*.so",
+    "Qt3DRender.*.so",
+    "QtCharts.*.so",
+    "QtDataVisualization.*.so",
+    "QtLocation.*.so",
+    "QtMultimedia.*.so",
+    "QtMultimediaWidgets.*.so",
+    "QtPositioning.*.so",
+    "QtQuickControls2.*.so",
+    "QtRemoteObjects.*.so",
+    "QtScript.*.so",
+    "QtScriptTools.*.so",
+    "QtScxml.*.so",
+    "QtSensors.*.so",
+    "QtSerialPort.*.so",
+    "QtTextToSpeech.*.so",
+    "QtWebChannel.*.so",
+    "QtWebSockets.*.so",
+    "QtWinExtras.*.so",
+  ]
   for pysrcdir in pysrcdirs:
     # everything in pysrcdir except some special dirs
     for d in os.listdir(pysrcdir):
@@ -511,7 +560,10 @@ def addPython():
       if sp[1]==False and (os.path.isdir(pysrcdir+"/site-packages/"+sp[0]) or os.path.isfile(pysrcdir+"/site-packages/"+sp[0]+".py")):
         sp[1]=True
         if os.path.isdir(pysrcdir+"/site-packages/"+sp[0]): # site-package is a directory
-          addFileToDist(pysrcdir+"/site-packages/"+sp[0], "mbsim-env/"+subdir+"/site-packages/"+sp[0])
+          for c in glob.glob(pysrcdir+"/site-packages/"+sp[0]+"/*"):
+            if any(map(lambda g: fnmatch.fnmatch(os.path.basename(c), g), skipPyd)):
+              continue
+            addFileToDist(c, "mbsim-env/"+subdir+"/site-packages/"+sp[0]+"/"+os.path.basename(c))
         if os.path.isfile(pysrcdir+"/site-packages/"+sp[0]+".py"): # site-package is a .py file
           addFileToDist(pysrcdir+"/site-packages/"+sp[0]+".py", "mbsim-env/"+subdir+"/site-packages/"+sp[0]+".py")
         for d in glob.glob(pysrcdir+"/site-packages/"+sp[0]+"-*"): # add also the site-package companion files/dirs
