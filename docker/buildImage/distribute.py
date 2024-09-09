@@ -487,17 +487,18 @@ def addPython():
       ["mpmath", False],
     ["sympy", False], # sympy and its deps (requirement by the python evaluator of MBXMLUtils to handle symbolic expressions)
       ["gmpy2", False],
-    ["matplotlib", False], # optional dependency
-      ["scipy", False],
-      ["PySide2", False],
-      ["cycler", False],
-      ["dateutil", False],
-      ["kiwisolver", False],
-      ["packaging", False],
-      ["PIL", False],
-      ["pyparsing", False],
-      ["shiboken2", False],
-      ["six", False],
+# mfmf this code will add matplotlib/scipy with all its dependencies to the distribution -> this doubles the size of the distribtion -> make a seperate download with this available.
+#    ["matplotlib", False], # optional dependency
+#      ["scipy", False],
+#      ["PySide2", False],
+#      ["cycler", False],
+#      ["dateutil", False],
+#      ["kiwisolver", False],
+#      ["packaging", False],
+#      ["PIL", False],
+#      ["pyparsing", False],
+#      ["shiboken2", False],
+#      ["six", False],
   ]
   skipPyd=[
     # skip these pyd files of PySide2
