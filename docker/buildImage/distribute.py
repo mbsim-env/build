@@ -129,6 +129,11 @@ def adaptRPATH(name, orgName):
 
 def addFileToDist(name, arcname, addDepLibs=True):
   import deplibs
+
+  # do not add any python __pycache__ file
+  if os.path.isfile(name) and "__pycache__" in name:
+    return
+
   # do not add a file more than once
   if arcname in addFileToDist.content:
     return
@@ -248,6 +253,7 @@ NOTE:
   1) Run the program <install-dir>/mbsim-env/bin/mbsim-env-test%s to check the
      installation. This will run some MBSim examples, some OpenMBVC++Interface
      SWIG examples and the programs h5plotserie, openmbv and mbsimgui.
+     It will also byte-compile all contained Python code.
   2) To Enable also the OpenMBVC++Interface SWIG python example ensure that
      "python" is in your PATH and set the envvar MBSIMENV_TEST_PYTHON=1.
      To Enable also the OpenMBVC++Interface SWIG java example ensure that
@@ -313,6 +319,9 @@ def addMBSimEnvTest():
     text=r'''#!/bin/bash
 
 INSTDIR="$(readlink -f $(dirname $0)/..)"
+
+echo "BYTE-COMPILE PYTHON CODE"
+$INSTDIR/bin/python -m compileall $INSTDIR
 
 ERROR=""
 
