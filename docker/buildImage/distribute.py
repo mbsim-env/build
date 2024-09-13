@@ -177,7 +177,7 @@ def addFileToDist(name, arcname, addDepLibs=True):
                 adaptRPATH(tmpDir+"/"+basename, name)
             distArchive.write(tmpDir+"/"+basename, arcname)
             # only add debug files of mbsim-env
-            if name.startswith("/mbsim-env/"):
+            if "/mbsim-env/" in name:
               debugArchive.write(tmpDir+"/"+basename+".debug", arcname+".debug")
           except:
             print("Failed to strip: "+name+". Adding unstripped.")
