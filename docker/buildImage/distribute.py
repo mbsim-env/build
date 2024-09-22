@@ -11,6 +11,7 @@ import shutil
 import tempfile
 import codecs
 import glob
+import hashlib
 
 def octVersion():
   if sys.platform=="win32":
@@ -127,17 +128,20 @@ def adaptRPATH(name, orgName):
   except subprocess.CalledProcessError as ex:
     pass
 
-def addFileToDist(name, arcname, addDepLibs=True):
+def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
+  if depLibsDir is None:
+    if platform=="linux":
+      subdir="lib"
+    if platform=="win":
+      subdir="bin"
+    depLibsDir="mbsim-env/"+subdir
+
   import deplibs
 
   # do not add any python __pycache__ file
   if os.path.isfile(name) and "__pycache__" in name:
     return
 
-  # do not add a file more than once
-  if arcname in addFileToDist.content:
-    return
-  addFileToDist.content.add(arcname)
   # add
 
   # dir link -> error
@@ -145,6 +149,11 @@ def addFileToDist(name, arcname, addDepLibs=True):
     raise RuntimeError("Directory links are not supported.")
   # file link -> add as link and also add the dereferenced file
   if os.path.islink(name):
+    # do not add a file more than once
+    if arcname in addFileToDist.content:
+      return
+    addFileToDist.content.add(arcname)
+
     if platform=="win":
       return
     distArchive.write(name, arcname) # add link
@@ -159,6 +168,14 @@ def addFileToDist(name, arcname, addDepLibs=True):
     if (platform=="linux" and re.search('ELF [0-9]+-bit LSB', content) is not None) or \
        (platform=="win"   and re.search('PE32\+? executable', content) is not None):
       # binary file
+
+      # do not add a file more than once (for binary files we use the sha256 hash, not the archive path)
+      with open(name, "rb") as f:
+        hexhash="sha256:"+hashlib.sha256(f.read()).hexdigest()
+      if hexhash in addFileToDist.content:
+        return
+      addFileToDist.content.add(hexhash)
+
       # fix rpath (remove all absolute componentes from rpath; delete all RUNPATH)
       basename=os.path.basename(name)
       tmpDir=tempfile.mkdtemp()
@@ -198,16 +215,22 @@ def addFileToDist(name, arcname, addDepLibs=True):
       # add also all dependent libs to the lib/bin dir
       if addDepLibs and addDepsFor(name):
         for deplib in deplibs.depLibs(name):
-          if platform=="linux":
-            subdir="lib"
-          if platform=="win":
-            subdir="bin"
-          addFileToDist(deplib, "mbsim-env/"+subdir+"/"+os.path.basename(deplib), False)
+          addFileToDist(deplib, depLibsDir+"/"+os.path.basename(deplib), False)
     else:
+      # do not add a file more than once
+      if arcname in addFileToDist.content:
+        return
+      addFileToDist.content.add(arcname)
+
       # none binary file
       distArchive.write(name, arcname)
   # dir -> add recursively
   elif os.path.isdir(name):
+    # do not add a file more than once
+    if arcname in addFileToDist.content:
+      return
+    addFileToDist.content.add(arcname)
+
     for dirpath, dirnames, filenames in os.walk(name):
       for file in filenames:
         addFileToDist(dirpath+"/"+file, arcname+dirpath[len(name):]+"/"+file)
@@ -476,6 +499,50 @@ def addPython():
   print("Add python files")
   sys.stdout.flush()
 
+  # add python executable
+  if platform=="linux":
+    pythonData='''#!/bin/bash
+INSTDIR="$(readlink -f $(dirname $0)/..)"
+export LD_LIBRARY_PATH="$INSTDIR/lib"
+export PYTHONHOME=$INSTDIR
+export PYTHONPATH=$INSTDIR/../mbsim-env-python-site-packages
+$INSTDIR/bin/.python-envvar "$@"
+'''
+    addStrToDist(pythonData, "mbsim-env/bin/python", True)
+    addFileToDist(f"/usr/bin/python{pyVersion()}", "mbsim-env/bin/.python-envvar")
+  if platform=="win":
+    pythonData=r'''@echo off
+set INSTDIR=%~dp0..
+set PYTHONHOME=%INSTDIR%
+set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDIR%\lib\lib-dynload;%INSTDIR%\lib\site-packages
+"%INSTDIR%\bin\.python-envvar.exe" %*
+'''
+    addStrToDist(pythonData, "mbsim-env/bin/python.bat", True)
+    if os.path.exists("/3rdparty/local/python-win64/python.exe"):
+      addFileToDist("/3rdparty/local/python-win64/python.exe", "mbsim-env/bin/.python-envvar.exe")
+    if os.path.exists("c:/msys64/ucrt64/bin/python.exe"):
+      addFileToDist("c:/msys64/ucrt64/bin/python.exe", "mbsim-env/bin/.python-envvar.exe")
+
+  # add pip executable
+  if platform=="linux":
+    pipData='''#!/bin/bash
+INSTDIR="$(readlink -f $(dirname $0)/..)"
+export PIP_TARGET=$INSTDIR/../mbsim-env-python-site-packages
+export PYTHONHOME=$INSTDIR
+export PYTHONPATH=$INSTDIR/../mbsim-env-python-site-packages
+$INSTDIR/bin/python -m pip "$@"
+'''
+    addStrToDist(pipData, "mbsim-env/bin/pip", True)
+  if platform=="win":
+    pipData=r'''@echo off
+set INSTDIR=%~dp0..
+set PIP_TARGET=%INSTDIR%\..\mbsim-env-python-site-packages
+set PYTHONHOME=%INSTDIR%
+set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDIR%\lib\lib-dynload;%INSTDIR%\lib\site-packages
+"%INSTDIR%\bin\.python-envvar.exe" -m pip %*
+'''
+    addStrToDist(pipData, "mbsim-env/bin/pip.bat", True)
+
   if platform=="linux":
     subdir=f"lib64/python{pyVersion()}"
     pysrcdirs=[f"/usr/local/lib/python{pyVersion()}", f"/usr/lib64/python{pyVersion()}", f"/usr/lib/python{pyVersion()}", ] # search packages in this order
@@ -496,18 +563,19 @@ def addPython():
       ["mpmath", False],
     ["sympy", False], # sympy and its deps (requirement by the python evaluator of MBXMLUtils to handle symbolic expressions)
       ["gmpy2", False],
-# mfmf this code will add matplotlib/scipy with all its dependencies to the distribution -> this doubles the size of the distribtion -> make a seperate download with this available.
-#    ["matplotlib", False], # optional dependency
-#      ["scipy", False],
-#      ["PySide2", False],
-#      ["cycler", False],
-#      ["dateutil", False],
-#      ["kiwisolver", False],
-#      ["packaging", False],
-#      ["PIL", False],
-#      ["pyparsing", False],
-#      ["shiboken2", False],
-#      ["six", False],
+  ]
+  sitePackagesOpt=[
+    ["matplotlib", False], # optional python packages and its dependency -> copy to mbsim-env-python-site-packages
+    ["scipy", False],
+      ["PySide2", False],
+      ["cycler", False],
+      ["dateutil", False],
+      ["kiwisolver", False],
+      ["packaging", False],
+      ["PIL", False],
+      ["pyparsing", False],
+      ["shiboken2", False],
+      ["six", False],
   ]
   skipPyd=[
     # skip these pyd files of PySide2
@@ -558,14 +626,7 @@ def addPython():
     "QtWebSockets.*.so",
     "QtWinExtras.*.so",
   ]
-  for pysrcdir in pysrcdirs:
-    # everything in pysrcdir except some special dirs
-    for d in os.listdir(pysrcdir):
-      if d=="site-packages": # some subdirs of site-packages are added later
-        continue
-      if d=="config": # not required and contains links not supported by addFileToDist
-        continue
-      addFileToDist(pysrcdir+"/"+d, "mbsim-env/"+subdir+"/"+d)
+  def copySitePackages(sitePackages, pysrcdir, sitePackagesDir, depLibsDir=None):
     for sp in sitePackages:
       if sp[1]==False and (os.path.isdir(pysrcdir+"/site-packages/"+sp[0]) or os.path.isfile(pysrcdir+"/site-packages/"+sp[0]+".py")):
         sp[1]=True
@@ -573,61 +634,34 @@ def addPython():
           for c in glob.glob(pysrcdir+"/site-packages/"+sp[0]+"/*"):
             if any(map(lambda g: fnmatch.fnmatch(os.path.basename(c), g), skipPyd)):
               continue
-            addFileToDist(c, "mbsim-env/"+subdir+"/site-packages/"+sp[0]+"/"+os.path.basename(c))
+            addFileToDist(c, sitePackagesDir+"/"+sp[0]+"/"+os.path.basename(c), True, depLibsDir)
         if os.path.isfile(pysrcdir+"/site-packages/"+sp[0]+".py"): # site-package is a .py file
-          addFileToDist(pysrcdir+"/site-packages/"+sp[0]+".py", "mbsim-env/"+subdir+"/site-packages/"+sp[0]+".py")
+          addFileToDist(pysrcdir+"/site-packages/"+sp[0]+".py", sitePackagesDir+"/"+sp[0]+".py", True, depLibsDir)
         for d in glob.glob(pysrcdir+"/site-packages/"+sp[0]+"-*"): # add also the site-package companion files/dirs
-          addFileToDist(d, "mbsim-env/"+subdir+"/site-packages/"+os.path.basename(d))
-
+          addFileToDist(d, sitePackagesDir+"/"+os.path.basename(d), True, depLibsDir)
+  for pysrcdir in pysrcdirs:
     # on Windows copy also the DLLs dir
     if platform=="win":
       if os.path.isdir(pysrcdir+"/../DLLs"):
         for f in os.listdir(pysrcdir+"/../DLLs"):
           addFileToDist(pysrcdir+"/../DLLs/"+f, "mbsim-env/DLLs/"+f)
 
-  # add python executable
-  if platform=="linux":
-    pythonData='''#!/bin/bash
-INSTDIR="$(readlink -f $(dirname $0)/..)"
-export LD_LIBRARY_PATH="$INSTDIR/lib"
-export PYTHONHOME=$INSTDIR
-export PYTHONPATH=$INSTDIR/../mbsim-env-python-site-packages
-$INSTDIR/bin/.python-envvar "$@"
-'''
-    addStrToDist(pythonData, "mbsim-env/bin/python", True)
-    addFileToDist(f"/usr/bin/python{pyVersion()}", "mbsim-env/bin/.python-envvar")
-  if platform=="win":
-    pythonData=r'''@echo off
-set INSTDIR=%~dp0..
-set PYTHONHOME=%INSTDIR%
-set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDIR%\lib\lib-dynload;%INSTDIR%\lib\site-packages
-"%INSTDIR%\bin\.python-envvar.exe" %*
-'''
-    addStrToDist(pythonData, "mbsim-env/bin/python.bat", True)
-    if os.path.exists("/3rdparty/local/python-win64/python.exe"):
-      addFileToDist("/3rdparty/local/python-win64/python.exe", "mbsim-env/bin/.python-envvar.exe")
-    if os.path.exists("c:/msys64/ucrt64/bin/python.exe"):
-      addFileToDist("c:/msys64/ucrt64/bin/python.exe", "mbsim-env/bin/.python-envvar.exe")
+    # everything in pysrcdir except some special dirs
+    for d in os.listdir(pysrcdir):
+      if d=="site-packages": # some subdirs of site-packages are added later
+        continue
+      if d=="config": # not required and contains links not supported by addFileToDist
+        continue
+      addFileToDist(pysrcdir+"/"+d, "mbsim-env/"+subdir+"/"+d)
 
-  # add pip executable
-  if platform=="linux":
-    pipData='''#!/bin/bash
-INSTDIR="$(readlink -f $(dirname $0)/..)"
-export PIP_TARGET=$INSTDIR/../mbsim-env-python-site-packages
-export PYTHONHOME=$INSTDIR
-export PYTHONPATH=$INSTDIR/../mbsim-env-python-site-packages
-$INSTDIR/bin/python -m pip "$@"
-'''
-    addStrToDist(pipData, "mbsim-env/bin/pip", True)
-  if platform=="win":
-    pipData=r'''@echo off
-set INSTDIR=%~dp0..
-set PIP_TARGET=%INSTDIR%\..\mbsim-env-python-site-packages
-set PYTHONHOME=%INSTDIR%
-set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDIR%\lib\lib-dynload;%INSTDIR%\lib\site-packages
-"%INSTDIR%\bin\.python-envvar.exe" -m pip %*
-'''
-    addStrToDist(pipData, "mbsim-env/bin/pip.bat", True)
+    copySitePackages(sitePackages, pysrcdir, "mbsim-env/"+subdir+"/site-packages")
+
+  for pysrcdir in pysrcdirs:
+    if platform=="linux":
+      subdir="lib"
+    if platform=="win":
+      subdir="bin"
+    copySitePackages(sitePackagesOpt, pysrcdir, "mbsim-env-python-site-packages", "mbsim-env-python-site-packages/"+subdir)
 
 
 
