@@ -553,29 +553,15 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
     if os.path.isdir(f"c:/msys64/ucrt64/lib/python{pyVersion()}/"):
       pysrcdirs=[f"c:/msys64/ucrt64/lib/python{pyVersion()}/"] # search packages in this order
   sitePackages=[
-    ["pip", False], # pip and its deps (needed to add python packages to a existing installation)
-      ["setuptools", False],
-      ["distlib", False],
-      ["_distutils_hack", False],
-      ["pkg_resources", False],
-      ["distlib", False],
-    ["numpy", False], # numpy and its deps (requirement by the python evaluator of MBXMLUtils)
-      ["mpmath", False],
-    ["sympy", False], # sympy and its deps (requirement by the python evaluator of MBXMLUtils to handle symbolic expressions)
-      ["gmpy2", False],
+     #name    #dep-names
+    ["pip",   ["setuptools", "distlib", "_distutils_hack", "pkg_resources", "distlib"]],
+    ["numpy", ["mpmath"]],
+    ["sympy", ["gmpy2"]],
   ]
   sitePackagesOpt=[
-    ["matplotlib", False], # optional python packages and its dependency -> copy to mbsim-env-python-site-packages
-    ["scipy", False],
-      ["PySide2", False],
-      ["cycler", False],
-      ["dateutil", False],
-      ["kiwisolver", False],
-      ["packaging", False],
-      ["PIL", False],
-      ["pyparsing", False],
-      ["shiboken2", False],
-      ["six", False],
+     #name         #dep-names
+    ["matplotlib", ["PySide2", "cycler", "dateutil", "kiwisolver", "packaging", "PIL", "pyparsing", "shiboken2", "six"]],
+    ["scipy",      ["dateutil", "kiwisolver", "packaging", "PIL", "pyparsing", "six"]],
   ]
   skipPyd=[
     # skip these pyd files of PySide2
@@ -627,18 +613,26 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
     "QtWinExtras.*.so",
   ]
   def copySitePackages(sitePackages, pysrcdir, sitePackagesDir, depLibsDir=None):
-    for sp in sitePackages:
-      if sp[1]==False and (os.path.isdir(pysrcdir+"/site-packages/"+sp[0]) or os.path.isfile(pysrcdir+"/site-packages/"+sp[0]+".py")):
-        sp[1]=True
-        if os.path.isdir(pysrcdir+"/site-packages/"+sp[0]): # site-package is a directory
-          for c in glob.glob(pysrcdir+"/site-packages/"+sp[0]+"/*"):
+    def addPackage(packageName):
+      if packageName not in copySitePackages.alreadyAdded and \
+         (os.path.isdir(pysrcdir+"/site-packages/"+packageName) or os.path.isfile(pysrcdir+"/site-packages/"+packageName+".py")):
+        copySitePackages.alreadyAdded.add(packageName)
+        if os.path.isdir(pysrcdir+"/site-packages/"+packageName): # site-package is a directory
+          for c in glob.glob(pysrcdir+"/site-packages/"+packageName+"/*"):
             if any(map(lambda g: fnmatch.fnmatch(os.path.basename(c), g), skipPyd)):
               continue
-            addFileToDist(c, sitePackagesDir+"/"+sp[0]+"/"+os.path.basename(c), True, depLibsDir)
-        if os.path.isfile(pysrcdir+"/site-packages/"+sp[0]+".py"): # site-package is a .py file
-          addFileToDist(pysrcdir+"/site-packages/"+sp[0]+".py", sitePackagesDir+"/"+sp[0]+".py", True, depLibsDir)
-        for d in glob.glob(pysrcdir+"/site-packages/"+sp[0]+"-*"): # add also the site-package companion files/dirs
+            addFileToDist(c, sitePackagesDir+"/"+packageName+"/"+os.path.basename(c), True, depLibsDir)
+        if os.path.isfile(pysrcdir+"/site-packages/"+packageName+".py"): # site-package is a .py file
+          addFileToDist(pysrcdir+"/site-packages/"+packageName+".py", sitePackagesDir+"/"+packageName+".py", True, depLibsDir)
+        for d in glob.glob(pysrcdir+"/site-packages/"+packageName+"-*"): # add also the site-package companion files/dirs
           addFileToDist(d, sitePackagesDir+"/"+os.path.basename(d), True, depLibsDir)
+        return True
+      return False
+    for p in sitePackages:
+      if addPackage(p[0]):
+        for d in p[1]:
+          addPackage(d)
+  copySitePackages.alreadyAdded=set()
   for pysrcdir in pysrcdirs:
     # on Windows copy also the DLLs dir
     if platform=="win":
