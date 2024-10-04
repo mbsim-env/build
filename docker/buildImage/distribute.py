@@ -343,7 +343,7 @@ def addMBSimEnvTest():
 
 INSTDIR="$(readlink -f $(dirname $0)/..)"
 
-echo "BYTE-COMPILE PYTHON CODE"
+echo "BYTE_COMPILE_PYTHON_CODE"
 $INSTDIR/bin/python -m compileall $INSTDIR
 
 ERROR=""
@@ -399,6 +399,9 @@ fi
 set PWD=%%CD%%
 
 set INSTDIR=%%~dp0..
+
+echo BYTE_COMPILE_PYTHON_CODE
+call "%%INSTDIR%%\bin\python -m compileall %%INSTDIR%%
 
 set ERROR=
 
@@ -612,10 +615,18 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
     "QtWebSockets.*.so",
     "QtWinExtras.*.so",
   ]
-  def copySitePackages(sitePackages, pysrcdir, sitePackagesDir, depLibsDir=None):
+  def copySitePackages(sitePackages, pysrcdirs, sitePackagesDir, depLibsDir=None):
+    pysrcdirsCopy=pysrcdirs.copy()
+    pysrcdirsCopy.append(None)
     def addPackage(packageName):
-      if packageName not in copySitePackages.alreadyAdded and \
-         (os.path.isdir(pysrcdir+"/site-packages/"+packageName) or os.path.isfile(pysrcdir+"/site-packages/"+packageName+".py")):
+      if packageName in copySitePackages.alreadyAdded:
+        return True
+      for pysrcdir in pysrcdirsCopy:
+        if pysrcdir is None:
+          break
+        if os.path.isdir(pysrcdir+"/site-packages/"+packageName) or os.path.isfile(pysrcdir+"/site-packages/"+packageName+".py"):
+          break
+      if pysrcdir is not None:
         copySitePackages.alreadyAdded.add(packageName)
         if os.path.isdir(pysrcdir+"/site-packages/"+packageName): # site-package is a directory
           for c in glob.glob(pysrcdir+"/site-packages/"+packageName+"/*"):
@@ -648,14 +659,13 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
         continue
       addFileToDist(pysrcdir+"/"+d, "mbsim-env/"+subdir+"/"+d)
 
-    copySitePackages(sitePackages, pysrcdir, "mbsim-env/"+subdir+"/site-packages")
+  copySitePackages(sitePackages, pysrcdirs, "mbsim-env/"+subdir+"/site-packages")
 
-  for pysrcdir in pysrcdirs:
-    if platform=="linux":
-      subdir="lib"
-    if platform=="win":
-      subdir="bin"
-    copySitePackages(sitePackagesOpt, pysrcdir, "mbsim-env-python-site-packages", "mbsim-env-python-site-packages/"+subdir)
+  if platform=="linux":
+    subdir="lib"
+  if platform=="win":
+    subdir="bin"
+  copySitePackages(sitePackagesOpt, pysrcdirs, "mbsim-env-python-site-packages", "mbsim-env-python-site-packages/"+subdir)
 
 
 
