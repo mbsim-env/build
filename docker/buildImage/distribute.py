@@ -169,12 +169,16 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
        (platform=="win"   and re.search('PE32\+? executable', content) is not None):
       # binary file
 
-      # do not add a file more than once (for binary files we use the sha256 hash, not the archive path)
-      with open(name, "rb") as f:
-        hexhash="sha256:"+hashlib.sha256(f.read()).hexdigest()
-      if hexhash in addFileToDist.content:
+      ## do not add a file more than once (for binary files we use the sha256 hash, not the archive path)
+      #with open(name, "rb") as f:
+      #  hexhash="sha256:"+hashlib.sha256(f.read()).hexdigest()
+      #if hexhash in addFileToDist.content:
+      #  return
+      #addFileToDist.content.add(hexhash)
+      # do not add a file more than once
+      if arcname in addFileToDist.content:
         return
-      addFileToDist.content.add(hexhash)
+      addFileToDist.content.add(arcname)
 
       # fix rpath (remove all absolute componentes from rpath; delete all RUNPATH)
       basename=os.path.basename(name)
@@ -276,7 +280,7 @@ NOTE:
   1) Run the program <install-dir>/mbsim-env/bin/mbsim-env-test%s to check the
      installation. This will run some MBSim examples, some OpenMBVC++Interface
      SWIG examples and the programs h5plotserie, openmbv and mbsimgui.
-     It will also byte-compile all contained Python code.
+     It can also be used to byte-compile all contained Python code using --compile
   2) To Enable also the OpenMBVC++Interface SWIG python example ensure that
      "python" is in your PATH and set the envvar MBSIMENV_TEST_PYTHON=1.
      To Enable also the OpenMBVC++Interface SWIG java example ensure that
@@ -343,8 +347,11 @@ def addMBSimEnvTest():
 
 INSTDIR="$(readlink -f $(dirname $0)/..)"
 
-echo "BYTE_COMPILE_PYTHON_CODE"
-$INSTDIR/bin/python -m compileall $INSTDIR
+if [ "_$1" == "_--compile" ]; then
+  echo "BYTE_COMPILE_PYTHON_CODE"
+  $INSTDIR/bin/python -m compileall $INSTDIR
+  exit 0
+fi
 
 ERROR=""
 
@@ -400,8 +407,11 @@ set PWD=%%CD%%
 
 set INSTDIR=%%~dp0..
 
-echo BYTE_COMPILE_PYTHON_CODE
-call "%%INSTDIR%%\bin\python -m compileall %%INSTDIR%%
+IF "_%%1"=="_--compile" (
+  echo BYTE_COMPILE_PYTHON_CODE
+  call "%%INSTDIR%%\bin\python" -m compileall "%%INSTDIR%%"
+  exit /b 0
+)
 
 set ERROR=
 
