@@ -11,7 +11,6 @@ import shutil
 import tempfile
 import codecs
 import glob
-import hashlib
 
 def octVersion():
   if sys.platform=="win32":
@@ -169,16 +168,16 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
        (platform=="win"   and re.search('PE32\+? executable', content) is not None):
       # binary file
 
-      ## do not add a file more than once (for binary files we use the sha256 hash, not the archive path)
-      #with open(name, "rb") as f:
-      #  hexhash="sha256:"+hashlib.sha256(f.read()).hexdigest()
-      #if hexhash in addFileToDist.content:
-      #  return
-      #addFileToDist.content.add(hexhash)
       # do not add a file more than once
-      if arcname in addFileToDist.content:
+      # if arcname is a file in the dir depLibsDir then use a special dirname to avoid duplicates in any depLibsDir's
+      # (there are currenlty to depLibsDir's: (on Windows) mbsim-env/bin and mbsim-env-python-site-packages/bin)
+      if os.path.dirname(arcname) == depLibsDir
+        contentArcname=":depLibsDir:/"+os.path.basename(arcname)
+      else:
+        contentArcname=arcname
+      if contentArcname in addFileToDist.content:
         return
-      addFileToDist.content.add(arcname)
+      addFileToDist.content.add(contentArcname)
 
       # fix rpath (remove all absolute componentes from rpath; delete all RUNPATH)
       basename=os.path.basename(name)
@@ -349,7 +348,7 @@ INSTDIR="$(readlink -f $(dirname $0)/..)"
 
 if [ "_$1" == "_--compile" ]; then
   echo "BYTE_COMPILE_PYTHON_CODE"
-  $INSTDIR/bin/python -m compileall $INSTDIR
+  $INSTDIR/bin/python -m compileall $INSTDIR $INSTDIR/../mbsim-env-python-site-packages
   exit 0
 fi
 
@@ -409,7 +408,7 @@ set INSTDIR=%%~dp0..
 
 IF "_%%1"=="_--compile" (
   echo BYTE_COMPILE_PYTHON_CODE
-  call "%%INSTDIR%%\bin\python" -m compileall "%%INSTDIR%%"
+  call "%%INSTDIR%%\bin\python" -m compileall "%%INSTDIR%%" "%%INSTDIR%%\..\mbsim-env-python-site-packages"
   exit /b 0
 )
 
