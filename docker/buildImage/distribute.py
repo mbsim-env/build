@@ -159,7 +159,7 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
     link=os.readlink(name) # add also the reference
     if "/" in link: # but only if to the same dire
       raise RuntimeError("Only links to the same dir are supported but "+name+" points to "+link+".")
-    addFileToDist(os.path.dirname(name)+"/"+link, os.path.dirname(arcname)+"/"+link) # recursive call
+    addFileToDist(os.path.dirname(name)+"/"+link, os.path.dirname(arcname)+"/"+link, addDepLibs, depLibsDir) # recursive call
   # file -> add as file
   elif os.path.isfile(name):
     # file type
@@ -218,7 +218,7 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
       # add also all dependent libs to the lib/bin dir
       if addDepLibs and addDepsFor(name):
         for deplib in deplibs.depLibs(name):
-          addFileToDist(deplib, depLibsDir+"/"+os.path.basename(deplib), False)
+          addFileToDist(deplib, depLibsDir+"/"+os.path.basename(deplib), False, depLibsDir)
     else:
       # do not add a file more than once
       if arcname in addFileToDist.content:
@@ -236,7 +236,7 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
 
     for dirpath, dirnames, filenames in os.walk(name):
       for file in filenames:
-        addFileToDist(dirpath+"/"+file, arcname+dirpath[len(name):]+"/"+file)
+        addFileToDist(dirpath+"/"+file, arcname+dirpath[len(name):]+"/"+file, addDepLibs, depLibsDir)
   else:
     raise RuntimeError("Unknown file type: "+name)
 addFileToDist.content=set()
