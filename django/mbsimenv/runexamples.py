@@ -405,7 +405,7 @@ def main():
       global displayNR
       displayNR=3
       # newer versions of vncserver may need the "-autokill no" option
-      while subprocess.call(["vncserver", ":"+str(displayNR), "-noxstartup", "-SecurityTypes", "None"], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))!=0:
+      while subprocess.call(["vncserver", ":"+str(displayNR), "-noxstartup", "-SecurityTypes", "None", "-autokill", "no"], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))!=0:
         displayNR=displayNR+1
         if displayNR>100:
           raise RuntimeError("Cannot find a free DISPLAY for vnc server.")
