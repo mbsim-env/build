@@ -49,6 +49,10 @@ RUN apt update -y && apt install -y \
   unzip \
   tigervnc-standalone-server \
   && rm -rf /var/lib/apt/lists/* 
+#mfmf
+RUN apt update -y && apt install -y \
+  sshpass \
+  && rm -rf /var/lib/apt/lists/* 
 
 # install using pip
 RUN pip3 install --break-system-packages django-octicons
