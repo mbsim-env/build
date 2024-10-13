@@ -161,9 +161,7 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
       addFileToDist(os.path.dirname(name)+"/"+link, os.path.dirname(arcname)+"/"+link, addDepLibs, depLibsDir) # recursive call
     elif link.startswith("/etc/alternatives/"): # a debian alternative file -> do not add the link but deep copy the target to the link
       while os.path.islink(link):
-        link=os.readlink(link)
-        if not link.startswith("/"):
-          raise RuntimeError("Only absolute links are supported for debian alternatives: "+name+" -> "+link+".")
+        link=os.path.join(os.path.dirname(link), os.readlink(link))
       addFileToDist(link, arcname, addDepLibs, depLibsDir) # recursive call
     else:
       raise RuntimeError("This type of link is not supported: "+name+" -> "+link+".")
