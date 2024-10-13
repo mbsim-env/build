@@ -15,12 +15,12 @@ import glob
 def octVersion():
   if sys.platform=="win32":
     return "9.1.0"
-  return "4.4.1"
+  return "7.3.0"
 
 def pyVersion():
   if sys.platform=="win32":
     return "3.11"
-  return "3.6"
+  return "3.11"
 
 args=None
 platform=None
@@ -159,9 +159,14 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
     if "/" not in link: # link to the same dir -> add the link and its target
       distArchive.write(name, arcname) # add link
       addFileToDist(os.path.dirname(name)+"/"+link, os.path.dirname(arcname)+"/"+link, addDepLibs, depLibsDir) # recursive call
-    elif link.startswith("/etc/alternatives/"): # a debian alternative file -> do not add the link but deep copy the target to the link
-      while os.path.islink(link):
-        link=os.path.join(os.path.dirname(link), os.readlink(link))
+    elif link.startswith("/etc/alternatives/") or \
+         link=="/etc/octaverc" or \
+         link==f"/etc/python{pyVersion()}/sitecustomize.py" or \
+         link=="../../x86_64-linux-gnu/libpython3.11.so.1": # a debian alternative file -> do not add the link but deep copy the target to the link
+      linkBase=name
+      while os.path.islink(os.path.join(os.path.dirname(linkBase), link)):
+        linkBase=os.path.join(os.path.dirname(linkBase), link)
+        link=os.path.join(os.path.dirname(linkBase), os.readlink(linkBase))
       addFileToDist(link, arcname, addDepLibs, depLibsDir) # recursive call
     else:
       raise RuntimeError("This type of link is not supported: "+name+" -> "+link+".")
@@ -480,8 +485,8 @@ def addOctave():
   print("Add octave share dir")
   sys.stdout.flush()
 
-  if os.path.isdir("/3rdparty/local/share/octave"):
-    addFileToDist("/3rdparty/local/share/octave", "mbsim-env/share/octave")
+  if os.path.isdir("/usr/share/octave"):
+    addFileToDist("/usr/share/octave", "mbsim-env/share/octave")
   if os.path.isdir("c:/msys64/ucrt64/share/octave"):
     addFileToDist("c:/msys64/ucrt64/share/octave", "mbsim-env/share/octave")
 
@@ -490,9 +495,12 @@ def addOctave():
 
   if platform=="linux":
     tmpDir=tempfile.mkdtemp()
-    shutil.copy(f"/3rdparty/local/bin/octave-cli-{octVersion()}", tmpDir+"/octave-cli")
+    shutil.copy("/usr/bin/octave-cli", tmpDir+"/octave-cli")
     subprocess.check_call(["patchelf", "--force-rpath", "--set-rpath", "$ORIGIN/../lib", tmpDir+"/octave-cli"])
     addFileToDist(tmpDir+"/octave-cli", "mbsim-env/bin/octave-cli")
+    shutil.copy("/usr/bin/octave", tmpDir+"/octave")
+    subprocess.check_call(["patchelf", "--force-rpath", "--set-rpath", "$ORIGIN/../lib", tmpDir+"/octave"])
+    addFileToDist(tmpDir+"/octave", "mbsim-env/bin/octave")
   if platform=="win":
     if os.path.exists(f"/3rdparty/local/bin/octave-cli-{octVersion()}.exe"):
       addFileToDist(f"/3rdparty/local/bin/octave-cli-{octVersion()}.exe", "mbsim-env/bin/octave-cli.exe")
@@ -503,7 +511,7 @@ def addOctave():
   sys.stdout.flush()
 
   if platform=="linux":
-    addFileToDist(f"/3rdparty/local/lib/octave/{octVersion()}/oct/x86_64-pc-linux-gnu", f"mbsim-env/lib/octave/{octVersion()}/oct/x86_64-pc-linux-gnu")
+    addFileToDist(f"/usr/lib/x86_64-linux-gnu/octave/{octVersion()}/oct/x86_64-pc-linux-gnu", f"mbsim-env/lib/x86_64-linux-gnu/octave/{octVersion()}/oct/x86_64-pc-linux-gnu")
   if platform=="win":
     if os.path.isdir(f"/3rdparty/local/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32"):
       addFileToDist(f"/3rdparty/local/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32", f"mbsim-env/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32")
@@ -562,7 +570,7 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
 
   if platform=="linux":
     subdir=f"lib64/python{pyVersion()}"
-    pysrcdirs=[f"/usr/local/lib/python{pyVersion()}", f"/usr/lib64/python{pyVersion()}", f"/usr/lib/python{pyVersion()}", ] # search packages in this order
+    pysrcdirs=[f"/usr/local/lib/python{pyVersion()}", f"/usr/lib/python{pyVersion()}", f"/usr/lib/python{pyVersion()}", ] # search packages in this order
   if platform=="win":
     subdir="lib"
     if os.path.isdir("/3rdparty/local/python-win64/Lib"):

@@ -96,9 +96,11 @@ COPY django/mbsimenv/service            /context/mbsimenv/service
 
 # enable ccache (after all other things are done); note /mbsim-env is usually a persistent Docker volume;
 # PATH for cache
+# add octave path to LD_LIBRARY_PATH just to enable distribute.py to find it for compiled *.oct files (e.g. OpenMBV.oct)
 ENV CCACHE_DIR=/mbsim-ccache \
     MBSIM_SWIG=1 \
-    PATH=/usr/lib/ccache:$PATH
+    PATH=/usr/lib/ccache:$PATH \
+    LD_LIBRARY_PATH=$LD_LIBRARY_PATH:/usr/lib/x86_64-linux-gnu/octave/7.3.0
 
 # user/group handling
 # - add group dockeruser and user dockeruser with group dockeruser

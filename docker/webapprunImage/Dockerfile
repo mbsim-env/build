@@ -1,4 +1,5 @@
 ARG MBSIMENVTAGNAME=latest
+#mfmf do not derive from mbsimenv/build. Its not needed since the installer is used -> use a plain debian with minimal X11 install
 FROM mbsimenv/build:$MBSIMENVTAGNAME
 
 USER root:root
