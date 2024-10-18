@@ -487,12 +487,26 @@ def addOctave():
     tmpDir=tempfile.mkdtemp()
     shutil.copy(f"/3rdparty/local/bin/octave-cli-{octVersion()}", tmpDir+"/octave-cli")
     subprocess.check_call(["patchelf", "--force-rpath", "--set-rpath", "$ORIGIN/../lib", tmpDir+"/octave-cli"])
-    addFileToDist(tmpDir+"/octave-cli", "mbsim-env/bin/octave-cli")
+    octaveData='''#!/bin/bash
+INSTDIR="$(readlink -f $(dirname $0)/..)"
+export OCTAVE_HOME="$INSTDIR"
+export OCTAVE_PATH="$INSTDIR/bin:$INSTDIR/lib:$INSTDIR/share/mbxmlutils/octave"
+$INSTDIR/bin/.octave-cli-envvar "$@"
+'''
+    addStrToDist(octaveData, "mbsim-env/bin/octave-cli", True)
+    addFileToDist(tmpDir+"/octave-cli", "mbsim-env/bin/.octave-cli-envvar")
   if platform=="win":
     if os.path.exists(f"/3rdparty/local/bin/octave-cli-{octVersion()}.exe"):
-      addFileToDist(f"/3rdparty/local/bin/octave-cli-{octVersion()}.exe", "mbsim-env/bin/octave-cli.exe")
+      addFileToDist(f"/3rdparty/local/bin/octave-cli-{octVersion()}.exe", "mbsim-env/bin/.octave-cli-envvar.exe")
     if os.path.exists("c:/msys64/ucrt64/bin/octave-cli.exe"):
-      addFileToDist("c:/msys64/ucrt64/bin/octave-cli.exe", "mbsim-env/bin/octave-cli.exe")
+      addFileToDist("c:/msys64/ucrt64/bin/octave-cli.exe", "mbsim-env/bin/.octave-cli-envvar.exe")
+    octaveData=r'''@echo off
+set INSTDIR=%~dp0..
+set OCTAVE_HOME=%INSTDIR%
+set OCTAVE_PATH=%INSTDIR%\bin;%INSTDIR%\lib;%INSTDIR%\share\mbxmlutils\octave
+"%INSTDIR%\bin\.octave-cli-envvar.exe" %*
+'''
+    addStrToDist(octaveData, "mbsim-env/bin/python.bat", True)
 
   print("Add octave oct files")
   sys.stdout.flush()
