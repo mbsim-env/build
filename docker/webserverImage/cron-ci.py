@@ -64,13 +64,13 @@ if ciq is not None:
                     openmbvBranch=ciq.openmbvBranch, mbsimBranch=ciq.mbsimBranch,
                     buildConfig=buildConfig)
       sys.exit(ret)
-  elif os.environ["MBSIMENVTAGNAME"]=="staging" and ciq.buildCommitID is not None and ciq.buildCommitID!="":
-    print("Start build of staging build-system: "+ciq.buildCommitID)
-    sys.stdout.flush()
-    # run rebuild build-system
-    ciq.delete()
-    ret=setup.run("builddocker", args.jobs, printLog=False, builddockerBranch=ciq.buildCommitID)
-    sys.exit(ret)
+  #elif os.environ["MBSIMENVTAGNAME"]=="staging" and ciq.buildCommitID is not None and ciq.buildCommitID!="":
+  #  print("Start build of staging build-system: "+ciq.buildCommitID)
+  #  sys.stdout.flush()
+  #  # run rebuild build-system
+  #  ciq.delete()
+  #  ret=setup.run("builddocker", args.jobs, printLog=False, builddockerBranch=ciq.buildCommitID)
+  #  sys.exit(ret)
   else:
     print("Removed queue entry: not a CI or staging-dockerbuild entry")
     ciq.delete()
