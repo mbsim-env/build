@@ -536,7 +536,7 @@ def addPython():
 INSTDIR="$(readlink -f $(dirname $0)/..)"
 export LD_LIBRARY_PATH="$INSTDIR/lib"
 export PYTHONHOME=$INSTDIR
-export PYTHONPATH=$INSTDIR/../mbsim-env-python-site-packages
+export PYTHONPATH=$INSTDIR/../mbsim-env-python-site-packages:$INSTDIR/share/mbxmlutils/python:$INSTDIR/bin
 $INSTDIR/bin/.python-envvar "$@"
 '''
     addStrToDist(pythonData, "mbsim-env/bin/python", True)
@@ -545,7 +545,7 @@ $INSTDIR/bin/.python-envvar "$@"
     pythonData=r'''@echo off
 set INSTDIR=%~dp0..
 set PYTHONHOME=%INSTDIR%
-set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDIR%\lib\lib-dynload;%INSTDIR%\lib\site-packages
+set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDIR%\lib\lib-dynload;%INSTDIR%\lib\site-packages;%INSTDIR%\share\mbxmlutils\python;%INSTDIR%\bin
 "%INSTDIR%\bin\.python-envvar.exe" %*
 '''
     addStrToDist(pythonData, "mbsim-env/bin/python.bat", True)
@@ -553,6 +553,14 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
       addFileToDist("/3rdparty/local/python-win64/python.exe", "mbsim-env/bin/.python-envvar.exe")
     if os.path.exists("c:/msys64/ucrt64/bin/python.exe"):
       addFileToDist("c:/msys64/ucrt64/bin/python.exe", "mbsim-env/bin/.python-envvar.exe")
+    pythonData=r'''import os
+if hasattr(os, "add_dll_directory"):
+  import sys
+  INSTDIR=os.path.dirname(os.path.dirname(sys.executable))
+  os.add_dll_directory(rf"{INSTDIR}\bin")
+  os.add_dll_directory(rf"{INSTDIR}\..\mbsim-env-python-site-packages\bin")
+'''
+    addStrToDist(pythonData, "mbsim-env/lib/site-packages/sitecustomize.py")
 
   # add pip executable
   if platform=="linux":
