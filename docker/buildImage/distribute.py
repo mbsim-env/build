@@ -159,15 +159,21 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
     if "/" not in link: # link to the same dir -> add the link and its target
       distArchive.write(name, arcname) # add link
       addFileToDist(os.path.dirname(name)+"/"+link, os.path.dirname(arcname)+"/"+link, addDepLibs, depLibsDir) # recursive call
+    # a debian alternative file -> do not add the link but deep copy the target to the link
     elif link.startswith("/etc/alternatives/") or \
          link=="/etc/octaverc" or \
          link==f"/etc/python{pyVersion()}/sitecustomize.py" or \
-         link=="../../x86_64-linux-gnu/libpython3.11.so.1": # a debian alternative file -> do not add the link but deep copy the target to the link
+         link==f"../../x86_64-linux-gnu/libpython{pyVersion()}.so.1" or \
+         link=="../../../../../../../../../../../share/javascript/jquery/jquery.js" or \
+         link=="../../../../../../../../../../../share/javascript/jquery/jquery.min.js" or \
+         link=="../../../../../../../../../../share/javascript/jquery-ui/css/smoothness/jquery-ui.min.css" or \
+         link=="../../../../../../../../share/javascript/jquery/jquery.min.js" or \
+         link=="../../../../../../../../share/javascript/jquery-ui/jquery-ui.min.js":
       linkBase=name
       while os.path.islink(os.path.join(os.path.dirname(linkBase), link)):
         linkBase=os.path.join(os.path.dirname(linkBase), link)
         link=os.path.join(os.path.dirname(linkBase), os.readlink(linkBase))
-      addFileToDist(link, arcname, addDepLibs, depLibsDir) # recursive call
+      addFileToDist(os.path.join(os.path.dirname(linkBase), link), arcname, addDepLibs, depLibsDir) # recursive call
     else:
       raise RuntimeError("This type of link is not supported: "+name+" -> "+link+".")
   # file -> add as file
@@ -569,8 +575,8 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
     addStrToDist(pipData, "mbsim-env/bin/pip.bat", True)
 
   if platform=="linux":
-    subdir=f"lib64/python{pyVersion()}"
-    pysrcdirs=[f"/usr/local/lib/python{pyVersion()}", f"/usr/lib/python{pyVersion()}", f"/usr/lib/python{pyVersion()}", ] # search packages in this order
+    subdir=f"lib/python{pyVersion()}"
+    pysrcdirs=[f"/usr/local/lib/python{pyVersion()}", f"/usr/lib/python3", f"/usr/lib/python{pyVersion()}", ] # search packages in this order
   if platform=="win":
     subdir="lib"
     if os.path.isdir("/3rdparty/local/python-win64/Lib"):
@@ -585,7 +591,7 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
   ]
   sitePackagesOpt=[
      #name         #dep-names
-    ["matplotlib", ["PySide2", "cycler", "dateutil", "kiwisolver", "packaging", "PIL", "pyparsing", "shiboken2", "six"]],
+    ["matplotlib", ["PySide2", "cycler", "dateutil", "kiwisolver", "packaging", "PIL", "pyparsing", "shiboken2", "six", "mpl_toolkits"]],
     ["scipy",      ["dateutil", "kiwisolver", "packaging", "PIL", "pyparsing", "six"]],
   ]
   skipPyd=[
@@ -637,6 +643,10 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
     "QtWebSockets.*.so",
     "QtWinExtras.*.so",
   ]
+  if os.path.exists("/etc/debian_version"):
+    siteDistPackagesDir="dist-packages"
+  else:
+    siteDistPackagesDir="site-packages"
   def copySitePackages(sitePackages, pysrcdirs, sitePackagesDir, depLibsDir=None):
     pysrcdirsCopy=pysrcdirs.copy()
     pysrcdirsCopy.append(None)
@@ -646,18 +656,18 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
       for pysrcdir in pysrcdirsCopy:
         if pysrcdir is None:
           break
-        if os.path.isdir(pysrcdir+"/site-packages/"+packageName) or os.path.isfile(pysrcdir+"/site-packages/"+packageName+".py"):
+        if os.path.isdir(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName) or os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".py"):
           break
       if pysrcdir is not None:
         copySitePackages.alreadyAdded.add(packageName)
-        if os.path.isdir(pysrcdir+"/site-packages/"+packageName): # site-package is a directory
-          for c in glob.glob(pysrcdir+"/site-packages/"+packageName+"/*"):
+        if os.path.isdir(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName): # site-package is a directory
+          for c in glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+"/*"):
             if any(map(lambda g: fnmatch.fnmatch(os.path.basename(c), g), skipPyd)):
               continue
             addFileToDist(c, sitePackagesDir+"/"+packageName+"/"+os.path.basename(c), True, depLibsDir)
-        if os.path.isfile(pysrcdir+"/site-packages/"+packageName+".py"): # site-package is a .py file
-          addFileToDist(pysrcdir+"/site-packages/"+packageName+".py", sitePackagesDir+"/"+packageName+".py", True, depLibsDir)
-        for d in glob.glob(pysrcdir+"/site-packages/"+packageName+"-*"): # add also the site-package companion files/dirs
+        if os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".py"): # site-package is a .py file
+          addFileToDist(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".py", sitePackagesDir+"/"+packageName+".py", True, depLibsDir)
+        for d in glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+"-*"): # add also the site-package companion files/dirs
           addFileToDist(d, sitePackagesDir+"/"+os.path.basename(d), True, depLibsDir)
         return True
       return False
@@ -675,13 +685,13 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
 
     # everything in pysrcdir except some special dirs
     for d in os.listdir(pysrcdir):
-      if d=="site-packages": # some subdirs of site-packages are added later
+      if d==siteDistPackagesDir: # some subdirs of site-packages are added later
         continue
       if d=="config": # not required and contains links not supported by addFileToDist
         continue
       addFileToDist(pysrcdir+"/"+d, "mbsim-env/"+subdir+"/"+d)
 
-  copySitePackages(sitePackages, pysrcdirs, "mbsim-env/"+subdir+"/site-packages")
+  copySitePackages(sitePackages, pysrcdirs, "mbsim-env/"+subdir+"/"+siteDistPackagesDir)
 
   if platform=="linux":
     subdir="lib"
