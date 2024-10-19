@@ -506,7 +506,7 @@ set OCTAVE_HOME=%INSTDIR%
 set OCTAVE_PATH=%INSTDIR%\bin;%INSTDIR%\lib;%INSTDIR%\share\mbxmlutils\octave
 "%INSTDIR%\bin\.octave-cli-envvar.exe" %*
 '''
-    addStrToDist(octaveData, "mbsim-env/bin/python.bat", True)
+    addStrToDist(octaveData, "mbsim-env/bin/octave-cli.bat", True)
 
   print("Add octave oct files")
   sys.stdout.flush()
