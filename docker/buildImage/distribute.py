@@ -510,7 +510,7 @@ export OCTAVE_PATH="$INSTDIR/bin:$INSTDIR/lib:$INSTDIR/share/mbxmlutils/octave"
 $INSTDIR/bin/.octave-cli-envvar "$@"
 '''
     addStrToDist(octaveData, "mbsim-env/bin/octave-cli", True)
-    addFileToDist(tmpDir+"/octave-cli", "mbsim-env/bin/-octave-cli-envvar")
+    addFileToDist(tmpDir+"/octave-cli", "mbsim-env/bin/.octave-cli-envvar")
   if platform=="win":
     if os.path.exists(f"/3rdparty/local/bin/octave-cli-{octVersion()}.exe"):
       addFileToDist(f"/3rdparty/local/bin/octave-cli-{octVersion()}.exe", "mbsim-env/bin/.octave-cli-envvar.exe")
