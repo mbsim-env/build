@@ -163,6 +163,10 @@ class UserProfile(Base):
         userLargeAvatarEle=octicon("person", height="125")
     if context["githubLogin"]:
       context["clientID"]=allauth.socialaccount.models.SocialApp.objects.get(provider="github").client_id
+      context["userLargeAvatarEle"]=userLargeAvatarEle
+      context["socialUser"]=socialUser
+      context["githubAccessTokenDummy"]="<not shown for security reasons>" if self.gh.getAccessToken() else None
+      context["githubUserInMbsimenv"]=self.gh
     sessionDBObj=list(django.contrib.sessions.models.Session.objects.filter(session_key=self.request.session.session_key))
     if len(sessionDBObj)>0:
       context["session"]={}
