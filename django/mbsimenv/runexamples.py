@@ -406,9 +406,9 @@ def main():
       displayNR=3
       # older versions of vncserver does not have the "-autokill no" -> "no" is the default
       if os.path.isfile("/etc/fedora-release"):
-        autokill=[]
-      else:
         autokill=["-autokill", "no"]
+      else:
+        autokill=[]
       while subprocess.call(["vncserver", ":"+str(displayNR), "-noxstartup", "-SecurityTypes", "None"]+autokill, stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))!=0:
         displayNR=displayNR+1
         if displayNR>100:
