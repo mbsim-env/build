@@ -405,7 +405,7 @@ def main():
       global displayNR
       displayNR=3
       # older versions of vncserver does not have the "-autokill no" -> "no" is the default
-      if os.path.isfile("/etc/debian-release"):
+      if os.path.isfile("/etc/debian_version"):
         autokill=["-autokill", "no"]
       else:
         autokill=[]
