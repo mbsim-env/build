@@ -2,6 +2,9 @@ name: Runexamples
 on:
   workflow_call:
     inputs:
+      id:
+        required: true
+        type: string
       matrix: # JSON string: {"data":
               #  [{"os": {"buildType": ?, "image": ?, "args": ?},
               #    "branches": {"fmatvecBranch": ?, "hdf5serieBranch": ?, "openmbvBranch": ?, "mbsimBranch": ?, }, }, ...]}
@@ -91,7 +94,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ${{github.workspace}}/mbsim-env/local
-          pattern: mbsim-env-covdata-*
+          pattern: mbsim-env-covdata-${{inputs.id}}-*
           merge-multiple: true
       - name: "Docker: pull image"
         run: docker image pull mbsimenv/build:${{env.MBSIMENVTAGNAME}}
@@ -150,17 +153,17 @@ jobs:
       - name: "Create UUID for artifact upload"
         if: ${{always() && inputs.uploadArtifactLcovdata}}
         shell: python
-        id: artivactUploadUUID
+        id: artifactUploadUUID
         run: |
           import uuid
-          print("jobs.runexamples.steps.artivactUploadUUID.outputs.artivactUploadUUID:\n"+str(uuid.uuid4()))
+          print("jobs.runexamples.steps.artifactUploadUUID.outputs.artifactUploadUUID:\n"+str(uuid.uuid4()))
           with open("${{github.output}}", "at") as o:
-            print("artivactUploadUUID="+str(uuid.uuid4()), file=o)
+            print("artifactUploadUUID="+str(uuid.uuid4()), file=o)
       - name: "Artifact: upload lcov-files"
         if: ${{always() && inputs.uploadArtifactLcovdata}}
         uses: actions/upload-artifact@v4
         with:
-          name: mbsim-env-covdata-${{steps.artivactUploadUUID.outputs.artivactUploadUUID}}
+          name: mbsim-env-covdata-${{inputs.id}}-${{steps.artifactUploadUUID.outputs.artifactUploadUUID}}
           retention-days: 1
           compression-level: 9
           path: ${{github.workspace}}/mbsim-env/local/cov.trace.final.part.*.*
