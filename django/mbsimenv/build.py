@@ -561,7 +561,7 @@ def repoUpdate(run, buildInfo):
       setattr(run, repo+"Triggered", getattr(run, repo+"Triggered") or (len(branchSplit)>2 and branchSplit[2]=="T"))
       if not args.disableUpdate:
         setattr(run, repo+"UpdateOK", retlocal==0)
-      setattr(run, repo+"UpdateOutput", repoUpdFD.getvalue())
+      setattr(run, repo+"UpdateOutput", repoUpdFD.getvalue().replace("\0", "&#00;"))
       setattr(run, repo+"UpdateCommitID", commitidfull[repo])
       setattr(run, repo+"UpdateMsg", commitsub.encode("utf-8")[:builds.models.Run._meta.get_field(repo+"UpdateMsg").max_length].decode("utf-8", "ignore"))
       setattr(run, repo+"UpdateAuthor", authorName)
@@ -575,7 +575,7 @@ def repoUpdate(run, buildInfo):
     repos.triggered=getattr(run, repo+"Triggered", False) or repos.triggered or (len(branchSplit)>2 and branchSplit[2]=="T")
     if not args.disableUpdate:
       repos.updateOK=retlocal==0
-    repos.updateOutput=repoUpdFD.getvalue()
+    repos.updateOutput=repoUpdFD.getvalue().replace("\0", "&#00;")
     repos.updateCommitID=commitidfull[repo]
     repos.updateMsg=commitsub.encode("utf-8")[:builds.models.Repos._meta.get_field("updateMsg").max_length].decode("utf-8", "ignore")
     repos.updateAuthor=authorName
@@ -757,7 +757,7 @@ def configure(tool):
     except:
       pass
     tool.configureOK=result=="done"
-  tool.configureOutput=configureFD.getvalue()
+  tool.configureOutput=configureFD.getvalue().replace("\0", "&#00;")
   tool.save()
   configureFD.close()
   os.chdir(savedDir)
@@ -802,11 +802,11 @@ def make(tool):
   # configure was disable but needs to be run then ...
   if tool.configureOK is None and tool.configureOutput!="":
     # ... copy the output from configureOutput to makeOutput and append the output of make
-    tool.makeOutput=tool.configureOutput+"\n\n\n\n\n"+makeFD.getvalue()
+    tool.makeOutput=tool.configureOutput+"\n\n\n\n\n"+makeFD.getvalue().replace("\0", "&#00;")
     tool.configureOutput=""
   else:
     # ... else just use the output of make
-    tool.makeOutput=makeFD.getvalue()
+    tool.makeOutput=makeFD.getvalue().replace("\0", "&#00;")
   tool.save()
   makeFD.close()
   ret=0
@@ -864,7 +864,7 @@ def check(tool):
             checkFD.write(f.read())
   if not args.disableMakeCheck:
     tool.makeCheckOK=result=="done"
-  tool.makeCheckOutput=checkFD.getvalue()
+  tool.makeCheckOutput=checkFD.getvalue().replace("\0", "&#00;")
   tool.save()
   checkFD.close()
 
@@ -925,7 +925,7 @@ def doc(tool, disabled, docDirName):
   os.chdir(savedDir)
   if not disabled:
     setattr(tool, docDirName+"OK", result=="done")
-  setattr(tool, docDirName+"Output", docFD.getvalue())
+  setattr(tool, docDirName+"Output", docFD.getvalue().replace("\0", "&#00;"))
   tool.save()
   docFD.close()
 
@@ -972,7 +972,7 @@ def createDistribution(run):
     distributeErrorCode=base.helper.subprocessCall([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../distribute.py",
                           "--outDir", tempDir, args.prefix if args.prefix is not None else args.prefixAuto], distLog)
     run.distributionOK=distributeErrorCode==0
-    run.distributionOutput=distLog.getvalue()
+    run.distributionOutput=distLog.getvalue().replace("\0", "&#00;")
     distLog.close()
     if distributeErrorCode==0:
       lines=run.distributionOutput.splitlines()

@@ -66,12 +66,12 @@ for texMain in glob.glob("*/main.tex"):
   manual, created=service.models.Manual.objects.get_or_create(id=idName, defaults={
     "manualName": idName,
     "resultOK": ret==0,
-    "resultOutput": f.getvalue(),
+    "resultOutput": f.getvalue().replace("\0", "&#00;"),
   })
   if not created:
     manual.manualName=idName
     manual.resultOK=ret==0
-    manual.resultOutput=f.getvalue()
+    manual.resultOutput=f.getvalue().replace("\0", "&#00;")
   manual.manualFileName=idName+".pdf"
   manual.save()
   with manual.manualFile.open("wb") as fo:
