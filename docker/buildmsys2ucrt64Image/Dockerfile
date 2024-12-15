@@ -76,6 +76,8 @@ RUN "python.exe -m pip install --upgrade pip==24.0 && python.exe -m pip install 
 RUN "wget https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/MinGit-2.43.0-64-bit.zip && `
   unzip -d /c/git MinGit-2.43.0-64-bit.zip && rm -f MinGit-2.43.0-64-bit.zip"
 RUN "echo 'PATH=\"$PATH:/c/git/cmd\"' >> ~/.bash_profile"
+# disable the git safe.directory security feature since files created in a docker container are not owned by the container user
+RUN "git config --global --add safe.directory '*'"
 
 ## Install mesa for software OpenGL (only needed to run GUI programs in VMs)
 #RUN "mkdir mesa && cd mesa && `

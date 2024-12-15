@@ -608,11 +608,14 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
     ["numpy", ["mpmath"]],
     ["sympy", ["gmpy2"]],
   ]
-  sitePackagesOpt=[
-     #name         #dep-names
-    ["matplotlib", ["PySide2", "cycler", "dateutil", "kiwisolver", "packaging", "PIL", "pyparsing", "shiboken2", "six", "mpl_toolkits"]],
-    ["scipy",      ["dateutil", "kiwisolver", "packaging", "PIL", "pyparsing", "six"]],
-  ]
+  if pyVersion()=="3.6": # a hack to skip sitePackagesOpt for the windows cross-compile build and for the CentOS-Linux build
+    sitePackagesOpt=[]
+  else:
+    sitePackagesOpt=[
+       #name         #dep-names
+      ["matplotlib", ["PySide2", "cycler", "dateutil", "kiwisolver", "packaging", "PIL", "pyparsing", "shiboken2", "six", "mpl_toolkits"]],
+      ["scipy",      ["dateutil", "kiwisolver", "packaging", "PIL", "pyparsing", "six"]],
+    ]
   skipPyd=[
     # skip these pyd files of PySide2
     "Qt3DAnimation.*.pyd",

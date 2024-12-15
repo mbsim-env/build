@@ -50,6 +50,7 @@ def parseArgs():
   argparser.add_argument("--httpPort", type=int, default=80, help="The http port number to use on the host side http (default: 80)")
   argparser.add_argument("--httpsPort", type=int, default=443, help="The https port number to use on the host side; not used if --noSSL (default: 443)")
   argparser.add_argument("--filestoragePort", type=int, default=1122, help="The filestorage port number to use on the host side (default: 1122)")
+  argparser.add_argument("--allowedDBNoSSLSubnet", default=[], nargs="*", help="The subnet's from which a no SSL login is allowed (default: [])")
 
   def buildConfigConvert(x):
     try:
@@ -542,7 +543,7 @@ def runNetworkAndDatabase(printLog, daemon):
     hostname="database", # reverse DNS must work for "database"
     network=networki.id,
     command=(["--noSSL"] if args.noSSL else [])+\
-            ["--dockerSubnet", networki.attrs["IPAM"]["Config"][0]["Subnet"], networke.attrs["IPAM"]["Config"][0]["Subnet"]],
+            ["--allowedDBNoSSLSubnet", networki.attrs["IPAM"]["Config"][0]["Subnet"], networke.attrs["IPAM"]["Config"][0]["Subnet"]]+args.allowedDBNoSSLSubnet,
     environment={"MBSIMENVSERVERNAME": getServername(), "GITCOMMITID": databaseImage.labels["gitCommitID"], "IMAGEID": databaseImage.id},
     volumes=volumes,
     ports=ports,

@@ -81,6 +81,7 @@ jobs:
     needs: buildPartitionedExamples
     if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
+      id: "normal"
       matrix: |
         {"data": [
           {"args": "--runExamplesPre"}
@@ -102,6 +103,7 @@ jobs:
     needs: [buildPartitionedExamples, examplesPre]
     if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
+      id: "normal"
       matrix: |
         {"data": [
           {"args": "--runExamplesPartition"},
@@ -136,6 +138,7 @@ jobs:
     needs: [buildPartitionedExamples, examplesRun, examplesPre]
     if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
+      id: "normal"
       matrix: |
         {"data": [
           {"args": "--runExamplesPost"}
@@ -163,6 +166,7 @@ jobs:
              # (examplesPreValgrind is not stared before to ensure correct startTime recording in the MBSim-Env database)
     if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
+      id: "valgrind"
       matrix: |
         {"data": [
           {"args": "--runExamplesPre --valgrindExamples"}
@@ -184,6 +188,7 @@ jobs:
     needs: [buildPartitionedExamples, examplesPreValgrind]
     if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
+      id: "valgrind"
       matrix: |
         {"data": [
           {"args": "--runExamplesPartition --valgrindExamples"},
@@ -218,6 +223,7 @@ jobs:
     needs: [buildPartitionedExamples, examplesRunValgrind, examplesPreValgrind]
     if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
+      id: "valgrind"
       matrix: |
         {"data": [
           {"args": "--runExamplesPost --valgrindExamples"}
