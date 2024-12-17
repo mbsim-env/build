@@ -12,6 +12,6 @@ urlpatterns = [
     base.views.textFieldFromDBDownload, name='textFieldFromDBDownload', robots=False),
   base.helper.urls_path('fileDownloadFromDB/<str:app>/<str:model>/<slug:id>/<str:field>/',
     base.views.fileDownloadFromDB, name='fileDownloadFromDB', robots=False),
-  base.helper.urls_path('fileDownloadFromDBMedia/<str:name>/',
+  base.helper.urls_path('fileDownloadFromDBMedia/<path:name>',
     base.views.fileDownloadFromDBMedia, name='fileDownloadFromDBMedia', robots=False),
 ]

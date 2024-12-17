@@ -6,6 +6,7 @@ import importlib
 import mimetypes
 import octicons
 import allauth
+import os
 from octicons.templatetags.octicons import octicon
 
 # basic view with header and footer
@@ -112,7 +113,7 @@ def fileDownloadFromDB(request, app, model, id, field):
 # download a file from the db media
 def fileDownloadFromDBMedia(request, name):
   f=django.core.files.storage.default_storage.open(name, "rb")
-  return django.http.FileResponse(f, as_attachment=True, filename=name)
+  return django.http.FileResponse(f, as_attachment=True, filename=os.path.basename(name))
 
 # the impresusm page
 class Impressum(Base):

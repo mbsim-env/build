@@ -68,6 +68,7 @@ RUN "pacman --noconfirm -S `
   mingw-w64-ucrt-x86_64-gcc-fortran `
   mingw-w64-ucrt-x86_64-python-requests-oauthlib && `
   pacman --noconfirm -Scc"
+#mfmf add openssh rsync sshpass
 
 # Install pip packages
 RUN "python.exe -m pip install --upgrade pip==24.0 && python.exe -m pip install django==3.2 django-allauth==0.55 django-octicons==1.0"
