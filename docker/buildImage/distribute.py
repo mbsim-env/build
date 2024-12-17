@@ -608,7 +608,7 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
     ["numpy", ["mpmath"]],
     ["sympy", ["gmpy2"]],
   ]
-  if pyVersion()=="3.6": # a hack to skip sitePackagesOpt for the windows cross-compile build and for the CentOS-Linux build
+  if pyVersion()=="3.6" or pyVersion()=="3.4": # a hack to skip sitePackagesOpt for the windows cross-compile build and for the CentOS-Linux build
     sitePackagesOpt=[]
   else:
     sitePackagesOpt=[
