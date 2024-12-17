@@ -404,8 +404,12 @@ def main():
       # start vnc server on a free display
       global displayNR
       displayNR=3
-      # newer versions of vncserver may need the "-autokill no" option
-      while subprocess.call(["vncserver", ":"+str(displayNR), "-noxstartup", "-SecurityTypes", "None"], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))!=0:
+      # older versions of vncserver does not have the "-autokill no" -> "no" is the default
+      if os.path.isfile("/etc/debian_version"):
+        autokill=["-autokill", "no"]
+      else:
+        autokill=[]
+      while subprocess.call(["vncserver", ":"+str(displayNR), "-noxstartup", "-SecurityTypes", "None"]+autokill, stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))!=0:
         displayNR=displayNR+1
         if displayNR>100:
           raise RuntimeError("Cannot find a free DISPLAY for vnc server.")

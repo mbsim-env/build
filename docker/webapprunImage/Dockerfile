@@ -1,18 +1,16 @@
 ARG MBSIMENVTAGNAME=latest
+#mfmf do not derive from mbsimenv/build. Its not needed since the installer is used -> use a plain debian with minimal X11 install
 FROM mbsimenv/build:$MBSIMENVTAGNAME
 
 USER root:root
 
-# use other mirror since the official CentOS mirror is removed since 2014-07-01
-RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
-RUN yum --setopt=skip_missing_names_on_install=False -y install \
+RUN apt update -y && apt install -y \
   xfwm4 \
-  bzip2 \
-  && yum clean all
+  && rm -rf /var/lib/apt/lists/* 
 
 # compile splash program
 COPY fullscreensplash.cc /context/fullscreensplash.cc
-RUN g++ -fPIC -o /context/fullscreensplash -I/usr/include/qt5 /context/fullscreensplash.cc -lQt5Widgets -lQt5Core
+RUN g++ -fPIC -o /context/fullscreensplash /context/fullscreensplash.cc $(pkg-config --cflags --libs Qt5Widgets)
 
 COPY entrypoint.py /context/entrypoint.py
 
@@ -30,10 +28,10 @@ RUN mkdir -p /mbsim-env && chown root:root /mbsim-env
 # prepare env for starting programs in the vnc server
 ENV https_proxy=proxy:8888 \
   XAUTHORITY=/tmp/mbsimwebapp-xauth \
-  DISPLAY=:1 \
-  COIN_FULL_INDIRECT_RENDERING=1 \
-  LIBGL_ALWAYS_INDIRECT=1 \
-  QT_X11_NO_MITSHM=1
+  DISPLAY=:1
+#mfmf  COIN_FULL_INDIRECT_RENDERING=1
+#mfmf  LIBGL_ALWAYS_INDIRECT=1
+#mfmf  QT_X11_NO_MITSHM=1
 
 # use a unpriviliged user to run the container
 USER dockeruser:dockeruser

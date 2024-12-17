@@ -15,12 +15,12 @@ import glob
 def octVersion():
   if sys.platform=="win32":
     return "9.1.0"
-  return "4.4.1"
+  return "7.3.0"
 
 def pyVersion():
   if sys.platform=="win32":
     return "3.11"
-  return "3.6"
+  return "3.11"
 
 args=None
 platform=None
@@ -155,11 +155,27 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
 
     if platform=="win":
       return
-    distArchive.write(name, arcname) # add link
     link=os.readlink(name) # add also the reference
-    if "/" in link: # but only if to the same dire
-      raise RuntimeError("Only links to the same dir are supported but "+name+" points to "+link+".")
-    addFileToDist(os.path.dirname(name)+"/"+link, os.path.dirname(arcname)+"/"+link, addDepLibs, depLibsDir) # recursive call
+    if "/" not in link: # link to the same dir -> add the link and its target
+      distArchive.write(name, arcname) # add link
+      addFileToDist(os.path.dirname(name)+"/"+link, os.path.dirname(arcname)+"/"+link, addDepLibs, depLibsDir) # recursive call
+    # a debian alternative file -> do not add the link but deep copy the target to the link
+    elif link.startswith("/etc/alternatives/") or \
+         link=="/etc/octaverc" or \
+         link==f"/etc/python{pyVersion()}/sitecustomize.py" or \
+         link==f"../../x86_64-linux-gnu/libpython{pyVersion()}.so.1" or \
+         link=="../../../../../../../../../../../share/javascript/jquery/jquery.js" or \
+         link=="../../../../../../../../../../../share/javascript/jquery/jquery.min.js" or \
+         link=="../../../../../../../../../../share/javascript/jquery-ui/css/smoothness/jquery-ui.min.css" or \
+         link=="../../../../../../../../share/javascript/jquery/jquery.min.js" or \
+         link=="../../../../../../../../share/javascript/jquery-ui/jquery-ui.min.js":
+      linkBase=name
+      while os.path.islink(os.path.join(os.path.dirname(linkBase), link)):
+        linkBase=os.path.join(os.path.dirname(linkBase), link)
+        link=os.path.join(os.path.dirname(linkBase), os.readlink(linkBase))
+      addFileToDist(os.path.join(os.path.dirname(linkBase), link), arcname, addDepLibs, depLibsDir) # recursive call
+    else:
+      raise RuntimeError("This type of link is not supported: "+name+" -> "+link+".")
   # file -> add as file
   elif os.path.isfile(name):
     # file type
@@ -475,8 +491,8 @@ def addOctave():
   print("Add octave share dir")
   sys.stdout.flush()
 
-  if os.path.isdir("/3rdparty/local/share/octave"):
-    addFileToDist("/3rdparty/local/share/octave", "mbsim-env/share/octave")
+  if os.path.isdir("/usr/share/octave"):
+    addFileToDist("/usr/share/octave", "mbsim-env/share/octave")
   if os.path.isdir("c:/msys64/ucrt64/share/octave"):
     addFileToDist("c:/msys64/ucrt64/share/octave", "mbsim-env/share/octave")
 
@@ -485,7 +501,7 @@ def addOctave():
 
   if platform=="linux":
     tmpDir=tempfile.mkdtemp()
-    shutil.copy(f"/3rdparty/local/bin/octave-cli-{octVersion()}", tmpDir+"/octave-cli")
+    shutil.copy("/usr/bin/octave-cli", tmpDir+"/octave-cli")
     subprocess.check_call(["patchelf", "--force-rpath", "--set-rpath", "$ORIGIN/../lib", tmpDir+"/octave-cli"])
     octaveData='''#!/bin/bash
 INSTDIR="$(readlink -f $(dirname $0)/..)"
@@ -512,7 +528,7 @@ set OCTAVE_PATH=%INSTDIR%\bin;%INSTDIR%\lib;%INSTDIR%\share\mbxmlutils\octave
   sys.stdout.flush()
 
   if platform=="linux":
-    addFileToDist(f"/3rdparty/local/lib/octave/{octVersion()}/oct/x86_64-pc-linux-gnu", f"mbsim-env/lib/octave/{octVersion()}/oct/x86_64-pc-linux-gnu")
+    addFileToDist(f"/usr/lib/x86_64-linux-gnu/octave/{octVersion()}/oct/x86_64-pc-linux-gnu", f"mbsim-env/lib/x86_64-linux-gnu/octave/{octVersion()}/oct/x86_64-pc-linux-gnu")
   if platform=="win":
     if os.path.isdir(f"/3rdparty/local/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32"):
       addFileToDist(f"/3rdparty/local/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32", f"mbsim-env/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32")
@@ -578,8 +594,8 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
     addStrToDist(pipData, "mbsim-env/bin/pip.bat", True)
 
   if platform=="linux":
-    subdir=f"lib64/python{pyVersion()}"
-    pysrcdirs=[f"/usr/local/lib/python{pyVersion()}", f"/usr/lib64/python{pyVersion()}", f"/usr/lib/python{pyVersion()}", ] # search packages in this order
+    subdir=f"lib/python{pyVersion()}"
+    pysrcdirs=[f"/usr/local/lib/python{pyVersion()}", f"/usr/lib/python3", f"/usr/lib/python{pyVersion()}", ] # search packages in this order
   if platform=="win":
     subdir="lib"
     if os.path.isdir("/3rdparty/local/python-win64/Lib"):
@@ -649,6 +665,10 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
     "QtWebSockets.*.so",
     "QtWinExtras.*.so",
   ]
+  if os.path.exists("/etc/debian_version"):
+    siteDistPackagesDir="dist-packages"
+  else:
+    siteDistPackagesDir="site-packages"
   def copySitePackages(sitePackages, pysrcdirs, sitePackagesDir, depLibsDir=None):
     pysrcdirsCopy=pysrcdirs.copy()
     pysrcdirsCopy.append(None)
@@ -658,18 +678,18 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
       for pysrcdir in pysrcdirsCopy:
         if pysrcdir is None:
           break
-        if os.path.isdir(pysrcdir+"/site-packages/"+packageName) or os.path.isfile(pysrcdir+"/site-packages/"+packageName+".py"):
+        if os.path.isdir(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName) or os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".py"):
           break
       if pysrcdir is not None:
         copySitePackages.alreadyAdded.add(packageName)
-        if os.path.isdir(pysrcdir+"/site-packages/"+packageName): # site-package is a directory
-          for c in glob.glob(pysrcdir+"/site-packages/"+packageName+"/*"):
+        if os.path.isdir(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName): # site-package is a directory
+          for c in glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+"/*"):
             if any(map(lambda g: fnmatch.fnmatch(os.path.basename(c), g), skipPyd)):
               continue
             addFileToDist(c, sitePackagesDir+"/"+packageName+"/"+os.path.basename(c), True, depLibsDir)
-        if os.path.isfile(pysrcdir+"/site-packages/"+packageName+".py"): # site-package is a .py file
-          addFileToDist(pysrcdir+"/site-packages/"+packageName+".py", sitePackagesDir+"/"+packageName+".py", True, depLibsDir)
-        for d in glob.glob(pysrcdir+"/site-packages/"+packageName+"-*"): # add also the site-package companion files/dirs
+        if os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".py"): # site-package is a .py file
+          addFileToDist(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".py", sitePackagesDir+"/"+packageName+".py", True, depLibsDir)
+        for d in glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+"-*"): # add also the site-package companion files/dirs
           addFileToDist(d, sitePackagesDir+"/"+os.path.basename(d), True, depLibsDir)
         return True
       return False
@@ -687,13 +707,13 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
 
     # everything in pysrcdir except some special dirs
     for d in os.listdir(pysrcdir):
-      if d=="site-packages": # some subdirs of site-packages are added later
+      if d==siteDistPackagesDir: # some subdirs of site-packages are added later
         continue
       if d=="config": # not required and contains links not supported by addFileToDist
         continue
       addFileToDist(pysrcdir+"/"+d, "mbsim-env/"+subdir+"/"+d)
 
-  copySitePackages(sitePackages, pysrcdirs, "mbsim-env/"+subdir+"/site-packages")
+  copySitePackages(sitePackages, pysrcdirs, "mbsim-env/"+subdir+"/"+siteDistPackagesDir)
 
   if platform=="linux":
     subdir="lib"
