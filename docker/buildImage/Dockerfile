@@ -60,10 +60,10 @@ RUN pip3 install --break-system-packages django-octicons
 
 RUN mkdir /3rdparty
 
-# install using npm
-WORKDIR /3rdparty
-RUN npm install mathjax-node@2.1
-ENV NODE_PATH=/3rdparty/node_modules
+#mfmf # install using npm
+#mfmf WORKDIR /3rdparty
+#mfmf RUN npm install mathjax-node@2.1
+#mfmf ENV NODE_PATH=/3rdparty/node_modules
 
 # nu-html
 ARG NUHTMLVERSION=20.6.30
