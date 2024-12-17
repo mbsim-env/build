@@ -48,9 +48,6 @@ RUN apt update -y && apt install -y \
   wget \
   unzip \
   tigervnc-standalone-server \
-  && rm -rf /var/lib/apt/lists/* 
-#mfmf
-RUN apt update -y && apt install -y \
   sshpass \
   p7zip-full \
   qt5-flatpak-platformtheme qt5-gtk-platformtheme qt5-gtk2-platformtheme qt5-style-kvantum-themes \
