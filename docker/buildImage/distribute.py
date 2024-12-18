@@ -12,6 +12,11 @@ import tempfile
 import codecs
 import glob
 
+args=None
+platform=None
+distArchive=None
+debugArchive=None
+
 def octVersion():
   if sys.platform=="win32":
     return "9.1.0" # msys2win64 build
@@ -25,11 +30,6 @@ def pyVersion():
   if platform=="win":
     return "3.6" # win64 build
   return "3.11" # linux64 build
-
-args=None
-platform=None
-distArchive=None
-debugArchive=None
 
 # a ZipFile like class for 7z (but only for compression and it writes first to a temp-dir and compresses at close())
 class SevenZipFile:
