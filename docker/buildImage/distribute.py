@@ -14,13 +14,17 @@ import glob
 
 def octVersion():
   if sys.platform=="win32":
-    return "9.1.0"
-  return "7.3.0"
+    return "9.1.0" # msys2win64 build
+  if platform=="win":
+    return "4.4.1" # win64 build
+  return "7.3.0" # linux64 build
 
 def pyVersion():
   if sys.platform=="win32":
-    return "3.11"
-  return "3.11"
+    return "3.11" # msys2win64 build
+  if platform=="win":
+    return "3.6" # win64 build
+  return "3.11" # linux64 build
 
 args=None
 platform=None
@@ -608,7 +612,7 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
     ["numpy", ["mpmath"]],
     ["sympy", ["gmpy2"]],
   ]
-  if pyVersion()=="3.6" or pyVersion()=="3.4": # a hack to skip sitePackagesOpt for the windows cross-compile build and for the CentOS-Linux build
+  if pyVersion()=="3.6": # a hack to skip sitePackagesOpt for the windows cross-compile build and for the CentOS-Linux build
     sitePackagesOpt=[]
   else:
     sitePackagesOpt=[
