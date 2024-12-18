@@ -495,6 +495,8 @@ def addOctave():
   print("Add octave share dir")
   sys.stdout.flush()
 
+  if os.path.isdir("/3rdparty/local/share/octave"):
+    addFileToDist("/3rdparty/local/share/octave", "mbsim-env/share/octave")
   if os.path.isdir("/usr/share/octave"):
     addFileToDist("/usr/share/octave", "mbsim-env/share/octave")
   if os.path.isdir("c:/msys64/ucrt64/share/octave"):
