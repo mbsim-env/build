@@ -308,7 +308,9 @@ if build:
       "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh "+\
       "--child-silent-after-fork=yes --num-callers=50 --gen-suppressions=all "+\
       "--suppressions=/mbsim-env/mbsim/thirdparty/valgrind/valgrind-mbsim.supp "+\
-      "--suppressions=/mbsim-build/build/misc/valgrind-python.supp --leak-check=full"]+RUNEXAMPLESFILTER
+      "--suppressions=/usr/lib/valgrind/python3.supp "+\
+      "--suppressions=/usr/lib/valgrind/debian.supp "+\
+      "--leak-check=full"]+RUNEXAMPLESFILTER
       , env=valgrindEnv)
     if localRet!=0:
       ret=ret+1
@@ -384,7 +386,9 @@ def runExamplesPartition(ARGS, pullExampleRepos, pullAll):
     "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh "+\
     "--child-silent-after-fork=yes --num-callers=50 --gen-suppressions=all "+\
     "--suppressions=/mbsim-env/mbsim/thirdparty/valgrind/valgrind-mbsim.supp "+\
-    "--suppressions=/mbsim-build/build/misc/valgrind-python.supp --leak-check=full"] if args.valgrindExamples else [])+\
+    "--suppressions=/usr/lib/valgrind/python3.supp "+\
+    "--suppressions=/usr/lib/valgrind/debian.supp "+\
+    "--leak-check=full"] if args.valgrindExamples else [])+\
     ARGS+RUNEXAMPLESFILTER,
     env=runexamplesEnv)
   if localRet!=0:
