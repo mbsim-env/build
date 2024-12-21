@@ -442,9 +442,6 @@ class DataTableValgrindError(base.views.DataTable):
   def searchField(self):
     return "kind"
 
-  def isLeak(self, ds):
-    return ds.kind.startswith("Leak_")
-
   @staticmethod
   def vertText(text, bold=False, size=16):
     return '''<svg width="%d" height="%d">
@@ -463,9 +460,16 @@ class DataTableValgrindError(base.views.DataTable):
       </span><br/>'''.format(octicon("triangle-down"), ds.suppressionRawText)+\
       self.vertText(ds.kind, True, 24), "runexamples/ValgrindError: id=%s"%(ds.id))
   def colSort_kind(self, ds):
-    return ("1" if self.isLeak(ds) else "0")+"_"+ds.kind
+    if ds.kind.lower().startswith("leak_"):
+      if "defini" in ds.kind.lower(): return "1001"
+      if "possib" in ds.kind.lower(): return "1002"
+      if "indire" in ds.kind.lower(): return "1003"
+      if "reacha" in ds.kind.lower(): return "1004"
+    if "write" in ds.kind.lower(): return "0000"
+    if "read" in ds.kind.lower(): return "0001"
+    return "0002"
   def colClass_kind(self, ds):
-    return 'table-warning' if self.isLeak(ds) else "table-danger"
+    return 'table-warning' if ds.kind.lower().startswith("leak_") else "table-danger"
 
   def colData_detail(self, ds):
     ret=""
