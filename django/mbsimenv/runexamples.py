@@ -788,8 +788,7 @@ def runExample(exRun, globalVars, example):
           if ret==0 or not base.helper.subprocessOtherFailure(ret): # OK or real error -> stop more tries
             break
           if t+1<tries: time.sleep(10) # wait some time, a direct next test will likely also fail (see above)
-        retv=valgrindOutputAndAdaptRet("guitest_"+tool, ex)
-        if retv!=0: ret=1
+        valgrindOutputAndAdaptRet("guitest_"+tool, ex)
         if ret!=0:
           retLocal=1
         outFD.close()
@@ -912,7 +911,6 @@ def prefixSimulation(id):
 # additional output files must be placed in the args.reportOutDir and here only the basename must be returned.
 def valgrindOutputAndAdaptRet(programType, ex):
   # handle VALGRIND
-  ret=0
   if args.prefixSimulationKeyword=='VALGRIND':
     import xml.etree.cElementTree as ET
 
@@ -950,7 +948,6 @@ def valgrindOutputAndAdaptRet(programType, ex):
       # errors
       wsNr=0
       for error in valgrindoutput.findall("error"):
-        ret=1
         wsNr=wsNr+1
 
         er=runexamples.models.ValgrindError()
@@ -992,7 +989,6 @@ def valgrindOutputAndAdaptRet(programType, ex):
     base.helper.bulk_create(runexamples.models.ValgrindError, ers, refresh=True)
     base.helper.bulk_create(runexamples.models.ValgrindWhatAndStack, wss, refresh=True)
     base.helper.bulk_create(runexamples.models.ValgrindFrame, frs, refresh=False)
-  return ret
 
 
 # execute the source code example in the current directory (write everything to fd executeFD)
@@ -1025,8 +1021,7 @@ def executeSrcExample(ex, executeFD):
                          env=mainEnv, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
-  retv=valgrindOutputAndAdaptRet("example_src", ex)
-  if retv!=0: ret=1
+  valgrindOutputAndAdaptRet("example_src", ex)
 
   return ret, dt
 
@@ -1053,8 +1048,7 @@ def executeXMLExample(ex, executeFD, env=os.environ):
                          exePathConvert([prjFile]), executeFD, env=env, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
-  retv=valgrindOutputAndAdaptRet("example_xml", ex)
-  if retv!=0: ret=1
+  valgrindOutputAndAdaptRet("example_xml", ex)
 
   return ret, dt
 
@@ -1080,8 +1074,7 @@ def executeFlatXMLExample(ex, executeFD):
        exePathConvert(flatxmlFile())], executeFD, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
-  retv=valgrindOutputAndAdaptRet("example_flatxml", ex)
-  if retv!=0: ret2=1
+  valgrindOutputAndAdaptRet("example_flatxml", ex)
 
   # return
   if ret1==base.helper.subprocessCall.timedOutErrorCode or ret2==base.helper.subprocessCall.timedOutErrorCode:
@@ -1110,8 +1103,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   if "noparam" in labels: noparamArg=['--noparam']
   comm=exePrefix()+[pj(mbsimBinDir, "mbsimCreateFMU"+args.exeExt), '--nocompress']+cosimArg+noparamArg+[exePathConvert(fmiInputFile)]
   ret1=abs(base.helper.subprocessCall(prefixSimulation('mbsimCreateFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
-  retv=valgrindOutputAndAdaptRet("example_fmi_create", ex)
-  if retv!=0: ret1=1
+  valgrindOutputAndAdaptRet("example_fmi_create", ex)
 
   ### run using fmuChecker
   # get fmuChecker executable
@@ -1135,8 +1127,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   ret2=abs(base.helper.subprocessCall(prefixSimulation('fmuCheck')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
-  retv=valgrindOutputAndAdaptRet("example_fmi_fmuCheck", ex)
-  if retv!=0: ret2=1
+  valgrindOutputAndAdaptRet("example_fmi_fmuCheck", ex)
   # convert fmuCheck result csv file to h5 format (this is then checked as usual by compareExample)
   if canCompare:
     try:
@@ -1175,8 +1166,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   if cosim: cosimArg=['--cosim']
   comm=exePrefix()+[pj(mbsimBinDir, "mbsimTestFMU"+args.exeExt)]+cosimArg+["tmp_mbsimTestFMU"]
   ret3=abs(base.helper.subprocessCall(prefixSimulation('mbsimTestFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
-  retv=valgrindOutputAndAdaptRet("example_fmi_mbsimTestFMU", ex)
-  if retv!=0: ret3=1
+  valgrindOutputAndAdaptRet("example_fmi_mbsimTestFMU", ex)
   # remove unpacked fmu
   if os.path.isdir("tmp_mbsimTestFMU"): shutil.rmtree("tmp_mbsimTestFMU")
 

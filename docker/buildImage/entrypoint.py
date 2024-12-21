@@ -310,7 +310,8 @@ if build:
       "--suppressions=/mbsim-env/mbsim/thirdparty/valgrind/valgrind-mbsim.supp "+\
       "--suppressions=/usr/lib/valgrind/python3.supp "+\
       "--suppressions=/usr/lib/valgrind/debian.supp "+\
-      "--leak-check=full --show-leak-kinds=definite,indirect,possible,reachable --errors-for-leak-kinds=definite"]+RUNEXAMPLESFILTER
+      "--leak-check=full --show-leak-kinds=definite,indirect,possible,reachable "+\
+      "--errors-for-leak-kinds=definite --error-exitcode=111"]+RUNEXAMPLESFILTER
       , env=valgrindEnv)
     if localRet!=0:
       ret=ret+1
@@ -388,7 +389,8 @@ def runExamplesPartition(ARGS, pullExampleRepos, pullAll):
     "--suppressions=/mbsim-env/mbsim/thirdparty/valgrind/valgrind-mbsim.supp "+\
     "--suppressions=/usr/lib/valgrind/python3.supp "+\
     "--suppressions=/usr/lib/valgrind/debian.supp "+\
-    "--leak-check=full --show-leak-kinds=definite,indirect,possible,reachable --errors-for-leak-kinds=definite"] if args.valgrindExamples else [])+\
+    "--leak-check=full --show-leak-kinds=definite,indirect,possible,reachable "+\
+    "--errors-for-leak-kinds=definite --error-exitcode=111"] if args.valgrindExamples else [])+\
     ARGS+RUNEXAMPLESFILTER,
     env=runexamplesEnv)
   if localRet!=0:
