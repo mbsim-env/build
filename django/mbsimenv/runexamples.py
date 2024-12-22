@@ -984,11 +984,23 @@ def valgrindOutputAndAdaptRet(programType, ex):
             fr.dir=os.path.dirname(newPath)
             fr.file=os.path.basename(newPath)
       os.remove(xmlFile)
+
+      # we cannot call the two lines below here since it not yet saved in the db -> delay it to (***)
+      #vg.errorsErrors=vg.errors.filterErrors().count()
+      #vg.errorsWarnings=vg.errors.filterWarnings().count()
+
     # now save all new datasets at once
     base.helper.bulk_create(runexamples.models.Valgrind, vgs, refresh=True)
     base.helper.bulk_create(runexamples.models.ValgrindError, ers, refresh=True)
     base.helper.bulk_create(runexamples.models.ValgrindWhatAndStack, wss, refresh=True)
     base.helper.bulk_create(runexamples.models.ValgrindFrame, frs, refresh=False)
+
+    # (***) now update the errorsErrors and errorsWarnings
+    vgs=ex.valgrinds.all()
+    for vg in vgs:
+      vg.errorsErrors=vg.errors.filterErrors().count()
+      vg.errorsWarnings=vg.errors.filterWarnings().count()
+    runexamples.models.Valgrind.objects.bulk_update(vgs, ["errorsErrors", "errorsWarnings"])
 
 
 # execute the source code example in the current directory (write everything to fd executeFD)

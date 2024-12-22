@@ -202,6 +202,28 @@ class DataTableExample(base.views.DataTable):
   def colClass_example(self, ds):
     return "text-break"
 
+  def _valgrindDropdown(self, ds, programTypePrefix):
+    ret=""
+    if ds.valgrinds.filter(programType__startswith=programTypePrefix).count()>0:
+      ret+='''<div class="dropdown">
+                <button class="btn btn-secondary btn-xs" type="button" data-toggle="dropdown">valgrind {}</button>
+                <div class="dropdown-menu">'''.format(octicon("triangle-down"))
+      for vg in ds.valgrinds.filter(programType__startswith=programTypePrefix):
+        valgrindNrErrors=runexamples.models.Valgrind.objects.get(id=vg.id).errorsErrors
+        valgrindNrWarnings=runexamples.models.Valgrind.objects.get(id=vg.id).errorsWarnings
+        ret+='<a class="dropdown-item" href="{}">{}:<span class="text-success">{}</span><span class="text-{}">{}</span><span class="text-{}">{}</span></a>'.\
+          format(
+            django.urls.reverse('runexamples:valgrind', args=[vg.id]), # href
+            vg.programType[len(programTypePrefix):], # program name
+            '&nbsp;OK' if valgrindNrErrors==0 and valgrindNrWarnings==0 else "", # ok text
+            "success" if valgrindNrErrors==0 else "danger", # text error color
+            '&nbsp;<span class="badge badge-danger">%d</span>&nbsp;errors'%(valgrindNrErrors) if valgrindNrErrors>0 else "", # error text
+            "success" if valgrindNrWarnings==0 else "warning", # text warn color
+            '&nbsp;<span class="badge badge-warning">%d</span>&nbsp;warnings'%(valgrindNrWarnings) if valgrindNrWarnings>0 else "" # warn text
+          )
+      ret+='</div></div>'
+    return ret
+
   def colData_run(self, ds):
     if ds.runResult==runexamples.models.Example.RunResult.PASSED:
       icon='<span class="text-success">'+octicon("check")+'</span>'
@@ -217,19 +239,7 @@ class DataTableExample(base.views.DataTable):
       text=""
     url=django.urls.reverse('base:textFieldFromDB', args=["runexamples", "Example", ds.id, "runOutput"])
     ret='%s&nbsp;<a href="%s">%s</a>'%(icon, url, text)
-    # valgrind
-    if ds.valgrinds.filter(programType__startswith="example_").count()>0:
-      ret+='''<div class="dropdown">
-                <button class="btn btn-secondary btn-xs" type="button" data-toggle="dropdown">valgrind {}</button>
-                <div class="dropdown-menu">'''.format(octicon("triangle-down"))
-      for vg in ds.valgrinds.filter(programType__startswith="example_"):
-        valgrindNrErrors=runexamples.models.Valgrind.objects.get(id=vg.id).errors.all().count()
-        ret+='<a class="dropdown-item text-{}" href="{}">{}{}</a>'.\
-          format("success" if valgrindNrErrors==0 else "danger",
-                 django.urls.reverse('runexamples:valgrind', args=[vg.id]),
-                 vg.programType[len("example_"):],
-                 '&nbsp;<span class="badge badge-danger">%d</span>&nbsp;errors'%(valgrindNrErrors) if valgrindNrErrors>0 else "")
-      ret+='</div></div>'
+    ret+=self._valgrindDropdown(ds, "example_")
     return ret
   def colSortKey_run(self, ds):
     if ds.willFail: return 2
@@ -274,19 +284,7 @@ class DataTableExample(base.views.DataTable):
     img=django.templatetags.static.static("base/mbsimgui.svg")
     ret+='<a href="%s"><button type="button" style="visibility:%s;" class="btn btn-%s btn-xs">'%(url, vis, ok)+\
            '<img src="%s" alt="gui"/></button></a>'%(img)
-    # valgrind
-    if ds.valgrinds.filter(programType__startswith="guitest_").count()>0:
-      ret+='''<div class="dropdown">
-                <button class="btn btn-secondary btn-xs" type="button" data-toggle="dropdown">valgrind {}</button>
-                <div class="dropdown-menu">'''.format(octicon("triangle-down"))
-      for vg in ds.valgrinds.filter(programType__startswith="guitest_"):
-        valgrindNrErrors=runexamples.models.Valgrind.objects.get(id=vg.id).errors.all().count()
-        ret+='<a class="dropdown-item text-{}" href="{}">{}{}</a>'.\
-          format("success" if valgrindNrErrors==0 else "danger",
-                 django.urls.reverse('runexamples:valgrind', args=[vg.id]),
-                 vg.programType[len("guitest_"):],
-                 '&nbsp;<span class="badge badge-danger">%d</span>&nbsp;errors'%(valgrindNrErrors) if valgrindNrErrors>0 else "")
-      ret+='</div></div>'
+    ret+=self._valgrindDropdown(ds, "guitest_")
     return ret
   def colSortKey_guiTest(self, ds):
     m={None:                                            0,
@@ -459,17 +457,12 @@ class DataTableValgrindError(base.views.DataTable):
         <pre class="dropdown-menu" style="padding-left: 0.5em; padding-right: 0.5em;">{}</pre>
       </span><br/>'''.format(octicon("triangle-down"), ds.suppressionRawText)+\
       self.vertText(ds.kind, True, 24), "runexamples/ValgrindError: id=%s"%(ds.id))
-  def colSort_kind(self, ds):
-    if ds.kind.lower().startswith("leak_"):
-      if "defini" in ds.kind.lower(): return "1001"
-      if "possib" in ds.kind.lower(): return "1002"
-      if "indire" in ds.kind.lower(): return "1003"
-      if "reacha" in ds.kind.lower(): return "1004"
-    if "write" in ds.kind.lower(): return "0000"
-    if "read" in ds.kind.lower(): return "0001"
-    return "0002"
+  def colSortKey_kind(self, ds):
+    if ds.kind.startswith("Leak_") and ds.kind!="Leak_DefinitelyLost":
+      return 1 # warning
+    return 0 # error
   def colClass_kind(self, ds):
-    return 'table-warning' if ds.kind.lower().startswith("leak_") else "table-danger"
+    return 'table-warning' if ds.kind.startswith("Leak_") and ds.kind!="Leak_DefinitelyLost" else "table-danger"
 
   def colData_detail(self, ds):
     ret=""
@@ -489,7 +482,7 @@ class DataTableValgrindError(base.views.DataTable):
         </table>'''.format("valgrindStackTable_"+str(ws.id),
                            django.urls.reverse('runexamples:datatable_valgrindstack', args=[ws.id]))
     return ret
-  def colSort_detail(self, ds):
+  def colSortKey_detail(self, ds):
     return ""
 
 class DataTableValgrindStack(base.views.DataTable):

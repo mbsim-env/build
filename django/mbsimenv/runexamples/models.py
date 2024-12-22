@@ -252,8 +252,25 @@ class Valgrind(django.db.models.Model):
   valgrindCmd=django.db.models.TextField()
   example=django.db.models.ForeignKey(Example, on_delete=django.db.models.CASCADE, related_name="valgrinds")
   # errors = related ForeignKey
+  errorsErrors=django.db.models.PositiveIntegerField(default=0) # just a cached value for performance of filterErrors
+  errorsWarnings=django.db.models.PositiveIntegerField(default=0) # just a cached value for performance of filterWarnings
+
+class ValgrindErrorManager(django.db.models.Manager):
+  # return a queryset with all valgrinds being errors
+  def filterErrors(self):
+    return self.filter(
+      ~Q(kind__startswith="Leak_") | Q(kind="Leak_DefinitelyLost")
+    ).distinct()
+
+  # return a queryset with all valgrinds being warnings
+  def filterWarnings(self):
+    return self.filter(
+      Q(kind__startswith="Leak_") & ~Q(kind="Leak_DefinitelyLost")
+    ).distinct()
 
 class ValgrindError(django.db.models.Model):
+  objects=ValgrindErrorManager()
+
   id=django.db.models.AutoField(primary_key=True)
   uuid=django.db.models.UUIDField(unique=True, default=uuid.uuid4, editable=False) # used for ForeignKey to enable bulk_create
 
