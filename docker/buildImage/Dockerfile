@@ -53,7 +53,7 @@ RUN apt update -y && apt install -y \
   qt5-flatpak-platformtheme qt5-gtk-platformtheme qt5-gtk2-platformtheme qt5-style-kvantum-themes \
   qt5-ukui-platformtheme qt5-xdgdesktopportal-platformtheme qt5-style-plugin-cleanlooks \
   qt5-style-plugin-motif qt5-style-plugin-plastique \
-  && rm -rf /var/lib/apt/lists/* 
+  && rm -rf /var/lib/apt/lists/*
 
 # install using pip
 RUN pip3 install --break-system-packages django-octicons
@@ -86,14 +86,14 @@ LABEL org.label-schema.schema-version="1.0" \
 COPY docker/buildImage/entrypoint.py /context/entrypoint.py
 COPY docker/buildImage/distribute.py /context/distribute.py
 COPY misc /mbsim-build/build/misc
-COPY django/mbsimenv/build.py           /context/mbsimenv/build.py                    
-COPY django/mbsimenv/runexamples.py     /context/mbsimenv/runexamples.py              
-COPY django/mbsimenv/mbsimenvSecrets.py /context/mbsimenv/mbsimenvSecrets.py          
-COPY django/mbsimenv/mbsimenv           /context/mbsimenv/mbsimenv                        
-COPY django/mbsimenv/base               /context/mbsimenv/base                        
-COPY django/mbsimenv/builds             /context/mbsimenv/builds                      
-COPY django/mbsimenv/runexamples        /context/mbsimenv/runexamples                 
-COPY django/mbsimenv/service            /context/mbsimenv/service                     
+COPY django/mbsimenv/build.py           /context/mbsimenv/build.py
+COPY django/mbsimenv/runexamples.py     /context/mbsimenv/runexamples.py
+COPY django/mbsimenv/mbsimenvSecrets.py /context/mbsimenv/mbsimenvSecrets.py
+COPY django/mbsimenv/mbsimenv           /context/mbsimenv/mbsimenv
+COPY django/mbsimenv/base               /context/mbsimenv/base
+COPY django/mbsimenv/builds             /context/mbsimenv/builds
+COPY django/mbsimenv/runexamples        /context/mbsimenv/runexamples
+COPY django/mbsimenv/service            /context/mbsimenv/service
 
 # enable ccache (after all other things are done); note /mbsim-env is usually a persistent Docker volume;
 # PATH for cache
