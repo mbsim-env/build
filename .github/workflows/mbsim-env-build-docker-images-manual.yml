@@ -3,28 +3,43 @@ on:
   workflow_dispatch:
     inputs:
       buildImage:
-        description: "Build the docker 'build' image"
+        description: "- Build 'build' image"
         required: true
         default: false
         type: boolean
       buildwin64Image:
-        description: "Build the docker 'buildwin64' image"
+        description: "- Build 'buildwin64' image"
         required: true
         default: false
         type: boolean
       buildmsys2ucrt64Image:
-        description: "Build the docker 'buildmsys2ucrt64' image"
+        description: "- Build 'buildmsys2ucrt64' image"
         required: true
         default: true
+        type: boolean
+      buildmsys2ucrt64ImageDownload:
+        description: "  - download msys2 db/cache"
+        required: true
+        default: true
+        type: boolean
+      buildmsys2ucrt64ImageUpload:
+        description: "  - upload msys2 db/cache"
+        required: true
+        default: true
+        type: boolean
+      buildmsys2ucrt64ImageUpdateByPublic:
+        description: "  - update by public repo"
+        required: true
+        default: false
         type: boolean
 env:
   # get secrets
   mbsimenvsec_dockerhubAccessToken: ${{secrets.dockerhubAccessToken}}
   mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
   MSYS2INSTALLERURI: "https://www.mbsim-env.de/base/fileDownloadFromDBMedia/msys2mbsimenv-downloads"
-  MSYS2INSTALLERDOWNLOAD: 1
-  MSYS2INSTALLERUPDATEBYPUBLIC: 0
-  MSYS2INSTALLERUPLOAD: 1
+  MSYS2INSTALLERDOWNLOAD: ${{ inputs.buildmsys2ucrt64ImageDownload && 1 || 0 }}
+  MSYS2INSTALLERUPLOAD: ${{ inputs.buildmsys2ucrt64ImageUpload && 1 || 0 }}
+  MSYS2INSTALLERUPDATEBYPUBLIC: ${{ inputs.buildmsys2ucrt64ImageUpdateByPublic && 1 || 0 }}
   MSYS2INSTALLERRSYNCURI: "dockeruser@www.mbsim-env.de:/data/databasemedia/msys2mbsimenv-downloads"
   MSYS2INSTALLERRSYNCPORT: 1122
 jobs:

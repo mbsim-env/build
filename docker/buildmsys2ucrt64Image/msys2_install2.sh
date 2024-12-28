@@ -3,6 +3,11 @@
 set -e
 set -o pipefail
 
+if [ -e /msys2_install1.sh.error ]; then
+  echo "msys2_install1.sh failed, see above"
+  exit 1
+fi
+
 # update install msys2 packages according package db
 if [ $MSYS2INSTALLERUPDATEBYPUBLIC -eq 1 ]; then
   echo "pacman -Syuu (second stage)"
