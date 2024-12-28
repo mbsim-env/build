@@ -8,6 +8,9 @@ if [ -e /msys2_install1.sh.error ]; then
   exit 1
 fi
 
+# create a error file
+touch /msys2_install2.sh.error
+
 # update install msys2 packages according package db
 if [ $MSYS2INSTALLERUPDATEBYPUBLIC -eq 1 ]; then
   echo "pacman -Syuu (second stage)"
@@ -34,3 +37,6 @@ fi
 # remove msys2 cache
 echo "pacman -Scc"
 pacman --noconfirm -Scc
+
+# remove the error file if everything was OK
+rm -f /msys2_install2.sh.error
