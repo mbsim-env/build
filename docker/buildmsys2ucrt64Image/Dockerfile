@@ -4,27 +4,42 @@
 FROM mbsimenv/buildmsys2ucrt64base:latest
 
 # install msys2
+ARG MSYS2INSTALLERURI
+ENV MSYS2INSTALLERURI=$MSYS2INSTALLERURI
+ARG MSYS2INSTALLERDOWNLOAD
+ENV MSYS2INSTALLERDOWNLOAD=$MSYS2INSTALLERDOWNLOAD
+ARG MSYS2INSTALLERUPDATEBYPUBLIC
+ENV MSYS2INSTALLERUPDATEBYPUBLIC=$MSYS2INSTALLERUPDATEBYPUBLIC
+ARG MSYS2INSTALLERUPLOAD
+ENV MSYS2INSTALLERUPLOAD=$MSYS2INSTALLERUPLOAD
+
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; `
-  Invoke-WebRequest -UseBasicParsing -uri "https://github.com/msys2/msys2-installer/releases/download/nightly-x86_64/msys2-base-x86_64-latest.sfx.exe" -OutFile msys2.exe; `
+  Invoke-WebRequest -UseBasicParsing -uri "$env:MSYS2INSTALLERURI/msys2-base-x86_64.sfx.exe" -OutFile msys2.exe; `
   .\msys2.exe -y -oC:\; `
-  Remove-Item msys2.exe ; `
-  function msys() { C:\msys64\usr\bin\bash.exe @('-lc') + @Args; } `
-  msys ' '; `
-  msys 'pacman --noconfirm -Syuu'; `
-  msys 'pacman --noconfirm -Syuu'; `
-  msys 'pacman --noconfirm -Scc';
+  Remove-Item msys2.exe;
 
 # set msys2 as default shell: you NEED TO use e.g.: RUN "ls -l && ls test" (with the double quotes)
 # we cannot use something like entrypoint_sys2.bat as wrapper script since e.g. "&&" is not passed as argument by docker Windows
 ENV MSYSTEM=UCRT64 CHERE_INVOKING=yes HOME=/home/user
 SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
 
-# install msys2 packages
-RUN "pacman --noconfirm -S `
+# run msys2 the first time -> initial setup
+RUN "echo DONE"
+
+# install/update msys2
+COPY docker/buildmsys2ucrt64Image/msys2_install1.sh c:/msys64/context/msys2_install1.sh
+COPY docker/buildmsys2ucrt64Image/msys2_install2.sh c:/msys64/context/msys2_install2.sh
+SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+RUN function msys() { C:\msys64\usr\bin\bash.exe @('-lc') + @Args; } `
+  msys '/context/msys2_install1.sh'; `
+  msys '/context/msys2_install2.sh `
   dos2unix `
   patch `
   unzip `
+  rsync `
+  openssh `
+  sshpass `
   mingw-w64-ucrt-x86_64-7zip `
   mingw-w64-ucrt-x86_64-swig `
   mingw-w64-ucrt-x86_64-arpack `
@@ -66,15 +81,16 @@ RUN "pacman --noconfirm -S `
   mingw-w64-ucrt-x86_64-python-oauthlib `
   mingw-w64-ucrt-x86_64-python-psycopg2 `
   mingw-w64-ucrt-x86_64-gcc-fortran `
-  mingw-w64-ucrt-x86_64-python-requests-oauthlib && `
-  pacman --noconfirm -Scc"
-#mfmf add openssh rsync sshpass
+  mingw-w64-ucrt-x86_64-python-requests-oauthlib `
+  ';
+
+SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
 
 # Install pip packages
-RUN "python.exe -m pip install --upgrade pip==24.0 && python.exe -m pip install django==3.2 django-allauth==0.55 django-octicons==1.0"
+RUN "python.exe -m pip install --break-system-packages --upgrade pip==24.0 && python.exe -m pip install --break-system-packages django==3.2 django-allauth==0.55 django-octicons==1.0"
 
 # install git
-RUN "wget https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/MinGit-2.43.0-64-bit.zip && `
+RUN "wget --no-verbose https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/MinGit-2.43.0-64-bit.zip && `
   unzip -d /c/git MinGit-2.43.0-64-bit.zip && rm -f MinGit-2.43.0-64-bit.zip"
 RUN "echo 'PATH=\"$PATH:/c/git/cmd\"' >> ~/.bash_profile"
 # disable the git safe.directory security feature since files created in a docker container are not owned by the container user
@@ -104,17 +120,17 @@ ENV CC="ccache gcc" `
     MBSIM_SWIG=1
 
 # copy
-RUN "mkdir /context"
-COPY docker/buildImage/distribute.py            c:/msys64/context/distribute.py
-COPY docker/buildmsys2ucrt64Image/entrypoint.py c:/msys64/context/entrypoint.py
-COPY django/mbsimenv/build.py                   c:/msys64/context/mbsimenv/build.py
-COPY django/mbsimenv/runexamples.py             c:/msys64/context/mbsimenv/runexamples.py
-COPY django/mbsimenv/mbsimenvSecrets.py         c:/msys64/context/mbsimenv/mbsimenvSecrets.py
-COPY django/mbsimenv/mbsimenv                   c:/msys64/context/mbsimenv/mbsimenv
-COPY django/mbsimenv/base                       c:/msys64/context/mbsimenv/base
-COPY django/mbsimenv/builds                     c:/msys64/context/mbsimenv/builds
-COPY django/mbsimenv/runexamples                c:/msys64/context/mbsimenv/runexamples
-COPY django/mbsimenv/service                    c:/msys64/context/mbsimenv/service
+COPY docker/buildmsys2ucrt64Image/msys2_upload.sh c:/msys64/context/msys2_upload.sh
+COPY docker/buildImage/distribute.py              c:/msys64/context/distribute.py
+COPY docker/buildmsys2ucrt64Image/entrypoint.py   c:/msys64/context/entrypoint.py
+COPY django/mbsimenv/build.py                     c:/msys64/context/mbsimenv/build.py
+COPY django/mbsimenv/runexamples.py               c:/msys64/context/mbsimenv/runexamples.py
+COPY django/mbsimenv/mbsimenvSecrets.py           c:/msys64/context/mbsimenv/mbsimenvSecrets.py
+COPY django/mbsimenv/mbsimenv                     c:/msys64/context/mbsimenv/mbsimenv
+COPY django/mbsimenv/base                         c:/msys64/context/mbsimenv/base
+COPY django/mbsimenv/builds                       c:/msys64/context/mbsimenv/builds
+COPY django/mbsimenv/runexamples                  c:/msys64/context/mbsimenv/runexamples
+COPY django/mbsimenv/service                      c:/msys64/context/mbsimenv/service
 
 # these are the default arguments when running the container
 CMD []
