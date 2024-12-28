@@ -86,7 +86,7 @@ jobs:
           --cache-from mbsimenv/buildmsys2ucrt64:latest
           -f docker/buildmsys2ucrt64Image/Dockerfile .
       - name: "Upload msys2 db and cache"
-        if: {{env.MSYS2INSTALLERUPLOAD}}
+        if: ${{env.MSYS2INSTALLERUPLOAD}}
         run: >
           docker run
           --env mbsimenvsec_filestoragePassword
