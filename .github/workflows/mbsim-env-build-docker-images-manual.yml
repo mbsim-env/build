@@ -3,37 +3,37 @@ on:
   workflow_dispatch:
     inputs:
       buildImage:
-        description: "| * Build 'build' image"
+        description: "* Build 'build' image"
         required: true
         default: false
         type: boolean
       buildwin64Image:
-        description: "| * Build 'buildwin64' image"
+        description: "* Build 'buildwin64' image"
         required: true
         default: false
         type: boolean
       buildmsys2ucrt64baseImage:
-        description: "| * Build 'buildmsys2ucrt64base' image"
+        description: "* Build 'buildmsys2ucrt64base' image"
         required: true
         default: false
         type: boolean
       buildmsys2ucrt64Image:
-        description: "| * Build 'buildmsys2ucrt64' image"
+        description: "* Build 'buildmsys2ucrt64' image"
         required: true
         default: true
         type: boolean
       buildmsys2ucrt64ImageDownload:
-        description: "|     * download msys2 db/cache"
+        description: "....* download msys2 db/cache"
         required: true
         default: true
         type: boolean
       buildmsys2ucrt64ImageUpload:
-        description: "|     * upload msys2 db/cache"
+        description: "....* upload msys2 db/cache"
         required: true
         default: true
         type: boolean
       buildmsys2ucrt64ImageUpdateByPublic:
-        description: "|     * update by public repo"
+        description: "....* update by public repo"
         required: true
         default: false
         type: boolean
