@@ -24,7 +24,7 @@ env:
   MSYS2INSTALLERURI: "https://www.mbsim-env.de/base/fileDownloadFromDBMedia/msys2mbsimenv-downloads"
   MSYS2INSTALLERDOWNLOAD: 1
   MSYS2INSTALLERUPDATEBYPUBLIC: 0
-  MSYS2INSTALLERUPLOAD: 0
+  MSYS2INSTALLERUPLOAD: 1
   MSYS2INSTALLERRSYNCURI: "dockeruser@www.mbsim-env.de:/data/databasemedia/msys2mbsimenv-downloads"
   MSYS2INSTALLERRSYNCPORT: 1122
 jobs:
@@ -85,8 +85,10 @@ jobs:
           -t mbsimenv/buildmsys2ucrt64:latest
           --cache-from mbsimenv/buildmsys2ucrt64:latest
           -f docker/buildmsys2ucrt64Image/Dockerfile .
+      - name: "Docker push build"
+        run: docker push mbsimenv/buildmsys2ucrt64:latest
       - name: "Upload msys2 db and cache"
-        if: ${{env.MSYS2INSTALLERUPLOAD}}
+        if: ${{env.MSYS2INSTALLERUPLOAD == 1}}
         run: >
           docker run
           --env mbsimenvsec_filestoragePassword
@@ -95,5 +97,3 @@ jobs:
           --entrypoint c:/msys64/usr/bin/bash
           mbsimenv/buildmsys2ucrt64:latest
           -l -c /context/msys2_upload.sh
-      - name: "Docker push build"
-        run: docker push mbsimenv/buildmsys2ucrt64:latest
