@@ -6,12 +6,6 @@ FROM mbsimenv/buildmsys2ucrt64base:latest
 # install msys2
 ARG MSYS2INSTALLERURI
 ENV MSYS2INSTALLERURI=$MSYS2INSTALLERURI
-ARG MSYS2INSTALLERDOWNLOAD
-ENV MSYS2INSTALLERDOWNLOAD=$MSYS2INSTALLERDOWNLOAD
-ARG MSYS2INSTALLERUPDATEBYPUBLIC
-ENV MSYS2INSTALLERUPDATEBYPUBLIC=$MSYS2INSTALLERUPDATEBYPUBLIC
-ARG MSYS2INSTALLERUPLOAD
-ENV MSYS2INSTALLERUPLOAD=$MSYS2INSTALLERUPLOAD
 
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
 RUN [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12; `
@@ -31,6 +25,12 @@ RUN "echo DONE"
 COPY docker/buildmsys2ucrt64Image/msys2_install1.sh c:/msys64/context/msys2_install1.sh
 COPY docker/buildmsys2ucrt64Image/msys2_install2.sh c:/msys64/context/msys2_install2.sh
 SHELL ["powershell", "-Command", "$ErrorActionPreference = 'Stop'; $ProgressPreference = 'SilentlyContinue';"]
+ARG MSYS2INSTALLERDOWNLOAD
+ENV MSYS2INSTALLERDOWNLOAD=$MSYS2INSTALLERDOWNLOAD
+ARG MSYS2INSTALLERUPLOAD
+ENV MSYS2INSTALLERUPLOAD=$MSYS2INSTALLERUPLOAD
+ARG MSYS2INSTALLERUPDATEBYPUBLIC
+ENV MSYS2INSTALLERUPDATEBYPUBLIC=$MSYS2INSTALLERUPDATEBYPUBLIC
 RUN function msys() { C:\msys64\usr\bin\bash.exe @('-lc') + @Args; } `
   msys '/context/msys2_install1.sh'; `
   msys '/context/msys2_install2.sh `
