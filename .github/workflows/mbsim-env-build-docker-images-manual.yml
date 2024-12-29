@@ -30,7 +30,7 @@ on:
       buildmsys2ucrt64ImageUpload:
         description: "....* upload msys2 db/cache"
         required: true
-        default: true
+        default: false
         type: boolean
       buildmsys2ucrt64ImageUpdateByPublic:
         description: "....* update by public repo"

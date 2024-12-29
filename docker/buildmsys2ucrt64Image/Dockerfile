@@ -19,7 +19,7 @@ ENV MSYSTEM=UCRT64 CHERE_INVOKING=yes HOME=/home/user
 SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
 
 # run msys2 the first time -> initial setup
-RUN "echo DONE"
+RUN "echo msys2 init done"
 
 # install/update msys2
 COPY docker/buildmsys2ucrt64Image/msys2_install1.sh c:/msys64/context/msys2_install1.sh

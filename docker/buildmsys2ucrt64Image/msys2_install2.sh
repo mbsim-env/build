@@ -3,13 +3,13 @@
 set -e
 set -o pipefail
 
+# create a error file
+touch /msys2_install2.sh.error
+
 if [ -e /msys2_install1.sh.error ]; then
   echo "msys2_install1.sh failed, see above"
   exit 1
 fi
-
-# create a error file
-touch /msys2_install2.sh.error
 
 # update install msys2 packages according package db
 if [ $MSYS2INSTALLERUPDATEBYPUBLIC -eq 1 ]; then
