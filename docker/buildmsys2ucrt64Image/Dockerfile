@@ -86,7 +86,7 @@ RUN function msys() { C:\msys64\usr\bin\bash.exe @('-lc') + @Args; } `
 
 SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
 
-RUN "test -e /msys2_install2.sh.error && echo msys2_install2.sh failed, see above && exit 1"
+RUN "test -e /msys2_install2.sh.error && echo msys2_install2.sh failed, see above && exit 1 || exit 0"
 
 # Install pip packages
 RUN "python.exe -m pip install --break-system-packages --upgrade pip==24.0 && python.exe -m pip install --break-system-packages django==3.2 django-allauth==0.55 django-octicons==1.0"
