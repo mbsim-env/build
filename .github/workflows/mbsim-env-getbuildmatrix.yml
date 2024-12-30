@@ -63,10 +63,10 @@ jobs:
           if "${{inputs.dailyRun}}"=="true":
             matrix={"branches": branchCombination,
               "os": [
-                {"buildType": "linux64-dailydebug"     , "image": "mbsimenv/build"           , "runsOn": "ubuntu-22.04", "mountBase": ""         , "args": ""},
-                {"buildType": "linux64-dailyrelease"   , "image": "mbsimenv/build"           , "runsOn": "ubuntu-22.04", "mountBase": ""         , "args": ""},
-                {"buildType": "win64-dailyrelease"     , "image": "mbsimenv/buildwin64"      , "runsOn": "ubuntu-22.04", "mountBase": ""         , "args": ""},
-                {"buildType": "msys2win64-dailyrelease", "image": "mbsimenv/buildmsys2ucrt64", "runsOn": "windows-2019", "mountBase": "c:/msys64", "args": ""},
+                {"buildType": "linux64-dailydebug"     , "image": "mbsimenv/build"           , "runsOn": "ubuntu-22.04", "mountBase": ""         , "args": "-j 4"},
+                {"buildType": "linux64-dailyrelease"   , "image": "mbsimenv/build"           , "runsOn": "ubuntu-22.04", "mountBase": ""         , "args": "-j 4"},
+                {"buildType": "win64-dailyrelease"     , "image": "mbsimenv/buildwin64"      , "runsOn": "ubuntu-22.04", "mountBase": ""         , "args": "-j 4"},
+                {"buildType": "msys2win64-dailyrelease", "image": "mbsimenv/buildmsys2ucrt64", "runsOn": "windows-2019", "mountBase": "c:/msys64", "args": "-j 4"},
               ]}
           else:
             # print repo, branch and sha
