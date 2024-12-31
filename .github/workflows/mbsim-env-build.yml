@@ -173,8 +173,8 @@ jobs:
       - name: "Docker: bind mount point permissions [Windows]"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip && !startsWith(matrix.data.os.runsOn, 'ubuntu')}}
         run: >
-          icacls.exe ${{github.workspace}}/mbsim-env /t /grant everyone:f > NUL &&
-          icacls.exe ${{github.workspace}}/mbsim-ccache /t /grant everyone:f > NUL
+          icacls.exe ${{github.workspace}}/mbsim-env /c /t /grant everyone:f > NUL &&
+          icacls.exe ${{github.workspace}}/mbsim-ccache /c /t /grant everyone:f > NUL
       - name: "Create build matrix UUID"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         shell: python
@@ -197,7 +197,7 @@ jobs:
         run: chmod -R 777 ${{github.workspace}}/mbsim-ccache
       - name: "Cache: fix ccache file permissions [Windows]"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip && !startsWith(matrix.data.os.runsOn, 'ubuntu')}}
-        run: icacls.exe ${{github.workspace}}/mbsim-ccache /t /grant everyone:f > NUL
+        run: icacls.exe ${{github.workspace}}/mbsim-ccache /c /t /grant everyone:f > NUL
       - name: "Cache restore: env [Windows]"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip && !startsWith(matrix.data.os.runsOn, 'ubuntu')}}
         uses: actions/cache/restore@v4
@@ -208,7 +208,7 @@ jobs:
             env-${{matrix.data.os.buildType}}--
       - name: "Cache: fix env file permissions [Windows]"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip && !startsWith(matrix.data.os.runsOn, 'ubuntu')}}
-        run: icacls.exe ${{github.workspace}}/mbsim-env /t /grant everyone:f > NUL
+        run: icacls.exe ${{github.workspace}}/mbsim-env /c /t /grant everyone:f > NUL
       - name: "Docker: run container"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         run: >
