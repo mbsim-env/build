@@ -221,7 +221,6 @@ jobs:
           --buildType ${{matrix.data.os.buildType}}
           --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
           ${{github.run_attempt>1 && '--forceBuild' || ''}}
-          --ccacheSize 5.0
           --fmatvecBranch ${{fromJson(steps.whatToDo.outputs.data).branches.fmatvec}}
           --hdf5serieBranch ${{fromJson(steps.whatToDo.outputs.data).branches.hdf5serie}}
           --openmbvBranch ${{fromJson(steps.whatToDo.outputs.data).branches.openmbv}}
