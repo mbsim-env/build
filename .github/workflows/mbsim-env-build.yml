@@ -139,7 +139,7 @@ jobs:
           with open(r"${{github.output}}", "at") as o:
             print("data="+json.dumps(data), file=o)
       - name: "Maximize disk space (remove unwanted pre-installed software) [Linux]"
-        if: ${{startsWith(matrix.data.os.runsOn, 'ubuntu')}}
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip && startsWith(matrix.data.os.runsOn, 'ubuntu')}}
         run: |
           BEFORE=$(df --output=used / | tail -n 1)
           #echo "Remove .NET (~1GB/~3sec)" && sudo rm -rf /usr/share/dotnet
@@ -149,6 +149,7 @@ jobs:
           AFTER=$(df --output=used / | tail -n 1)
           echo "$[($BEFORE-$AFTER)/1000000]GB freed"
       - name: "Dump resources"
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         shell: python
         run: |
           import shutil
@@ -299,6 +300,7 @@ jobs:
               subprocess.check_call(["gh", "actions-cache", "delete", key, "--confirm",
                                      "--repo", "${{github.repository}}", "--branch", "${{github.ref_name}}"])
       - name: "Dump resources"
+        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         shell: python
         run: |
           import shutil
