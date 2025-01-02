@@ -285,7 +285,7 @@ class Feed(django.contrib.syndication.views.Feed):
   def items(self):
     date=django.utils.timezone.now()-django.utils.timezone.timedelta(days=30)
     # get builds and examples newer than 30days
-    buildTypes=["linux64-ci", "win64-ci", "linux64-dailydebug", "linux64-dailydebug-valgrind", "linux64-dailyrelease", "win64-dailyrelease"]
+    buildTypes=["linux64-ci", "win64-ci", "linux64-dailydebug", "linux64-dailydebug-valgrind", "linux64-dailyrelease", "win64-dailyrelease", "msys2win64-dailyrelease"]
     buildRun=builds.models.Run.objects.filterFailed().filter(endTime__gt=date, buildType__in=buildTypes)
     exampleRun=runexamples.models.Run.objects.filterFailed().filter(endTime__gt=date, buildType__in=buildTypes)
     # merge both lists and sort by endTime
