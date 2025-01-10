@@ -461,13 +461,17 @@ def webhook(request):
                "ref_name": res["branch"],
                "sha": res["commitID"]}
            }
-      response=requests.post("https://api.github.com/repos/mbsim-env/build/dispatches", json=data,
-                             headers={"Authorization": "token "+mbsimenvSecrets.getSecrets("githubAccessToken")})
-      if response.status_code!=204:
-        return django.http.HttpResponseBadRequest("Faild to dispatch to mbsim-env/build Github Actions workflow."+\
+      if os.environ["MBSIMENVTAGNAME"]=="latest":
+        response=requests.post("https://api.github.com/repos/mbsim-env/build/dispatches", json=data,
+                               headers={"Authorization": "token "+mbsimenvSecrets.getSecrets("githubAccessToken")})
+        if response.status_code!=204:
+          return django.http.HttpResponseBadRequest("Faild to dispatch to mbsim-env/build Github Actions workflow."+\
                                                   (response.content.decode("utf-8") if django.conf.settings.DEBUG else ""))
-      # just some messages
-      res["githubAction"]={"target": "mbsim-env/build", "data": data}
+        # just some messages
+        res["githubAction"]={"target": "mbsim-env/build", "data": data}
+      else:
+        # just some messages
+        res["skipped_githubAction"]={"target": "mbsim-env/build", "data": data}
 
     elif res["repo"]=="build":
       if res["branch"]=="staging":
@@ -477,7 +481,7 @@ def webhook(request):
         ciq.save()
         res["addedBuildCommitID"]=res["commitID"]
       else:
-        res["skipNoneStagingBranch"]=res["commitID"]
+        res["skipped_addedBuildCommitID"]=res["commitID"]
     else:
       return django.http.HttpResponseBadRequest("Unknown repo.")
     return django.http.JsonResponse(res, json_dumps_params={"indent": 2})
