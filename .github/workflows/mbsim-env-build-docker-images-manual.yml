@@ -112,7 +112,7 @@ jobs:
       - name: "Upload msys2 db and cache"
         if: ${{env.MSYS2INSTALLERUPLOAD == 1}}
         run: >
-          docker run --init -ti
+          docker run --init
           --env mbsimenvsec_filestoragePassword
           --env MSYS2INSTALLERRSYNCPORT
           --env MSYS2INSTALLERRSYNCURI

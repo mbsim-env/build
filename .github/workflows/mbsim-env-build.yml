@@ -202,7 +202,7 @@ jobs:
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         run: >
           docker run
-          --init -ti
+          --init
           --label buildtype=${{matrix.data.os.buildType}}
           --env OPENBLAS_CORETYPE
           --env MBSIMENVDATABASE

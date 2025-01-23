@@ -105,7 +105,7 @@ jobs:
       - name: "Docker: run container"
         run: >
           docker run
-          --init -ti
+          --init
           --label buildtype=linux64-dailydebug
           --env OPENBLAS_CORETYPE
           --env MBSIMENVDATABASE
