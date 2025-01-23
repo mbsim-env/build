@@ -255,7 +255,7 @@ jobs:
       - name: "Docker: run container"
         run: >
           docker run
-          --init
+          --init -ti
           --env MBSIMENVDATABASE
           --env MBSIMENVFILESTORAGE
           --env MBSIMENVSERVERNAME
