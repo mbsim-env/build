@@ -970,7 +970,7 @@ def createDistribution(run):
   with tempfile.TemporaryDirectory() as tempDir:
     distLog=io.StringIO()
     distributeErrorCode=base.helper.subprocessCall([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../distribute.py",
-                          "--outDir", tempDir, args.prefix if args.prefix is not None else args.prefixAuto], distLog)
+                          "--outDir", tempDir, "--buildConfig", json.dumps(args.buildConfig), args.prefix if args.prefix is not None else args.prefixAuto], distLog)
     run.distributionOK=distributeErrorCode==0
     run.distributionOutput=distLog.getvalue().replace("\0", "&#00;")
     distLog.close()

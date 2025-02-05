@@ -87,6 +87,7 @@ def parseArguments():
   
   argparser.add_argument("prefix", type=str, help="The directory to distribute (the --prefix dir)")
   argparser.add_argument("--outDir", type=str, required=True, help="Output dir of the distribution archive")
+  argparser.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")
 
   global args
   args=argparser.parse_args()
@@ -622,6 +623,7 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
       ["matplotlib", ["PySide2", "cycler", "dateutil", "kiwisolver", "packaging", "PIL", "pyparsing", "shiboken2", "six", "mpl_toolkits"]],
       ["scipy",      ["dateutil", "kiwisolver", "packaging", "PIL", "pyparsing", "six"]],
     ]
+    sitePackagesOpt.extend(args.buildConfig.get("pythonSitePackages", []))
   skipPyd=[
     # skip these pyd files of PySide2
     "Qt3DAnimation.*.pyd",
