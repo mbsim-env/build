@@ -400,12 +400,12 @@ fi
 
 echo "H5PLOTSERIE"
 cd $INSTDIR/examples/xml/plotting
-$INSTDIR/bin/h5plotserie MBS.mbsim.mbsh5 || ERROR="$ERROR H5PLOTSERIE"
+$INSTDIR/bin/h5plotserie MBS.mbsh5 || ERROR="$ERROR H5PLOTSERIE"
 echo "DONE"
 
 echo "OPENMBV"
 cd $INSTDIR/examples/xml/plotting
-$INSTDIR/bin/openmbv MBS.mbsim.ombvx || ERROR="$ERROR OPENMBV"
+$INSTDIR/bin/openmbv MBS.ombvx || ERROR="$ERROR OPENMBV"
 echo "DONE"
 
 echo "MBSIMGUI"
@@ -463,13 +463,13 @@ IF "%%MBSIMENV_TEST_JAVA%%"=="1" (
 
 echo H5PLOTSERIE
 cd "%%INSTDIR%%\examples\xml\plotting"
-call "%%INSTDIR%%\bin\h5plotserie" MBS.mbsim.mbsh5
+call "%%INSTDIR%%\bin\h5plotserie" MBS.mbsh5
 IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% H5PLOTSERIE
 echo DONE
 
 echo OPENMBV
 cd "%%INSTDIR%%\examples\xml\plotting"
-call "%%INSTDIR%%\bin\openmbv" MBS.mbsim.ombvx
+call "%%INSTDIR%%\bin\openmbv" MBS.ombvx
 IF %%ERRORLEVEL%% NEQ 0 set ERROR=%%ERROR%% OPENMBV
 echo DONE
 
