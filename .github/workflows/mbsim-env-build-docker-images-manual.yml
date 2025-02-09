@@ -56,7 +56,7 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@v4
       - name: "Docker login"
-        run: echo $Env:mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
+        run: echo $mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
       - name: "Docker pull build"
         run: docker pull mbsimenv/build:latest
       - name: "Docker build"
@@ -71,7 +71,7 @@ jobs:
       - name: "Checkout"
         uses: actions/checkout@v4
       - name: "Docker login"
-        run: echo $Env:mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
+        run: echo $mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
       - name: "Docker pull build"
         run: docker pull mbsimenv/buildwin64:latest
       - name: "Docker build"
