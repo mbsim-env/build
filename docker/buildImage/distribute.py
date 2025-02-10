@@ -687,18 +687,31 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
       for pysrcdir in pysrcdirsCopy:
         if pysrcdir is None:
           break
-        if os.path.isdir(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName) or os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".py"):
+        if os.path.isdir(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName) or \
+           os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".py") or \
+           os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".pyd") or \
+           os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".so") or \
+           len(glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".*.pyd"))>0 or \
+           len(glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".*.so"))>0:
           break
       if pysrcdir is not None:
         copySitePackages.alreadyAdded.add(packageName)
-        if os.path.isdir(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName): # site-package is a directory
+        if os.path.isdir(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName):
           for c in glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+"/*"):
             if any(map(lambda g: fnmatch.fnmatch(os.path.basename(c), g), skipPyd)):
               continue
             addFileToDist(c, sitePackagesDir+"/"+packageName+"/"+os.path.basename(c), True, depLibsDir)
-        if os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".py"): # site-package is a .py file
+        if os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".py"):
           addFileToDist(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".py", sitePackagesDir+"/"+packageName+".py", True, depLibsDir)
-        for d in glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+"-*"): # add also the site-package companion files/dirs
+        if os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".pyd"):
+          addFileToDist(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".pyd", sitePackagesDir+"/"+packageName+".pyd", True, depLibsDir)
+        if os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".so"):
+          addFileToDist(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".so", sitePackagesDir+"/"+packageName+".so", True, depLibsDir)
+        for src in glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".*.pyd"):
+          addFileToDist(src, sitePackagesDir+"/"+os.path.basename(src), True, depLibsDir)
+        for src in glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".*.so"):
+          addFileToDist(src, sitePackagesDir+"/"+os.path.basename(src), True, depLibsDir)
+        for d in glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+"-*"):
           addFileToDist(d, sitePackagesDir+"/"+os.path.basename(d), True, depLibsDir)
         return True
       return False
