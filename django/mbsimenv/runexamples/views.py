@@ -800,14 +800,13 @@ def chartDifferencePlot(request, id):
       finally:
         os.unlink(tempF.name)
 
-    def np2Json(np):
-      return list(map(lambda x: [x[0],0] if math.isnan(x[1]) else x, np.tolist()))
-
     if cur is not None and ref is not None and ref.shape==cur.shape and \
        numpy.all(numpy.isclose(timeCur, timeRef, rtol=1e-12, atol=1e-12, equal_nan=True)):
       absErr=abs(ref-cur)
       relErr=absErr/(abs(ref)+1.0e-14) # avoid diff my zero
   finally:
+    def np2Json(np):
+      return list(map(lambda x: [x[0],0] if math.isnan(x[1]) else x, np.tolist()))
     return django.http.JsonResponse({
       "reference": None if ref is None else np2Json(numpy.concatenate((timeRef,ref.reshape((dataset.shape[0],1))), axis=1)),
       "current": None if cur is None else np2Json(numpy.concatenate((timeCur,cur.reshape((timeCur.shape[0],1))), axis=1)),
