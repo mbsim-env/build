@@ -18,7 +18,7 @@ argparser=argparse.ArgumentParser(
   formatter_class=argparse.ArgumentDefaultsHelpFormatter,
   description="Entrypoint for container mbsimenv/webserver.")
   
-argparser.add_argument("--jobs", "-j", type=int, default=psutil.cpu_count(False), help="Number of jobs to run in parallel")
+argparser.add_argument("--jobs", "-j", type=int, default=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psutil.cpu_count(False))), help="Number of jobs to run in parallel")
 argparser.add_argument("--noSSL", action='store_true', help="Disable SSL support")
 argparser.add_argument("--cronBuilds", action='store_true', help="Run daily and CI builds in docker containers by cron.")
 argparser.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")

@@ -27,7 +27,7 @@ argparser.add_argument("--fmatvecBranch", type=str, default="master", help="fmat
 argparser.add_argument("--hdf5serieBranch", type=str, default="master", help="hdf5serie branch")
 argparser.add_argument("--openmbvBranch", type=str, default="master", help="openmbv branch")
 argparser.add_argument("--mbsimBranch", type=str, default="master", help="mbsim branch")
-argparser.add_argument("--jobs", "-j", type=int, default=psutil.cpu_count(False), help="Number of jobs to run in parallel")
+argparser.add_argument("--jobs", "-j", type=int, default=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psutil.cpu_count(False))), help="Number of jobs to run in parallel")
 argparser.add_argument('--forceBuild', action="store_true", help="Passed to buily.py if existing")
 argparser.add_argument("--valgrindExamples", action="store_true", help="Run examples also with valgrind.")
 argparser.add_argument("--ccacheSize", default=10, type=float, help="Maximal ccache size in GB.")

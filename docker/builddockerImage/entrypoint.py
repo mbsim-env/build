@@ -20,7 +20,7 @@ argparser=argparse.ArgumentParser(
   description="Entrypoint for container mbsimenv/build.")
   
 argparser.add_argument("commitID", type=str, help="The commit ID to build")
-argparser.add_argument("--jobs", "-j", type=int, default=psutil.cpu_count(False), help="Number of jobs to run in parallel")
+argparser.add_argument("--jobs", "-j", type=int, default=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psutil.cpu_count(False))), help="Number of jobs to run in parallel")
 
 args=argparser.parse_args()
 

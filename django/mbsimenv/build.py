@@ -55,7 +55,7 @@ def parseArguments():
     help="run config.status --recheck instead of configure")
   
   cfgOpts=argparser.add_argument_group('Configuration Options')
-  cfgOpts.add_argument("-j", default=psutil.cpu_count(False), type=int, help="Number of jobs to run in parallel (for make and examples)")
+  cfgOpts.add_argument("-j", default=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psutil.cpu_count(False))), type=int, help="Number of jobs to run in parallel (for make and examples)")
   cfgOpts.add_argument("--forceBuild", action="store_true", help="Force building even if --buildSystemRun is used and no new commits exist")
   cfgOpts.add_argument("--buildTools", action="append", type=str, help="The list of tools to build. Build all tools if not specified.")
   
