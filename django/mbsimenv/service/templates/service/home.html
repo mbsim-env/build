@@ -178,6 +178,27 @@
   </div>
 </div>
 
+<h2 style="margin-top: 1em;">{% octicon "cloud-download" height="38" %}&nbsp;MSYS2 Packages for Building</h2>
+<div class="card border-secondary">
+  <div class="card-body">
+    <p>The Windows build using MSYS2 is done inside a Docker container which provides all required packages
+    with the proper versions required for the build. But you can also installed MSYS2 locally and build there.
+    To get all required packages with the proper versions it is recommended to use a specific MSYS2 installer
+    and a given state of the MSYS2 database. All this can be downloaded here:</p>
+    <ol>
+      <li><p><a href="{% url "base:fileDownloadFromDBMedia" "msys2mbsimenv-downloads/msys2-base-x86_64.sfx.exe" %}">
+        MSYS2 installer</a>
+      </p></li>
+      <li><p><a href="{% url "base:fileDownloadFromDBMedia" "msys2mbsimenv-downloads/db.tar.gz" %}">
+        MSYS2 package database (content of /var/lib/pacman/sync/)</a>
+      </p></li>
+      <li><p><a href="{% url "base:fileDownloadFromDBMedia" "msys2mbsimenv-downloads/cache.tar.gz" %}">
+        MSYS2 cached packages (content of /var/cache/pacman/pkg/)</a>
+      </p></li>
+    </ol>
+  </div>
+</div>
+
 <h2 style="margin-top: 1em;">{% octicon "rss" height="38" %}&nbsp;Build/Runexample Feeds</h2>
 <div class="card border-secondary">
   <div class="card-body">
