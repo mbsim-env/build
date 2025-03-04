@@ -1,7 +1,7 @@
 FROM centos:centos7 AS webapp
 
 # use other mirror since the official CentOS mirror is removed since 2014-07-01
-#RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
+RUN sed -i s/mirror.centos.org/vault.centos.org/g /etc/yum.repos.d/*.repo && sed -i s/^#.*baseurl=http/baseurl=http/g /etc/yum.repos.d/*.repo && sed -i s/^mirrorlist=http/#mirrorlist=http/g /etc/yum.repos.d/*.repo
 RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release && \
   yum --setopt=skip_missing_names_on_install=False -y install \
   python36-numpy \
