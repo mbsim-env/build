@@ -692,7 +692,8 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
            os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".pyd") or \
            os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".so") or \
            len(glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".*.pyd"))>0 or \
-           len(glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".*.so"))>0:
+           len(glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".*.so"))>0 or \
+           len(glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+"-*"))>0:
           break
       if pysrcdir is not None:
         copySitePackages.alreadyAdded.add(packageName)
