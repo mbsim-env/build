@@ -130,6 +130,7 @@ ret=subprocess.call(
   "--passToConfigure", "--enable-shared", "--disable-static",
   "--with-boost-system-lib=boost_system-mt",
   "--with-boost-filesystem-lib=boost_filesystem-mt",
+  "--with-boost-iostreams-lib=boost_iostreams-mt",
   "--with-boost-chrono-lib=boost_chrono-mt",
   "--with-boost-thread-lib=boost_thread-mt",
   "--with-boost-program-options-lib=boost_program_options-mt",

@@ -141,6 +141,7 @@ ret=subprocess.call(
   "--with-javajniosdir=/context/java_jni",
   "--with-pythonversion=3.4",
   "--with-boost-filesystem-lib=boost_filesystem-mt-x64",
+  "--with-boost-iostreams-lib=boost_iostreams-mt-x64",
   "--with-boost-thread-lib=boost_thread-mt-x64",
   "--with-boost-program-options-lib=boost_program_options-mt-x64",
   "--with-boost-system-lib=boost_system-mt-x64",
