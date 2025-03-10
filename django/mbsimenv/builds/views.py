@@ -251,12 +251,12 @@ def releaseDistribution(request, run_id):
   # get data
   run=builds.models.Run.objects.get(id=run_id)
   releaseVersion=json.loads(request.body)["releaseVersion"]
-  platform="win64" if run.buildType=="win64-dailyrelease" else "linux64"
+  platform="win64" if run.buildType=="msys2win64-dailyrelease" else "linux64"
   tagName="release/"+releaseVersion+"-"+platform
   relArchiveName="mbsim-env-release-"+releaseVersion+"-"+platform+".7z"
   relArchiveDebugName="mbsim-env-release-"+releaseVersion+"-"+platform+"-debug"+".7z"
   # check data
-  if run.buildType!="win64-dailyrelease" and run.buildType!="linux64-dailyrelease":
+  if run.buildType!="msys2win64-dailyrelease" and run.buildType!="linux64-dailyrelease":
     return django.http.HttpResponseBadRequest("Illegal build type for release.")
   if re.fullmatch("[0-9]+\.[0-9]+", releaseVersion) is None:
     return django.http.HttpResponseBadRequest("The version does not match x.y, where x and y are numbers.")
