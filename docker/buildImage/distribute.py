@@ -605,7 +605,7 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
     subdir=f"lib/python{pyVersion()}"
     pysrcdirs=[f"/usr/local/lib/python{pyVersion()}", f"/usr/lib/python3", f"/usr/lib/python{pyVersion()}", ] # search packages in this order
   if platform=="win":
-    subdir="lib"
+    subdir="lib/python{pyVersion()}"
     if os.path.isdir("/3rdparty/local/python-win64/Lib"):
       pysrcdirs=["/3rdparty/local/python-win64/Lib"] # search packages in this order
     if os.path.isdir(f"c:/msys64/ucrt64/lib/python{pyVersion()}/"):
