@@ -909,6 +909,7 @@ def prefixSimulation(id):
 # get additional output files of simulations.
 # these are all dependent on the keyword of args.prefixSimulationKeyword.
 # additional output files must be placed in the args.reportOutDir and here only the basename must be returned.
+valgrindWrongErrorRE=re.compile("Memcheck:Cond\n( *obj:\*\n)+ *}")
 def valgrindOutputAndAdaptRet(programType, ex):
   # handle VALGRIND
   if args.prefixSimulationKeyword=='VALGRIND':
@@ -948,13 +949,18 @@ def valgrindOutputAndAdaptRet(programType, ex):
       # errors
       wsNr=0
       for error in valgrindoutput.findall("error"):
+        # skip some strange errors
+        suppressionRawText=error.find("suppression").find("rawtext").text
+        if valgrindWrongErrorRE.search(suppressionRawText):
+          continue
+
         wsNr=wsNr+1
 
         er=runexamples.models.ValgrindError()
         ers.append(er)
         er.valgrind=vg
         er.kind=error.find("kind").text
-        er.suppressionRawText=error.find("suppression").find("rawtext").text
+        er.suppressionRawText=suppressionRawText
 
         # what and stack
         ws=runexamples.models.ValgrindWhatAndStack()
