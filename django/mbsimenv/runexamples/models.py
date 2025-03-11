@@ -101,6 +101,13 @@ class Run(django.db.models.Model):
     if self.coverageOK is not None and not self.coverageOK: nr=nr+1
     return nr
 
+# delete all files referenced in Run when a Run object is deleted
+def runDeleteHandler(sender, **kwargs):
+  crf=kwargs["instance"]
+  if crf.coverageFile:
+    crf.coverageFile.delete(False)
+django.db.models.signals.pre_delete.connect(runDeleteHandler, sender=Run)
+
 class ExampleManager(django.db.models.Manager):
   # return a queryset with all failed examples of the current queryset
   def filterFailed(self):
