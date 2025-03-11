@@ -51,6 +51,7 @@ mbxmlutilsvalidate=None
 xmlCatalog=None
 displayNR=None
 directories=list() # a list of all examples sorted in descending order (filled recursively (using the filter) by --directories)
+valgrindErrorCode=111
 
 # MBSim Modules
 mbsimModules=["mbsimControl", "mbsimElectronics", "mbsimFlexibleBody",
@@ -788,7 +789,7 @@ def runExample(exRun, globalVars, example):
           if ret==0 or not base.helper.subprocessOtherFailure(ret): # OK or real error -> stop more tries
             break
           if t+1<tries: time.sleep(10) # wait some time, a direct next test will likely also fail (see above)
-        valgrindOutputAndAdaptRet("guitest_"+tool, ex)
+        if valgrindOutputAndAdaptRet("guitest_"+tool, ex)!=0: ret=valgrindErrorCode
         if ret!=0:
           retLocal=1
         outFD.close()
@@ -911,6 +912,7 @@ def prefixSimulation(id):
 # additional output files must be placed in the args.reportOutDir and here only the basename must be returned.
 valgrindWrongErrorRE=re.compile("Memcheck:Cond\n( *obj:\*\n)+ *}")
 def valgrindOutputAndAdaptRet(programType, ex):
+  ret=0
   # handle VALGRIND
   if args.prefixSimulationKeyword=='VALGRIND':
     import xml.etree.cElementTree as ET
@@ -954,6 +956,7 @@ def valgrindOutputAndAdaptRet(programType, ex):
         if valgrindWrongErrorRE.search(suppressionRawText):
           continue
 
+        ret=1
         wsNr=wsNr+1
 
         er=runexamples.models.ValgrindError()
@@ -1007,6 +1010,7 @@ def valgrindOutputAndAdaptRet(programType, ex):
       vg.errorsErrors=vg.errors.filterErrors().count()
       vg.errorsWarnings=vg.errors.filterWarnings().count()
     runexamples.models.Valgrind.objects.bulk_update(vgs, ["errorsErrors", "errorsWarnings"])
+  return ret
 
 
 # execute the source code example in the current directory (write everything to fd executeFD)
@@ -1039,7 +1043,7 @@ def executeSrcExample(ex, executeFD):
                          env=mainEnv, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
-  valgrindOutputAndAdaptRet("example_src", ex)
+  if valgrindOutputAndAdaptRet("example_src", ex)!=0: ret=valgrindErrorCode
 
   return ret, dt
 
@@ -1066,7 +1070,7 @@ def executeXMLExample(ex, executeFD, env=os.environ):
                          exePathConvert([prjFile]), executeFD, env=env, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
-  valgrindOutputAndAdaptRet("example_xml", ex)
+  if valgrindOutputAndAdaptRet("example_xml", ex)!=0: ret=valgrindErrorCode
 
   return ret, dt
 
@@ -1092,7 +1096,7 @@ def executeFlatXMLExample(ex, executeFD):
        exePathConvert(flatxmlFile())], executeFD, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
-  valgrindOutputAndAdaptRet("example_flatxml", ex)
+  if valgrindOutputAndAdaptRet("example_flatxml", ex)!=0: ret2=valgrindErrorCode
 
   # return
   if ret1==base.helper.subprocessCall.timedOutErrorCode or ret2==base.helper.subprocessCall.timedOutErrorCode:
@@ -1121,7 +1125,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   if "noparam" in labels: noparamArg=['--noparam']
   comm=exePrefix()+[pj(mbsimBinDir, "mbsimCreateFMU"+args.exeExt), '--nocompress']+cosimArg+noparamArg+[exePathConvert(fmiInputFile)]
   ret1=abs(base.helper.subprocessCall(prefixSimulation('mbsimCreateFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
-  valgrindOutputAndAdaptRet("example_fmi_create", ex)
+  if valgrindOutputAndAdaptRet("example_fmi_create", ex)!=0: ret1=valgrindErrorCode
 
   ### run using fmuChecker
   # get fmuChecker executable
@@ -1145,7 +1149,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   ret2=abs(base.helper.subprocessCall(prefixSimulation('fmuCheck')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
-  valgrindOutputAndAdaptRet("example_fmi_fmuCheck", ex)
+  if valgrindOutputAndAdaptRet("example_fmi_fmuCheck", ex)!=0: ret2=valgrindErrorCode
   # convert fmuCheck result csv file to h5 format (this is then checked as usual by compareExample)
   if canCompare:
     try:
@@ -1184,7 +1188,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   if cosim: cosimArg=['--cosim']
   comm=exePrefix()+[pj(mbsimBinDir, "mbsimTestFMU"+args.exeExt)]+cosimArg+["tmp_mbsimTestFMU"]
   ret3=abs(base.helper.subprocessCall(prefixSimulation('mbsimTestFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
-  valgrindOutputAndAdaptRet("example_fmi_mbsimTestFMU", ex)
+  if valgrindOutputAndAdaptRet("example_fmi_mbsimTestFMU", ex)!=0: ret3=valgrindErrorCode
   # remove unpacked fmu
   if os.path.isdir("tmp_mbsimTestFMU"): shutil.rmtree("tmp_mbsimTestFMU")
 

@@ -311,7 +311,7 @@ if build:
       "--suppressions=/usr/lib/valgrind/python3.supp "+\
       "--suppressions=/usr/lib/valgrind/debian.supp "+\
       "--leak-check=full --show-leak-kinds=definite,possible "+\
-      "--errors-for-leak-kinds=definite,possible --error-exitcode=111"]+RUNEXAMPLESFILTER
+      "--errors-for-leak-kinds=definite,possible"]+RUNEXAMPLESFILTER
       , env=valgrindEnv)
     if localRet!=0:
       ret=ret+1
