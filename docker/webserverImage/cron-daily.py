@@ -32,21 +32,21 @@ def dailyBuild(fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch):
   contldd=setup.run("build-linux64-dailydebug", math.ceil(args.jobs/2), printLog=False, detach=True, addCommands=[],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                     buildConfig=buildConfig)
-  
-  # win64-dailyrelease
-  contwdr=setup.run("build-win64-dailyrelease", math.ceil(args.jobs/2), printLog=False, detach=True, addCommands=[],
-                    fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                    buildConfig=buildConfig)
-  retwdr=setup.waitContainer(contwdr)
-  
+
   # linux64-dailyrelease
   contldr=setup.run("build-linux64-dailyrelease", math.ceil(args.jobs/2), printLog=False, detach=True, addCommands=[],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                     buildConfig=buildConfig)
   retldr=setup.waitContainer(contldr)
-  
+
+  # win64-dailyrelease
+  contwdr=setup.run("build-win64-dailyrelease", math.ceil(args.jobs/2), printLog=False, detach=True, addCommands=[],
+                    fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
+                    buildConfig=buildConfig)
+  retwdr=setup.waitContainer(contwdr)
+
   retldd=setup.waitContainer(contldd)
-  
+
   # return
   return 0 if retldd==0 and retldr==0 and retwdr==0 else 1
 
