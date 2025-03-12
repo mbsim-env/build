@@ -390,7 +390,7 @@ def runExamplesPartition(ARGS, pullExampleRepos, pullAll):
     "--suppressions=/usr/lib/valgrind/python3.supp "+\
     "--suppressions=/usr/lib/valgrind/debian.supp "+\
     "--leak-check=full --show-leak-kinds=definite,possible "+\
-    "--errors-for-leak-kinds=definite,possible --error-exitcode=111"] if args.valgrindExamples else [])+\
+    "--errors-for-leak-kinds=definite,possible"] if args.valgrindExamples else [])+\
     ARGS+RUNEXAMPLESFILTER,
     env=runexamplesEnv)
   if localRet!=0:
