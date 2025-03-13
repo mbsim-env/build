@@ -120,7 +120,7 @@ ENV CC="ccache gcc" `
     CXX="ccache g++" `
     CCACHE_DIR=/mbsim-ccache `
     MBSIM_SWIG=1 `
-    PYTHONHOME=/ucrt64
+    PYTHONHOME=c:/msys64/ucrt64
 # PYTHONHOME is needed for python >= 3.8 to find dependent *.dll files required by *.pyd files: python >= 3.8 does no longer use PATH to search for such dependent dll's
 # you need to use os.add_dll_directroy(...). This is done for PYTHONHOME/lib in pycppwrapper.cc/initializePython(...) if PYTHONHOME is set.
 # This is not required for a release distribution since the *.dll files are located in a dir which is already searched.
