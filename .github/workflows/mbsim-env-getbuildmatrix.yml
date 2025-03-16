@@ -65,7 +65,6 @@ jobs:
               "os": [
                 {"buildType": "linux64-dailydebug"     , "image": "mbsimenv/build"           , "runsOn": "ubuntu-22.04", "mountBase": ""         , "args": "--ccacheSize 0.69"},
                 {"buildType": "linux64-dailyrelease"   , "image": "mbsimenv/build"           , "runsOn": "ubuntu-22.04", "mountBase": ""         , "args": "--ccacheSize 0.73"},
-                {"buildType": "win64-dailyrelease"     , "image": "mbsimenv/buildwin64"      , "runsOn": "ubuntu-22.04", "mountBase": ""         , "args": "--ccacheSize 4.38"},
                 {"buildType": "msys2win64-dailyrelease", "image": "mbsimenv/buildmsys2ucrt64", "runsOn": "windows-2019", "mountBase": "c:/msys64", "args": "--ccacheSize 0.75"},
               ]}
           else:
@@ -87,7 +86,6 @@ jobs:
             matrix={"branches": branches,
               "os": [
                 {"buildType": "linux64-ci"   , "image": "mbsimenv/build"           , "runsOn": "ubuntu-22.04", "mountBase": ""         , "args": "--ccacheSize 0.63"},
-                {"buildType": "win64-ci"     , "image": "mbsimenv/buildwin64"      , "runsOn": "ubuntu-22.04", "mountBase": ""         , "args": "--ccacheSize 4.25"},
                 {"buildType": "msys2win64-ci", "image": "mbsimenv/buildmsys2ucrt64", "runsOn": "windows-2019", "mountBase": "c:/msys64", "args": "--ccacheSize 0.63"},
               ]}
           # linearize matrix and remove master, linux-dailydebug combination

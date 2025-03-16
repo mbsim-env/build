@@ -34,10 +34,6 @@ jobs:
           }, {
             "branches": ${{toJson(github.event.client_payload.branches)}},
             "os":
-              {"buildType": "win64-ci", "image": "mbsimenv/buildwin64", "runsOn": "ubuntu-22.04", "mountBase": "", "args": "--ccacheSize 4.25"}
-          }, {
-            "branches": ${{toJson(github.event.client_payload.branches)}},
-            "os":
               {"buildType": "msys2win64-ci", "image": "mbsimenv/buildmsys2ucrt64", "runsOn": "windows-2019", "mountBase": "c:/msys64", "args": "--ccacheSize 0.63"}
           }]
         }
@@ -66,10 +62,6 @@ jobs:
 #            "branches": ${{toJson(github.event.client_payload.branches)}},
 #            "os":
 #              {"buildType": "linux64-dailyrelease", "image": "mbsimenv/build", "runsOn": "ubuntu-22.04", "mountBase": "", "args": "--ccacheSize 0.73"}
-#          }, {
-#            "branches": ${{toJson(github.event.client_payload.branches)}},
-#            "os":
-#              {"buildType": "win64-dailyrelease", "image": "mbsimenv/buildwin64", "runsOn": "ubuntu-22.04", "mountBase": "", "args": "--ccacheSize 4.38"}
 #          }, {
 #            "branches": ${{toJson(github.event.client_payload.branches)}},
 #            "os":

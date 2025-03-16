@@ -54,7 +54,7 @@ if ciq is not None:
       print("Start build: "+ciq.fmatvecBranch+", "+ciq.hdf5serieBranch+", "+\
             ciq.openmbvBranch+", "+ciq.mbsimBranch)
       sys.stdout.flush()
-      # run linux64-ci (win64-ci is not run by crone for now!!!)
+      # run linux64-ci
       ciq.delete()
       enforceConfigure=False # if this is set to True the CI build enforces a configure run which is sometime required.
       with open("/context/buildConfig.json", "rt") as f:

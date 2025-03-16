@@ -7,11 +7,6 @@ on:
         required: true
         default: false
         type: boolean
-      buildwin64Image:
-        description: "* Build 'buildwin64' image"
-        required: true
-        default: false
-        type: boolean
       buildmsys2ucrt64baseImage:
         description: "* Build 'buildmsys2ucrt64base' image"
         required: true
@@ -63,21 +58,6 @@ jobs:
         run: docker build -t mbsimenv/build:latest --cache-from mbsimenv/build:latest -f docker/buildImage/Dockerfile .
       - name: "Docker push build"
         run: docker push mbsimenv/build:latest
-  buildwin64Image:
-    name: "Bulid Windows-XC Docker Image"
-    runs-on: ubuntu-22.04
-    if: ${{inputs.buildwin64Image}}
-    steps:
-      - name: "Checkout"
-        uses: actions/checkout@v4
-      - name: "Docker login"
-        run: echo $mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
-      - name: "Docker pull build"
-        run: docker pull mbsimenv/buildwin64:latest
-      - name: "Docker build"
-        run: docker build -t mbsimenv/buildwin64:latest --cache-from mbsimenv/buildwin64:latest -f docker/buildwin64Image/Dockerfile .
-      - name: "Docker push build"
-        run: docker push mbsimenv/buildwin64:latest
   buildmsys2ucrt64Image:
     name: "Bulid MSYS2 Docker Image"
     runs-on: windows-2019

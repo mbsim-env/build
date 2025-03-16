@@ -66,7 +66,7 @@ def parseArgs():
 
 scriptdir=os.path.dirname(os.path.realpath(__file__))
 
-buildTypes=["linux64-dailydebug", "linux64-dailyrelease", "win64-dailyrelease", "linux64-ci", "win64-ci"]
+buildTypes=["linux64-dailydebug", "linux64-dailyrelease", "linux64-ci"]
 
 dockerClient=docker.from_env()
 dockerClientLL=docker.APIClient()
@@ -144,7 +144,6 @@ if sys.platform=="linux":
     "database",
     "filestorage",
     "build",
-    "buildwin64",
     "builddoc",
     "builddocker",
     "proxy",
@@ -357,13 +356,6 @@ def build(s, jobs=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),p
       path=baseDir+"/proxyImage",
       rm=False)
 
-  elif s=="buildwin64":
-    return buildImage(tag="mbsimenv/buildwin64:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
-      buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
-      path=baseDir+"/..",
-      dockerfile="docker/buildwin64Image/Dockerfile",
-      rm=False)
-
   elif s=="buildmsys2ucrt64base":
     return buildImage(tag="mbsimenv/buildmsys2ucrt64base:"+getTagname(), fd=fd, cacheFromSelf=cacheFromSelf,
       buildargs={"JOBS": str(jobs), "MBSIMENVTAGNAME": getTagname()},
@@ -454,7 +446,7 @@ def runAutobuild(s, buildType, addCommand, jobs=max(1,min(round(psutil.virtual_m
 
   # build
   renameStoppedContainer('mbsimenv.build.'+buildType+'.')
-  imageName=(buildConfig.get("buildwin64Image", "mbsimenv/buildwin64") if buildType.startswith("win64-") else buildConfig.get("buildImage", "mbsimenv/build"))+":"+getTagname()
+  imageName=(buildConfig.get("buildImage", "mbsimenv/build"))+":"+getTagname()
   imageID=dockerClient.images.get(imageName).id
   build=dockerClient.containers.run(
     image=imageName,
@@ -579,11 +571,6 @@ def run(s, jobs=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psu
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog, detach=detach, buildConfig=buildConfig)
 
-  elif s=="build-win64-ci":
-    return runAutobuild(s, "win64-ci", addCommands, jobs=jobs, interactive=interactive, enforceConfigure=enforceConfigure,
-                 fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach, buildConfig=buildConfig)
-
   elif s.startswith("build-linux64-dailydebug"):
     buildTypeSuffix=s[len("build-linux64-dailydebug"):]
     return runAutobuild(s, "linux64-dailydebug"+buildTypeSuffix, ["--valgrindExamples"]+addCommands,
@@ -595,13 +582,6 @@ def run(s, jobs=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psu
     buildTypeSuffix=s[len("build-linux64-dailyrelease"):]
     return runAutobuild(s, "linux64-dailyrelease"+buildTypeSuffix, addCommands,
                  jobs=jobs, interactive=interactive, enforceConfigure=enforceConfigure,
-                 fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
-                 printLog=printLog, detach=detach, buildConfig=buildConfig)
-
-  elif s.startswith("build-win64-dailyrelease"):
-    buildTypeSuffix=s[len("build-win64-dailyrelease"):]
-    return runAutobuild(s, "win64-dailyrelease"+buildTypeSuffix, addCommands, jobs=jobs,
-                 interactive=interactive, enforceConfigure=enforceConfigure,
                  fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                  printLog=printLog, detach=detach, buildConfig=buildConfig)
 
