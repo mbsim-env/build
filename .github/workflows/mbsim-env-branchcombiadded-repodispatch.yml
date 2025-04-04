@@ -34,7 +34,7 @@ jobs:
           }, {
             "branches": ${{toJson(github.event.client_payload.branches)}},
             "os":
-              {"buildType": "msys2win64-ci", "image": "mbsimenv/buildmsys2ucrt64", "runsOn": "windows-2019", "mountBase": "c:/msys64", "args": "--ccacheSize 0.63"}
+              {"buildType": "msys2win64-ci", "image": "mbsimenv/buildmsys2ucrt64", "runsOn": "windows-2022", "mountBase": "c:/msys64", "args": "--ccacheSize 0.63"}
           }]
         }
       uploadArtifactLocalLcov: false
@@ -65,7 +65,7 @@ jobs:
 #          }, {
 #            "branches": ${{toJson(github.event.client_payload.branches)}},
 #            "os":
-#              {"buildType": "msys2win64-dailyrelease", "image": "mbsimenv/buildmsys2ucrt64", "runsOn": "windows-2019", "mountBase": "c:/msys64", "args": "--ccacheSize 0.75"}
+#              {"buildType": "msys2win64-dailyrelease", "image": "mbsimenv/buildmsys2ucrt64", "runsOn": "windows-2022", "mountBase": "c:/msys64", "args": "--ccacheSize 0.75"}
 #          }]
 #        }
 #      uploadArtifactLocalLcov: false
