@@ -87,6 +87,7 @@ jobs:
           --build-arg=MSYS2INSTALLERDOWNLOAD="${{env.MSYS2INSTALLERDOWNLOAD}}"
           --build-arg=MSYS2INSTALLERUPDATEBYPUBLIC="${{env.MSYS2INSTALLERUPDATEBYPUBLIC}}"
           --build-arg=MSYS2INSTALLERUPLOAD="${{env.MSYS2INSTALLERUPLOAD}}"
+          --build-arg=MBSIMENVTAGNAME="${{github.ref_name}}"
           -t mbsimenv/buildmsys2ucrt64:${{github.ref_name}}
           --cache-from mbsimenv/buildmsys2ucrt64:${{github.ref_name}}
           -f docker/buildmsys2ucrt64Image/Dockerfile .
