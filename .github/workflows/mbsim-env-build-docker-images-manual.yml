@@ -44,7 +44,7 @@ env:
   MSYS2INSTALLERRSYNCPORT: 1122
 jobs:
   buildImage:
-    name: "Bulid Linux Docker Image"
+    name: "Build Linux Docker Image"
     runs-on: ubuntu-22.04
     if: ${{inputs.buildImage}}
     steps:
@@ -53,13 +53,14 @@ jobs:
       - name: "Docker login"
         run: echo $mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
       - name: "Docker pull build"
-        run: docker pull mbsimenv/build:latest
+        continue-on-error: true
+        run: docker pull mbsimenv/build:${{github.ref_name}}
       - name: "Docker build"
-        run: docker build -t mbsimenv/build:latest --cache-from mbsimenv/build:latest -f docker/buildImage/Dockerfile .
+        run: docker build -t mbsimenv/build:${{github.ref_name}} --cache-from mbsimenv/build:${{github.ref_name}} -f docker/buildImage/Dockerfile .
       - name: "Docker push build"
-        run: docker push mbsimenv/build:latest
+        run: docker push mbsimenv/build:${{github.ref_name}}
   buildmsys2ucrt64Image:
-    name: "Bulid MSYS2 Docker Image"
+    name: "Build MSYS2 Docker Image"
     runs-on: windows-2022
     if: ${{inputs.buildmsys2ucrt64Image}}
     steps:
@@ -68,15 +69,17 @@ jobs:
       - name: "Docker login"
         run: echo $Env:mbsimenvsec_dockerhubAccessToken | docker login -u fm12 --password-stdin
       - name: "Docker pull base"
-        run: docker pull mbsimenv/buildmsys2ucrt64base:latest
+        continue-on-error: true
+        run: docker pull mbsimenv/buildmsys2ucrt64base:${{github.ref_name}}
       - name: "Docker build base"
         if: ${{inputs.buildmsys2ucrt64baseImage}}
-        run: docker build -t mbsimenv/buildmsys2ucrt64base:latest --cache-from mbsimenv/buildmsys2ucrt64base:latest -f docker/buildmsys2ucrt64baseImage/Dockerfile .
+        run: docker build -t mbsimenv/buildmsys2ucrt64base:${{github.ref_name}} --cache-from mbsimenv/buildmsys2ucrt64base:${{github.ref_name}} -f docker/buildmsys2ucrt64baseImage/Dockerfile .
       - name: "Docker push base"
         if: ${{inputs.buildmsys2ucrt64baseImage}}
-        run: docker push mbsimenv/buildmsys2ucrt64base:latest
+        run: docker push mbsimenv/buildmsys2ucrt64base:${{github.ref_name}}
       - name: "Docker pull build"
-        run: docker pull mbsimenv/buildmsys2ucrt64:latest
+        continue-on-error: true
+        run: docker pull mbsimenv/buildmsys2ucrt64:${{github.ref_name}}
       - name: "Docker build"
         run: >
           docker build
@@ -84,11 +87,11 @@ jobs:
           --build-arg=MSYS2INSTALLERDOWNLOAD="${{env.MSYS2INSTALLERDOWNLOAD}}"
           --build-arg=MSYS2INSTALLERUPDATEBYPUBLIC="${{env.MSYS2INSTALLERUPDATEBYPUBLIC}}"
           --build-arg=MSYS2INSTALLERUPLOAD="${{env.MSYS2INSTALLERUPLOAD}}"
-          -t mbsimenv/buildmsys2ucrt64:latest
-          --cache-from mbsimenv/buildmsys2ucrt64:latest
+          -t mbsimenv/buildmsys2ucrt64:${{github.ref_name}}
+          --cache-from mbsimenv/buildmsys2ucrt64:${{github.ref_name}}
           -f docker/buildmsys2ucrt64Image/Dockerfile .
       - name: "Docker push build"
-        run: docker push mbsimenv/buildmsys2ucrt64:latest
+        run: docker push mbsimenv/buildmsys2ucrt64:${{github.ref_name}}
       - name: "Upload msys2 db and cache"
         if: ${{env.MSYS2INSTALLERUPLOAD == 1}}
         run: >
@@ -97,5 +100,5 @@ jobs:
           --env MSYS2INSTALLERRSYNCPORT
           --env MSYS2INSTALLERRSYNCURI
           --entrypoint c:/msys64/usr/bin/bash
-          mbsimenv/buildmsys2ucrt64:latest
+          mbsimenv/buildmsys2ucrt64:${{github.ref_name}}
           -l -c /context/msys2_upload.sh
