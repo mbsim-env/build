@@ -1663,6 +1663,11 @@ def coverage(exRun, lcovResultFile=None):
                     covPartFinal, "-o", pj(tempDir, "cov.trace.total")], lcovFD))
     # run lcov: remove counters
     ret=ret+abs(base.helper.subprocessCall(["lcov", "-r", pj(tempDir, "cov.trace.total"),
+      "/mbsim-env/hdf5serie-*/*/conftest.c",
+      "/mbsim-env/openmbv-*/*/conftest.c",
+      "/mbsim-env/mbsim-*/*/conftest.c",
+      "/mbsim-env/mbsim-*/modules/*/conftest.c",
+      "/mbsim-env/mbsim-*/thirdparty/nurbs++/conftest.c",
       "/mbsim-env/mbsim-*/kernel/swig/*", # SWIG generated
       "/mbsim-env/mbsim-*/modules/*/swig/*", # SWIG generated
       "/mbsim-env/openmbv-*/openmbvcppinterface/swig/java/*", # SWIG generated
