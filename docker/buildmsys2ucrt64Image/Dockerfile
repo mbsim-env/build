@@ -138,6 +138,7 @@ COPY docker/buildImage/distribute.py              c:/msys64/context/distribute.p
 COPY docker/buildmsys2ucrt64Image/entrypoint.py   c:/msys64/context/entrypoint.py
 COPY django/mbsimenv/build.py                     c:/msys64/context/mbsimenv/build.py
 COPY django/mbsimenv/runexamples.py               c:/msys64/context/mbsimenv/runexamples.py
+COPY django/mbsimenv/runexamples-fmu.py /context/mbsimenv/runexamples-fmu.py
 COPY django/mbsimenv/mbsimenvSecrets.py           c:/msys64/context/mbsimenv/mbsimenvSecrets.py
 COPY django/mbsimenv/mbsimenv                     c:/msys64/context/mbsimenv/mbsimenv
 COPY django/mbsimenv/base                         c:/msys64/context/mbsimenv/base

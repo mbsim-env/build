@@ -89,6 +89,7 @@ COPY docker/buildImage/distribute.py /context/distribute.py
 COPY misc /mbsim-build/build/misc
 COPY django/mbsimenv/build.py           /context/mbsimenv/build.py
 COPY django/mbsimenv/runexamples.py     /context/mbsimenv/runexamples.py
+COPY django/mbsimenv/runexamples-fmu.py /context/mbsimenv/runexamples-fmu.py
 COPY django/mbsimenv/mbsimenvSecrets.py /context/mbsimenv/mbsimenvSecrets.py
 COPY django/mbsimenv/mbsimenv           /context/mbsimenv/mbsimenv
 COPY django/mbsimenv/base               /context/mbsimenv/base
