@@ -31,6 +31,7 @@ import builds
 import json
 import io
 import itertools
+import importlib.util
 
 if django.VERSION[0]!=3:
   print("Need django version 3. This is django version "+django.__version__)
@@ -1170,7 +1171,11 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   # remove unpacked fmu
   if os.path.isdir("tmp_fmuCheck"): shutil.rmtree("tmp_fmuCheck")
 
-  ### run using mbsimTestFMU
+  ### run using mbsimTestFMU and python
+
+  cosimMEArg=['--me']
+  if cosim: cosimMEArg=['--cosim']
+
   # unpack FMU
   if os.path.isdir("tmp_mbsimTestFMU"): shutil.rmtree("tmp_mbsimTestFMU")
   try:
@@ -1181,14 +1186,25 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
     print("Failed.\n", file=executeFD)
   else:
     print("Done.\n", file=executeFD)
-  # run mbsimTestFMU
+
+  # run using mbsimTestFMU
   print("\n\n\n", file=executeFD)
   print("Running command:", file=executeFD)
-  cosimArg=['--me']
-  if cosim: cosimArg=['--cosim']
-  comm=exePrefix()+[pj(mbsimBinDir, "mbsimTestFMU"+args.exeExt)]+cosimArg+["tmp_mbsimTestFMU"]
+  comm=exePrefix()+[pj(mbsimBinDir, "mbsimTestFMU"+args.exeExt)]+cosimMEArg+["tmp_mbsimTestFMU"]
   ret3=abs(base.helper.subprocessCall(prefixSimulation('mbsimTestFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
   if valgrindOutputAndAdaptRet("example_fmi_mbsimTestFMU", ex)!=0: ret3=valgrindErrorCode
+
+  # run using python (FMPy)
+  print("\n\n\n", file=executeFD)
+  ret4=0
+  if importlib.util.find_spec("fmpy", package=None) is None:
+    print("Skipping running FMU via FMPy since the fmyp module is not installed", file=executeFD)
+  else:
+    print("Running command:", file=executeFD)
+    comm=[sys.executable, os.path.dirname(__file__)+"/runexamples-fmu.py", "tmp_mbsimTestFMU"]+cosimMEArg
+    ret4=abs(base.helper.subprocessCall(prefixSimulation('fmpy')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
+    if valgrindOutputAndAdaptRet("example_fmi_fmpy", ex)!=0: ret4=valgrindErrorCode
+
   # remove unpacked fmu
   if os.path.isdir("tmp_mbsimTestFMU"): shutil.rmtree("tmp_mbsimTestFMU")
 
@@ -1196,12 +1212,14 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   if os.path.isfile("mbsim.fmu"): os.remove("mbsim.fmu")
 
   # return
-  if ret1==base.helper.subprocessCall.timedOutErrorCode or ret2==base.helper.subprocessCall.timedOutErrorCode or ret3==base.helper.subprocessCall.timedOutErrorCode:
+  if ret1==base.helper.subprocessCall.timedOutErrorCode or ret2==base.helper.subprocessCall.timedOutErrorCode or \
+     ret3==base.helper.subprocessCall.timedOutErrorCode or ret4==base.helper.subprocessCall.timedOutErrorCode:
     ret=base.helper.subprocessCall.timedOutErrorCode
-  elif ret1==base.helper.subprocessCall.stopByREErrorCode or ret2==base.helper.subprocessCall.stopByREErrorCode or ret3==base.helper.subprocessCall.stopByREErrorCode:
+  elif ret1==base.helper.subprocessCall.stopByREErrorCode or ret2==base.helper.subprocessCall.stopByREErrorCode or \
+       ret3==base.helper.subprocessCall.stopByREErrorCode or ret4==base.helper.subprocessCall.stopByREErrorCode:
     ret=base.helper.subprocessCall.stopByREErrorCode
   else:
-    ret=abs(ret1)+abs(ret2)+abs(ret3)
+    ret=abs(ret1)+abs(ret2)+abs(ret3)+abs(ret4)
 
   return ret, dt
 
