@@ -82,6 +82,11 @@ RUN function msys() { C:\msys64\usr\bin\bash.exe @('-lc') + @Args; } `
   mingw-w64-ucrt-x86_64-python-psycopg2 `
   mingw-w64-ucrt-x86_64-gcc-fortran `
   mingw-w64-ucrt-x86_64-python-requests-oauthlib `
+  mingw-w64-ucrt-x86_64-python-jinja2-time `
+  mingw-w64-ucrt-x86_64-python-markupsafe `
+  mingw-w64-ucrt-x86_64-python-lark-parser `
+  mingw-w64-ucrt-x86_64-python-lxml `
+  mingw-w64-ucrt-x86_64-python-pywin32 `
   ';
 
 SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
@@ -89,7 +94,9 @@ SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
 RUN "test -e /msys2_install2.sh.error && echo msys2_install2.sh failed, see above && exit 1 || exit 0"
 
 # Install pip packages
-RUN "python.exe -m pip install --break-system-packages --upgrade pip==24.0 && python.exe -m pip install --break-system-packages django==3.2 django-allauth==0.55 django-octicons==1.0"
+RUN "python.exe -m pip install --break-system-packages --upgrade pip==24.0 && python.exe -m pip install --break-system-packages django==3.2 django-allauth==0.55 django-octicons==1.0 fmpy==0.3.22"
+#mfmf
+RUN "exit 1"
 
 # install git
 RUN "wget --no-verbose https://github.com/git-for-windows/git/releases/download/v2.43.0.windows.1/MinGit-2.43.0-64-bit.zip && `

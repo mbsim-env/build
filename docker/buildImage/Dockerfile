@@ -8,6 +8,7 @@ RUN apt update -y && apt install -y \
   python3 \
   python3-django python3-psutil python3-pip python3-django-allauth python3-psycopg2 python3-paramiko \
   python3-github python3-dev python3-numpy python3-h5py python3-pyside2.qtwidgets python3-scipy python3-matplotlib \
+  python3-jinja2 python3-lark python3-msgpack \
   libboost-thread-dev libboost-system-dev libboost-stacktrace-dev libboost-regex-dev \
   libboost-filesystem-dev libboost-iostreams-dev libboost-date-time-dev libboost-chrono-dev libboost-program-options-dev libboost-timer-dev \
   ccache \
@@ -56,7 +57,7 @@ RUN apt update -y && apt install -y \
   && rm -rf /var/lib/apt/lists/*
 
 # install using pip
-RUN pip3 install --break-system-packages django-octicons
+RUN pip3 install --break-system-packages django-octicons==1.0.2 fmpy==0.3.22
 
 RUN mkdir /3rdparty
 
