@@ -17,6 +17,10 @@ if args.me:
 else:
   fmu = fmpy.fmi1.FMU1Slave(guid=md.guid, modelIdentifier=md.coSimulation.modelIdentifier, unzipDirectory=args.unzipdir)
 fmu.instantiate()
+
+outputVR =0 # the VR of the "Output directory"
+fmu.setString([outputVR], ["fmuPyOutput"])
+
 fmu.initialize()
 fmu.terminate()
 fmu.freeInstance()
