@@ -60,7 +60,7 @@ jobs:
         run: docker push mbsimenv/build:latest
   buildmsys2ucrt64Image:
     name: "Bulid MSYS2 Docker Image"
-    runs-on: windows-2019
+    runs-on: windows-2022
     if: ${{inputs.buildmsys2ucrt64Image}}
     steps:
       - name: "Checkout"
