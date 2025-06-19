@@ -253,8 +253,9 @@ jobs:
       - name: "Docker: pull image"
         run: docker image pull mbsimenv/builddoc:${{env.MBSIMENVTAGNAME}}
       - name: "Docker: run container"
+        # we run on windows-2022 a windows-2019 container -> this requires hyperv isolation
         run: >
-          docker run
+          docker run --isolation=hyperv
           --init
           --env MBSIMENVDATABASE
           --env MBSIMENVFILESTORAGE

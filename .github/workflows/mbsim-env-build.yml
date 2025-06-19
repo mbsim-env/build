@@ -200,8 +200,9 @@ jobs:
         run: icacls.exe ${{github.workspace}}/mbsim-ccache /l /t /grant everyone:f > NUL
       - name: "Docker: run container"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
+        # we run on windows-2022 a windows-2019 container -> this requires hyperv isolation
         run: >
-          docker run
+          docker run --isolation=hyperv
           --init
           --label buildtype=${{matrix.data.os.buildType}}
           --env OPENBLAS_CORETYPE
