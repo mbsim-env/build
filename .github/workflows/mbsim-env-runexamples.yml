@@ -103,9 +103,8 @@ jobs:
       - name: "Docker: bind mount point permissions"
         run: chmod 777 ${{github.workspace}}/mbsim-env ${{github.workspace}}/mbsim-ccache
       - name: "Docker: run container"
-        # we run on windows-2022 a windows-2019 container -> this requires hyperv isolation
         run: >
-          docker run --isolation=hyperv
+          docker run
           --init
           --label buildtype=linux64-dailydebug
           --env OPENBLAS_CORETYPE

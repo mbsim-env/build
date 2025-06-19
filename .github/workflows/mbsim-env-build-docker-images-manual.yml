@@ -93,6 +93,7 @@ jobs:
         if: ${{env.MSYS2INSTALLERUPLOAD == 1}}
         run: >
           docker run --init
+          --isolation=hyperv
           --env mbsimenvsec_filestoragePassword
           --env MSYS2INSTALLERRSYNCPORT
           --env MSYS2INSTALLERRSYNCURI

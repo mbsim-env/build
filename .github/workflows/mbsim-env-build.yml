@@ -3,7 +3,7 @@ on:
   workflow_call:
     inputs:
       matrix: # JSON string: {"data":
-              #  [{"os": {"buildType": ?, "image": ?, "args": ?},
+              #  [{"os": {"buildType": ?, "image": ?, "args": ?, "dockerargs": ?},
               #    "branches": {"fmatvecBranch": ?, "hdf5serieBranch": ?, "openmbvBranch": ?, "mbsimBranch": ?, }, }, ...]}
         required: true
         type: string
@@ -68,6 +68,7 @@ jobs:
           openmbvBranch   = ${{matrix.data.branches.openmbvBranch}}
           mbsimBranch     = ${{matrix.data.branches.mbsimBranch}}
           args            = ${{matrix.data.os.args}}
+          dockerargs      = ${{matrix.data.os.dockerargs}}
           Triggered by repo = ${{github.repository}}
                        branch = ${{github.ref_name}}
                        sha = ${{github.sha}}
@@ -200,9 +201,9 @@ jobs:
         run: icacls.exe ${{github.workspace}}/mbsim-ccache /l /t /grant everyone:f > NUL
       - name: "Docker: run container"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
-        # we run on windows-2022 a windows-2019 container -> this requires hyperv isolation
         run: >
-          docker run --isolation=hyperv
+          docker run
+          ${{matrix.data.os.dockerargs}}
           --init
           --label buildtype=${{matrix.data.os.buildType}}
           --env OPENBLAS_CORETYPE

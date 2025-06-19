@@ -30,11 +30,21 @@ jobs:
           [{
             "branches": ${{toJson(github.event.client_payload.branches)}},
             "os":
-              {"buildType": "linux64-ci", "image": "mbsimenv/build", "runsOn": "ubuntu-22.04", "mountBase": "", "args": "--ccacheSize 0.63"}
+              {"buildType": "linux64-ci",
+               "image": "mbsimenv/build",
+               "runsOn": "ubuntu-22.04",
+               "mountBase": "",
+               "args": "--ccacheSize 0.63",
+               "dockerargs": ""}
           }, {
             "branches": ${{toJson(github.event.client_payload.branches)}},
             "os":
-              {"buildType": "msys2win64-ci", "image": "mbsimenv/buildmsys2ucrt64", "runsOn": "windows-2022", "mountBase": "c:/msys64", "args": "--ccacheSize 0.63"}
+              {"buildType": "msys2win64-ci",
+               "image": "mbsimenv/buildmsys2ucrt64",
+               "runsOn": "windows-2022",
+               "mountBase": "c:/msys64",
+               "args": "--ccacheSize 0.63",
+               "dockerargs": "--isolation=hyperv"}
           }]
         }
       uploadArtifactLocalLcov: false
@@ -57,15 +67,30 @@ jobs:
 #          [{
 #            "branches": ${{toJson(github.event.client_payload.branches)}},
 #            "os":
-#              {"buildType": "linux64-dailydebug", "image": "mbsimenv/build", "runsOn": "ubuntu-22.04", "mountBase": "", "args": "--ccacheSize 0.69"}
+#              {"buildType": "linux64-dailydebug",
+#               "image": "mbsimenv/build",
+#               "runsOn": "ubuntu-22.04",
+#               "mountBase": "",
+#               "args": "--ccacheSize 0.69",
+#               "dockerargs": ""}
 #          }, {
 #            "branches": ${{toJson(github.event.client_payload.branches)}},
 #            "os":
-#              {"buildType": "linux64-dailyrelease", "image": "mbsimenv/build", "runsOn": "ubuntu-22.04", "mountBase": "", "args": "--ccacheSize 0.73"}
+#              {"buildType": "linux64-dailyrelease",
+#               "image": "mbsimenv/build",
+#               "runsOn": "ubuntu-22.04",
+#               "mountBase": "",
+#               "args": "--ccacheSize 0.73",
+#               "dockerargs": ""}
 #          }, {
 #            "branches": ${{toJson(github.event.client_payload.branches)}},
 #            "os":
-#              {"buildType": "msys2win64-dailyrelease", "image": "mbsimenv/buildmsys2ucrt64", "runsOn": "windows-2022", "mountBase": "c:/msys64", "args": "--ccacheSize 0.75"}
+#              {"buildType": "msys2win64-dailyrelease",
+#               "image": "mbsimenv/buildmsys2ucrt64",
+#               "runsOn": "windows-2022",
+#               "mountBase": "c:/msys64",
+#               "args": "--ccacheSize 0.75",
+#               "dockerargs": "--isolation=hyperv"}
 #          }]
 #        }
 #      uploadArtifactLocalLcov: false
