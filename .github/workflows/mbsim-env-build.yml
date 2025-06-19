@@ -201,6 +201,13 @@ jobs:
         run: icacls.exe ${{github.workspace}}/mbsim-ccache /l /t /grant everyone:f > NUL
       - name: "Docker: run container"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
+        # TODO mfmf if the windows docker images are on windows-2022 then remove the dockerargs --isolation=hyperv and
+        # replace the below
+        # ${{startsWith(matrix.data.os.runsOn, 'windows') && ' ' || format('-v {0}/mbsim-env:{1}/mbsim-env', github.workspace, matrix.data.os.mountBase)}}
+        # just to
+        # -v ${{github.workspace}}/mbsim-env:${{matrix.data.os.mountBase}}/mbsim-env
+        # The hack not to use a docker volume for /mbsim-env inside the docker is neede due to the Bug:
+        # https://github.com/microsoft/Windows-Containers/issues/559 
         run: >
           docker run
           ${{matrix.data.os.dockerargs}}
@@ -217,7 +224,7 @@ jobs:
           --env mbsimenvsec_djangoSecretKey
           --env mbsimenvsec_postgresPassword
           --env mbsimenvsec_filestoragePassword
-          -v ${{github.workspace}}/mbsim-env:${{matrix.data.os.mountBase}}/mbsim-env
+          ${{startsWith(matrix.data.os.runsOn, 'windows') && ' ' || format('-v {0}/mbsim-env:{1}/mbsim-env', github.workspace, matrix.data.os.mountBase)}}
           -v ${{github.workspace}}/mbsim-ccache:${{matrix.data.os.mountBase}}/mbsim-ccache
           ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}}
           --buildType ${{matrix.data.os.buildType}}
