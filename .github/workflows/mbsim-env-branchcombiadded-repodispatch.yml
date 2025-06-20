@@ -44,7 +44,7 @@ jobs:
                "runsOn": "windows-2022",
                "mountBase": "c:/msys64",
                "args": "--ccacheSize 0.63",
-               "dockerargs": "--isolation=hyperv --memory=15g"}
+               "dockerargs": "--isolation=hyperv --memory=15g --cpu-count=4"}
           }]
         }
       uploadArtifactLocalLcov: false
@@ -90,7 +90,7 @@ jobs:
 #               "runsOn": "windows-2022",
 #               "mountBase": "c:/msys64",
 #               "args": "--ccacheSize 0.75",
-#               "dockerargs": "--isolation=hyperv --memory=15g"}
+#               "dockerargs": "--isolation=hyperv --memory=15g --cpu-count=4"}
 #          }]
 #        }
 #      uploadArtifactLocalLcov: false

@@ -80,7 +80,7 @@ jobs:
                  "runsOn": "windows-2022",
                  "mountBase": "c:/msys64",
                  "args": "--ccacheSize 0.75",
-                 "dockerargs": "--isolation=hyperv --memory=15g"},
+                 "dockerargs": "--isolation=hyperv --memory=15g --cpu-count=4"},
               ]}
           else:
             # print repo, branch and sha
@@ -111,7 +111,7 @@ jobs:
                  "runsOn": "windows-2022",
                  "mountBase": "c:/msys64",
                  "args": "--ccacheSize 0.63",
-                 "dockerargs": "--isolation=hyperv --memory=15g"},
+                 "dockerargs": "--isolation=hyperv --memory=15g --cpu-count=4"},
               ]}
           # linearize matrix and remove master, linux-dailydebug combination
           matrix=itertools.product(matrix["branches"], matrix["os"])

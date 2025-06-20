@@ -94,7 +94,7 @@ jobs:
         # TODO: mfmf remove --isolation=hyperv ... if the container is based on windows-2022
         run: >
           docker run --init
-          --isolation=hyperv --memory=15g
+          --isolation=hyperv --memory=15g --cpu-count=4
           --env mbsimenvsec_filestoragePassword
           --env MSYS2INSTALLERRSYNCPORT
           --env MSYS2INSTALLERRSYNCURI
