@@ -91,9 +91,10 @@ jobs:
         run: docker push mbsimenv/buildmsys2ucrt64:latest
       - name: "Upload msys2 db and cache"
         if: ${{env.MSYS2INSTALLERUPLOAD == 1}}
+        # TODO: mfmf remove --isolation=hyperv ... if the container is based on windows-2022
         run: >
           docker run --init
-          --isolation=hyperv
+          --isolation=hyperv --memory=15g
           --env mbsimenvsec_filestoragePassword
           --env MSYS2INSTALLERRSYNCPORT
           --env MSYS2INSTALLERRSYNCURI

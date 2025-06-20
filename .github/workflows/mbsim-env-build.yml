@@ -201,7 +201,7 @@ jobs:
         run: icacls.exe ${{github.workspace}}/mbsim-ccache /l /t /grant everyone:f > NUL
       - name: "Docker: run container"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
-        # TODO mfmf if the windows docker images are on windows-2022 then remove the dockerargs --isolation=hyperv and
+        # TODO mfmf if the windows docker images are on windows-2022 then remove the dockerargs --isolation=hyperv ... and
         # replace the below
         # ${{startsWith(matrix.data.os.runsOn, 'windows') && ' ' || format('-v {0}/mbsim-env:{1}/mbsim-env', github.workspace, matrix.data.os.mountBase)}}
         # just to
