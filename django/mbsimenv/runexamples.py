@@ -1688,9 +1688,11 @@ def coverage(exRun, lcovResultFile=None):
       "/mbsim-env/mbsim-*/thirdparty/nurbs++/conftest.c",
       "/mbsim-env/mbsim-*/kernel/swig/*", # SWIG generated
       "/mbsim-env/mbsim-*/modules/*/swig/*", # SWIG generated
+      "/mbsim-env/mbsim-*/mbsimxml/swig/*", # SWIG generated
       "/mbsim-env/openmbv-*/openmbvcppinterface/swig/java/*", # SWIG generated
       "/mbsim-env/openmbv-*/openmbvcppinterface/swig/octave/*", # SWIG generated
       "/mbsim-env/openmbv-*/openmbvcppinterface/swig/python/*", # SWIG generated
+      "/mbsim-env/*/include/mbxmlutils/pycppwrapper_mainlib.h", # MBXMLUtils
       "/mbsim-env/openmbv-*/mbxmlutils/mbxmlutils/*", # SWIG generated
       "/mbsim-env/mbsim*/thirdparty/nurbs++/*/*", "*/include/nurbs++/*", "/mbsim-env/mbsim*/kernel/mbsim/numerics/csparse.*", # 3rd party
       "/mbsim-env/mbsim*/examples/*", # mbsim examples
