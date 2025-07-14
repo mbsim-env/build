@@ -108,7 +108,7 @@ if build:
   # args
   if args.buildType == "linux64-ci":
     ARGS=["--disableDoxygen", "--disableXMLDoc"]
-    RUNEXAMPLESARGS=["--disableMakeClean", "--checkGUIs"]
+    RUNEXAMPLESARGS=["--disableMakeClean", "--checkGUIs", "--prefixSimulation", "gdb -q -n -batch --return-child-result -ex run -ex backtrace -ex quit --args"]
     RUNEXAMPLESFILTER=["--filter", "'basic' in labels"]
   
     # get current/last image ID
@@ -124,14 +124,14 @@ if build:
       info.save()
   elif args.buildType.startswith("linux64-dailydebug"):
     ARGS=["--coverage", "--enableDistribution"]
-    RUNEXAMPLESARGS=["--checkGUIs"]
+    RUNEXAMPLESARGS=["--checkGUIs", "--prefixSimulation", "gdb -q -n -batch --return-child-result -ex run -ex backtrace -ex quit --args"]
     RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] \
       if os.environ["MBSIMENVTAGNAME"]=="staging" or \
          not isMaster(args.fmatvecBranch) or not isMaster(args.hdf5serieBranch) or not isMaster(args.openmbvBranch) or not isMaster(args.mbsimBranch) \
          else ["--filter", "'nightly' in labels"])
   elif args.buildType.startswith("linux64-dailyrelease"):
     ARGS=["--enableDistribution"]
-    RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs"]
+    RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--prefixSimulation", "gdb -q -n -batch --return-child-result -ex run -ex backtrace -ex quit --args"]
     RUNEXAMPLESFILTER=["--filter", "'basic' in labels"]
   
   # pass arguments to build.py
