@@ -71,7 +71,7 @@ jobs:
         run: docker pull mbsimenv/buildmsys2ucrt64base:latest
       - name: "Docker build base"
         if: ${{inputs.buildmsys2ucrt64baseImage}}
-        run: docker build --isolation=hyperv --memory=15g --cpu-count=4 -t mbsimenv/buildmsys2ucrt64base:latest --cache-from mbsimenv/buildmsys2ucrt64base:latest -f docker/buildmsys2ucrt64baseImage/Dockerfile .
+        run: docker build --isolation=hyperv --memory=15g -t mbsimenv/buildmsys2ucrt64base:latest --cache-from mbsimenv/buildmsys2ucrt64base:latest -f docker/buildmsys2ucrt64baseImage/Dockerfile .
       - name: "Docker push base"
         if: ${{inputs.buildmsys2ucrt64baseImage}}
         run: docker push mbsimenv/buildmsys2ucrt64base:latest
@@ -80,7 +80,7 @@ jobs:
       - name: "Docker build"
         run: >
           docker build
-          --isolation=hyperv --memory=15g --cpu-count=4
+          --isolation=hyperv --memory=15g
           --build-arg=MSYS2INSTALLERURI="${{env.MSYS2INSTALLERURI}}"
           --build-arg=MSYS2INSTALLERDOWNLOAD="${{env.MSYS2INSTALLERDOWNLOAD}}"
           --build-arg=MSYS2INSTALLERUPDATEBYPUBLIC="${{env.MSYS2INSTALLERUPDATEBYPUBLIC}}"
