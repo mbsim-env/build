@@ -89,6 +89,7 @@ RUN function msys() { C:\msys64\usr\bin\bash.exe @('-lc') + @Args; } `
   mingw-w64-ucrt-x86_64-python-pywin32 `
   mingw-w64-ucrt-x86_64-python-attrs `
   mingw-w64-ucrt-x86_64-python-msgpack `
+  mingw-w64-ucrt-x86_64-gdb `
   ';
 
 SHELL ["c:\\msys64\\usr\\bin\\bash.exe", "-l", "-c"]
