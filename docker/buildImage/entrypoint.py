@@ -216,7 +216,7 @@ if build:
   os.environ["LDFLAGS"]=os.environ.get('LDFLAGS', '')+" -L/usr/lib64/boost169" # use boost 1.69 libraries (and includes, see --with-boost-inc)
   localRet=subprocess.call(
     ["/context/mbsimenv/build.py"]+ARGS+[
-    "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun",
+    "--toolJobs", "4", "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local", "-j", str(args.jobs), "--buildSystemRun",
     "--fmatvecBranch", args.fmatvecBranch,
     "--hdf5serieBranch", args.hdf5serieBranch, "--openmbvBranch", args.openmbvBranch,
     "--mbsimBranch", args.mbsimBranch, "--enableCleanPrefix",
