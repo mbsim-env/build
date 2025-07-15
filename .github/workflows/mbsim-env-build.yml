@@ -210,6 +210,7 @@ jobs:
         # https://github.com/microsoft/Windows-Containers/issues/559 
         run: >
           docker run
+          -j 1
           ${{matrix.data.os.dockerargs}}
           --init
           --label buildtype=${{matrix.data.os.buildType}}
