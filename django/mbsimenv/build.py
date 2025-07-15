@@ -411,7 +411,7 @@ def main():
   # ... and wait for all thread to finish
   for t in t_:
     t.join()
-  django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
+  django.db.connections.close_all() # close connections before finishing a process
   for toolName in toolDependencies:
     nrFailed+=toolDependencies[toolName]["nrFailed"].value
     nrRun+=toolDependencies[toolName]["nrRun"].value
@@ -518,6 +518,7 @@ def toolWorker(toolName, globalVars):
     toolPoolCondVar.notify()
   toolDependencies[toolName]["nrFailed"]=nrFailed
   toolDependencies[toolName]["nrRun"]=nrRun
+  django.db.connections.close_all() # close connections before finishing a process
 
 
 
@@ -1030,6 +1031,7 @@ def createDistribution(run):
 
 if __name__=="__main__":
   mainRet=main()
+  django.db.connections.close_all()
   if mainRet<0: # fatal error -> exit with 1
     sys.exit(1)
   if args.buildFailedExit is not None and mainRet!=0: # build/example errors and buildFailedExit set -> exit with buildFailedExit
