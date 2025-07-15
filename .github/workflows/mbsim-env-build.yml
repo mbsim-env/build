@@ -227,6 +227,7 @@ jobs:
           ${{startsWith(matrix.data.os.runsOn, 'windows') && ' ' || format('-v {0}/mbsim-env:{1}/mbsim-env', github.workspace, matrix.data.os.mountBase)}}
           -v ${{github.workspace}}/mbsim-ccache:${{matrix.data.os.mountBase}}/mbsim-ccache
           ${{matrix.data.os.image}}:${{env.MBSIMENVTAGNAME}}
+          -j 1
           --buildType ${{matrix.data.os.buildType}}
           --executor '<a class="MBSIMENV_EXECUTOR_GITHUBACTION" href="https://github.com/${{github.repository}}/actions/runs/${{github.run_id}}/attempts/${{github.run_attempt}}">GitHub Actions</a>'
           ${{github.run_attempt>1 && '--forceBuild' || ''}}
