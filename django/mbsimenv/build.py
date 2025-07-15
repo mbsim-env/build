@@ -201,18 +201,18 @@ else:
     os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_local"
 django.setup()
 
+# close unusable connections before model save()
+# (to avoid connection failures between two save() on the same model when a large time is in-between;
+#  e.g. firewalls may drop such TCP connections)
+def closeUnusableConnection(**kwargs):
+  connection=django.db.connections[kwargs["using"]]
+  connection.ensure_connection()
+  if not connection.is_usable(): connection.close()
+django.db.models.signals.pre_save.connect(closeUnusableConnection)
+
 
 
 def main():
-
-  # close unusable connections before model save()
-  # (to avoid connection failures between two save() on the same model when a large time is in-between;
-  #  e.g. firewalls may drop such TCP connections)
-  def closeUnusableConnection(**kwargs):
-    connection=django.db.connections[kwargs["using"]]
-    connection.ensure_connection()
-    if not connection.is_usable(): connection.close()
-  django.db.models.signals.pre_save.connect(closeUnusableConnection)
 
   if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
     localServer=base.helper.startLocalServer(args.localServerPort, django.conf.settings.MBSIMENV_TYPE=="localdocker")
