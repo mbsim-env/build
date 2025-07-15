@@ -18,6 +18,7 @@ import builds
 import tempfile
 import psutil
 import copy
+import multiprocessing
 
 if django.VERSION[0]!=3:
   print("Need django version 3. This is django version "+django.__version__)
@@ -56,6 +57,7 @@ def parseArguments():
   
   cfgOpts=argparser.add_argument_group('Configuration Options')
   cfgOpts.add_argument("-j", default=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psutil.cpu_count(False))), type=int, help="Number of jobs to run in parallel (for make and examples)")
+  cfgOpts.add_argument("--toolJobs", default=1, type=int, help="Number of tools to run in parallel (tool parallelization)")
   cfgOpts.add_argument("--forceBuild", action="store_true", help="Force building even if --buildSystemRun is used and no new commits exist")
   cfgOpts.add_argument("--buildTools", action="append", type=str, help="The list of tools to build. Build all tools if not specified.")
   
@@ -186,19 +188,22 @@ def removeOldBuilds():
     print("Deleted %d build runs being older than %d days!"%(nrDeleted, args.removeOlderThan))
 
 # the main routine being called ones
-def main():
-  parseArguments()
-  args.sourceDir=os.path.abspath(args.sourceDir)
+parseArguments()
+args.sourceDir=os.path.abspath(args.sourceDir)
 
-  mbsimenvSecrets.getSecrets()
-  if args.buildSystemRun:
-    os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
+mbsimenvSecrets.getSecrets()
+if args.buildSystemRun:
+  os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_buildsystem"
+else:
+  if os.path.isfile("/.dockerenv"):
+    os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_localdocker"
   else:
-    if os.path.isfile("/.dockerenv"):
-      os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_localdocker"
-    else:
-      os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_local"
-  django.setup()
+    os.environ["DJANGO_SETTINGS_MODULE"]="mbsimenv.settings_local"
+django.setup()
+
+
+
+def main():
 
   # close unusable connections before model save()
   # (to avoid connection failures between two save() on the same model when a large time is in-between;
@@ -219,84 +224,81 @@ def main():
 
   toolDependencies={
     #   |ToolName   |WillFail (if WillFail is true no Atom Feed error is reported if this Tool fails somehow)
-    'fmatvec': [False, [ # depends on
-      ]],
-    'hdf5serie/h5plotserie': [False, [ # depends on
+    'fmatvec': {"willFail": False, "dependsOn": [ # depends on
+      ]},
+    'hdf5serie/h5plotserie': {"willFail": False, "dependsOn": [ # depends on
         'hdf5serie/hdf5serie',
-      ]],
-    'hdf5serie/hdf5serie': [False, [ # depends on
+      ]},
+    'hdf5serie/hdf5serie': {"willFail": False, "dependsOn": [ # depends on
         'fmatvec',
-      ]],
-    'openmbv/mbxmlutils': [False, [ # depends on
+      ]},
+    'openmbv/mbxmlutils': {"willFail": False, "dependsOn": [ # depends on
         'fmatvec',
-      ]],
-    'openmbv/openmbv': [False, [ # depends on
+      ]},
+    'openmbv/openmbv': {"willFail": False, "dependsOn": [ # depends on
         'openmbv/openmbvcppinterface',
         'hdf5serie/hdf5serie',
-      ]],
-    'openmbv/openmbvcppinterface': [False, [ # depends on
+      ]},
+    'openmbv/openmbvcppinterface': {"willFail": False, "dependsOn": [ # depends on
         'hdf5serie/hdf5serie',
         'openmbv/mbxmlutils',
-      ]],
-    'mbsim/kernel': [False, [ # depends on
+      ]},
+    'mbsim/kernel': {"willFail": False, "dependsOn": [ # depends on
         'fmatvec',
         'openmbv/openmbvcppinterface',
-      ]],
-    'mbsim/modules/mbsimHydraulics': [False, [ # depends on
+      ]},
+    'mbsim/modules/mbsimHydraulics': {"willFail": False, "dependsOn": [ # depends on
         'mbsim/kernel',
         'mbsim/modules/mbsimControl',
-      ]],
-    'mbsim/modules/mbsimFlexibleBody': [False, [ # depends on
+      ]},
+    'mbsim/modules/mbsimFlexibleBody': {"willFail": False, "dependsOn": [ # depends on
         'mbsim/kernel',
         'mbsim/thirdparty/nurbs++',
-      ]],
-    'mbsim/thirdparty/nurbs++': [False, [ # depends on
-      ]],
-    'mbsim/modules/mbsimElectronics': [False, [ # depends on
+      ]},
+    'mbsim/thirdparty/nurbs++': {"willFail": False, "dependsOn": [ # depends on
+      ]},
+    'mbsim/modules/mbsimElectronics': {"willFail": False, "dependsOn": [ # depends on
         'mbsim/kernel',
         'mbsim/modules/mbsimControl',
-      ]],
-    'mbsim/modules/mbsimControl': [False, [ # depends on
+      ]},
+    'mbsim/modules/mbsimControl': {"willFail": False, "dependsOn": [ # depends on
         'mbsim/kernel',
-      ]],
-    'mbsim/modules/mbsimPhysics': [False, [ # depends on
+      ]},
+    'mbsim/modules/mbsimPhysics': {"willFail": False, "dependsOn": [ # depends on
         'mbsim/kernel',
-      ]],
-    'mbsim/modules/mbsimInterface': [False, [ # depends on
+      ]},
+    'mbsim/modules/mbsimInterface': {"willFail": False, "dependsOn": [ # depends on
         'mbsim/kernel',
         'mbsim/modules/mbsimControl',
-      ]],
-    'mbsim/mbsimxml': [False, [ # depends on
+      ]},
+    'mbsim/mbsimxml': {"willFail": False, "dependsOn": [ # depends on
         'mbsim/kernel',
         'openmbv/openmbvcppinterface',
         'openmbv/mbxmlutils',
-        # dependencies to mbsim modules are only required for correct xmldoc generation 
+        # dependencies to mbsim modules are only required for correct xmldoc generation and for testing
         'mbsim/modules/mbsimHydraulics',
         'mbsim/modules/mbsimFlexibleBody',
         'mbsim/modules/mbsimElectronics',
         'mbsim/modules/mbsimControl',
         'mbsim/modules/mbsimPhysics',
         'mbsim/modules/mbsimInterface',
-      ]],
-    'mbsim/mbsimgui': [False, [ # depends on
+      ]},
+    'mbsim/mbsimgui': {"willFail": False, "dependsOn": [ # depends on
         'openmbv/openmbv',
         'openmbv/mbxmlutils',
         'mbsim/mbsimxml',
-      ]],
-    'mbsim/mbsimfmi': [False, [ # depends on
+      ]},
+    'mbsim/mbsimfmi': {"willFail": False, "dependsOn": [ # depends on
         'mbsim/kernel',
         'mbsim/mbsimxml',
         'mbsim/modules/mbsimControl',
-      ]],
+      ]},
   }
   # add command line tools
   toolDependencies.update(copy.deepcopy(args.buildConfig.get("tools", {})))
-  # convert dependent list to set
+  # convert dependent list to set (since json does not support sets)
   for t in toolDependencies:
-    toolDependencies[t][1]=set(toolDependencies[t][1])
-
-  # extend the dependencies recursively
-  addAllDepencencies()
+    toolDependencies[t]["dependsOn"]=set(toolDependencies[t]["dependsOn"])
 
   # set docDir
   global docDir
@@ -360,22 +362,6 @@ def main():
   # set status on commit
   setGithubStatus(run, "pending")
 
-  # a sorted list of all tools te be build (in the correct order according the dependencies)
-  orderedBuildTools=list()
-  try:
-    sortBuildTools(set(toolDependencies) if args.buildTools is None else set(args.buildTools), orderedBuildTools)
-  except RecursionError:
-    print("ERROR: Recursive tool dependencies detected: Please check the 'tools' in the --buildConfig argument!")
-    return 1
-
-  # list tools which are not updated and must not be rebuild according dependencies
-  for toolName in set(toolDependencies)-set(orderedBuildTools):
-    tool=builds.models.Tool()
-    tool.run=run
-    tool.toolName=toolName
-    tool.willFail=toolDependencies[toolName][0]
-    tool.save()
-
   # remove all "*.gcno", "*.gcda" files
   if not args.disableMake and not args.disableMakeClean and args.coverage:
     for e in ["fmatvec", "hdf5serie", "openmbv", "mbsim"]:
@@ -384,16 +370,53 @@ def main():
           if os.path.splitext(f)[1]==".gcno": os.remove(pj(d, f))
           if os.path.splitext(f)[1]==".gcda": os.remove(pj(d, f))
 
-  # build the other tools in order
-  nr=1
-  for toolName in orderedBuildTools:
-    print("Building "+str(nr)+"/"+str(len(orderedBuildTools))+": "+toolName+": ", end="")
-    sys.stdout.flush()
-    nrFailedLocal, nrRunLocal=build(toolName, run)
-    if toolDependencies[toolName][0]==False:
-      nrFailed+=nrFailedLocal
-      nrRun+=nrRunLocal
-    nr+=1
+  # set default for buildTools
+  if args.buildTools is None:
+    args.buildTools = list(toolDependencies)
+
+  multiprocessing.set_start_method('spawn') # use same method on Window and Linux (= python>=3.14 default)
+  toolPoolCondVar=multiprocessing.Condition() # condition variable to notify about changes in toolPoolJobs
+  toolPoolJobs=multiprocessing.Value("i", lock=False) # the lock from the Condition variable one line above guards this
+  toolPoolJobs.value=0
+  # extend the tool list with the required variables to handle the parallelization
+  for toolName in toolDependencies:
+    toolDependencies[toolName]["toolCondVar"]=multiprocessing.Condition() # condition variable to notify about changes when a tool is done
+    toolDependencies[toolName]["toolDone"]=multiprocessing.Value("b", lock=False) # the lock from the Condition variable one line above guards this
+    toolDependencies[toolName]["toolDone"].value=False
+    toolDependencies[toolName]["toolNeedsBuild"]=False
+    toolDependencies[toolName]["nrFailed"]=multiprocessing.Value("i", lock=False) # no lock needed
+    toolDependencies[toolName]["nrRun"]=multiprocessing.Value("i", lock=False) # no lock needed
+  # set the toolNeedsBuild flag for all tools and its dependencies to True
+  # (this is just needed to check of this tool can be skipped or not)
+  def toolNeedsBuild(toolName):
+    toolDependencies[toolName]["toolNeedsBuild"]=True
+    for dep in toolDependencies[toolName]["dependsOn"]:
+      toolNeedsBuild(dep)
+  for toolName in args.buildTools:
+    toolNeedsBuild(toolName)
+  # create the worker thread for each tool ...
+  t_=[]
+  globalVars={ # can only contain read only variables or shared memory variables
+    "toolDependencies": toolDependencies,
+    "toolPoolCondVar": toolPoolCondVar,
+    "toolPoolJobs": toolPoolJobs,
+    "args": args,
+    "run": run,
+  }
+  django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
+  for toolName in toolDependencies:
+    t=multiprocessing.Process(target=toolWorker, args=(toolName,globalVars))
+    t.start()
+    t_.append(t)
+  # ... and wait for all thread to finish
+  for t in t_:
+    t.join()
+  django.db.connections.close_all() # multiprocessing forks on Linux which cannot be done with open database connections
+  for toolName in toolDependencies:
+    nrFailed+=toolDependencies[toolName]["nrFailed"].value
+    nrRun+=toolDependencies[toolName]["nrRun"].value
+
+  # update toolsFailed (added to database for performance reasons)
   run.toolsFailed=run.tools.filterFailed().count()
   run.save()
 
@@ -443,33 +466,58 @@ def main():
 
 
 
-def addAllDepencencies():
-  rec=False
-  for t in toolDependencies:
-    add=set()
-    oldLength=len(toolDependencies[t][1])
-    for d in toolDependencies[t][1]:
-      for a in toolDependencies[d][1]:
-        add.add(a)
-    for a in add:
-      toolDependencies[t][1].add(a)
-    newLength=len(toolDependencies[t][1])
-    if newLength>oldLength:
-      rec=True
-  if rec:
-    addAllDepencencies()
-
-
- 
-def sortBuildTools(buildTools, orderedBuildTools):
-  upToDate=set(toolDependencies)-buildTools
-  for bt in sorted(buildTools):
-    if len(toolDependencies[bt][1]-upToDate)==0:
-      orderedBuildTools.append(bt)
-      upToDate.add(bt)
-  buildTools-=set(orderedBuildTools)
-  if len(buildTools)>0:
-    sortBuildTools(buildTools, orderedBuildTools)
+# this worker thread is created for each tool in parallel ...
+def toolWorker(toolName, globalVars):
+  global toolDependencies, toolPoolCondVar, toolPoolJobs, args, run
+  toolDependencies = globalVars["toolDependencies"]
+  toolPoolCondVar = globalVars["toolPoolCondVar"]
+  toolPoolJobs = globalVars["toolPoolJobs"]
+  args = globalVars["args"]
+  run = globalVars["run"]
+  nrFailed=0
+  nrRun=0
+  # ... and waits until the toolDone flag of all dependent tools is True (to ensure the dependent tools are build before) ...
+  for dep in toolDependencies[toolName]["dependsOn"]:
+    with toolDependencies[dep]["toolCondVar"]:
+      while toolDependencies[dep]["toolDone"].value==False:
+        toolDependencies[dep]["toolCondVar"].wait()
+  # ... than it waits until less then args.toolJobs build jobs are running ...
+  with toolPoolCondVar:
+    while toolPoolJobs.value>=args.toolJobs:
+      toolPoolCondVar.wait()
+    # ... if so, the number of running jobs in the build pool is incremented and the build is run ...
+    toolPoolJobs.value+=1
+  if toolName in args.buildTools or toolDependencies[toolName]["toolNeedsBuild"]:
+    # ... by calling build(...) if the tool need to be build ...
+    if toolName in args.buildTools:
+      print(f"Building {toolName}: requested by user")
+    else:
+      print(f"Building {toolName}: needed as dependency")
+    # build toolName
+    nrFailedLocal, nrRunLocal=build(toolName, run)
+    if toolDependencies[toolName]["willFail"]==False:
+      nrFailed+=nrFailedLocal
+      nrRun+=nrRunLocal
+  else:
+    # ... or by just recording the tool in the DB if the tool does not need to be build ...
+    print(f"Building {toolName}: skipped, not requested by user and not needed as dependency")
+    sys.stdout.flush()
+    tool=builds.models.Tool()
+    tool.run=run
+    tool.toolName=toolName
+    tool.willFail=toolDependencies[toolName]["willFail"]
+    tool.save()
+  # ... when the build is finished, the buildDon flag of the tool is set a all waiting thread are notified ...
+  with toolDependencies[toolName]["toolCondVar"]:
+    toolDependencies[toolName]["toolDone"].value=True
+    toolDependencies[toolName]["toolCondVar"].notify_all()
+  # ... at the end the running jobs in the build pool is decremented and one other thread in the pool is notified
+  print(f"Finished {toolName}")
+  with toolPoolCondVar:
+    toolPoolJobs.value-=1
+    toolPoolCondVar.notify()
+  toolDependencies[toolName]["nrFailed"]=nrFailed
+  toolDependencies[toolName]["nrRun"]=nrRun
 
 
 
@@ -625,15 +673,13 @@ def build(toolName, run):
   tool=builds.models.Tool()
   tool.run=run
   tool.toolName=toolName
-  tool.willFail=toolDependencies[toolName][0]
+  tool.willFail=toolDependencies[toolName]["willFail"]
   tool.save()
 
   savedDir=os.getcwd()
   if not os.path.exists(pj(args.sourceDir, buildTool(tool.toolName))): os.makedirs(pj(args.sourceDir, buildTool(tool.toolName)))
 
   # configure
-  print("configure", end="")
-  sys.stdout.flush()
   failed, run=configure(tool)
   nrFailed+=failed
   nrRun+=run
@@ -643,37 +689,26 @@ def build(toolName, run):
   os.chdir(pj(args.sourceDir, buildTool(tool.toolName)))
 
   # make
-  print(", make", end="")
-  sys.stdout.flush()
   failed, run=make(tool)
   nrFailed+=failed
   nrRun+=run
 
   # make check
-  print(", check", end="")
-  sys.stdout.flush()
   failed, run=check(tool)
   nrFailed+=failed
   nrRun+=run
 
   # doxygen
-  print(", doxygen-doc", end="")
-  sys.stdout.flush()
   failed, run=doc(tool, args.disableDoxygen, "doc")
   nrFailed+=failed
   nrRun+=run
 
   # xmldoc
-  print(", xml-doc", end="")
-  sys.stdout.flush()
   failed, run=doc(tool, args.disableXMLDoc, "xmldoc")
   nrFailed+=failed
   nrRun+=run
 
   os.chdir(savedDir)
-
-  print("")
-  sys.stdout.flush()
 
   return nrFailed, nrRun
 
