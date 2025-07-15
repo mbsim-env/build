@@ -390,7 +390,8 @@ def runExamplesPartition(ARGS, pullExampleRepos, pullAll):
     "--suppressions=/usr/lib/valgrind/python3.supp "+\
     "--suppressions=/usr/lib/valgrind/debian.supp "+\
     "--leak-check=full --show-leak-kinds=definite,possible "+\
-    "--errors-for-leak-kinds=definite,possible"] if args.valgrindExamples else [])+\
+    "--errors-for-leak-kinds=definite,possible"] if args.valgrindExamples else \
+     ["--prefixSimulation", "gdb -q -n -batch --return-child-result -ex run -ex backtrace -ex quit --args"])+\
     ARGS+RUNEXAMPLESFILTER,
     env=runexamplesEnv)
   if localRet!=0:
