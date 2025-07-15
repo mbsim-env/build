@@ -258,7 +258,7 @@ def releaseDistribution(request, run_id):
   # check data
   if run.buildType!="msys2win64-dailyrelease" and run.buildType!="linux64-dailyrelease":
     return django.http.HttpResponseBadRequest("Illegal build type for release.")
-  if re.fullmatch("[0-9]+\.[0-9]+", releaseVersion) is None:
+  if re.fullmatch(r"[0-9]+\.[0-9]+", releaseVersion) is None:
     return django.http.HttpResponseBadRequest("The version does not match x.y, where x and y are numbers.")
   if service.models.Release.objects.filter(versionMajor=releaseVersion.split(".")[0], versionMinor=releaseVersion.split(".")[1],
                                            platform=platform).count()>0:

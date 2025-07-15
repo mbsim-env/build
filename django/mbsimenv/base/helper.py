@@ -374,7 +374,7 @@ def copyFile(fi, fo, returnSHA1HexDigest=False):
     if returnSHA1HexDigest:
       return m.hexdigest()
 
-getExecutorIDRE=re.compile("\WMBSIMENV_EXECUTOR_([a-zA-Z0-9_]+)")
+getExecutorIDRE=re.compile(r"\WMBSIMENV_EXECUTOR_([a-zA-Z0-9_]+)")
 def getExecutorID(executor):
   m=getExecutorIDRE.search(executor)
   if m is not None:
