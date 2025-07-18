@@ -927,9 +927,7 @@ def doc(tool, disabled, docDirName):
       print("\n\nRUNNING make clean\n", file=docFD); docFD.flush()
       if base.helper.subprocessCall([args.makeProg, "clean"], docFD)!=0:
         errStr=errStr+"make clean failed; "
-      print("\n\nRUNNING make\n", file=docFD); docFD.flush()
-      if base.helper.subprocessCall([args.makeProg, "-k"], docFD)!=0:
-        errStr=errStr+"make failed; "
+      # "make install" calls "make" calling both may run "make" twice -> to avoid this we just run "make install"
       print("\n\nRUNNING make install\n", file=docFD); docFD.flush()
       if base.helper.subprocessCall([args.makeProg, "-k", "install"], docFD)!=0:
         errStr=errStr+"make install failed; "
@@ -943,11 +941,9 @@ def doc(tool, disabled, docDirName):
       if existsTarget(tool, "doc-clean"):
         if base.helper.subprocessCall(["ninja", "-v", "%s-clean"%(docDirName)], docFD)!=0:
           errStr=errStr+"ninja %s-clean failed; "%(docDirName)
-        print("\n\nRUNNING ninja %s\n"%(docDirName), file=docFD); docFD.flush()
-        if base.helper.subprocessCall(["ninja", "-v", "-k", "1000000", "%s"%(docDirName)], docFD)!=0:
-          errStr=errStr+"ninja %s failed; "%(docDirName)
+        # "make install" calls "make" calling both may run "make" twice -> to avoid this we just run "make install"
         print("\n\nRUNNING ninja %s-install\n"%(docDirName), file=docFD); docFD.flush()
-        if base.helper.subprocessCall(["ninja", "-v", "%s-install"%(docDirName)], docFD)!=0:
+        if base.helper.subprocessCall(["ninja", "-v", "-k", "1000000", "%s-install"%(docDirName)], docFD)!=0:
           errStr=errStr+"ninja %s-install failed; "%(docDirName)
         if errStr!="": raise RuntimeError(errStr)
       else:
