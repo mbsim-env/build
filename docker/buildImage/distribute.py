@@ -12,6 +12,7 @@ import tempfile
 import codecs
 import glob
 import json
+import functools
 
 args=None
 platform=None
@@ -133,6 +134,10 @@ def adaptRPATH(name, orgName):
   except subprocess.CalledProcessError as ex:
     pass
 
+@functools.lru_cache(maxsize=None)
+def file_(name):
+  return subprocess.check_output(["file", name]).decode('utf-8')
+
 def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
   if depLibsDir is None:
     if platform=="linux":
@@ -185,7 +190,7 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
   # file -> add as file
   elif os.path.isfile(name):
     # file type
-    content=subprocess.check_output(["file", name]).decode('utf-8')
+    content=file_(name)
     if (platform=="linux" and re.search('ELF [0-9]+-bit LSB', content) is not None) or \
        (platform=="win"   and re.search('PE32\+? executable', content) is not None):
       # binary file
