@@ -785,7 +785,7 @@ def runExample(exRun, globalVars, example):
         ret=0
         for t in range(0, tries):
           print("Starting (try %d/%d):\n"%(t+1, tries)+"\n\n", file=outFD)
-          ret=base.helper.subprocessCall(prefixSimulation(tool)+exePrefix()+comm, outFD, env=guiEnvVars(displayNR), maxExecutionTime=(20 if args.prefixSimulationKeyword=='VALGRIND' else 5), stopRE=windowsOutputStopRE)
+          ret=base.helper.subprocessCall(prefixSimulation(tool)+exePrefix()+comm, outFD, env=guiEnvVars(displayNR), maxExecutionTime=(20 if args.prefixSimulationKeyword=='VALGRIND' else 10), stopRE=windowsOutputStopRE)
           print("\n\nReturned with "+str(ret), file=outFD)
           if ret==0 or not base.helper.subprocessOtherFailure(ret): # OK or real error -> stop more tries
             break
