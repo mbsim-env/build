@@ -911,7 +911,7 @@ def prefixSimulation(id):
 # get additional output files of simulations.
 # these are all dependent on the keyword of args.prefixSimulationKeyword.
 # additional output files must be placed in the args.reportOutDir and here only the basename must be returned.
-valgrindWrongErrorRE=re.compile("Memcheck:Cond\n( *obj:\*\n)+ *}")
+valgrindWrongErrorRE=re.compile("Memcheck:Cond\n( *obj:\\*\n)+ *}")
 def valgrindOutputAndAdaptRet(programType, ex):
   ret=0
   # handle VALGRIND
@@ -1707,7 +1707,7 @@ def coverage(exRun, lcovResultFile=None):
       return 0
 
     # get coverage rate
-    linesRE=re.compile("^ *lines\.*: *([0-9]+\.[0-9]+)% ")
+    linesRE=re.compile(r"^ *lines\.*: *([0-9]+\.[0-9]+)% ")
     for line in reversed(lcovFD.getData().splitlines()):
       m=linesRE.match(line)
       if m is not None:

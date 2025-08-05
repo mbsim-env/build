@@ -34,10 +34,10 @@ for arg in sys.argv[1:]:
   allsym={}
 
   for line in subprocess.check_output(["ldd", arg], stderr=open(os.devnull,"w")).decode('utf-8').splitlines():
-    match=re.search("^\s*(.+)\s=>\snot found$", line)
+    match=re.search(r"^\s*(.+)\s=>\snot found$", line)
     if match is not None:
       raise RuntimeError('Library '+match.expand("\\1")+' not found')
-    match=re.search("^.*\s=>\s(.+)\s\(0x[0-9a-fA-F]+\)$", line)
+    match=re.search(r"^.*\s=>\s(.+)\s\(0x[0-9a-fA-F]+\)$", line)
     if match is not None:
       deplib=os.path.realpath(match.expand("\\1"))
       for line2 in subprocess.check_output(["nm", "-D", deplib], stderr=open(os.devnull,"w")).decode('utf-8').splitlines():

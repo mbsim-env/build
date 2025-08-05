@@ -191,8 +191,8 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
   elif os.path.isfile(name):
     # file type
     content=file_(name)
-    if (platform=="linux" and re.search('ELF [0-9]+-bit LSB', content) is not None) or \
-       (platform=="win"   and re.search('PE32\+? executable', content) is not None):
+    if (platform=="linux" and re.search(r'ELF [0-9]+-bit LSB', content) is not None) or \
+       (platform=="win"   and re.search(r'PE32\+? executable', content) is not None):
       # binary file
 
       # do not add a file more than once
@@ -211,8 +211,8 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
       tmpDir=tempfile.mkdtemp()
       try:
         # strip or not
-        if ((re.search('ELF [0-9]+-bit LSB', content) is not None and re.search('not stripped', content) is not None) or \
-            (re.search('PE32\+? executable', content) is not None and re.search('stripped to external PDB', content) is None)) and \
+        if ((re.search(r'ELF [0-9]+-bit LSB', content) is not None and re.search('not stripped', content) is not None) or \
+            (re.search(r'PE32\+? executable', content) is not None and re.search('stripped to external PDB', content) is None)) and \
            not name.startswith("/3rdparty/local/python-win64/"):# do not strip python files (these are not build with mingw)
           # not stripped binary file
           try:
