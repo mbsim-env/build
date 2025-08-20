@@ -127,8 +127,10 @@ cfgOpts.add_argument("--disableValidate", action="store_true", help="disable val
 cfgOpts.add_argument("--printToConsole", action='store_const', const=sys.stdout, help="print all output also to the console")
 cfgOpts.add_argument("--buildType", default="local", type=str, help="Description of the build type (e.g: linux64-dailydebug) [default: %(default)s]")
 cfgOpts.add_argument("--executor", default='<span class="MBSIMENV_EXECUTOR_LOCAL">local</span>', type=str, help="The executor of this run (can contain simple HTML a-elements)")
-cfgOpts.add_argument("--prefixSimulation", default=[], type=lambda x: x.split(" "),
-  help="prefix the simulation command (./main, mbsimflatxml, mbsimxml) with this string: e.g. 'valgrind --tool=callgrind'")
+def splitWithNBSP(str):
+  return list(map(lambda x: x.replace("&nbsp;", " "), str.split(" ")))
+cfgOpts.add_argument("--prefixSimulation", default=[], type=splitWithNBSP,
+  help="prefix the simulation command (./main, mbsimflatxml, mbsimxml) with this string: e.g. 'valgrind --tool=callgrind'. If a space in a argument is needed use &nbsp;")
 cfgOpts.add_argument("--prefixSimulationKeyword", default=None, type=str,
   help="VALGRIND: add special arguments and handling for valgrind")
 cfgOpts.add_argument("--exeExt", default="", type=str, help="File extension of cross compiled executables (wine is used if set)")

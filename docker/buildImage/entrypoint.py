@@ -71,6 +71,8 @@ while True:
     time.sleep(0.5)
 django.db.connections.close_all()
 
+gdbPrefix = "gdb -q -n -batch --return-child-result -ex set&nbsp;trace-commands&nbsp;on -ex run -ex backtrace -ex info&nbsp;args -ex info&nbsp;locals -ex up -ex info&nbsp;args -ex info&nbsp;locals -ex up -ex info&nbsp;args -ex info&nbsp;locals -ex up -ex info&nbsp;args -ex info&nbsp;locals -ex up -ex info&nbsp;args -ex info&nbsp;locals -ex up -ex info&nbsp;args -ex info&nbsp;locals -ex quit --args"
+
 # run
 
 if build:
@@ -108,7 +110,7 @@ if build:
   # args
   if args.buildType == "linux64-ci":
     ARGS=["--disableDoxygen", "--disableXMLDoc"]
-    RUNEXAMPLESARGS=["--disableMakeClean", "--checkGUIs", "--prefixSimulation", "gdb -q -n -batch --return-child-result -ex run -ex backtrace -ex quit --args"]
+    RUNEXAMPLESARGS=["--disableMakeClean", "--checkGUIs", "--prefixSimulation", gdbPrefix]
     RUNEXAMPLESFILTER=["--filter", "'basic' in labels"]
   
     # get current/last image ID
@@ -124,14 +126,14 @@ if build:
       info.save()
   elif args.buildType.startswith("linux64-dailydebug"):
     ARGS=["--coverage", "--enableDistribution"]
-    RUNEXAMPLESARGS=["--checkGUIs", "--prefixSimulation", "gdb -q -n -batch --return-child-result -ex run -ex backtrace -ex quit --args"]
+    RUNEXAMPLESARGS=["--checkGUIs", "--prefixSimulation", gdbPrefix]
     RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] \
       if os.environ["MBSIMENVTAGNAME"]=="staging" or \
          not isMaster(args.fmatvecBranch) or not isMaster(args.hdf5serieBranch) or not isMaster(args.openmbvBranch) or not isMaster(args.mbsimBranch) \
          else ["--filter", "'nightly' in labels"])
   elif args.buildType.startswith("linux64-dailyrelease"):
     ARGS=["--enableDistribution"]
-    RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--prefixSimulation", "gdb -q -n -batch --return-child-result -ex run -ex backtrace -ex quit --args"]
+    RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--prefixSimulation", gdbPrefix]
     RUNEXAMPLESFILTER=["--filter", "'basic' in labels"]
   
   # pass arguments to build.py
@@ -391,7 +393,7 @@ def runExamplesPartition(ARGS, pullExampleRepos, pullAll):
     "--suppressions=/usr/lib/valgrind/debian.supp "+\
     "--leak-check=full --show-leak-kinds=definite,possible "+\
     "--errors-for-leak-kinds=definite,possible"] if args.valgrindExamples else \
-     ["--prefixSimulation", "gdb -q -n -batch --return-child-result -ex run -ex backtrace -ex quit --args"])+\
+     ["--prefixSimulation", gdbPrefix])+\
     ARGS+RUNEXAMPLESFILTER,
     env=runexamplesEnv)
   if localRet!=0:

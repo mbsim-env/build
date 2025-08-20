@@ -54,6 +54,8 @@ while True:
     time.sleep(0.5)
 django.db.connections.close_all()
 
+gdbPrefix = "gdb -q -n -batch --return-child-result -ex set&nbsp;trace-commands&nbsp;on -ex run -ex backtrace -ex info&nbsp;args -ex info&nbsp;locals -ex up -ex info&nbsp;args -ex info&nbsp;locals -ex up -ex info&nbsp;args -ex info&nbsp;locals -ex up -ex info&nbsp;args -ex info&nbsp;locals -ex up -ex info&nbsp;args -ex info&nbsp;locals -ex up -ex info&nbsp;args -ex info&nbsp;locals -ex quit --args"
+
 # run
 
 # clone repos if needed
@@ -75,7 +77,7 @@ if args.buildType == "msys2win64-dailyrelease":
   os.environ['CFLAGS']=os.environ.get('CFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
   os.environ['FFLAGS']=os.environ.get('FFLAGS', '')+" -g -O2 -gdwarf-2 -DNDEBUG"
   ARGS=["--enableDistribution"]
-  RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--filter", "'basic' in labels", "--prefixSimulation", "gdb -q -n -batch --return-child-result -ex run -ex backtrace -ex quit --args"]
+  RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--filter", "'basic' in labels", "--prefixSimulation", gdbPrefix]
   
 elif args.buildType == "msys2win64-ci":
   BUILDTYPE="Debug"
@@ -83,7 +85,7 @@ elif args.buildType == "msys2win64-ci":
   os.environ['CFLAGS']=os.environ.get('CFLAGS', '')+" -Og -g -gdwarf-2"
   os.environ['FFLAGS']=os.environ.get('FFLAGS', '')+" -Og -g -gdwarf-2"
   ARGS=["--disableDoxygen", "--disableXMLDoc"]
-  RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--disableMakeClean", "--filter", "'basic' in labels", "--prefixSimulation", "gdb -q -n -batch --return-child-result -ex run -ex backtrace -ex quit --args"]
+  RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--disableMakeClean", "--filter", "'basic' in labels", "--prefixSimulation", gdbPrefix]
 
   #mfmf# get current/last image ID
   #mfmfcurImageID=os.environ.get("MBSIMENVIMAGEID", None)
