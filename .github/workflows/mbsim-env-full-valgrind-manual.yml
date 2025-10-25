@@ -1,4 +1,4 @@
-name: Full build, like daily, but with user branchs (Manual)
+name: Full valgrind run with user branchs (Manual)
 on:
   workflow_dispatch:
     inputs:
@@ -235,34 +235,3 @@ jobs:
       djangoSecretKey: ${{secrets.djangoSecretKey}}
       postgresPassword: ${{secrets.postgresPassword}}
       filestoragePassword: ${{secrets.filestoragePassword}}
-
-
-
-  buildDoc:
-    name: "Build manuals"
-    runs-on: ubuntu-22.04
-    needs: buildPartitionedExamples
-    if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
-    steps:
-      - name: "Dump resources"
-        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
-      - name: "Docker: pull image"
-        run: docker image pull mbsimenv/builddoc:${{env.MBSIMENVTAGNAME}}
-      - name: "Docker: run container"
-        run: >
-          docker run
-          --init
-          --env MBSIMENVDATABASE
-          --env MBSIMENVFILESTORAGE
-          --env MBSIMENVSERVERNAME
-          --env MBSIMENVTAGNAME
-          --env mbsimenvsec_githubAccessToken
-          --env mbsimenvsec_mbsimenvAccessToken
-          --env mbsimenvsec_djangoSecretKey
-          --env mbsimenvsec_postgresPassword
-          --env mbsimenvsec_filestoragePassword
-          mbsimenv/builddoc:${{env.MBSIMENVTAGNAME}}
-          --mbsimBranch ${{fromJson(needs.buildPartitionedExamples.outputs.buildInfo).repo.mbsim}}
-      - name: "Dump resources"
-        if: ${{always()}}
-        run: echo ***df*** && df && echo ***free*** && free && echo ***cpu*** && grep -m 1 "model name" /proc/cpuinfo && grep -e processor -e "pyhsical id" -e siblings -e "core id" /proc/cpuinfo | sed -e 's|$|; |' | tr '\n' ' ' | sed -re "s+;  processor+\nprocessor+g" && echo
