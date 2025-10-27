@@ -26,7 +26,7 @@ RUN mkdir -p /mbsim-env && chown root:root /mbsim-env
 
 # proxy and
 # prepare env for starting programs in the vnc server
-ENV https_proxy=proxy:8888 \
+ENV https_proxy=http://proxy:8888 \
   XAUTHORITY=/tmp/mbsimwebapp-xauth \
   DISPLAY=:1
 #mfmf  COIN_FULL_INDIRECT_RENDERING=1
