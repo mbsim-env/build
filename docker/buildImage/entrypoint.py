@@ -106,6 +106,14 @@ else:
 def isMaster(branch):
   return branch=="master" or branch.startswith("master*")
 
+def dailyDebugBuildExamples():
+  if os.environ["MBSIMENVTAGNAME"]=="staging" or \
+     not isMaster(args.fmatvecBranch) or not isMaster(args.hdf5serieBranch) or \
+     not isMaster(args.openmbvBranch) or not isMaster(args.mbsimBranch):
+    return ["--filter", "'basic' in labels"]
+  else:
+    return ["--filter", "'nightly' in labels"]
+
 if build:
   # args
   if args.buildType == "linux64-ci":
@@ -127,10 +135,7 @@ if build:
   elif args.buildType.startswith("linux64-dailydebug"):
     ARGS=["--coverage", "--enableDistribution"]
     RUNEXAMPLESARGS=["--checkGUIs", "--prefixSimulation", gdbPrefix]
-    RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] \
-      if os.environ["MBSIMENVTAGNAME"]=="staging" or \
-         not isMaster(args.fmatvecBranch) or not isMaster(args.hdf5serieBranch) or not isMaster(args.openmbvBranch) or not isMaster(args.mbsimBranch) \
-         else ["--filter", "'nightly' in labels"])
+    RUNEXAMPLESFILTER=dailyDebugBuildExamples()
   elif args.buildType.startswith("linux64-dailyrelease"):
     ARGS=["--enableDistribution"]
     RUNEXAMPLESARGS=["--disableCompare", "--disableValidate", "--checkGUIs", "--prefixSimulation", gdbPrefix]
@@ -297,10 +302,7 @@ if build:
     valgrindEnv["HDF5SERIE_FIXAFTER"]=str(10*60*1000)#10min
     # run examples
     os.chdir("/mbsim-env/mbsim-valgrind/examples")
-    RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] \
-      if os.environ["MBSIMENVTAGNAME"]=="staging" or
-         not isMaster(args.fmatvecBranch) or not isMaster(args.hdf5serieBranch) or not isMaster(args.openmbvBranch) or not isMaster(args.mbsimBranch) \
-         else ["--filter", "'nightly' in labels"])
+    RUNEXAMPLESFILTER=dailyDebugBuildExamples()
     localRet=subprocess.call([sys.executable, "/context/mbsimenv/runexamples.py", "--checkGUIs", "--disableCompare", "--disableValidate", "--buildConfig", json.dumps(args.buildConfig),
       "--buildType", args.buildType+"-valgrind", "--executor", args.executor, "--buildSystemRun", "-j", str(args.jobs),
       "--buildRunID", str(buildInfo["buildRunID"])]+\
@@ -374,10 +376,7 @@ def runExamplesPartition(ARGS, pullExampleRepos, pullAll):
     runexamplesEnv["MBSIM_SET_MINIMAL_TEND"]="1"
     runexamplesEnv["HDF5SERIE_FIXAFTER"]=str(10*60*1000)#10min
   # build
-  RUNEXAMPLESFILTER=(["--filter", "'basic' in labels"] \
-    if os.environ["MBSIMENVTAGNAME"]=="staging" or \
-       not isMaster(args.fmatvecBranch) or not isMaster(args.hdf5serieBranch) or not isMaster(args.openmbvBranch) or not isMaster(args.mbsimBranch) \
-       else ["--filter", "'nightly' in labels"])
+  RUNEXAMPLESFILTER = ["--filter", "'basic' in labels"] if os.environ["MBSIMENVTAGNAME"]=="staging" else ["--filter", "'nightly' in labels"]
   localRet=subprocess.call([sys.executable, "/context/mbsimenv/runexamples.py", "--checkGUIs",
     "--buildType", args.buildType+("-valgrind" if args.valgrindExamples else ""), "--executor", args.executor,
     "--buildSystemRun", "-j", str(args.jobs),
