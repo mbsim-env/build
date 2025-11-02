@@ -82,17 +82,7 @@ everything comes along with the Docker image automatically and consistently.
 **Note that users of MBSim-Env should just download and install a [release of MBSim-Env](https://www.mbsim-env.de/service/releases/)!
 This section is for developers who want to build MBSim-Env inside of a Docker image!**
 
-You can also build (cross-compile) all MBSim-Env tools for Windows using a Docker image. You can than run the generated Windows
-executables using Wine on Linux or run these natively on a Windows PC.
-
-To build and run MBSim-Env for Windows just follow the instructions from the previous section but replace in 3. 
-`<mypath>/build/docker/buildScripts` with `<mypath>/build/docker/buildwin64Scripts`.
-The build directories are named `<mypath>/fmatvec-dockerwin64`, `<mypath>/hdf5serie-dockerwin64/hdf5serie`, ...
-
-The Docker image for the Windows build is about 8GB.
-
-It is recommended NOT to use the same base directory `<mypath>` for the Linux and Windows Docker build.
-This works in principle but causes problems due to different versions of the autotools build tools.
+TODO
 
 
 

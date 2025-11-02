@@ -79,9 +79,9 @@ if [ "$BASENAME" == "mbsbd" ]; then
       -e LDFLAGS \
       -e GIT_COMMITTER_NAME=dummy -e GIT_COMMITTER_EMAIL=dummy \
       -e HOME=/tmp/home \
-      -e PATH=".:/osupdate/local/bin:/usr/lib64/ccache:/mbsim-env/build/misc:/opt/rh/rh-git227/root/usr/bin:/opt/rh/devtoolset-7/root/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/3rdparty/local/bin:/mbsim-env/local-docker/bin" \
-      -e LD_LIBRARY_PATH="/mbsim-env/local-docker/lib:/mbsim-env/local-docker/lib64:/3rdparty/local/lib/octave/4.4.1:/opt/rh/httpd24/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib:/opt/rh/devtoolset-7/root/usr/lib64/dyninst:/opt/rh/devtoolset-7/root/usr/lib/dyninst:/opt/rh/devtoolset-7/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib:/osupdate/local/lib:/osupdate/local/lib64:/3rdparty/local/lib:/3rdparty/local/lib64" \
-      -e PKG_CONFIG_PATH="/osupdate/local/lib/pkgconfig:/osupdate/local/lib64/pkgconfig:/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfig:/mbsim-env/local-docker/lib/pkgconfig:/mbsim-env/local-docker/lib64/pkgconfig" \
+      -e PATH=".:/usr/lib64/ccache:/mbsim-env/build/misc:/opt/rh/rh-git227/root/usr/bin:/opt/rh/devtoolset-7/root/usr/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/3rdparty/local/bin:/mbsim-env/local-docker/bin" \
+      -e LD_LIBRARY_PATH="/mbsim-env/local-docker/lib:/mbsim-env/local-docker/lib64:/3rdparty/local/lib/octave/4.4.1:/opt/rh/httpd24/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib:/opt/rh/devtoolset-7/root/usr/lib64/dyninst:/opt/rh/devtoolset-7/root/usr/lib/dyninst:/opt/rh/devtoolset-7/root/usr/lib64:/opt/rh/devtoolset-7/root/usr/lib:/3rdparty/local/lib:/3rdparty/local/lib64" \
+      -e PKG_CONFIG_PATH="/3rdparty/local/lib/pkgconfig:/3rdparty/local/lib64/pkgconfig:/mbsim-env/local-docker/lib/pkgconfig:/mbsim-env/local-docker/lib64/pkgconfig" \
       -e MBSIM_SET_MINIMAL_TEND \
       -e MBXMLUTILS_DEACTIVATE_BLOCK \
       -w "$CURDIR" \
