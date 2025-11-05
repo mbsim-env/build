@@ -1296,94 +1296,100 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
   import numpy
   import h5py
 
-  if isinstance(refObj, h5py.Dataset):
-    # add to refMemberNames
-    refMemberNames.add(datasetName)
-    # the corresponding curObj to refObj
-    try:
-      curObj=h5CurFile[datasetName]
-    except KeyError:
-      cmpRes=runexamples.models.CompareResult()
-      cmpRess.append(cmpRes)
-      cmpRes.compareResultFile=cmpResFile
-      cmpRes.dataset=datasetName
-      cmpRes.result=runexamples.models.CompareResult.Result.DATASETNOTINCUR
+  if not isinstance(refObj, h5py.Dataset):
+    return
+
+  # add to refMemberNames
+  refMemberNames.add(datasetName)
+
+  if numpy.issubdtype(refObj.dtype, numpy.character):
+    return
+
+  # the corresponding curObj to refObj
+  try:
+    curObj=h5CurFile[datasetName]
+  except KeyError:
+    cmpRes=runexamples.models.CompareResult()
+    cmpRess.append(cmpRes)
+    cmpRes.compareResultFile=cmpResFile
+    cmpRes.dataset=datasetName
+    cmpRes.result=runexamples.models.CompareResult.Result.DATASETNOTINCUR
+    saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
+    nrFailed[0]+=1
+    return
+  # get shape
+  refObjCols=refObj.shape[1] if len(refObj.shape)==2 else 1
+  curObjCols=curObj.shape[1] if len(curObj.shape)==2 else 1
+  def toUTF8(x):
+    return x.decode("utf-8") if type(x)==bytes else x
+  # get labels from reference
+  try:
+    refLabels=list(map(lambda x: toUTF8(x), refObj.attrs["Column Label"]))
+    # append missing dummy labels
+    for x in range(len(refLabels), refObjCols):
+      refLabels.append('<no label in ref. for col. '+str(x+1)+'>')
+  except KeyError:
+    refLabels=list(map(
+      lambda x: '<no label for col. '+str(x+1)+'>',
+      range(refObjCols)))
+  # get labels from current
+  try:
+    curLabels=list(map(lambda x: toUTF8(x), curObj.attrs["Column Label"]))
+    # append missing dummy labels
+    for x in range(len(curLabels), curObjCols):
+      curLabels.append('<no label in cur. for col. '+str(x+1)+'>')
+  except KeyError:
+    curLabels=list(map(
+      lambda x: '<no label for col. '+str(x+1)+'>',
+      range(refObjCols)))
+  # loop over all columns
+  for column in range(refObjCols):
+    cmpRes=runexamples.models.CompareResult()
+    cmpRess.append(cmpRes)
+    cmpRes.compareResultFile=cmpResFile
+    cmpRes.dataset=datasetName
+    cmpRes.label=refLabels[column]
+    cmpRes.result=runexamples.models.CompareResult.Result.PASSED
+    # if if curObj[:,column] does not exitst
+    if column>=curObjCols:
+      cmpRes.result=runexamples.models.CompareResult.Result.LABELNOTINCUR
       saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
       nrFailed[0]+=1
-      return
-    # get shape
-    refObjCols=refObj.shape[1] if len(refObj.shape)==2 else 1
-    curObjCols=curObj.shape[1] if len(curObj.shape)==2 else 1
-    def toUTF8(x):
-      return x.decode("utf-8") if type(x)==bytes else x
-    # get labels from reference
-    try:
-      refLabels=list(map(lambda x: toUTF8(x), refObj.attrs["Column Label"]))
-      # append missing dummy labels
-      for x in range(len(refLabels), refObjCols):
-        refLabels.append('<no label in ref. for col. '+str(x+1)+'>')
-    except KeyError:
-      refLabels=list(map(
-        lambda x: '<no label for col. '+str(x+1)+'>',
-        range(refObjCols)))
-    # get labels from current
-    try:
-      curLabels=list(map(lambda x: toUTF8(x), curObj.attrs["Column Label"]))
-      # append missing dummy labels
-      for x in range(len(curLabels), curObjCols):
-        curLabels.append('<no label in cur. for col. '+str(x+1)+'>')
-    except KeyError:
-      curLabels=list(map(
-        lambda x: '<no label for col. '+str(x+1)+'>',
-        range(refObjCols)))
-    # loop over all columns
-    for column in range(refObjCols):
-      cmpRes=runexamples.models.CompareResult()
-      cmpRess.append(cmpRes)
-      cmpRes.compareResultFile=cmpResFile
-      cmpRes.dataset=datasetName
-      cmpRes.label=refLabels[column]
-      cmpRes.result=runexamples.models.CompareResult.Result.PASSED
-      # if if curObj[:,column] does not exitst
-      if column>=curObjCols:
-        cmpRes.result=runexamples.models.CompareResult.Result.LABELNOTINCUR
-        saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
-        nrFailed[0]+=1
-      if not column<curObjCols or refLabels[column]!=curLabels[column]:
-        cmpRes.result=runexamples.models.CompareResult.Result.LABELDIFFER
-        saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
-        nrFailed[0]+=1
-      if column>=curObjCols or curObj.shape[0]<=0 or curObj.shape[0]<=0: # not row in curObj or refObj
-        cmpRes.result=runexamples.models.CompareResult.Result.LABELMISSING
-        saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
-        nrFailed[0]+=1
-      else: # only if curObj and refObj contains data (rows)
-        # check for difference
-        refObjCol=getColumn(refObj,column)
-        curObjCol=getColumn(curObj,column)
-        if (refObjCol.shape[0]!=curObjCol.shape[0]) or \
-           (args.rtolminmax is None and \
-             not numpy.all(numpy.isclose(curObjCol, refObjCol, rtol=args.rtol, atol=args.atol, equal_nan=True))) or \
-           (args.rtolminmax is not None and \
-             not numpy.all(numpy.isclose(curObjCol, refObjCol, rtol=0, atol= \
-               max((numpy.max(refObjCol)-numpy.min(refObjCol)) * args.rtolminmax, args.atol), equal_nan=True))):
-          nrFailed[0]+=1
-          cmpRes.result=runexamples.models.CompareResult.Result.FAILED
-          if refObjCol.shape[0]==curObjCol.shape[0]:
-            cmpRes.rtolminmax = max(abs(refObjCol-curObjCol))/(numpy.max(refObjCol)-numpy.min(refObjCol))
-          else:
-            cmpRes.rtolminmax = 1e100
-          saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
-    # check for labels/columns in current but not in reference
-    for label in curLabels[len(refLabels):]:
-      cmpRes=runexamples.models.CompareResult()
-      cmpRess.append(cmpRes)
-      cmpRes.compareResultFile=cmpResFile
-      cmpRes.dataset=datasetName
-      cmpRes.label=label
-      cmpRes.result=runexamples.models.CompareResult.Result.LABELNOTINREF
+    if not column<curObjCols or refLabels[column]!=curLabels[column]:
+      cmpRes.result=runexamples.models.CompareResult.Result.LABELDIFFER
       saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
       nrFailed[0]+=1
+    if column>=curObjCols or curObj.shape[0]<=0 or curObj.shape[0]<=0: # not row in curObj or refObj
+      cmpRes.result=runexamples.models.CompareResult.Result.LABELMISSING
+      saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
+      nrFailed[0]+=1
+    else: # only if curObj and refObj contains data (rows)
+      # check for difference
+      refObjCol=getColumn(refObj,column)
+      curObjCol=getColumn(curObj,column)
+      if (refObjCol.shape[0]!=curObjCol.shape[0]) or \
+         (args.rtolminmax is None and \
+           not numpy.all(numpy.isclose(curObjCol, refObjCol, rtol=args.rtol, atol=args.atol, equal_nan=True))) or \
+         (args.rtolminmax is not None and \
+           not numpy.all(numpy.isclose(curObjCol, refObjCol, rtol=0, atol= \
+             max((numpy.max(refObjCol)-numpy.min(refObjCol)) * args.rtolminmax, args.atol), equal_nan=True))):
+        nrFailed[0]+=1
+        cmpRes.result=runexamples.models.CompareResult.Result.FAILED
+        if refObjCol.shape[0]==curObjCol.shape[0]:
+          cmpRes.rtolminmax = max(abs(refObjCol-curObjCol))/(numpy.max(refObjCol)-numpy.min(refObjCol))
+        else:
+          cmpRes.rtolminmax = 1e100
+        saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
+  # check for labels/columns in current but not in reference
+  for label in curLabels[len(refLabels):]:
+    cmpRes=runexamples.models.CompareResult()
+    cmpRess.append(cmpRes)
+    cmpRes.compareResultFile=cmpResFile
+    cmpRes.dataset=datasetName
+    cmpRes.label=label
+    cmpRes.result=runexamples.models.CompareResult.Result.LABELNOTINREF
+    saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
+    nrFailed[0]+=1
 
 def appendDatasetName(curMemberNames, datasetName, curObj):
   import h5py
