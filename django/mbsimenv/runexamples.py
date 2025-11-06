@@ -1296,13 +1296,19 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
   import numpy
   import h5py
 
+  # skip none datasets
   if not isinstance(refObj, h5py.Dataset):
     return
 
   # add to refMemberNames
   refMemberNames.add(datasetName)
 
+  # skip datasets of type string
   if numpy.issubdtype(refObj.dtype, numpy.character):
+    return
+
+  # skip datasets with 0 dimensions
+  if len(refObj.shape)==0:
     return
 
   # the corresponding curObj to refObj
