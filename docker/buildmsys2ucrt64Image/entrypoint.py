@@ -130,7 +130,6 @@ ret=subprocess.call(
   "--executor", args.executor,
   "--buildConfig", json.dumps(args.buildConfig),
   "--passToConfigure", "--enable-shared", "--disable-static",
-  "--with-boost-system-lib=boost_system-mt",
   "--with-boost-filesystem-lib=boost_filesystem-mt",
   "--with-boost-iostreams-lib=boost_iostreams-mt",
   "--with-boost-chrono-lib=boost_chrono-mt",

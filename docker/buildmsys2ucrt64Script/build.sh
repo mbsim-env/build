@@ -117,7 +117,6 @@ while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1
   --enable-python \
   --with-qwt-inc-prefix=/ucrt64/include/qwt-qt5 \
   --with-qwt-lib-name=qwt-qt5 \
-  --with-boost-system-lib=boost_system-mt \
   --with-boost-filesystem-lib=boost_filesystem-mt \
   --with-boost-iostreams-lib=boost_iostreams-mt \
   --with-boost-chrono-lib=boost_chrono-mt \
