@@ -299,7 +299,7 @@ def addReadme():
 NOTE:
 %s
 
-- Unpack the archive to an arbitary directory (already done)
+- Unpack the archive to an arbitrary directory (already done)
   (Note: It is recommended, that the full directory path where the archive
   is unpacked does not contain any spaces.)
 - Test the installation:
@@ -307,15 +307,13 @@ NOTE:
      installation. This will run some MBSim examples, some OpenMBVC++Interface
      SWIG examples and the programs h5plotserie, openmbv and mbsimgui.
      It can also be used to byte-compile all contained Python code using --compile
-  2) To Enable also the OpenMBVC++Interface SWIG python example ensure that
-     "python" is in your PATH and set the envvar MBSIMENV_TEST_PYTHON=1.
-     To Enable also the OpenMBVC++Interface SWIG java example ensure that
+  2) Optionally, to enable the OpenMBVC++Interface SWIG java example ensure that
      "java" is in your PATH and set the envvar MBSIMENV_TEST_JAVA=1.
 - Try any of the programs in <install-dir>/mbsim-env/bin
-- Build your own models using XML and run it with
-  <install-dir>/mbsim-env/bin/mbsimxml <mbsim-project-file.xml>
-  View the plots with h5plotserie and view the animation with openmbv.
 - Build your own models using the GUI: <install-dir>/mbsim-env/bin/mbsimgui
+- Run your own models from command line using
+  <install-dir>/mbsim-env/bin/mbsimxml <mbsim-project-file.mbsx>
+- View the plots with h5plotserie and view the 3D animation with openmbv.
 
 Have fun!
 '''%(note, scriptExt)
