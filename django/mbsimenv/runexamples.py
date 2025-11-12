@@ -763,7 +763,7 @@ def runExample(exRun, globalVars, example):
 
     if args.checkGUIs:
       # get files to load
-      ombvFiles=mainFiles(glob.glob("*.ombvx"), ".", ".ombvx")
+      ombvFiles=mainFiles(glob.glob("*.ombvh5"), ".", ".ombvh5")
       h5pFiles=mainFiles(glob.glob("*.mbsh5"), ".", ".mbsh5")
       guiFile=None
       if ppxmlFile() is not None:
