@@ -807,6 +807,18 @@ def main():
   # add some examples
   addExamples()
 
+  # add additional dirs from buildConfig
+  for dd in args.buildConfig.get("distributeDirs", []):
+    if not os.path.isdir(dd["src"]): # if the src dir in the buildConfig does not exits skip the dir (this allows to define windows and linux dirs)
+      continue
+    exclude=[]
+    for exGlob in dd["excludeGlob"]:
+      exclude.extend(map(lambda x: os.path.basename(x), glob.glob(dd["src"]+"/"+exGlob)))
+    for entry in os.listdir(dd["src"]):
+      if entry in exclude:
+        continue
+      addFileToDist(dd["src"]+"/"+entry, dd["dst"]+"/"+entry, addDepLibs=False)
+
   # close archives
   print("")
   print("Finished")
