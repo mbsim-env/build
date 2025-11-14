@@ -287,11 +287,14 @@ class DataTableExample(base.views.DataTable):
     ret+=self._valgrindDropdown(ds, "guitest_")
     return ret
   def colSortKey_guiTest(self, ds):
-    m={None:                                            0,
-       runexamples.models.Example.RunResult.PASSED:     1,
-       runexamples.models.Example.RunResult.FAILED:    10,
-       runexamples.models.Example.RunResult.WARNING:  100}
-    return -(m[ds.guiTestOpenmbvOK]+m[ds.guiTestHdf5serieOK]+m[ds.guiTestMbsimguiOK])
+    m={None:                                                 0,
+       runexamples.models.Example.RunResult.PASSED:        100,
+       runexamples.models.Example.RunResult.FAILED:      10000,
+       runexamples.models.Example.RunResult.WARNING:  10000000}
+    sort = -(m[ds.guiTestOpenmbvOK]+m[ds.guiTestHdf5serieOK]+m[ds.guiTestMbsimguiOK])
+    if ds.willFail:
+      sort /= 2
+    return sort
 
   def colData_ref(self, ds):
     refUrl=django.urls.reverse('runexamples:compareresult', args=[ds.id])
