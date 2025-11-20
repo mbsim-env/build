@@ -1003,14 +1003,17 @@ def createDistribution(run):
     distLog=io.StringIO()
     distributeErrorCode=base.helper.subprocessCall([sys.executable, os.path.dirname(os.path.realpath(__file__))+"/../distribute.py",
                           "--outDir", tempDir, "--buildConfig", json.dumps(args.buildConfig), args.prefix if args.prefix is not None else args.prefixAuto], distLog)
-    run.distributionOK=distributeErrorCode==0
-    run.distributionOutput=distLog.getvalue().replace("\0", "&#00;")
-    distLog.close()
-    if distributeErrorCode==0:
-      lines=run.distributionOutput.splitlines()
-      run.distributionFileName=[x[len("distArchiveName="):] for x in lines if x.startswith("distArchiveName=")][0].rstrip()
-      run.distributionDebugFileName=[x[len("debugArchiveName="):] for x in lines if x.startswith("debugArchiveName=")][0].rstrip()
+    try:
+      run.distributionOK=distributeErrorCode==0
+      run.distributionOutput=distLog.getvalue().replace("\0", "&#00;")
+      distLog.close()
+      if distributeErrorCode==0:
+        lines=run.distributionOutput.splitlines()
+        run.distributionFileName=[x[len("distArchiveName="):] for x in lines if x.startswith("distArchiveName=")][0].rstrip()
+        run.distributionDebugFileName=[x[len("debugArchiveName="):] for x in lines if x.startswith("debugArchiveName=")][0].rstrip()
+    finally:
       run.save()
+    if distributeErrorCode==0:
       with run.distributionFile.open("wb") as fo:
         with open(tempDir+"/"+run.distributionFileName, "rb") as fi:
           base.helper.copyFile(fi, fo)
