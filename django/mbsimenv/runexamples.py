@@ -1006,7 +1006,7 @@ def executeSrcExample(ex, executeFD):
     mainEnv[NAME]=libDir
   # run main
   t0=datetime.datetime.now()
-  ret=abs(base.helper.subprocessCall(prefixSimulation('source')+exePrefix()+[pj(os.curdir, "main")], executeFD,
+  ret=abs(base.helper.subprocessCall(prefixSimulation('source')+[pj(os.curdir, "main")], executeFD,
                          env=mainEnv, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
@@ -1033,7 +1033,7 @@ def executeXMLExample(ex, executeFD, env=os.environ):
   ex.webappMbsimgui=True
   executeFD.flush()
   t0=datetime.datetime.now()
-  ret=abs(base.helper.subprocessCall(prefixSimulation('mbsimxml')+exePrefix()+[pj(mbsimBinDir, "mbsimxml")]+
+  ret=abs(base.helper.subprocessCall(prefixSimulation('mbsimxml')+[pj(mbsimBinDir, "mbsimxml")]+
                          exePathConvert([prjFile]), executeFD, env=env, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
@@ -1059,7 +1059,7 @@ def executeFlatXMLExample(ex, executeFD):
   ex.webappMbsimgui=True
   executeFD.flush()
   t0=datetime.datetime.now()
-  ret2=abs(base.helper.subprocessCall(prefixSimulation('mbsimflatxml')+exePrefix()+[pj(mbsimBinDir, "mbsimflatxml"),
+  ret2=abs(base.helper.subprocessCall(prefixSimulation('mbsimflatxml')+[pj(mbsimBinDir, "mbsimflatxml"),
        exePathConvert(flatxmlFile())], executeFD, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
@@ -1090,7 +1090,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   if cosim: cosimArg=['--cosim']
   noparamArg=[]
   if "noparam" in labels: noparamArg=['--noparam']
-  comm=exePrefix()+[pj(mbsimBinDir, "mbsimCreateFMU"), '--nocompress']+cosimArg+noparamArg+[exePathConvert(fmiInputFile)]
+  comm=[pj(mbsimBinDir, "mbsimCreateFMU"), '--nocompress']+cosimArg+noparamArg+[exePathConvert(fmiInputFile)]
   ret1=abs(base.helper.subprocessCall(prefixSimulation('mbsimCreateFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
   if valgrindOutputAndAdaptRet("example_fmi_create", ex)!=0: ret1=valgrindErrorCode
 
@@ -1111,7 +1111,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
     endTime=['-s', '0.01']
   if os.path.isdir("tmp_fmuCheck"): shutil.rmtree("tmp_fmuCheck")
   os.mkdir("tmp_fmuCheck")
-  comm=exePrefix()+[pj(mbsimBinDir, fmuCheck)]+endTime+["-f", "-l", "4", "-o", "fmuCheck.result.csv", "-z", "tmp_fmuCheck", "mbsim.fmu"]
+  comm=[pj(mbsimBinDir, fmuCheck)]+endTime+["-f", "-l", "4", "-o", "fmuCheck.result.csv", "-z", "tmp_fmuCheck", "mbsim.fmu"]
   t0=datetime.datetime.now()
   ret2=abs(base.helper.subprocessCall(prefixSimulation('fmuCheck')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
@@ -1156,7 +1156,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   # run using mbsimTestFMU
   print("\n\n\n", file=executeFD)
   print("Running command:", file=executeFD)
-  comm=exePrefix()+[pj(mbsimBinDir, "mbsimTestFMU")]+cosimMEArg+["tmp_mbsimTestFMU"]
+  comm=[pj(mbsimBinDir, "mbsimTestFMU")]+cosimMEArg+["tmp_mbsimTestFMU"]
   ret3=abs(base.helper.subprocessCall(prefixSimulation('mbsimTestFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
   if valgrindOutputAndAdaptRet("example_fmi_mbsimTestFMU", ex)!=0: ret3=valgrindErrorCode
 
@@ -1574,7 +1574,7 @@ def validateXML(ex):
         outputFD=base.helper.MultiFile(args.printToConsole)
         print("Running command:", file=outputFD)
         xmlOut.resultOK=True
-        if base.helper.subprocessCall(exePrefix()+[mbxmlutilsvalidate]+\
+        if base.helper.subprocessCall([mbxmlutilsvalidate]+\
            (["--xmlCatalog", exePathConvert(xmlCatalog)] if xmlCatalog else [])+\
            [pj(root, filename)], outputFD)!=0:
           nrFailed+=1
