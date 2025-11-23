@@ -18,11 +18,8 @@ import traceback
 import re
 import hashlib
 import codecs
-import time
 import zipfile
 import tempfile
-import urllib.request
-import urllib.parse
 import django
 import base.helper
 import mbsimenvSecrets
@@ -133,7 +130,6 @@ cfgOpts.add_argument("--prefixSimulation", default=[], type=splitWithNBSP,
   help="prefix the simulation command (./main, mbsimflatxml, mbsimxml) with this string: e.g. 'valgrind --tool=callgrind'. If a space in a argument is needed use &nbsp;")
 cfgOpts.add_argument("--prefixSimulationKeyword", default=None, type=str,
   help="VALGRIND: add special arguments and handling for valgrind")
-cfgOpts.add_argument("--exeExt", default="", type=str, help="File extension of cross compiled executables (wine is used if set)")
 cfgOpts.add_argument("--maxExecutionTime", default=30, type=float, help="The time in minutes after started program timed out [default: %(default)s]")
 cfgOpts.add_argument("--coverage", action="store_true", help='Enable coverage analyzis using gcov/lcov')
 cfgOpts.add_argument("--sourceDir", default=None, type=str, help='[needed by coverage and valgrind]')
@@ -208,7 +204,6 @@ if exampleFilters is not None:
     if exampleFilter is not None:
       args.filter = exampleFilter
 
-windowsOutputStopRE=re.compile("Application tried to create a window, but no driver could be loaded")
 def guiEnvVars(displayNR):
   denv=os.environ.copy()
   denv["DISPLAY"]=":"+str(displayNR)
@@ -391,16 +386,16 @@ def main():
   if normalRun or args.partition:
     # get mbxmlutilsvalidate program
     global mbxmlutilsvalidate, xmlCatalog
-    mbxmlutilsvalidate=pj(pkgconfig("mbxmlutils", ["--variable=BINDIR"]), "mbxmlutilsvalidate"+args.exeExt)
+    mbxmlutilsvalidate=pj(pkgconfig("mbxmlutils", ["--variable=BINDIR"]), "mbxmlutilsvalidate")
     if not os.path.isfile(mbxmlutilsvalidate):
-      mbxmlutilsvalidate="mbxmlutilsvalidate"+args.exeExt
+      mbxmlutilsvalidate="mbxmlutilsvalidate"
     # set global dirs
     global mbsimBinDir
     mbsimBinDir=pkgconfig("mbsim", ["--variable=bindir"])
     # get schema files
     # create mbsimxml schema
     xmlCatalog="/tmp/.runexamples.catalog.xml"
-    if subprocess.call(exePrefix()+[pj(mbsimBinDir, "mbsimxml"+args.exeExt), "--dumpXMLCatalog", exePathConvert(xmlCatalog)])!=0:
+    if subprocess.call([pj(mbsimBinDir, "mbsimxml"), "--dumpXMLCatalog", exePathConvert(xmlCatalog)])!=0:
       xmlCatalog=None
       print("Error: 'mbsimxml --dumpXMLCatalog <file>' failed. Trying to continue without schema files.", file=sys.stderr)
 
@@ -417,13 +412,6 @@ def main():
         displayNR=displayNR+1
         if displayNR>100:
           raise RuntimeError("Cannot find a free DISPLAY for vnc server.")
-      if exePrefix()==["wine"]:
-        print("Starting a dummy Windows GUI program (h5plotserie) and close it again. " \
-              "This is needed to avoid failures in wine if the first GUI program is started while a none GUI program is running. " \
-              "(This is a strange 'bug' in wine)")
-        ret=base.helper.subprocessCall(exePrefix()+[pj(mbsimBinDir, "h5plotserie"+args.exeExt), "--autoExit"], open(os.devnull, 'w'), env=guiEnvVars(displayNR), maxExecutionTime=5, stopRE=windowsOutputStopRE)
-        if ret!=0:
-          print("Failed to start the dummy Windows GUI program. Return code: "+str(ret))
 
     try:
       multiprocessing.set_start_method('spawn') # use same method on Window and Linux (= python>=3.14 default)
@@ -728,7 +716,7 @@ def runExample(exRun, globalVars, example):
       # remove lock from all h5 file, just to avoid the the results depend on crashes of previous runs
       lockFiles=glob.glob("*.ombvh5")+glob.glob("*.mbsh5")
       if len(lockFiles)>0:
-        base.helper.subprocessCall(exePrefix()+[pj(mbsimBinDir, "h5lockserie"+args.exeExt), "--remove"]+exePathConvert(lockFiles),
+        base.helper.subprocessCall([pj(mbsimBinDir, "h5lockserie"), "--remove"]+exePathConvert(lockFiles),
                                    executeFD, maxExecutionTime=1)
 
       # clean output of previous run
@@ -779,19 +767,10 @@ def runExample(exRun, globalVars, example):
         retLocal=0
         if len(files)==0:
           return []
-        # at least on Windows (wine) the DISPLAY is not found sometimes (unknown why). Hence, try this number of times before reporting an error
-        tries=20 if exePrefix()==["wine"] else 1
         outFD=base.helper.MultiFile(args.printToConsole)
-        comm=[pj(mbsimBinDir, tool+args.exeExt), "--autoExit"]+exePathConvert(files)
-        # if this string is found in the output (wine output) then stop the execution immediately
-        ret=0
-        for t in range(0, tries):
-          print("Starting (try %d/%d):\n"%(t+1, tries)+"\n\n", file=outFD)
-          ret=base.helper.subprocessCall(prefixSimulation(tool)+exePrefix()+comm, outFD, env=guiEnvVars(displayNR), maxExecutionTime=(20 if args.prefixSimulationKeyword=='VALGRIND' else 10), stopRE=windowsOutputStopRE)
-          print("\n\nReturned with "+str(ret), file=outFD)
-          if ret==0 or not base.helper.subprocessOtherFailure(ret): # OK or real error -> stop more tries
-            break
-          if t+1<tries: time.sleep(10) # wait some time, a direct next test will likely also fail (see above)
+        comm=[pj(mbsimBinDir, tool), "--autoExit"]+exePathConvert(files)
+        ret=base.helper.subprocessCall(prefixSimulation(tool)+comm, outFD, env=guiEnvVars(displayNR), maxExecutionTime=(20 if args.prefixSimulationKeyword=='VALGRIND' else 10))
+        print("\n\nReturned with "+str(ret), file=outFD)
         if valgrindOutputAndAdaptRet("guitest_"+tool, ex)!=0: ret=valgrindErrorCode
         if ret!=0:
           retLocal=1
@@ -869,22 +848,7 @@ def mainFiles(fl, example, suffix):
   ret.sort(key=lambda a: os.path.basename(a))
   return ret
 
-# if args.exeEXt is set we must prefix every command with wine
-def exePrefix():
-  if args.exeExt=="":
-    return []
-  else:
-    return ["wine"]
-# if args.exeEXt is set we must convert every path to a Windows path
 def exePathConvert(path):
-  if exePrefix()==["wine"]:
-    def convert(p):
-        return "z:"+p.replace("/", "\\") if os.path.isabs(p) else p.replace("/", "\\")
-    if type(path)==str:
-      return convert(path)
-    else:
-      return list(map(lambda p: convert(p), path))   
-
   if os.name!="nt" or shutil.which("cygpath") is None:
     return path
 
@@ -1042,7 +1006,7 @@ def executeSrcExample(ex, executeFD):
     mainEnv[NAME]=libDir
   # run main
   t0=datetime.datetime.now()
-  ret=abs(base.helper.subprocessCall(prefixSimulation('source')+exePrefix()+[pj(os.curdir, "main"+args.exeExt)], executeFD,
+  ret=abs(base.helper.subprocessCall(prefixSimulation('source')+exePrefix()+[pj(os.curdir, "main")], executeFD,
                          env=mainEnv, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
@@ -1069,7 +1033,7 @@ def executeXMLExample(ex, executeFD, env=os.environ):
   ex.webappMbsimgui=True
   executeFD.flush()
   t0=datetime.datetime.now()
-  ret=abs(base.helper.subprocessCall(prefixSimulation('mbsimxml')+exePrefix()+[pj(mbsimBinDir, "mbsimxml"+args.exeExt)]+
+  ret=abs(base.helper.subprocessCall(prefixSimulation('mbsimxml')+exePrefix()+[pj(mbsimBinDir, "mbsimxml")]+
                          exePathConvert([prjFile]), executeFD, env=env, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
@@ -1095,7 +1059,7 @@ def executeFlatXMLExample(ex, executeFD):
   ex.webappMbsimgui=True
   executeFD.flush()
   t0=datetime.datetime.now()
-  ret2=abs(base.helper.subprocessCall(prefixSimulation('mbsimflatxml')+exePrefix()+[pj(mbsimBinDir, "mbsimflatxml"+args.exeExt),
+  ret2=abs(base.helper.subprocessCall(prefixSimulation('mbsimflatxml')+exePrefix()+[pj(mbsimBinDir, "mbsimflatxml"),
        exePathConvert(flatxmlFile())], executeFD, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
@@ -1126,7 +1090,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   if cosim: cosimArg=['--cosim']
   noparamArg=[]
   if "noparam" in labels: noparamArg=['--noparam']
-  comm=exePrefix()+[pj(mbsimBinDir, "mbsimCreateFMU"+args.exeExt), '--nocompress']+cosimArg+noparamArg+[exePathConvert(fmiInputFile)]
+  comm=exePrefix()+[pj(mbsimBinDir, "mbsimCreateFMU"), '--nocompress']+cosimArg+noparamArg+[exePathConvert(fmiInputFile)]
   ret1=abs(base.helper.subprocessCall(prefixSimulation('mbsimCreateFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
   if valgrindOutputAndAdaptRet("example_fmi_create", ex)!=0: ret1=valgrindErrorCode
 
@@ -1192,7 +1156,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   # run using mbsimTestFMU
   print("\n\n\n", file=executeFD)
   print("Running command:", file=executeFD)
-  comm=exePrefix()+[pj(mbsimBinDir, "mbsimTestFMU"+args.exeExt)]+cosimMEArg+["tmp_mbsimTestFMU"]
+  comm=exePrefix()+[pj(mbsimBinDir, "mbsimTestFMU")]+cosimMEArg+["tmp_mbsimTestFMU"]
   ret3=abs(base.helper.subprocessCall(prefixSimulation('mbsimTestFMU')+comm, executeFD, maxExecutionTime=args.maxExecutionTime))
   if valgrindOutputAndAdaptRet("example_fmi_mbsimTestFMU", ex)!=0: ret3=valgrindErrorCode
 
@@ -1260,7 +1224,7 @@ def executeFMISrcExample(ex, executeFD):
     if base.helper.subprocessCall(["make", "-f", basename, "clean"], executeFD)!=0: return 1, 0
   if base.helper.subprocessCall(["make", "-f", basename], executeFD)!=0: return 1, 0
   # create and run FMU
-  if os.name=="nt" or args.exeExt==".exe":
+  if os.name=="nt":
     dllExt=".dll"
   else:
     dllExt=".so"
