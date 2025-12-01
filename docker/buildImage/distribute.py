@@ -566,17 +566,19 @@ $INSTDIR/bin/.python-envvar "$@"
     addStrToDist(pythonData, "mbsim-env/bin/python", True)
     addFileToDist(f"/usr/bin/python{pyVersion()}", "mbsim-env/bin/.python-envvar")
   if platform=="win":
-    pythonData=r'''@echo off
+    for python in ["python", "pythonw"]:
+      pythonData=fr'''@echo off
 set INSTDIR=%~dp0..
 set PYTHONHOME=%INSTDIR%
 set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDIR%\lib\lib-dynload;%INSTDIR%\lib\site-packages;%INSTDIR%\share\mbxmlutils\python;%INSTDIR%\bin
-"%INSTDIR%\bin\.python-envvar.exe" %*
+"%INSTDIR%\bin\.{python}-envvar.exe" %*
 '''
-    addStrToDist(pythonData, "mbsim-env/bin/python.bat", True)
-    if os.path.exists("/3rdparty/local/python-win64/python.exe"):
-      addFileToDist("/3rdparty/local/python-win64/python.exe", "mbsim-env/bin/.python-envvar.exe")
-    if os.path.exists("c:/msys64/ucrt64/bin/python.exe"):
-      addFileToDist("c:/msys64/ucrt64/bin/python.exe", "mbsim-env/bin/.python-envvar.exe")
+      addStrToDist(pythonData, f"mbsim-env/bin/{python}.bat", True)
+      if os.path.exists(f"/3rdparty/local/python-win64/{python}.exe"):
+        addFileToDist(f"/3rdparty/local/python-win64/{python}.exe", f"mbsim-env/bin/.{python}-envvar.exe")
+      if os.path.exists(f"c:/msys64/ucrt64/bin/{python}.exe"):
+        addFileToDist(f"c:/msys64/ucrt64/bin/{python}.exe", f"mbsim-env/bin/.{python}-envvar.exe")
+
     pythonData=r'''import os
 if hasattr(os, "add_dll_directory"):
   import sys
