@@ -579,6 +579,17 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
       if os.path.exists(f"c:/msys64/ucrt64/bin/{python}.exe"):
         addFileToDist(f"c:/msys64/ucrt64/bin/{python}.exe", f"mbsim-env/bin/.{python}-envvar.exe")
 
+    pythonData=r'''' start pythonw.bat while hidding the cmd window
+' use '"wscript.exe" ".../pythonw.vbs" "%1"' as the registry key shell/open/command"
+args = ""
+For i = 0 To WScript.Arguments.Count - 1
+  args = args & " """ & WScript.Arguments(i) & """"
+Next
+scriptFolder = CreateObject("Scripting.FileSystemObject").GetParentFolderName(WScript.ScriptFullName)
+CreateObject("Wscript.Shell").Run scriptFolder & "\pythonw.bat" & args, 0
+'''
+    addStrToDist(pythonData, f"mbsim-env/bin/pythonw.vbs", True)
+
     pythonData=r'''import os
 if hasattr(os, "add_dll_directory"):
   import sys
