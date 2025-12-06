@@ -764,6 +764,31 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
 
 
 
+def addHDF5Tools():
+  tools=[
+    "h5clear",
+    "h5copy",
+    "h5debug",
+    "h5diff",
+    "h5dump",
+    "h5import",
+    "h5jam",
+    "h5ls",
+    "h5mkgrp",
+    "h5repack",
+    "h5repart",
+    "h5stat",
+    "h5unjam",
+  ]
+  if platform=="linux":
+    for t in tools:
+      addFileToDist(f"/usr/bin/{t}", f"mbsim-env/bin/{t}")
+  if platform=="win":
+    for t in tools:
+      addFileToDist(f"c:/msys64/ucrt64/bin/{t}-shared.exe", f"mbsim-env/bin/{t}-shared.exe")
+
+
+
 # return all basic examples except source examples
 def basicExamples():
   ret=[]
@@ -816,6 +841,8 @@ def main():
   addOctave()
   # add python
   addPython()
+  # add hdf5-tools
+  addHDF5Tools()
 
   # add some examples
   addExamples()
