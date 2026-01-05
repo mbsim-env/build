@@ -537,6 +537,7 @@ def runNetworkAndDatabase(printLog, daemon):
     command=(["--noSSL"] if args.noSSL else [])+\
             ["--allowedDBNoSSLSubnet", networki.attrs["IPAM"]["Config"][0]["Subnet"], networke.attrs["IPAM"]["Config"][0]["Subnet"]]+args.allowedDBNoSSLSubnet,
     environment={"MBSIMENVSERVERNAME": getServername(), "GITCOMMITID": databaseImage.labels["gitCommitID"], "IMAGEID": databaseImage.id},
+    shm_size="1g",
     volumes=volumes,
     ports=ports,
     detach=True, stdout=True, stderr=True)
