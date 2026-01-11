@@ -107,10 +107,14 @@ RUN "echo 'PATH=\"$PATH:/c/git/cmd\"' >> ~/.bash_profile"
 RUN "git config --global --add safe.directory '*'"
 
 # Install mesa for software OpenGL (only needed to run GUI programs in VMs)
-RUN "mkdir /c/mesa && cd /c/mesa && `
+# In Windows docker /c/windows/system32/config/system does not exist but is required by mesa systemwidedeploy.cmd -> create it temporarily
+RUN "mkdir mesa && cd mesa && `
   wget --no-verbose https://github.com/pal1000/mesa-dist-win/releases/download/25.3.3/mesa3d-25.3.3-release-msvc.7z && `
   7z x mesa3d-25.3.3-release-msvc.7z && `
-  echo 'PATH=\"$PATH:/c/mesa/x64\"' >> ~/.bash_profile"
+  mkdir /c/windows/system32/config/system && `
+  cmd //c systemwidedeploy.cmd 1 && `
+  rmdir /c/windows/system32/config/system && `
+  cd .. && for i in {1..30}; do sleep 1; echo Try $i; rm -rf mesa && break; done"
 
 # create volume directories
 RUN "mkdir /mbsim-env /mbsim-ccache"
