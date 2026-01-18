@@ -34,6 +34,7 @@ RUN apt update -y && apt install -y \
   libarchive-dev \
   libarpack2-dev libspooles-dev \
   libhdf5-dev \
+  hdf5-tools \
   libcoin-dev libsoqt520-dev \
   libqwt-qt5-dev \
   octave-dev \
