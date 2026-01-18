@@ -201,6 +201,10 @@ jobs:
         run: icacls.exe ${{github.workspace}}/mbsim-ccache /l /t /grant everyone:f > NUL
       - name: "Docker: run container"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
+        # set a timeout for this long running step to ensure that still time is left for the steps after this step.
+        # especially the cache-save step should run to ensure that the next run is faster.
+        # -> github timeout is 360min -15min until this step is reached, -15min for all steps after this step
+        timeout-minutes: 330
         # TODO mfmf if the windows docker images are on windows-2022 then remove the dockerargs --isolation=hyperv ... and
         # replace the below
         # ${{startsWith(matrix.data.os.runsOn, 'windows') && ' ' || format('-v {0}/mbsim-env:{1}/mbsim-env', github.workspace, matrix.data.os.mountBase)}}
@@ -253,22 +257,6 @@ jobs:
           print("jobs.build.steps.buildDetails.outputs.buildInfo:\n"+json.dumps(buildInfo, indent=2))
           with open(r"${{github.output}}", "at") as o:
             print("buildInfo="+json.dumps(buildInfo), file=o)
-      - name: "Artifact: zip prefix and coverage-files"
-        if: ${{always() && inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
-        run: >
-          (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcda" >  ${{github.workspace}}/local-cov.files);
-          (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcno" >> ${{github.workspace}}/local-cov.files);
-          (cd ${{github.workspace}}/mbsim-env/ && 7z a -spf ${{github.workspace}}/local-cov.7z
-          local/ @${{github.workspace}}/local-cov.files);
-          rm -f ${{github.workspace}}/local-cov.files
-      - name: "Artifact: upload zip of prefix and coverage-files"
-        if: ${{always() && inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
-        uses: actions/upload-artifact@v4
-        with:
-          name: mbsim-env-local-cov
-          retention-days: 1
-          compression-level: 0
-          path: ${{github.workspace}}/local-cov.7z
       - name: "Cache save: ccache"
         if: ${{always() && !fromJson(steps.whatToDo.outputs.data).skip}}
         uses: actions/cache/save@v4
@@ -287,6 +275,22 @@ jobs:
             key = line.split("\t")[0]
             subprocess.check_call(["gh", "actions-cache", "delete", key, "--confirm",
                                    "--repo", "${{github.repository}}", "--branch", "${{github.ref_name}}"])
+      - name: "Artifact: zip prefix and coverage-files"
+        if: ${{always() && inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
+        run: >
+          (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcda" >  ${{github.workspace}}/local-cov.files);
+          (cd ${{github.workspace}}/mbsim-env/ && find -name "*.gcno" >> ${{github.workspace}}/local-cov.files);
+          (cd ${{github.workspace}}/mbsim-env/ && 7z a -spf ${{github.workspace}}/local-cov.7z
+          local/ @${{github.workspace}}/local-cov.files);
+          rm -f ${{github.workspace}}/local-cov.files
+      - name: "Artifact: upload zip of prefix and coverage-files"
+        if: ${{always() && inputs.uploadArtifactLocalLcov && !fromJson(steps.whatToDo.outputs.data).skip}}
+        uses: actions/upload-artifact@v4
+        with:
+          name: mbsim-env-local-cov
+          retention-days: 1
+          compression-level: 0
+          path: ${{github.workspace}}/local-cov.7z
       - name: "Dump resources"
         if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
         shell: python
