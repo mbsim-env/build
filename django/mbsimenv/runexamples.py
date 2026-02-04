@@ -1673,7 +1673,7 @@ def coverage(exRun, lcovResultFile=None):
       "/mbsim-env/*/include/mbxmlutils/pycppwrapper_mainlib.h", # MBXMLUtils
       "/mbsim-env/openmbv-*/mbxmlutils/mbxmlutils/*", # SWIG generated
       "/mbsim-env/mbsim*/thirdparty/nurbs++/*/*", "*/include/nurbs++/*", "/mbsim-env/mbsim*/kernel/mbsim/numerics/csparse.*", # 3rd party
-      "/mbsim-env/openmbv/mbxmlutils/mbxmlutils/mbxmlutilshelper/simdutf.*", # 3rd party
+      "/mbsim-env/openmbv/mbxmlutils/mbxmlutilshelper/simdutf.*", # 3rd party
       "/mbsim-env/mbsim*/examples/*", # mbsim examples
       "*.moc.cc", # mbsim generated
       "/mbsim-env/*/CMakeFiles/*", "/mbsim-env/*/CMakeFiles/*/*", "/mbsim-env/*/CMakeFiles/*/*/*", # cmake generated
