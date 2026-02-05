@@ -292,7 +292,7 @@ jobs:
           compression-level: 0
           path: ${{github.workspace}}/local-cov.7z
       - name: "Dump resources"
-        if: ${{!fromJson(steps.whatToDo.outputs.data).skip}}
+        if: ${{always() && !fromJson(steps.whatToDo.outputs.data).skip}}
         shell: python
         run: |
           import shutil
