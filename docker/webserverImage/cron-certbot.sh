@@ -12,3 +12,5 @@ python3 -c "import time; import random; time.sleep(random.randint(0,24*60*60-100
 2> >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/2) > >(sed -re "s/^/CERTBOT: /" > /proc/1/fd/1)
 
 chown -R dockeruser:dockeruser /etc/letsencrypt/
+
+httpd -k graceful
