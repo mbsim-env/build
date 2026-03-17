@@ -820,7 +820,6 @@ def run(s, jobs=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psu
                "webserver\n"+ # docker hostname for the webserver container
                "github\\.com\n"+
                "cdn\\.jsdelivr\\.net\n"+
-               "code\\.highcharts\\.com\n"+
                "cdn\\.datatables\\.net\n"+
                "cdnjs\\.cloudflare\\.com\n"+
                "code\\.jquery\\.com\n"+
