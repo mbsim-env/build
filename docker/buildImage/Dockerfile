@@ -55,6 +55,7 @@ RUN apt update -y && apt install -y \
   qt5-flatpak-platformtheme qt5-gtk-platformtheme qt5-gtk2-platformtheme qt5-style-kvantum-themes \
   qt5-ukui-platformtheme qt5-xdgdesktopportal-platformtheme qt5-style-plugin-cleanlooks \
   qt5-style-plugin-motif qt5-style-plugin-plastique \
+  libkf5syntaxhighlighting-dev \
   && rm -rf /var/lib/apt/lists/*
 
 # install using pip
