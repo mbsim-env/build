@@ -1337,15 +1337,21 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
       # check for difference
       refObjCol=getColumn(refObj,column)
       curObjCol=getColumn(curObj,column)
+      if numpy.issubdtype(refObj.dtype, numpy.floating):
+        isClose1=lambda a,b: numpy.isclose(a, b, rtol=args.rtol, atol=args.atol, equal_nan=True)
+        isClose2=lambda a,b: numpy.isclose(a, b, rtol=0, atol= \
+             max((numpy.max(refObjCol)-numpy.min(refObjCol)) * args.rtolminmax, args.atol), equal_nan=True)
+      else:
+        isClose1=lambda a,b: a==b
+        isClose2=isClose1
       if (refObjCol.shape[0]!=curObjCol.shape[0]) or \
          (args.rtolminmax is None and \
-           not numpy.all(numpy.isclose(curObjCol, refObjCol, rtol=args.rtol, atol=args.atol, equal_nan=True))) or \
+           not numpy.all(isClose1(curObjCol, refObjCol))) or \
          (args.rtolminmax is not None and \
-           not numpy.all(numpy.isclose(curObjCol, refObjCol, rtol=0, atol= \
-             max((numpy.max(refObjCol)-numpy.min(refObjCol)) * args.rtolminmax, args.atol), equal_nan=True))):
+           not numpy.all(isClose2(curObjCol, refObjCol))):
         nrFailed[0]+=1
         cmpRes.result=runexamples.models.CompareResult.Result.FAILED
-        if refObjCol.shape[0]==curObjCol.shape[0]:
+        if numpy.issubdtype(refObj.dtype, numpy.floating) and refObjCol.shape[0]==curObjCol.shape[0]:
           cmpRes.rtolminmax = max(abs(refObjCol-curObjCol))/(numpy.max(refObjCol)-numpy.min(refObjCol))
         else:
           cmpRes.rtolminmax = 1e100
