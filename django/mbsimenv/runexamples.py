@@ -121,6 +121,8 @@ cfgOpts.add_argument("--disableMakeClean", action="store_true", help="disable ma
 cfgOpts.add_argument("--checkGUIs", action="store_true", help="Try to check/start the GUIs and exit after a short time.")
 cfgOpts.add_argument("--disableCompare", action="store_true", help="disable comparing the results on action 'report'")
 cfgOpts.add_argument("--disableValidate", action="store_true", help="disable validating the XML files on action 'report'")
+cfgOpts.add_argument("--disableVNC", action="store_true", help="disable the use of a VNC server to run gui tests")
+cfgOpts.add_argument("--stopafterfirststep", action="store_true", help="pass --stopafterfirststep to mbsimxml/mbsimflatxml, implies --disableCompare")
 cfgOpts.add_argument("--printToConsole", action='store_const', const=sys.stdout, help="print all output also to the console")
 cfgOpts.add_argument("--buildType", default="local", type=str, help="Description of the build type (e.g: linux64-dailydebug) [default: %(default)s]")
 cfgOpts.add_argument("--executor", default='<span class="MBSIMENV_EXECUTOR_LOCAL">local</span>', type=str, help="The executor of this run (can contain simple HTML a-elements)")
@@ -158,6 +160,8 @@ debugOpts.add_argument("--runID", default=None, type=int, help="The id of the ru
 
 # parse command line options
 args = argparser.parse_args()
+if args.stopafterfirststep:
+  args.disableCompare=True
 normalRun=not args.pre and not args.post and not args.partition
 
 # allRepos
@@ -206,7 +210,8 @@ if exampleFilters is not None:
 
 def guiEnvVars(displayNR):
   denv=os.environ.copy()
-  denv["DISPLAY"]=":"+str(displayNR)
+  if not args.disableVNC:
+    denv["DISPLAY"]=":"+str(displayNR)
   denv["COIN_FULL_INDIRECT_RENDERING"]="1"
   denv["QT_X11_NO_MITSHM"]="1"
   return denv
@@ -399,7 +404,7 @@ def main():
       xmlCatalog=None
       print("Error: 'mbsimxml --dumpXMLCatalog <file>' failed. Trying to continue without schema files.", file=sys.stderr)
 
-    if args.checkGUIs and os.name!="nt":
+    if not args.disableVNC and args.checkGUIs and os.name!="nt":
       # start vnc server on a free display
       global displayNR
       displayNR=3
@@ -451,7 +456,7 @@ def main():
     finally:
       exRun.examplesFailed=exRun.examples.filterFailed().count()
       exRun.save()
-      if args.checkGUIs and os.name!="nt":
+      if not args.disableVNC and args.checkGUIs and os.name!="nt":
         # kill vnc server
         if subprocess.call(["vncserver", "-kill", ":"+str(displayNR)], stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb'))!=0:
           print("Cannot close vnc server on :%d but continue."%(displayNR))
@@ -1026,14 +1031,15 @@ def executeXMLExample(ex, executeFD, env=os.environ):
   else: raise RuntimeError("Internal error: Unknown ppxml file.")
 
   print("Running command:", file=executeFD)
-  list(map(lambda x: print(x, end=" ", file=executeFD), [pj(mbsimBinDir, "mbsimxml")]+[prjFile]))
+  stopafterfirststep = ["--stopafterfirststep"] if args.stopafterfirststep else []
+  list(map(lambda x: print(x, end=" ", file=executeFD), [pj(mbsimBinDir, "mbsimxml")]+stopafterfirststep+[prjFile]))
   print("\n", file=executeFD)
   ex.webappHdf5serie=True
   ex.webappOpenmbv=True
   ex.webappMbsimgui=True
   executeFD.flush()
   t0=datetime.datetime.now()
-  ret=abs(base.helper.subprocessCall(prefixSimulation('mbsimxml')+[pj(mbsimBinDir, "mbsimxml")]+
+  ret=abs(base.helper.subprocessCall(prefixSimulation('mbsimxml')+[pj(mbsimBinDir, "mbsimxml")]+stopafterfirststep+
                          exePathConvert([prjFile]), executeFD, env=env, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
@@ -1052,14 +1058,15 @@ def executeFlatXMLExample(ex, executeFD):
 
   print("\n\n\n", file=executeFD)
   print("Running command:", file=executeFD)
-  list(map(lambda x: print(x, end=" ", file=executeFD), [pj(mbsimBinDir, "mbsimflatxml"), flatxmlFile()]))
+  stopafterfirststep = ["--stopafterfirststep"] if args.stopafterfirststep else []
+  list(map(lambda x: print(x, end=" ", file=executeFD), [pj(mbsimBinDir, "mbsimflatxml")]+stopafterfirststep+[flatxmlFile()]))
   print("\n", file=executeFD)
   ex.webappHdf5serie=True
   ex.webappOpenmbv=True
   ex.webappMbsimgui=True
   executeFD.flush()
   t0=datetime.datetime.now()
-  ret2=abs(base.helper.subprocessCall(prefixSimulation('mbsimflatxml')+[pj(mbsimBinDir, "mbsimflatxml"),
+  ret2=abs(base.helper.subprocessCall(prefixSimulation('mbsimflatxml')+[pj(mbsimBinDir, "mbsimflatxml")]+stopafterfirststep+[
        exePathConvert(flatxmlFile())], executeFD, maxExecutionTime=args.maxExecutionTime))
   t1=datetime.datetime.now()
   dt=(t1-t0).total_seconds()
