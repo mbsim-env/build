@@ -19,6 +19,8 @@ platform=None
 distArchive=None
 debugArchive=None
 
+msys2BaseDir=os.path.dirname(os.environ["MSYSTEM_PREFIX"])
+
 def octVersion():
   if sys.platform=="win32":
     return "9.1.0" # msys2win64 build
@@ -506,8 +508,8 @@ def addOctave():
     addFileToDist("/3rdparty/local/share/octave", "mbsim-env/share/octave")
   if os.path.isdir("/usr/share/octave"):
     addFileToDist("/usr/share/octave", "mbsim-env/share/octave")
-  if os.path.isdir("c:/msys64/ucrt64/share/octave"):
-    addFileToDist("c:/msys64/ucrt64/share/octave", "mbsim-env/share/octave")
+  if os.path.isdir(f"{msys2BaseDir}/ucrt64/share/octave"):
+    addFileToDist(f"{msys2BaseDir}/ucrt64/share/octave", "mbsim-env/share/octave")
 
   print("Add octave executable")
   sys.stdout.flush()
@@ -527,8 +529,8 @@ $INSTDIR/bin/.octave-cli-envvar "$@"
   if platform=="win":
     if os.path.exists(f"/3rdparty/local/bin/octave-cli-{octVersion()}.exe"):
       addFileToDist(f"/3rdparty/local/bin/octave-cli-{octVersion()}.exe", "mbsim-env/bin/.octave-cli-envvar.exe")
-    if os.path.exists("c:/msys64/ucrt64/bin/octave-cli.exe"):
-      addFileToDist("c:/msys64/ucrt64/bin/octave-cli.exe", "mbsim-env/bin/.octave-cli-envvar.exe")
+    if os.path.exists(f"{msys2BaseDir}/ucrt64/bin/octave-cli.exe"):
+      addFileToDist(f"{msys2BaseDir}/ucrt64/bin/octave-cli.exe", "mbsim-env/bin/.octave-cli-envvar.exe")
     octaveData=r'''@echo off
 set INSTDIR=%~dp0..
 set OCTAVE_HOME=%INSTDIR%
@@ -545,8 +547,8 @@ set OCTAVE_PATH=%INSTDIR%\bin;%INSTDIR%\lib;%INSTDIR%\share\mbxmlutils\octave
   if platform=="win":
     if os.path.isdir(f"/3rdparty/local/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32"):
       addFileToDist(f"/3rdparty/local/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32", f"mbsim-env/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32")
-    if os.path.isdir(f"c:/msys64/ucrt64/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32"):
-      addFileToDist(f"c:/msys64/ucrt64/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32", f"mbsim-env/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32")
+    if os.path.isdir(f"{msys2BaseDir}/ucrt64/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32"):
+      addFileToDist(f"{msys2BaseDir}/ucrt64/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32", f"mbsim-env/lib/octave/{octVersion()}/oct/x86_64-w64-mingw32")
 
 
 
@@ -576,8 +578,8 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
       addStrToDist(pythonData, f"mbsim-env/bin/{python}.bat", True)
       if os.path.exists(f"/3rdparty/local/python-win64/{python}.exe"):
         addFileToDist(f"/3rdparty/local/python-win64/{python}.exe", f"mbsim-env/bin/.{python}-envvar.exe")
-      if os.path.exists(f"c:/msys64/ucrt64/bin/{python}.exe"):
-        addFileToDist(f"c:/msys64/ucrt64/bin/{python}.exe", f"mbsim-env/bin/.{python}-envvar.exe")
+      if os.path.exists(f"{msys2BaseDir}/ucrt64/bin/{python}.exe"):
+        addFileToDist(f"{msys2BaseDir}/ucrt64/bin/{python}.exe", f"mbsim-env/bin/.{python}-envvar.exe")
 
     pythonData=r'''' start pythonw.bat while hidding the cmd window
 ' use '"wscript.exe" ".../pythonw.vbs" "%1"' as the registry key shell/open/command"
@@ -626,8 +628,8 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
     subdir=f"lib/python{pyVersion()}"
     if os.path.isdir("/3rdparty/local/python-win64/Lib"):
       pysrcdirs=["/3rdparty/local/python-win64/Lib"] # search packages in this order
-    if os.path.isdir(f"c:/msys64/ucrt64/lib/python{pyVersion()}/"):
-      pysrcdirs=[f"c:/msys64/ucrt64/lib/python{pyVersion()}/"] # search packages in this order
+    if os.path.isdir(f"{msys2BaseDir}/ucrt64/lib/python{pyVersion()}/"):
+      pysrcdirs=[f"{msys2BaseDir}/ucrt64/lib/python{pyVersion()}/"] # search packages in this order
   sitePackages=[
      #name    #dep-names
     ["pip",   ["setuptools", "distlib", "_distutils_hack", "pkg_resources", "distlib"]],
@@ -785,7 +787,7 @@ def addHDF5Tools():
       addFileToDist(f"/usr/bin/{t}", f"mbsim-env/bin/{t}")
   if platform=="win":
     for t in tools:
-      addFileToDist(f"c:/msys64/ucrt64/bin/{t}-shared.exe", f"mbsim-env/bin/{t}-shared.exe")
+      addFileToDist(f"{msys2BaseDir}/ucrt64/bin/{t}-shared.exe", f"mbsim-env/bin/{t}-shared.exe")
 
 
 
