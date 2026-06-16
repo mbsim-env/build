@@ -19,7 +19,7 @@ platform=None
 distArchive=None
 debugArchive=None
 
-msys2BaseDir=os.path.dirname(os.environ["MSYSTEM_PREFIX"])
+msys2BaseDir=os.path.dirname(os.environ.get("MSYSTEM_PREFIX", "/noneExistent/dir/test"))
 
 def octVersion():
   if sys.platform=="win32":
