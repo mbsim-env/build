@@ -1359,7 +1359,11 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
         nrFailed[0]+=1
         cmpRes.result=runexamples.models.CompareResult.Result.FAILED
         if numpy.issubdtype(refObj.dtype, numpy.floating) and refObjCol.shape[0]==curObjCol.shape[0]:
-          cmpRes.rtolminmax = max(abs(refObjCol-curObjCol))/(numpy.max(refObjCol)-numpy.min(refObjCol))
+          denom = numpy.max(refObjCol)-numpy.min(refObjCol)
+          if abs(denom)>1e-10:
+            cmpRes.rtolminmax = max(abs(refObjCol-curObjCol))/denom
+          else:
+            cmpRes.rtolminmax = 1e100
         else:
           cmpRes.rtolminmax = 1e100
         saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)

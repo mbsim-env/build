@@ -762,6 +762,7 @@ def chartDifferencePlot(request, id):
   cur=None
   absErr=None
   relErr=None
+  isStr = False
   try:
     # get current result
     compareResult=runexamples.models.CompareResult.objects.filter(id=id).select_related("compareResultFile").get()
@@ -775,7 +776,11 @@ def chartDifferencePlot(request, id):
         timeCur=dataset[:,0].reshape((dataset.shape[0],1))
         try:
           colIdx=toUTF8(dataset.attrs["Column Label"].tolist()).index(toUTF8(compareResult.label))
-          cur=dataset[:,colIdx]
+          if h5py.check_string_dtype(dataset.dtype) is None:
+            cur=dataset[:,colIdx]
+          else:
+            isStr = True
+            cur=dataset.asstr()[:,colIdx]
         except ValueError:
           pass
       finally:
@@ -797,25 +802,37 @@ def chartDifferencePlot(request, id):
         timeRef=dataset[:,0].reshape((dataset.shape[0],1))
         try:
           colIdx=toUTF8(dataset.attrs["Column Label"].tolist()).index(toUTF8(compareResult.label))
-          ref=dataset[:,colIdx]
+          if h5py.check_string_dtype(dataset.dtype) is None:
+            ref=dataset[:,colIdx]
+          else:
+            isStr = True
+            ref=dataset.asstr()[:,colIdx]
         except ValueError:
           pass
       finally:
         os.unlink(tempF.name)
 
-    if cur is not None and ref is not None and ref.shape==cur.shape and \
-       numpy.all(numpy.isclose(timeCur, timeRef, rtol=1e-12, atol=1e-12, equal_nan=True)):
-      absErr=abs(ref-cur)
-      relErr=absErr/(abs(ref)+1.0e-14) # avoid diff my zero
+    if not isStr:
+      if cur is not None and ref is not None and ref.shape==cur.shape and \
+         numpy.all(numpy.isclose(timeCur, timeRef, rtol=1e-12, atol=1e-12, equal_nan=True)):
+        absErr=abs(ref-cur)
+        relErr=absErr/(abs(ref)+1.0e-14) # avoid diff my zero
   finally:
-    def np2Json(np):
-      return list(map(lambda x: [x[0],0] if math.isnan(x[1]) else x, np.tolist()))
-    return django.http.JsonResponse({
-      "reference": None if ref is None else np2Json(numpy.concatenate((timeRef,ref.reshape((dataset.shape[0],1))), axis=1)),
-      "current": None if cur is None else np2Json(numpy.concatenate((timeCur,cur.reshape((timeCur.shape[0],1))), axis=1)),
-      "abs": None if absErr is None else np2Json(numpy.concatenate((timeCur,absErr.reshape((dataset.shape[0],1))), axis=1)),
-      "rel": None if relErr is None else np2Json(numpy.concatenate((timeCur,relErr.reshape((dataset.shape[0],1))), axis=1)),
-    })
+    if not isStr:
+      def np2Json(np):
+        return list(map(lambda x: [x[0],0] if math.isnan(x[1]) else x, np.tolist()))
+      return django.http.JsonResponse({
+        "reference": None if ref is None else np2Json(numpy.concatenate((timeRef,ref.reshape((dataset.shape[0],1))), axis=1)),
+        "current": None if cur is None else np2Json(numpy.concatenate((timeCur,cur.reshape((timeCur.shape[0],1))), axis=1)),
+        "abs": None if absErr is None else np2Json(numpy.concatenate((timeCur,absErr.reshape((dataset.shape[0],1))), axis=1)),
+        "rel": None if relErr is None else np2Json(numpy.concatenate((timeCur,relErr.reshape((dataset.shape[0],1))), axis=1)),
+      })
+    else:
+      # for strings just return the data
+      return django.http.JsonResponse({
+        "referenceStr": ref.tolist(),
+        "currentStr": cur.tolist(),
+      })
 
 def allExampleStatic(request):
   allEx={}
