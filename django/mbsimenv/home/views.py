@@ -31,6 +31,7 @@ class Videos(base.views.Base):
     {"file": "home/videos/xml_constraints.webm"        , "title": "Constraints"       , "ext": False, "href": "xml/constraints"                            },
     {"file": "home/videos/xmlflat_tippe_top.webm"      , "title": "Tippe-Top"         , "ext": False, "href": "xmlflat/tippe_top"                          },
     {"file": "home/videos/xml_pumptrack.webm"          , "title": "BMX/MTB Pumptrack" , "ext": False, "href": "xml/pumptrack"                              },
+    {"file": "home/videos/xml_fork_lefty-regular.webm" , "title": "MTB Fork Compare"  , "ext": False, "href": "xml/fork_lefty-regular"                     },
     {"file": "home/videos/xml_rocking_rod.webm"        , "title": "Rocking-Rod"       , "ext": False, "href": "xml/rocking_rod"                            },
     {"file": "home/videos/xml_rolling.webm"            , "title": "Rolling"           , "ext": False, "href": "xml/rolling"                                },
     {"file": "home/videos/xml_spinning_plate.webm"     , "title": "Spinning plate"    , "ext": False, "href": "xml/spinning_plate"                         },
