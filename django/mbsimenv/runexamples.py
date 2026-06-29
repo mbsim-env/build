@@ -131,7 +131,7 @@ def splitWithNBSP(str):
 cfgOpts.add_argument("--prefixSimulation", default=[], type=splitWithNBSP,
   help="prefix the simulation command (./main, mbsimflatxml, mbsimxml) with this string: e.g. 'valgrind --tool=callgrind'. If a space in a argument is needed use &nbsp;")
 cfgOpts.add_argument("--prefixSimulationKeyword", default=None, type=str,
-  help="VALGRIND: add special arguments and handling for valgrind")
+  help="VALGRIND: add special arguments and handling for valgrind (set envvar 'MBSIM_VALGRIND, ...')")
 cfgOpts.add_argument("--maxExecutionTime", default=30, type=float, help="The time in minutes after started program timed out [default: %(default)s]")
 cfgOpts.add_argument("--coverage", action="store_true", help='Enable coverage analyzis using gcov/lcov')
 cfgOpts.add_argument("--sourceDir", default=None, type=str, help='[needed by coverage and valgrind]')
@@ -245,6 +245,10 @@ def removeOldBuilds():
 
 # the main routine being called ones
 def main():
+  # handle VALGRIND
+  if args.prefixSimulationKeyword=='VALGRIND':
+    os.environ["MBSIM_VALGRIND"]="1"
+
   # check arguments
   if not (args.action=="report" or args.action=="copyToReference" or
           args.action=="updateReference" or
