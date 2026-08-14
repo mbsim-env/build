@@ -38,7 +38,7 @@ env:
   mbsimenvsec_filestoragePassword: ${{secrets.filestoragePassword}}
 jobs:
   getBuildMatrix:
-    name: "."
+    name: "_"
     runs-on: ubuntu-22.04
     outputs:
       matrix: ${{steps.matrix.outputs.matrix}}
