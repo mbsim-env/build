@@ -58,7 +58,7 @@ env:
 jobs:
   runexamples:
     if: ${{always()}}
-    name: "_"
+    name: "${{matrix.data.id}}"
     runs-on: ubuntu-22.04
     outputs:
       runexamplesInfo: ${{steps.runexamplesDetails.outputs.runexamplesInfo}}

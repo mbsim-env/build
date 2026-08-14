@@ -87,9 +87,11 @@ jobs:
     if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
       id: "normal"
+      # id: is just used for a unique job name
+      # args: is passed the as arguments to the job
       matrix: |
         {"data": [
-          {"args": "--runExamplesPre"}
+          {"id": 1, "args": "--runExamplesPre"}
         ]}
       buildInfo: ${{needs.buildPartitionedExamples.outputs.buildInfo}}
       runexamplesInfo: '{"runID": -1}'
@@ -109,22 +111,24 @@ jobs:
     if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
       id: "normal"
+      # id: is just used for a unique job name
+      # args: is passed the as arguments to the job
       matrix: |
         {"data": [
-          {"args": "--runExamplesPartition"},
-          {"args": "--runExamplesPartition"},
-          {"args": "--runExamplesPartition"},
-          {"args": "--runExamplesPartition"},
-          {"args": "--runExamplesPartition"},
-          {"args": "--runExamplesPartition"},
-          {"args": "--runExamplesPartition"},
-          {"args": "--runExamplesPartition"},
-          {"args": "--runExamplesPartition"},
-          {"args": "--runExamplesPartition"},
-          {"args": "--runExamplesPartition"},
-          {"args": "--runExamplesPartition"},
-          {"args": "--runExamplesPartition"},
-          {"args": "--runExamplesPartition"}
+          {"id":  1, "args": "--runExamplesPartition"},
+          {"id":  2, "args": "--runExamplesPartition"},
+          {"id":  3, "args": "--runExamplesPartition"},
+          {"id":  4, "args": "--runExamplesPartition"},
+          {"id":  5, "args": "--runExamplesPartition"},
+          {"id":  6, "args": "--runExamplesPartition"},
+          {"id":  7, "args": "--runExamplesPartition"},
+          {"id":  8, "args": "--runExamplesPartition"},
+          {"id":  9, "args": "--runExamplesPartition"},
+          {"id": 10, "args": "--runExamplesPartition"},
+          {"id": 11, "args": "--runExamplesPartition"},
+          {"id": 12, "args": "--runExamplesPartition"},
+          {"id": 13, "args": "--runExamplesPartition"},
+          {"id": 14, "args": "--runExamplesPartition"}
         ]}
       buildInfo: ${{needs.buildPartitionedExamples.outputs.buildInfo}}
       runexamplesInfo: ${{needs.examplesPre.outputs.runexamplesInfo}}
@@ -144,9 +148,11 @@ jobs:
     if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
       id: "normal"
+      # id: is just used for a unique job name
+      # args: is passed the as arguments to the job
       matrix: |
         {"data": [
-          {"args": "--runExamplesPost"}
+          {"id": 1, "args": "--runExamplesPost"}
         ]}
       buildInfo: ${{needs.buildPartitionedExamples.outputs.buildInfo}}
       runexamplesInfo: ${{needs.examplesPre.outputs.runexamplesInfo}}
@@ -172,9 +178,11 @@ jobs:
     if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
       id: "valgrind"
+      # id: is just used for a unique job name
+      # args: is passed the as arguments to the job
       matrix: |
         {"data": [
-          {"args": "--runExamplesPre --valgrindExamples"}
+          {"id": 1, "args": "--runExamplesPre --valgrindExamples"}
         ]}
       buildInfo: ${{needs.buildPartitionedExamples.outputs.buildInfo}}
       runexamplesInfo: '{"runID": -1}'
@@ -194,22 +202,24 @@ jobs:
     if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
       id: "valgrind"
+      # id: is just used for a unique job name
+      # args: is passed the as arguments to the job
       matrix: |
         {"data": [
-          {"args": "--runExamplesPartition --valgrindExamples"},
-          {"args": "--runExamplesPartition --valgrindExamples"},
-          {"args": "--runExamplesPartition --valgrindExamples"},
-          {"args": "--runExamplesPartition --valgrindExamples"},
-          {"args": "--runExamplesPartition --valgrindExamples"},
-          {"args": "--runExamplesPartition --valgrindExamples"},
-          {"args": "--runExamplesPartition --valgrindExamples"},
-          {"args": "--runExamplesPartition --valgrindExamples"},
-          {"args": "--runExamplesPartition --valgrindExamples"},
-          {"args": "--runExamplesPartition --valgrindExamples"},
-          {"args": "--runExamplesPartition --valgrindExamples"},
-          {"args": "--runExamplesPartition --valgrindExamples"},
-          {"args": "--runExamplesPartition --valgrindExamples"},
-          {"args": "--runExamplesPartition --valgrindExamples"}
+          {"id":  1, "args": "--runExamplesPartition --valgrindExamples"},
+          {"id":  2, "args": "--runExamplesPartition --valgrindExamples"},
+          {"id":  3, "args": "--runExamplesPartition --valgrindExamples"},
+          {"id":  4, "args": "--runExamplesPartition --valgrindExamples"},
+          {"id":  5, "args": "--runExamplesPartition --valgrindExamples"},
+          {"id":  6, "args": "--runExamplesPartition --valgrindExamples"},
+          {"id":  7, "args": "--runExamplesPartition --valgrindExamples"},
+          {"id":  8, "args": "--runExamplesPartition --valgrindExamples"},
+          {"id":  9, "args": "--runExamplesPartition --valgrindExamples"},
+          {"id": 10, "args": "--runExamplesPartition --valgrindExamples"},
+          {"id": 11, "args": "--runExamplesPartition --valgrindExamples"},
+          {"id": 12, "args": "--runExamplesPartition --valgrindExamples"},
+          {"id": 13, "args": "--runExamplesPartition --valgrindExamples"},
+          {"id": 14, "args": "--runExamplesPartition --valgrindExamples"}
         ]}
       buildInfo: ${{needs.buildPartitionedExamples.outputs.buildInfo}}
       runexamplesInfo: ${{needs.examplesPreValgrind.outputs.runexamplesInfo}}
@@ -229,9 +239,11 @@ jobs:
     if: ${{always() && !fromJson(needs.buildPartitionedExamples.outputs.whatToDo).skip}}
     with:
       id: "valgrind"
+      # id: is just used for a unique job name
+      # args: is passed the as arguments to the job
       matrix: |
         {"data": [
-          {"args": "--runExamplesPost --valgrindExamples"}
+          {"id": 1, "args": "--runExamplesPost --valgrindExamples"}
         ]}
       buildInfo: ${{needs.buildPartitionedExamples.outputs.buildInfo}}
       runexamplesInfo: ${{needs.examplesPreValgrind.outputs.runexamplesInfo}}
