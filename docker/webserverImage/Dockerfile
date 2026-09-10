@@ -48,7 +48,7 @@ RUN yum --setopt=skip_missing_names_on_install=False -y install epel-release cen
   python3-psutil \
   sudo \
   && yum clean all
-RUN python3 -m pip install --upgrade pip && pip3 install django==3.2 django-allauth==0.48 django-octicons==1.0 h5py==2.9.0 paramiko==2.9
+RUN python3 -m pip install --upgrade pip && pip3 install django==3.2 django-allauth==0.48 django-octicons==1.0 h5py==2.10.0 paramiko==2.9
 ENV PATH=/opt/rh/httpd24/root/usr/bin:/opt/rh/httpd24/root/usr/sbin:$PATH \
     LD_LIBRARY_PATH=/opt/rh/httpd24/root/usr/lib64
 

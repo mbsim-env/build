@@ -14,7 +14,7 @@ RUN yum install -y https://download.postgresql.org/pub/repos/yum/reporpms/EL-7-x
   python3-psycopg2 \
   cronie \
   && yum clean all
-RUN python3 -m pip install --upgrade pip && pip3 install django==3.2 django-allauth==0.47 django-octicons==1.0 h5py==2.9.0
+RUN python3 -m pip install --upgrade pip && pip3 install django==3.2 django-allauth==0.47 django-octicons==1.0 h5py==2.10.0
 
 # copy context files
 COPY docker/databaseImage/entrypoint.py /context/entrypoint.py
