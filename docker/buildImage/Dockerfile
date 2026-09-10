@@ -126,4 +126,4 @@ ENV XDG_RUNTIME_DIR=/run/user/$DOCKERUSERID
 # these are the default arguments when running the container
 CMD []
 # call this script when running the container
-ENTRYPOINT ["timeout", "-k", "30s", "5h", "/context/entrypoint.py"]
+ENTRYPOINT ["timeout", "-v", "-k", "30s", "5h", "/context/entrypoint.py"]
