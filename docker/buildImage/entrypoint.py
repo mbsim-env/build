@@ -309,7 +309,7 @@ if build:
       (["--coverage", "--sourceDir", "/mbsim-env", "--binSuffix=-build", "--prefix", "/mbsim-env/local",
         "--baseExampleDir", "/mbsim-env/mbsim-valgrind/examples"] if "--coverage" in ARGS else [])+\
       ["--prefixSimulationKeyword=VALGRIND", "--prefixSimulation",
-      "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh "+\
+      "valgrind --trace-children=yes --trace-children-skip=*/rm,*/dbus-launch,*/ldconfig,*/sh,*/fc-list "+\
       "--child-silent-after-fork=yes --num-callers=50 --gen-suppressions=all "+\
       "--suppressions=/mbsim-env/mbsim/thirdparty/valgrind/valgrind-mbsim.supp "+\
       "--suppressions=/usr/lib/valgrind/python3.supp "+\
