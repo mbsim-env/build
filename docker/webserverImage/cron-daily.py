@@ -29,17 +29,17 @@ def dailyBuild(fmatvecBranch, hdf5serieBranch, openmbvBranch, mbsimBranch):
   with open("/context/buildConfig.json", "rt") as f:
     buildConfig=json.load(f)
   # linux64-dailydebug
-  contldd=setup.run("build-linux64-dailydebug", math.ceil(args.jobs/2), printLog=False, detach=True, addCommands=[],
+  contldd=setup.run("build-linux64-dailydebug", math.ceil(args.jobs), printLog=False, detach=True, addCommands=[],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                     buildConfig=buildConfig)
+  retldd=setup.waitContainer(contldd)
 
   # linux64-dailyrelease
-  contldr=setup.run("build-linux64-dailyrelease", math.ceil(args.jobs/2), printLog=False, detach=True, addCommands=[],
+  contldr=setup.run("build-linux64-dailyrelease", math.ceil(args.jobs), printLog=False, detach=True, addCommands=[],
                     fmatvecBranch=fmatvecBranch, hdf5serieBranch=hdf5serieBranch, openmbvBranch=openmbvBranch, mbsimBranch=mbsimBranch,
                     buildConfig=buildConfig)
 
   retldr=setup.waitContainer(contldr)
-  retldd=setup.waitContainer(contldd)
 
   # return
   return 0 if retldd==0 and retldr==0 else 1
