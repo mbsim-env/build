@@ -129,7 +129,7 @@ def mainDocPage():
   if not args.buildSystemRun or args.buildType!="linux64-dailydebug":
     return
 
-  print("Copy documentation")
+  print("Copy documentation", flush=True)
   def rsyncToFileStorage(src, dst, msg=""):
     params=django.conf.settings.SIMPLE_SFTP_STORAGE_PARAMS
     with tempfile.NamedTemporaryFile(mode='wt') as pwfile:
@@ -185,7 +185,7 @@ def removeOldBuilds():
   keep=builds.models.Run.objects.all().order_by('-startTime')[0:args.removeOlderThan].values("id")
   nrDeleted=builds.models.Run.objects.filter(startTime__lt=olderThan).exclude(id__in=keep).delete()[0]
   if nrDeleted>0:
-    print("Deleted %d build runs being older than %d days!"%(nrDeleted, args.removeOlderThan))
+    print("Deleted %d build runs being older than %d days!"%(nrDeleted, args.removeOlderThan), flush=True)
 
 # the main routine being called ones
 parseArguments()
@@ -311,8 +311,7 @@ def main():
     os.environ["LDFLAGS" ]=os.environ.get("LDFLAGS", "")+" --coverage -lgcov"
 
   # start messsage
-  print("Started build process.")
-  sys.stdout.flush()
+  print("Started build process.", flush=True)
 
   # clean prefix dir
   if args.enableCleanPrefix and os.path.isdir(args.prefix if args.prefix is not None else args.prefixAuto):
@@ -356,8 +355,7 @@ def main():
             run.fmatvecBranch, run.hdf5serieBranch, run.openmbvBranch, run.mbsimBranch])))
     print("                         = http://%s:%d%s"%(localServer["hostname"], localServer["port"],
           django.urls.reverse("builds:run", args=[run.id])))
-    print("")
-    sys.stdout.flush()
+    print("", flush=True)
 
   # set status on commit
   setGithubStatus(run, "pending")
@@ -426,8 +424,7 @@ def main():
   # create distribution
   if args.enableDistribution:
     nrRun=nrRun+1
-    print("Create distribution")
-    sys.stdout.flush()
+    print("Create distribution", flush=True)
     cdRet=createDistribution(run)
     if cdRet!=0:
       nrFailed=nrFailed+1
@@ -439,16 +436,14 @@ def main():
   setGithubStatus(run, "success" if nrFailed==0 else "failure")
 
   if nrFailed>0:
-    print("\nERROR: %d of %d build parts failed!!!!!"%(nrFailed, nrRun));
-    sys.stdout.flush()
+    print("\nERROR: %d of %d build parts failed!!!!!"%(nrFailed, nrRun), flush=True);
 
   # run examples
   runExamplesErrorCode=0
   if not args.disableRunExamples:
     savedDir=os.getcwd()
     os.chdir(pj(args.sourceDir, "mbsim", "examples"))
-    print("Running examples in "+os.getcwd())
-    sys.stdout.flush()
+    print("Running examples in "+os.getcwd(), flush=True)
     runExamplesErrorCode=runexamples(run)
     os.chdir(savedDir)
 
@@ -490,9 +485,9 @@ def toolWorker(toolName, globalVars):
   if toolName in args.buildTools or toolDependencies[toolName]["toolNeedsBuild"]:
     # ... by calling build(...) if the tool need to be build ...
     if toolName in args.buildTools:
-      print(f"Building {toolName}: requested by user")
+      print(f"Building {toolName}: requested by user", flush=True)
     else:
-      print(f"Building {toolName}: needed as dependency")
+      print(f"Building {toolName}: needed as dependency", flush=True)
     # build toolName
     nrFailedLocal, nrRunLocal=build(toolName, run)
     if toolDependencies[toolName]["willFail"]==False:
@@ -500,8 +495,7 @@ def toolWorker(toolName, globalVars):
       nrRun+=nrRunLocal
   else:
     # ... or by just recording the tool in the DB if the tool does not need to be build ...
-    print(f"Building {toolName}: skipped, not requested by user and not needed as dependency")
-    sys.stdout.flush()
+    print(f"Building {toolName}: skipped, not requested by user and not needed as dependency", flush=True)
     tool=builds.models.Tool()
     tool.run=run
     tool.toolName=toolName
@@ -512,7 +506,7 @@ def toolWorker(toolName, globalVars):
     toolDependencies[toolName]["toolDone"].value=True
     toolDependencies[toolName]["toolCondVar"].notify_all()
   # ... at the end the running jobs in the build pool is decremented and one other thread in the pool is notified
-  print(f"Finished {toolName}")
+  print(f"Finished {toolName}", flush=True)
   with toolPoolCondVar:
     toolPoolJobs.value-=1
     toolPoolCondVar.notify()
@@ -531,8 +525,7 @@ def repoUpdate(run, buildInfo):
   ret=0
   savedDir=os.getcwd()
   if not args.disableUpdate:
-    print('Updating repositories: ', end="")
-    sys.stdout.flush()
+    print('Updating repositories: ', end="", flush=True)
 
   # allRepos
   allRepos=[
@@ -657,10 +650,9 @@ def repoUpdate(run, buildInfo):
 
   if not args.disableUpdate:
     if ret>0:
-      print('failed')
+      print('failed', flush=True)
     else:
-      print('passed')
-    sys.stdout.flush()
+      print('passed', flush=True)
 
   os.chdir(savedDir)
   return ret, commitidfull
@@ -990,8 +982,7 @@ def runexamples(run):
   print("")
   print("")
   print("Output of run example")
-  print("")
-  sys.stdout.flush()
+  print("", flush=True)
   return subprocess.call(command, stderr=subprocess.STDOUT)
 
 

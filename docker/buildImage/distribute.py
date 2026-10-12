@@ -285,8 +285,7 @@ def addStrToDist(text, arcname, exeBit=False):
 
 
 def addReadme():
-  print("Add README.txt file")
-  sys.stdout.flush()
+  print("Add README.txt file", flush=True)
 
   if platform=="linux":
     note="This binary Linux64 build requires a Linux 64-bit operating system."
@@ -365,8 +364,7 @@ cd "%%INSTDIR%%\examples\%s"
 '''
   return text
 def addMBSimEnvTest():
-  print("Add test script mbsim-env-test[.bat]")
-  sys.stdout.flush()
+  print("Add test script mbsim-env-test[.bat]", flush=True)
 
   if platform=="linux":
     text=r'''#!/bin/bash
@@ -501,8 +499,7 @@ cd "%%PWD%%"
 
 
 def addOctave():
-  print("Add octave share dir")
-  sys.stdout.flush()
+  print("Add octave share dir", flush=True)
 
   if os.path.isdir("/3rdparty/local/share/octave"):
     addFileToDist("/3rdparty/local/share/octave", "mbsim-env/share/octave")
@@ -511,8 +508,7 @@ def addOctave():
   if os.path.isdir(f"{msys2BaseDir}/ucrt64/share/octave"):
     addFileToDist(f"{msys2BaseDir}/ucrt64/share/octave", "mbsim-env/share/octave")
 
-  print("Add octave executable")
-  sys.stdout.flush()
+  print("Add octave executable", flush=True)
 
   if platform=="linux":
     tmpDir=tempfile.mkdtemp()
@@ -539,8 +535,7 @@ set OCTAVE_PATH=%INSTDIR%\bin;%INSTDIR%\lib;%INSTDIR%\share\mbxmlutils\octave
 '''
     addStrToDist(octaveData, "mbsim-env/bin/octave-cli.bat", True)
 
-  print("Add octave oct files")
-  sys.stdout.flush()
+  print("Add octave oct files", flush=True)
 
   if platform=="linux":
     addFileToDist(f"/usr/lib/x86_64-linux-gnu/octave/{octVersion()}/oct/x86_64-pc-linux-gnu", f"mbsim-env/lib/x86_64-linux-gnu/octave/{octVersion()}/oct/x86_64-pc-linux-gnu")
@@ -553,8 +548,7 @@ set OCTAVE_PATH=%INSTDIR%\bin;%INSTDIR%\lib;%INSTDIR%\share\mbxmlutils\octave
 
 
 def addPython():
-  print("Add python files")
-  sys.stdout.flush()
+  print("Add python files", flush=True)
 
   # add python executable
   if platform=="linux":
@@ -802,8 +796,7 @@ def basicExamples():
   return ret
 
 def addExamples():
-  print("Add some examples") # all examples with label "basic"
-  sys.stdout.flush()
+  print("Add some examples", flush=True) # all examples with label "basic"
 
   for ex in basicExamples():
     for file in subprocess.check_output(["git", "ls-files"], cwd=args.prefix+"/../mbsim/examples/"+ex).decode('utf-8').rstrip().splitlines():
@@ -818,8 +811,7 @@ def main():
 
   # open archives
   print("Create binary distribution")
-  print("")
-  sys.stdout.flush()
+  print("", flush=True)
 
   global distArchive, debugArchive
   if platform=="linux":
@@ -836,8 +828,7 @@ def main():
   addMBSimEnvTest()
 
   # add prefix
-  print("Add prefix dir of mbsim-env")
-  sys.stdout.flush()
+  print("Add prefix dir of mbsim-env", flush=True)
   addFileToDist(args.prefix, "mbsim-env")
   # add octave
   addOctave()
@@ -863,8 +854,7 @@ def main():
 
   # close archives
   print("")
-  print("Finished")
-  sys.stdout.flush()
+  print("Finished", flush=True)
   distArchive.close()
   debugArchive.close()
 
@@ -875,5 +865,4 @@ def main():
 if __name__=="__main__":
   distArchiveName, debugArchiveName=main()
   print("distArchiveName="+distArchiveName)
-  print("debugArchiveName="+debugArchiveName)
-  sys.stdout.flush()
+  print("debugArchiveName="+debugArchiveName, flush=True)

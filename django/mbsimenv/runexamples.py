@@ -240,8 +240,7 @@ def removeOldBuilds():
   keep=runexamples.models.Run.objects.all().order_by('-startTime')[0:args.removeOlderThan].values("id")
   nrDeleted=runexamples.models.Run.objects.filter(startTime__lt=olderThan).exclude(id__in=keep).delete()[0]
   if nrDeleted>0:
-    print("Deleted %d example runs being older than %d days!"%(nrDeleted, args.removeOlderThan))
-    sys.stdout.flush()
+    print("Deleted %d example runs being older than %d days!"%(nrDeleted, args.removeOlderThan), flush=True)
 
 # the main routine being called ones
 def main():
@@ -279,8 +278,7 @@ def main():
   except ImportError: 
     print("WARNING!")
     print("The python module numpy and h5py is required for full functionallity of this script.")
-    print("However at least one of these modules are not found. Hence comparing the results will be disabled.\n")
-    sys.stdout.flush()
+    print("However at least one of these modules are not found. Hence comparing the results will be disabled.\n", flush=True)
     global canCompare
     canCompare=False
 
@@ -350,8 +348,7 @@ def main():
           django.urls.reverse("runexamples:current_buildtype", args=[args.buildType])))
     print("                              = http://%s:%d%s"%(localServer["hostname"], localServer["port"],
           django.urls.reverse("runexamples:run", args=[exRun.id])))
-    print("")
-    sys.stdout.flush()
+    print("", flush=True)
 
   mainRet=0
 
@@ -496,8 +493,7 @@ def main():
   coverageFailed=0
   if args.coverage:
     coverageAll=1
-    print("Create coverage analyzis")
-    sys.stdout.flush()
+    print("Create coverage analyzis", flush=True)
     coverageFailed=coverage(exRun)
     if normalRun:
       # restore the coverage files in the build directories
@@ -513,13 +509,11 @@ def main():
   if normalRun:
     # print result summary to console
     if len(failedExamples)>0:
-      print('\nERROR: '+str(len(failedExamples))+' of '+str(len(retAll))+' examples have failed.')
-      sys.stdout.flush()
+      print('\nERROR: '+str(len(failedExamples))+' of '+str(len(retAll))+' examples have failed.', flush=True)
     if coverageFailed!=0:
       if mainRet==0:
         mainRet=1
-      print('\nERROR: Coverage analyzis generation failed.')
-      sys.stdout.flush()
+      print('\nERROR: Coverage analyzis generation failed.', flush=True)
 
   return mainRet
 
@@ -686,7 +680,7 @@ def addExamplesByFilter(baseDir, directoriesSet):
 
 # run the given example
 def runExample(exRun, globalVars, example):
-  print("Started example "+example)
+  print("Started example "+example, flush=True)
 
   global mbsimBinDir, canCompare, mbxmlutilsvalidate, xmlCatalog, displayNR, directories
   mbsimBinDir=globalVars["mbsimBinDir"]
@@ -696,7 +690,6 @@ def runExample(exRun, globalVars, example):
   displayNR=globalVars["displayNR"]
   directories=globalVars["directories"]
 
-  sys.stdout.flush()
   savedDir=os.getcwd()
   runExampleRet=0 # run ok
   executeFD=base.helper.MultiFile(args.printToConsole)
@@ -823,10 +816,9 @@ def runExample(exRun, globalVars, example):
   finally:
     os.chdir(savedDir)
     if runExampleRet==0:
-      print("Passed example "+example)
+      print("Passed example "+example, flush=True)
     else:
-      print("Failed example "+example)
-    sys.stdout.flush()
+      print("Failed example "+example, flush=True)
     return runExampleRet, example, excStr
 
 # helper function for runExample for args.partition
@@ -1480,7 +1472,6 @@ def compareExample(ex):
 
 def copyToReference():
   for example in directories:
-    sys.stdout.flush()
     try:
       exSt=runexamples.models.ExampleStatic.objects.get(exampleName=example)
     except runexamples.models.ExampleStatic.DoesNotExist:
@@ -1488,9 +1479,9 @@ def copyToReference():
       exSt.exampleName=example
     try:
       ex=runexamples.models.Run.objects.getCurrent(args.buildType).examples.get(exampleName=example)
-      print("Copy to reference: "+example)
+      print("Copy to reference: "+example, flush=True)
     except:
-      print("Skipping: "+example)
+      print("Skipping: "+example, flush=True)
       continue
     exSt.references.all().delete()
     exSt.refTime=ex.time
@@ -1513,8 +1504,7 @@ def updateReference():
   import requests
   rs=requests.Session()
 
-  print('Downloading metadata for all references from %s\n'%(args.updateURL))
-  sys.stdout.flush()
+  print('Downloading metadata for all references from %s\n'%(args.updateURL), flush=True)
 
   # get metadata of all static examples (does not get any reference file)
   response=rs.get(args.updateURL+django.urls.reverse("runexamples:allExampleStatic"))
@@ -1526,8 +1516,7 @@ def updateReference():
   for example in directories:
     # skip examples not on server
     if example not in serverAllExampleStatic:
-      print('%s: SKIPPING, does not exist on server'%(example))
-      sys.stdout.flush()
+      print('%s: SKIPPING, does not exist on server'%(example), flush=True)
       continue
     # get server and local example
     serverExampleStatic=serverAllExampleStatic[example]
@@ -1543,12 +1532,10 @@ def updateReference():
         localReference=runexamples.models.ExampleStaticReference()
         localReference.exampleStatic=localExampleStatic
       elif serverReference["h5FileSHA1"]==localReference.h5FileSHA1:
-        print(example+": "+serverReference["h5FileName"]+": SKIPPING, already up to date")
-        sys.stdout.flush()
+        print(example+": "+serverReference["h5FileName"]+": SKIPPING, already up to date", flush=True)
         continue
       # newer reference exists -> download
-      print(example+": "+serverReference["h5FileName"]+": DOWNLOADING new reference file ...")
-      sys.stdout.flush()
+      print(example+": "+serverReference["h5FileName"]+": DOWNLOADING new reference file ...", flush=True)
       # set new SHA1 and delete old file
       localReference.h5FileSHA1=serverReference["h5FileSHA1"]
       localReference.h5File.delete(False)
@@ -1567,8 +1554,7 @@ def updateReference():
     # search for local reference files not on server -> delete these
     for localReference in localExampleStatic.references.all():
       if next((x for x in serverExampleStatic["references"] if x["h5FileName"]==localReference.h5FileName), None) is None:
-        print(example+": "+localReference.h5FileName+": REMOVED, does not exist on server")
-        sys.stdout.flush()
+        print(example+": "+localReference.h5FileName+": REMOVED, does not exist on server", flush=True)
         localReference.delete()
 
 
@@ -1577,7 +1563,7 @@ def listExamples():
   print('The following examples will be run:\n')
   for example in directories:
     print(example)
-  sys.stdout.flush()
+  print("", end="", flush=True)
 
 
 
