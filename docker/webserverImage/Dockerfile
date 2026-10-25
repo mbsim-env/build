@@ -104,10 +104,11 @@ RUN DJANGO_SETTINGS_MODULE=mbsimenv.settings_buildsystem python3 /context/mbsime
 COPY --from=temp /tmp/generatepng/*.png /var/www/html/static/octiconpng/
 
 # set crontab for
+# the entrypoint.py script add (in front) some envvars at startup
 # - cert updates (once a day at arbitary time)
 # - django clear expired sessions (once a day)
 RUN mkdir /var/www/html/certbot
-RUN echo -e 'SHELL=/bin/bash\n\
+RUN echo -e '\
 1 0 * * * /context/cron-certbot.sh\n\
 39 7 * * * DJANGO_SETTINGS_MODULE=mbsimenv.settings_buildsystem python3 /context/mbsimenv/manage.py clearsessions' \
 | crontab /dev/stdin
