@@ -554,7 +554,7 @@ def addPython():
   if platform=="linux":
     pythonData='''#!/bin/bash
 INSTDIR="$(readlink -f $(dirname $0)/..)"
-export LD_LIBRARY_PATH="$INSTDIR/lib"
+export LD_LIBRARY_PATH="$INSTDIR/lib:$INSTDIR/../mbsim-env-python-site-packages/lib"
 export PYTHONHOME=$INSTDIR
 export PYTHONPATH=$INSTDIR/../mbsim-env-python-site-packages:$INSTDIR/share/mbxmlutils/python:$INSTDIR/bin
 $INSTDIR/bin/.python-envvar "$@"
@@ -600,6 +600,7 @@ if hasattr(os, "add_dll_directory"):
     pipData='''#!/bin/bash
 INSTDIR="$(readlink -f $(dirname $0)/..)"
 export PIP_TARGET=$INSTDIR/../mbsim-env-python-site-packages
+export LD_LIBRARY_PATH="$INSTDIR/lib:$INSTDIR/../mbsim-env-python-site-packages/lib"
 export PYTHONHOME=$INSTDIR
 export PYTHONPATH=$INSTDIR/../mbsim-env-python-site-packages
 $INSTDIR/bin/python -m pip "$@"
@@ -757,6 +758,9 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
   if platform=="win":
     subdir="bin"
   copySitePackages(sitePackagesOpt, pysrcdirs, "mbsim-env-python-site-packages", "mbsim-env-python-site-packages/"+subdir)
+
+  # copy matplotlibrc file
+  addFileToDist("/etc/matplotlibrc", "mbsim-env-python-site-packages/matplotlib/mpl-data/matplotlibrc", addDepLibs=False)
 
 
 
