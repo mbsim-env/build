@@ -35,7 +35,7 @@ def parseArgs():
   
   argparser.add_argument("command", type=str, choices=["build", "run", "pull", "push", "prune"], help="Command to execute")
   argparser.add_argument("service", nargs="*", help="Service or image to run or build")
-  argparser.add_argument("--jobs", "-j", type=int, default=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psutil.cpu_count(False))), help="Number of jobs to run in parallel")
+  argparser.add_argument("--jobs", "-j", type=int, default=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psutil.cpu_count(True))), help="Number of jobs to run in parallel")
   argparser.add_argument("--interactive", "-i", action='store_true', help="Run container, wait and print how to attach to it")
   argparser.add_argument("--daemon", "-d", type=str, choices=["start", "status", "stop"], help="Only for 'run service'")
   argparser.add_argument("--pushPullMultistageImage", action='store_true', help="Also push/pull multistage images")
@@ -325,7 +325,7 @@ def buildImage(tag, tagMultistageImage=True, fd=sys.stdout, path=None, dockerfil
   build=dockerClientLL.build(tag=tag, **createTarContext(path=path, dockerfile=dockerfile), **kwargs, **extraArgs)
   return syncLogBuildImage(build, fd)
 
-def build(s, jobs=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psutil.cpu_count(False))), fd=sys.stdout, baseDir=scriptdir, cacheFromSelf=False):
+def build(s, jobs=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psutil.cpu_count(True))), fd=sys.stdout, baseDir=scriptdir, cacheFromSelf=False):
 
   if s=="database":
     gitCommitID=subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=baseDir).decode("UTF-8").rstrip()
@@ -427,7 +427,7 @@ def renameStoppedContainer(name):
   except docker.errors.NotFound:
     pass
 
-def runAutobuild(s, buildType, addCommand, jobs=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psutil.cpu_count(False))), interactive=False, enforceConfigure=False,
+def runAutobuild(s, buildType, addCommand, jobs=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psutil.cpu_count(True))), interactive=False, enforceConfigure=False,
                  fmatvecBranch="master", hdf5serieBranch="master", openmbvBranch="master", mbsimBranch="master",
                  printLog=True, detach=False, buildConfig={}):
   stopDatabase=False
@@ -555,7 +555,7 @@ def runNetworkAndDatabase(printLog, daemon):
       print("Started database in background")
   return networki, networke, database
 
-def run(s, jobs=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psutil.cpu_count(False))),
+def run(s, jobs=max(1,min(round(psutil.virtual_memory().total/pow(1024,3)/2),psutil.cpu_count(True))),
         addCommands=[],
         interactive=False,
         enforceConfigure=False,
