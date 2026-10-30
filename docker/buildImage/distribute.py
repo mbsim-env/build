@@ -422,7 +422,7 @@ else
   echo "THE FOLLOWING TESTS FAILED:"
   echo "$ERROR"
   echo ""
-  echo "If openmbv and/or mbsimgui crashes you can try to remove the files $INSTDIR/lib/libstdc++.so.* and retry!"
+  echo "If h5plotserie, openmbv and/or mbsimgui crashes you can try to remove the files $INSTDIR/lib/libstdc++.so.* and retry!"
 fi
 ''' % ('\n'.join(map(addMBSimEnvTestExampleLinux, basicExamples())))
 
