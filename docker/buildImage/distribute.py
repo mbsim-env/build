@@ -113,6 +113,7 @@ def addDepsFor(name):
     "*/__mbsim_part*.so",
     "*/__mbsim_part*.pyd",
     "*/libqgtk3.so",
+    "*/libqgnomeplatformtheme.so",
   ]
   noDepsForDir=[
   ]
