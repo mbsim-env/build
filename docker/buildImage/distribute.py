@@ -760,7 +760,10 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
   copySitePackages(sitePackagesOpt, pysrcdirs, "mbsim-env-python-site-packages", "mbsim-env-python-site-packages/"+subdir)
 
   # copy matplotlibrc file
-  addFileToDist("/etc/matplotlibrc", "mbsim-env-python-site-packages/matplotlib/mpl-data/matplotlibrc", addDepLibs=False)
+  if platform=="linux":
+    addFileToDist("/etc/matplotlibrc", "mbsim-env-python-site-packages/matplotlib/mpl-data/matplotlibrc", addDepLibs=False)
+  if platform=="win":
+    addFileToDist(f"{msys2BaseDir}/ucrt64/lib/python{pyVersion()}/site-packages/matplotlib/mpl-data/matplotlibrc", "mbsim-env-python-site-packages/matplotlib/mpl-data/matplotlibrc", addDepLibs=False)
 
 
 
