@@ -120,12 +120,12 @@ def addDepsFor(name):
   if any(map(lambda g: fnmatch.fnmatch(name, g), noDepsForFile)): return False
   return True
 
-def adaptRPATH(name, orgName):
+def adaptRPATH(name, arcname, depLibsDir):
   fnull=open(os.devnull, 'w')
   try:
     # remove all abs path from RPATH and add relative path to prefix/lib
     rpath=subprocess.check_output(["patchelf", "--print-rpath", name]).decode('utf-8').rstrip()
-    vnewrpath=["$ORIGIN/"+os.path.relpath(args.prefix+"/lib", os.path.dirname(orgName))]
+    vnewrpath=["$ORIGIN/"+os.path.relpath(depLibsDir, os.path.dirname(arcname))]
     if len(rpath)>0:
       for p in rpath.split(':'):
         if p[0]!='/':
@@ -229,7 +229,7 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
             subprocess.check_call(["objcopy", "--add-gnu-debuglink="+tmpDir+"/"+basename+".debug", tmpDir+"/"+basename], stdout=subprocess.DEVNULL)
             if platform=="linux":
               if re.search('ELF [0-9]+-bit LSB', content) is not None:
-                adaptRPATH(tmpDir+"/"+basename, name)
+                adaptRPATH(tmpDir+"/"+basename, arcname, depLibsDir)
             distArchive.write(tmpDir+"/"+basename, arcname)
             # only add debug files of mbsim-env
             if name.startswith(args.prefix+"/") or name.startswith(args.prefix+"\\"):
@@ -246,7 +246,7 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
           shutil.copy(name, tmpDir+"/"+basename)
           if platform=="linux":
             if re.search('ELF [0-9]+-bit LSB', content) is not None:
-              adaptRPATH(tmpDir+"/"+basename, name)
+              adaptRPATH(tmpDir+"/"+basename, arcname, depLibsDir)
           distArchive.write(tmpDir+"/"+basename, arcname)
       finally:
         shutil.rmtree(tmpDir)
