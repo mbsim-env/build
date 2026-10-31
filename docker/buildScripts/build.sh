@@ -113,22 +113,15 @@ while [ ! -e $MBSIMENVDIR/build/django/mbsimenv/localserver.json ]; do sleep 0.1
   --passToConfigure \
   --disable-static \
   --enable-python \
-  --with-qwt-inc-prefix=/3rdparty/local/include --with-qwt-lib-prefix=/3rdparty/local/lib --with-qwt-lib-name=qwt \
-  --with-boost-inc=/usr/include/boost169 \
-  --with-hdf5-prefix=/3rdparty/local \
-  --with-mkoctfile=/3rdparty/local/bin/mkoctfile \
-  --with-qmake=qmake-qt5 \
+  --with-hdf5-inc=/usr/include/hdf5/serial --with-hdf5-lib=/usr/lib/x86_64-linux-gnu/hdf5/serial \
+  --with-qwt-inc-prefix=/usr/include/qwt --with-qwt-lib-name=qwt-qt5 \
   CXXFLAGS="$CXXFLAGS" \
   CFLAGS="$CFLAGS" \
   FFLAGS="$FFLAGS" \
-  COIN_CFLAGS=-I/3rdparty/local/include COIN_LIBS=-"L/3rdparty/local/lib64 -lCoin" \
-  SOQT_CFLAGS=-I/3rdparty/local/include SOQT_LIBS="-L/3rdparty/local/lib64 -lSoQt" \
+  COIN_CFLAGS=-I/usr/include COIN_LIBS=-lCoin SOQT_CFLAGS=-I/usr/include SOQT_LIBS=-lSoQt \
   "${CONFIGUREARGS[@]}" \
   --passToCMake \
-  -DARPACK_INCLUDE_DIRS=/3rdparty/local/include/arpack -DARPACK_LIBRARIES=/3rdparty/local/lib64/libarpack.so \
-  -DSPOOLES_INCLUDE_DIRS=/3rdparty/local/include/spooles -DSPOOLES_LIBRARIES=/3rdparty/local/lib/spooles.a \
-  -DBLAS_LIBRARIES=/usr/lib64/libopenblas.so.0 -DLAPACK_LIBRARIES=/usr/lib64/libopenblas.so.0 \
-  -DBOOST_INCLUDEDIR=/usr/include/boost169 -DBOOST_LIBRARYDIR=/usr/lib64/boost169 \
+  -DSPOOLES_INCLUDE_DIRS=/usr/include/spooles -DSPOOLES_LIBRARIES=-lspooles \
   -DCMAKE_BUILD_TYPE=$BT \
   -DCMAKE_CXX_FLAGS_${BT^^}="$CXXFLAGS" \
   -DCMAKE_C_FLAGS_${BT^^}="$CFLAGS" \

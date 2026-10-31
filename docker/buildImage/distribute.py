@@ -162,9 +162,15 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
   # file link -> add as link and also add the dereferenced file
   if os.path.islink(name):
     # do not add a file more than once
-    if arcname in addFileToDist.content:
+    # if arcname is a file in the dir depLibsDir then use a special dirname to avoid duplicates in any depLibsDir's
+    # (there are currenlty to depLibsDir's: (on Windows) mbsim-env/bin and mbsim-env-python-site-packages/bin)
+    if os.path.dirname(arcname) == depLibsDir:
+      contentArcname=":depLibsDir:/"+os.path.basename(arcname)
+    else:
+      contentArcname=arcname
+    if contentArcname in addFileToDist.content:
       return
-    addFileToDist.content.add(arcname)
+    addFileToDist.content.add(contentArcname)
 
     if platform=="win":
       return
