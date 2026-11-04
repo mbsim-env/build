@@ -151,6 +151,23 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
 
   import deplibs
 
+  def duplicate(arcname, depLibsDir):
+    if depLibsDir is None:
+      # do not add a file more than once
+      contentArcname = arcname
+    else:
+      # do not add a file more than once
+      # if arcname is a file in the dir depLibsDir then use a special dirname to avoid duplicates in any depLibsDir's
+      # (there are currenlty to depLibsDir's: (on Windows) mbsim-env/bin and mbsim-env-python-site-packages/bin)
+      if os.path.dirname(arcname) == depLibsDir:
+        contentArcname=":depLibsDir:/"+os.path.basename(arcname)
+      else:
+        contentArcname=arcname
+    if contentArcname in addFileToDist.content:
+      return True
+    addFileToDist.content.add(contentArcname)
+    return False
+
   # do not add any python __pycache__ file
   if os.path.isfile(name) and "__pycache__" in name:
     return
@@ -162,21 +179,13 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
     raise RuntimeError("Directory links are not supported.")
   # file link -> add as link and also add the dereferenced file
   if os.path.islink(name):
-    # do not add a file more than once
-    # if arcname is a file in the dir depLibsDir then use a special dirname to avoid duplicates in any depLibsDir's
-    # (there are currenlty to depLibsDir's: (on Windows) mbsim-env/bin and mbsim-env-python-site-packages/bin)
-    if os.path.dirname(arcname) == depLibsDir:
-      contentArcname=":depLibsDir:/"+os.path.basename(arcname)
-    else:
-      contentArcname=arcname
-    if contentArcname in addFileToDist.content:
-      return
-    addFileToDist.content.add(contentArcname)
-
     if platform=="win":
       return
     link=os.readlink(name) # add also the reference
     if "/" not in link: # link to the same dir -> add the link and its target
+      if duplicate(arcname, depLibsDir):
+        return
+
       distArchive.write(name, arcname) # add link
       addFileToDist(os.path.dirname(name)+"/"+link, os.path.dirname(arcname)+"/"+link, addDepLibs, depLibsDir) # recursive call
     # a debian alternative file -> do not add the link but deep copy the target to the link
@@ -204,16 +213,8 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
        (platform=="win"   and re.search(r'PE32\+? executable', content) is not None):
       # binary file
 
-      # do not add a file more than once
-      # if arcname is a file in the dir depLibsDir then use a special dirname to avoid duplicates in any depLibsDir's
-      # (there are currenlty to depLibsDir's: (on Windows) mbsim-env/bin and mbsim-env-python-site-packages/bin)
-      if os.path.dirname(arcname) == depLibsDir:
-        contentArcname=":depLibsDir:/"+os.path.basename(arcname)
-      else:
-        contentArcname=arcname
-      if contentArcname in addFileToDist.content:
+      if duplicate(arcname, depLibsDir):
         return
-      addFileToDist.content.add(contentArcname)
 
       # fix rpath (remove all absolute componentes from rpath; delete all RUNPATH)
       basename=os.path.basename(name)
@@ -256,19 +257,15 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
         for deplib in deplibs.depLibs(name):
           addFileToDist(deplib, depLibsDir+"/"+os.path.basename(deplib), False, depLibsDir)
     else:
-      # do not add a file more than once
-      if arcname in addFileToDist.content:
+      if duplicate(arcname, None):
         return
-      addFileToDist.content.add(arcname)
 
       # none binary file
       distArchive.write(name, arcname)
   # dir -> add recursively
   elif os.path.isdir(name):
-    # do not add a file more than once
-    if arcname in addFileToDist.content:
+    if duplicate(arcname, None):
       return
-    addFileToDist.content.add(arcname)
 
     for dirpath, dirnames, filenames in os.walk(name):
       for file in filenames:
