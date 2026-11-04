@@ -734,7 +734,7 @@ if "MPLCONFIGDIR" not in os.environ:
 # END: PATCHED BY mbsim-env
 """
               lines = lines[:idx] + contentToAdd.splitlines(keepends=True) + lines[idx:]
-              addStrToDist("\n".join(lines), sitePackagesDir+"/"+packageName+"/"+os.path.basename(c))
+              addStrToDist("".join(lines), sitePackagesDir+"/"+packageName+"/"+os.path.basename(c))
             else:
 
               addFileToDist(c, sitePackagesDir+"/"+packageName+"/"+os.path.basename(c), True, depLibsDir)
