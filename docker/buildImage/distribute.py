@@ -723,7 +723,25 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
           for c in glob.glob(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+"/*"):
             if any(map(lambda g: fnmatch.fnmatch(os.path.basename(c), g), skipPyd)):
               continue
-            addFileToDist(c, sitePackagesDir+"/"+packageName+"/"+os.path.basename(c), True, depLibsDir)
+
+            # at least on debian matplotlib needs special handling
+            if os.path.normcase(c) == os.path.normcase(pysrcdir+"/"+siteDistPackagesDir+"/matplotlib/__init__.py"):
+              # we need to repatch matplotlib since debian changes some search path
+              with open(c, "rt") as f:
+                lines = f.readlines()
+              idx = next((i for i, s in enumerate(lines) if s.startswith("import ")))
+              contentToAdd="""# BEGIN: PATCHED BY mbsim-env
+import os
+if "MPLCONFIGDIR" not in os.environ:
+  os.environ["MPLCONFIGDIR"]=os.path.join(os.path.dirname(__file__), "mpl-data")
+# END: PATCHED BY mbsim-env
+"""
+              lines = lines[:idx] + contentToAdd.splitlines(keepends=True) + lines[idx:]
+              addStrToDist("\n".join(lines), sitePackagesDir+"/"+packageName+"/"+os.path.basename(c))
+            else:
+
+              addFileToDist(c, sitePackagesDir+"/"+packageName+"/"+os.path.basename(c), True, depLibsDir)
+
         if os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".py"):
           addFileToDist(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".py", sitePackagesDir+"/"+packageName+".py", True, depLibsDir)
         if os.path.isfile(pysrcdir+"/"+siteDistPackagesDir+"/"+packageName+".pyd"):
@@ -765,12 +783,6 @@ set PYTHONPATH=%INSTDIR%\..\mbsim-env-python-site-packages;%INSTDIR%\lib;%INSTDI
   if platform=="win":
     subdir="bin"
   copySitePackages(sitePackagesOpt, pysrcdirs, "mbsim-env-python-site-packages", "mbsim-env-python-site-packages/"+subdir)
-
-  # copy matplotlibrc file
-  if platform=="linux":
-    addFileToDist("/etc/matplotlibrc", "mbsim-env-python-site-packages/matplotlib/mpl-data/matplotlibrc", addDepLibs=False)
-  if platform=="win":
-    addFileToDist(f"{msys2BaseDir}/ucrt64/lib/python{pyVersion()}/site-packages/matplotlib/mpl-data/matplotlibrc", "mbsim-env-python-site-packages/matplotlib/mpl-data/matplotlibrc", addDepLibs=False)
 
 
 
