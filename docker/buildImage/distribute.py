@@ -781,6 +781,11 @@ if "MPLCONFIGDIR" not in os.environ:
     subdir="bin"
   copySitePackages(sitePackagesOpt, pysrcdirs, "mbsim-env-python-site-packages", "mbsim-env-python-site-packages/"+subdir)
 
+  # on debian matplotlibrc needs special handling (matplotlibrc may not be contained in the standard path -> copy from /etc/)
+  if platform=="linux":
+    if os.path.exists("/etc/matplotlibrc"):
+      addFileToDist("/etc/matplotlibrc", "mbsim-env-python-site-packages/matplotlib/mpl-data/matplotlibrc", addDepLibs=False)
+
 
 
 def addHDF5Tools():
