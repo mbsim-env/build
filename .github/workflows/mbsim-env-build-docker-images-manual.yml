@@ -44,7 +44,7 @@ env:
   MSYS2INSTALLERRSYNCPORT: 1122
 jobs:
   buildImage:
-    name: "Bulid Linux Docker Image"
+    name: "Build Linux Docker Image"
     runs-on: ubuntu-22.04
     if: ${{inputs.buildImage}}
     steps:
@@ -71,7 +71,7 @@ jobs:
         run: docker pull mbsimenv/buildmsys2ucrt64base:latest
       - name: "Docker build base"
         if: ${{inputs.buildmsys2ucrt64baseImage}}
-        run: docker build --isolation=hyperv --memory=15g -t mbsimenv/buildmsys2ucrt64base:latest --cache-from mbsimenv/buildmsys2ucrt64base:latest -f docker/buildmsys2ucrt64baseImage/Dockerfile .
+        run: docker build --isolation=process -t mbsimenv/buildmsys2ucrt64base:latest --cache-from mbsimenv/buildmsys2ucrt64base:latest -f docker/buildmsys2ucrt64baseImage/Dockerfile .
       - name: "Docker push base"
         if: ${{inputs.buildmsys2ucrt64baseImage}}
         run: docker push mbsimenv/buildmsys2ucrt64base:latest
@@ -80,7 +80,7 @@ jobs:
       - name: "Docker build"
         run: >
           docker build
-          --isolation=hyperv --memory=15g
+          --isolation=process
           --build-arg=MSYS2INSTALLERURI="${{env.MSYS2INSTALLERURI}}"
           --build-arg=MSYS2INSTALLERDOWNLOAD="${{env.MSYS2INSTALLERDOWNLOAD}}"
           --build-arg=MSYS2INSTALLERUPDATEBYPUBLIC="${{env.MSYS2INSTALLERUPDATEBYPUBLIC}}"
@@ -95,7 +95,7 @@ jobs:
         # TODO: mfmf remove --isolation=hyperv ... if the container is based on windows-2022
         run: >
           docker run --init
-          --isolation=hyperv --memory=15g --cpu-count=4
+          --isolation=process
           --env mbsimenvsec_filestoragePassword
           --env MSYS2INSTALLERRSYNCPORT
           --env MSYS2INSTALLERRSYNCURI

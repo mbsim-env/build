@@ -71,7 +71,7 @@ if [ "$BASENAME" == "mbsbd" ]; then
   mkdir -p "$MBSIMENVDIR/.ccache" "$MBSIMENVDIR/.home"
   function callDocker {
     MBSIMENVDIR_WIN=$(cygpath -w $MBSIMENVDIR)
-    docker run --init --entrypoint= --rm \
+    docker run --isolation=process --init --entrypoint= --rm \
       $INTERACTIVE \
       -v "$MBSIMENVDIR_WIN":c:/mbsim-env \
       -v "$MBSIMENVDIR_WIN/.ccache":c:/mbsim-ccache \

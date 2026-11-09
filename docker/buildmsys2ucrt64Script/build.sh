@@ -95,7 +95,7 @@ for i in ${!NORMALARGS[@]}; do
 done
 MBSIMENVTAGNAME=${MBSIMENVTAGNAME:-latest}
 MBSIMENVDIR_WIN=$(cygpath -w $MBSIMENVDIR)
-docker run -d --init --entrypoint= --rm \
+docker run --isolation=process -d --init --entrypoint= --rm \
   -v "$MBSIMENVDIR_WIN":c:/mbsim-env \
   -p $PORT:$PORT \
   mbsimenv/buildmsys2ucrt64:$MBSIMENVTAGNAME \
