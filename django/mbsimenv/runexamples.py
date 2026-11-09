@@ -1149,7 +1149,8 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   if os.path.isdir("tmp_mbsimTestFMU"): shutil.rmtree("tmp_mbsimTestFMU")
   try:
     print("Unzip mbsim.fmu for mbsimTestFMU:\n", file=executeFD)
-    zipfile.ZipFile("mbsim.fmu").extractall("tmp_mbsimTestFMU")
+    with zipfile.ZipFile("mbsim.fmu") as zipf:
+      zipf.extractall("tmp_mbsimTestFMU")
   except:
     print(traceback.format_exc(), file=executeFD)
     print("Failed.\n", file=executeFD)
