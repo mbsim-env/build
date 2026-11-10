@@ -141,6 +141,10 @@ def adaptRPATH(name, arcname, depLibsDir):
 def file_(name):
   return subprocess.check_output(["file", name]).decode('utf-8')
 
+def rmTreeRetryReadonlyFile(func, path, _):
+  os.chmod(path, stat.S_IWRITE)
+  func(path)
+
 def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
   if depLibsDir is None:
     if platform=="linux":
@@ -251,7 +255,7 @@ def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
               adaptRPATH(tmpDir+"/"+basename, arcname, depLibsDir)
           distArchive.write(tmpDir+"/"+basename, arcname)
       finally:
-        shutil.rmtree(tmpDir)
+        shutil.rmtree(tmpDir, onerror=rmTreeRetryReadonlyFile)
       # add also all dependent libs to the lib/bin dir
       if addDepLibs and addDepsFor(name):
         for deplib in deplibs.depLibs(name):
