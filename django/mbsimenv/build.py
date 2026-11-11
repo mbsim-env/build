@@ -212,12 +212,6 @@ django.db.models.signals.pre_save.connect(closeUnusableConnection)
 
 
 
-def rmTreeRetryReadonlyFile(func, path, _):
-  os.chmod(path, stat.S_IWRITE)
-  func(path)
-
-
-
 def main():
 
   if django.conf.settings.MBSIMENV_TYPE=="local" or django.conf.settings.MBSIMENV_TYPE=="localdocker":
@@ -321,7 +315,7 @@ def main():
 
   # clean prefix dir
   if args.enableCleanPrefix and os.path.isdir(args.prefix if args.prefix is not None else args.prefixAuto):
-    shutil.rmtree(args.prefix if args.prefix is not None else args.prefixAuto, onerror=rmTreeRetryReadonlyFile)
+    shutil.rmtree(args.prefix if args.prefix is not None else args.prefixAuto, onerror=base.helper.rmTreeRetryReadonlyFile)
   os.makedirs(args.prefix if args.prefix is not None else args.prefixAuto, exist_ok=True)
 
   if args.buildRunID is None:

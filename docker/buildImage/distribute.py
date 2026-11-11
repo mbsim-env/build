@@ -142,8 +142,14 @@ def file_(name):
   return subprocess.check_output(["file", name]).decode('utf-8')
 
 def rmTreeRetryReadonlyFile(func, path, _):
-  os.chmod(path, stat.S_IWRITE)
-  func(path)
+  import stat
+  for t in [0.1, 0.5, 1, 2, 3, 0]:
+    try:
+      os.chmod(path, stat.S_IWRITE)
+      func(path)
+      return
+    except:
+      time.sleep(t)
 
 def addFileToDist(name, arcname, addDepLibs=True, depLibsDir=None):
   if depLibsDir is None:

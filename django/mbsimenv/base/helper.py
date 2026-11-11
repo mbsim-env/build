@@ -448,3 +448,13 @@ def lcovColor(rate):
   else:
     r=(rate-rateMin)/(1-rateMin)
   return "#"+"".join(map(lambda x: hex(int(x*255))[2:].zfill(2),colorsys.hsv_to_rgb(r*2/6, 0.62, 0.83)))
+
+def rmTreeRetryReadonlyFile(func, path, _):
+  import stat
+  for t in [0.1, 0.5, 1, 2, 3, 0]:
+    try:
+      os.chmod(path, stat.S_IWRITE)
+      func(path)
+      return
+    except:
+      time.sleep(t)

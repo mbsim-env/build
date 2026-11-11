@@ -1079,12 +1079,6 @@ def executeFlatXMLExample(ex, executeFD):
 
 
 
-def rmTreeRetryReadonlyFile(func, path, _):
-  os.chmod(path, stat.S_IWRITE)
-  func(path)
-
-
-
 # helper function for executeFMIXMLExample and executeFMISrcExample
 def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   ex.webappHdf5serie=True
@@ -1118,7 +1112,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   endTime=[]
   if 'MBSIM_SET_MINIMAL_TEND' in os.environ:
     endTime=['-s', '0.01']
-  if os.path.isdir("tmp_fmuCheck"): shutil.rmtree("tmp_fmuCheck", onerror=rmTreeRetryReadonlyFile)
+  if os.path.isdir("tmp_fmuCheck"): shutil.rmtree("tmp_fmuCheck", onerror=base.helper.rmTreeRetryReadonlyFile)
   os.mkdir("tmp_fmuCheck")
   comm=[pj(mbsimBinDir, fmuCheck)]+endTime+["-f", "-l", "4", "-o", "fmuCheck.result.csv", "-z", "tmp_fmuCheck", "mbsim.fmu"]
   t0=datetime.datetime.now()
@@ -1144,7 +1138,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
     else:
       print("Done.\n", file=executeFD)
   # remove unpacked fmu
-  if os.path.isdir("tmp_fmuCheck"): shutil.rmtree("tmp_fmuCheck", onerror=rmTreeRetryReadonlyFile)
+  if os.path.isdir("tmp_fmuCheck"): shutil.rmtree("tmp_fmuCheck", onerror=base.helper.rmTreeRetryReadonlyFile)
 
   ### run using mbsimTestFMU and python
 
@@ -1152,7 +1146,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
   if cosim: cosimMEArg=['--cosim']
 
   # unpack FMU
-  if os.path.isdir("tmp_mbsimTestFMU"): shutil.rmtree("tmp_mbsimTestFMU", onerror=rmTreeRetryReadonlyFile)
+  if os.path.isdir("tmp_mbsimTestFMU"): shutil.rmtree("tmp_mbsimTestFMU", onerror=base.helper.rmTreeRetryReadonlyFile)
   try:
     print("Unzip mbsim.fmu for mbsimTestFMU:\n", file=executeFD)
     with zipfile.ZipFile("mbsim.fmu") as zipf:
@@ -1182,7 +1176,7 @@ def executeFMIExample(ex, executeFD, fmiInputFile, cosim):
     if valgrindOutputAndAdaptRet("example_fmi_fmpy", ex)!=0: ret4=valgrindErrorCode
 
   # remove unpacked fmu
-  if os.path.isdir("tmp_mbsimTestFMU"): shutil.rmtree("tmp_mbsimTestFMU", onerror=rmTreeRetryReadonlyFile)
+  if os.path.isdir("tmp_mbsimTestFMU"): shutil.rmtree("tmp_mbsimTestFMU", onerror=base.helper.rmTreeRetryReadonlyFile)
 
   # remove the generated fmu (just to save disk space)
   if os.path.isfile("mbsim.fmu"): os.remove("mbsim.fmu")
@@ -1738,7 +1732,7 @@ def coverage(exRun, lcovResultFile=None):
       pass
   finally:
     if not os.path.isfile("/.dockerenv"): # keep the temp dir when running in docker
-      shutil.rmtree(tempDir, onerror=rmTreeRetryReadonlyFile)
+      shutil.rmtree(tempDir, onerror=base.helper.rmTreeRetryReadonlyFile)
 
 # An iterable of all examples using server side dynamic queueing.
 class ExampleServerQueue:
