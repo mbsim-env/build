@@ -76,6 +76,8 @@ The type of an example is defined dependent on some key files in the corrospondi
   by mbsimxml also mbsimCreateFMU is run to export the model as a FMU and the FMU is run by fmuCheck.<PLATFORM>.
 - If a file named 'Makefile_FMI_cosim' exists, then it is treated as a FMI Cosim source export example. Beside compiling the
   source examples also mbsimCreateFMU is run to export the model as a FMU and the FMU is run by fmuCheck.<PLATFORM>.
+If a directory contains a pre-run.py or post-run.py file this file is also executed and its return value influences the
+result flag of the example. The prefix-dir, if available, is passed a first argument to these scripts.
 If more then one of these files exist the behaviour is undefined.
 The 'Makefile' of a SRC example must build the example and must create an executable named 'main'.
 '''
@@ -714,6 +716,8 @@ def runExample(exRun, globalVars, example):
 
     # execute the example
     executeRet=0
+    preRet = 0
+    postRet = 0
     if not args.disableRun:
       # remove lock from all h5 file, just to avoid the the results depend on crashes of previous runs
       lockFiles=glob.glob("*.ombvh5")+glob.glob("*.mbsh5")
@@ -725,6 +729,10 @@ def runExample(exRun, globalVars, example):
       list(map(os.remove, glob.glob("*.fmuh5")))
       list(map(os.remove, glob.glob("*.mbsh5")))
       list(map(os.remove, glob.glob("*.ombvh5")))
+
+      # run pre-scripts if exist
+      if os.path.exists("pre-run.py"):
+        preRet=abs(base.helper.subprocessCall([sys.executable, "pre-run.py"]+([args.prefix] if args.prefix is not None else []), executeFD, maxExecutionTime=60))
 
       dt=0
       if os.path.isfile("Makefile"):
@@ -742,13 +750,22 @@ def runExample(exRun, globalVars, example):
         executeRet=1
         dt=0
       ex.time=datetime.timedelta(seconds=dt)
+
+      # run post-scripts if exist
+      if os.path.exists("post-run.py"):
+        postRet=abs(base.helper.subprocessCall([sys.executable, "post-run.py"]+([args.prefix] if args.prefix is not None else []), executeFD, maxExecutionTime=60))
+
       executeFD.close()
       ex.runOutput=executeFD.getData().replace("\0", "&#00;");
       exRunOutputWritten=True
       ex.runResult=runexamples.models.Example.RunResult.WARNING if base.helper.subprocessOtherFailure(executeRet) else \
                    (runexamples.models.Example.RunResult.FAILED if executeRet!=0 else runexamples.models.Example.RunResult.PASSED)
+      if preRet!=0 or postRet!=0:
+        ex.runResult=runexamples.models.Example.RunResult.FAILED
       ex.save()
     if executeRet!=0: runExampleRet=1
+    if preRet!=0: runExampleRet=1
+    if postRet!=0: runExampleRet=1
     # get reference time
 
     if args.checkGUIs:
