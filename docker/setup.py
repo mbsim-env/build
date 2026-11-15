@@ -63,7 +63,7 @@ def parseArgs():
   argparser.add_argument("--buildConfig", type=buildConfigConvert, default={}, help="Load an additional build(/examples) configuration as json string or filename")
 
   # argument completion in bash
-  if importlib.util.find_spec("numpy") is not None:
+  if importlib.util.find_spec("argcomplete") is not None:
     import argcomplete
     argcomplete.autocomplete(argparser)
   

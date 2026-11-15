@@ -13,7 +13,7 @@ meOrCosim.add_argument('--me', action='store_true')
 meOrCosim.add_argument('--cosim', action='store_false')
 
 # argument completion in bash
-if importlib.util.find_spec("numpy") is not None:
+if importlib.util.find_spec("argcomplete") is not None:
   import argcomplete
   argcomplete.autocomplete(argparser)
 

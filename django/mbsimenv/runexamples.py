@@ -162,7 +162,7 @@ partitionGroup.add_argument("--post", action="store_true", help="Finalize a part
 debugOpts.add_argument("--runID", default=None, type=int, help="The id of the runexamples.model.Run dataset.")
 
 # argument completion in bash
-if importlib.util.find_spec("numpy") is not None:
+if importlib.util.find_spec("argcomplete") is not None:
   import argcomplete
   argcomplete.autocomplete(argparser)
 
