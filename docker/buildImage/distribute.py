@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 
 # imports
 import argparse
@@ -13,6 +14,7 @@ import codecs
 import glob
 import json
 import functools
+import importlib.util
 
 args=None
 platform=None
@@ -92,6 +94,11 @@ def parseArguments():
   argparser.add_argument("prefix", type=str, help="The directory to distribute (the --prefix dir)")
   argparser.add_argument("--outDir", type=str, required=True, help="Output dir of the distribution archive")
   argparser.add_argument("--buildConfig", type=json.loads, default={}, help="Load an additional build(/examples) configuration as json string")
+
+  # argument completion in bash
+  if importlib.util.find_spec("numpy") is not None:
+    import argcomplete
+    argcomplete.autocomplete(argparser)
 
   global args
   args=argparser.parse_args()

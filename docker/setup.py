@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 
 import argparse
 import docker
@@ -15,6 +16,7 @@ import re
 import socket
 import subprocess
 import uuid
+import importlib.util
 
 
 
@@ -59,6 +61,11 @@ def parseArgs():
       with open(x, "rt") as f:
         return json.load(f)
   argparser.add_argument("--buildConfig", type=buildConfigConvert, default={}, help="Load an additional build(/examples) configuration as json string or filename")
+
+  # argument completion in bash
+  if importlib.util.find_spec("numpy") is not None:
+    import argcomplete
+    argcomplete.autocomplete(argparser)
   
   return argparser.parse_known_args()
 

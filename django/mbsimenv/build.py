@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 
 # imports
 import sys
@@ -19,6 +20,7 @@ import tempfile
 import psutil
 import copy
 import multiprocessing
+import importlib.util
 
 if django.VERSION[0]!=3:
   print("Need django version 3. This is django version "+django.__version__)
@@ -107,6 +109,11 @@ def parseArguments():
     if arg is None:
       return len(args)
     return args.index(arg)
+
+  # argument completion in bash
+  if importlib.util.find_spec("numpy") is not None:
+    import argcomplete
+    argcomplete.autocomplete(argparser)
 
   # parse all options before --passToConfigure, --passToCMake, --passToRunexamples by argparser. 
   global args

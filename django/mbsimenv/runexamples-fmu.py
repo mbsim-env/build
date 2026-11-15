@@ -1,14 +1,22 @@
 #!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 
 import argparse
 import fmpy
 import os
+import importlib.util
 
 argparser = argparse.ArgumentParser()
 argparser.add_argument("unzipdir", type=os.path.abspath)
 meOrCosim = argparser.add_mutually_exclusive_group()
 meOrCosim.add_argument('--me', action='store_true')
 meOrCosim.add_argument('--cosim', action='store_false')
+
+# argument completion in bash
+if importlib.util.find_spec("numpy") is not None:
+  import argcomplete
+  argcomplete.autocomplete(argparser)
+
 args = argparser.parse_args()
 
 md = fmpy.read_model_description("mbsim.fmu")

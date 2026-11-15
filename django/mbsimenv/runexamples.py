@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# PYTHON_ARGCOMPLETE_OK
 
 # imports
 import sys
@@ -159,6 +160,11 @@ partitionGroup.add_argument("--pre", action="store_true", help="Init a partition
 partitionGroup.add_argument("--partition", action="store_true", help="Run a partitioned runExamples run")
 partitionGroup.add_argument("--post", action="store_true", help="Finalize a partitioned runExamples run")
 debugOpts.add_argument("--runID", default=None, type=int, help="The id of the runexamples.model.Run dataset.")
+
+# argument completion in bash
+if importlib.util.find_spec("numpy") is not None:
+  import argcomplete
+  argcomplete.autocomplete(argparser)
 
 # parse command line options
 args = argparser.parse_args()
