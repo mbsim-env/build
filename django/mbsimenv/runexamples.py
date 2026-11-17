@@ -1352,15 +1352,8 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
       cmpRes.result=runexamples.models.CompareResult.Result.LABELNOTINCUR
       saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
       nrFailed[0]+=1
-    if not column<curObjCols or refLabels[column]!=curLabels[column]:
-      cmpRes.result=runexamples.models.CompareResult.Result.LABELDIFFER
-      saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
-      nrFailed[0]+=1
-    if column>=curObjCols or curObj.shape[0]<=0 or curObj.shape[0]<=0: # not row in curObj or refObj
-      cmpRes.result=runexamples.models.CompareResult.Result.LABELMISSING
-      saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
-      nrFailed[0]+=1
-    else: # only if curObj and refObj contains data (rows)
+    else:
+      err=0
       # check for difference
       refObjCol=getColumn(refObj,column)
       curObjCol=getColumn(curObj,column)
@@ -1376,7 +1369,7 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
            not numpy.all(isClose1(curObjCol, refObjCol))) or \
          (args.rtolminmax is not None and \
            not numpy.all(isClose2(curObjCol, refObjCol))):
-        nrFailed[0]+=1
+        err=1
         cmpRes.result=runexamples.models.CompareResult.Result.FAILED
         if numpy.issubdtype(refObj.dtype, numpy.floating) and refObjCol.shape[0]==curObjCol.shape[0]:
           denom = numpy.max(refObjCol)-numpy.min(refObjCol)
@@ -1387,6 +1380,11 @@ def compareDatasetVisitor(h5CurFile, ex, nrFailed, refMemberNames, cmpResFile, c
         else:
           cmpRes.rtolminmax = 1e100
         saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
+      if refLabels[column]!=curLabels[column]:
+        cmpRes.result=runexamples.models.CompareResult.Result.LABELDIFFER
+        saveCompareResultFileIfNotAlreadyDone(cmpResFile, h5CurFile)
+        err=1
+      nrFailed[0]+=err
   # check for labels/columns in current but not in reference
   for label in curLabels[len(refLabels):]:
     cmpRes=runexamples.models.CompareResult()

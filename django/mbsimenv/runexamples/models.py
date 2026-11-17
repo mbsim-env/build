@@ -356,7 +356,7 @@ class CompareResult(django.db.models.Model):
     LABELNOTINCUR = 6
     LABELNOTINREF = 7
     LABELDIFFER = 8
-    LABELMISSING = 9
+    LABELMISSING = 9 # not used
 
   objects=CompareResultManager()
 
