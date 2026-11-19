@@ -451,10 +451,12 @@ def lcovColor(rate):
 
 def rmTreeRetryReadonlyFile(func, path, _):
   import stat
-  for t in [0.1, 0.5, 1, 2, 3, 0]:
+  for t in [0.1, 0.5, 1, 2, 3, None]:
     try:
       os.chmod(path, stat.S_IWRITE)
       func(path)
       return
     except:
+      if t is None:
+        raise
       time.sleep(t)
